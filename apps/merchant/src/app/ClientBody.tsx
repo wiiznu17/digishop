@@ -1,7 +1,5 @@
 "use client"
 
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { useEffect } from "react"
 
 export default function ClientBody({
@@ -15,12 +13,5 @@ export default function ClientBody({
     document.body.className = "antialiased"
   }, [])
 
-  return (
-    <div className="antialiased">
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>{children}</SidebarInset>
-      </SidebarProvider>
-    </div>
-  )
+  return <div className="antialiased">{children}</div>
 }
