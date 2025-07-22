@@ -1,0 +1,77 @@
+import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
+import { OrderStatus } from '../types/enum';
+
+export interface OrderAttributes {
+  id: number;
+  customerId: number;
+  storeId: number;
+  totalPrice: string; // DECIMAL
+  status: OrderStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface OrderCreationAttributes
+  extends Optional<OrderAttributes, 'id' | 'status' | 'createdAt' | 'updatedAt'> {}
+
+export class Order extends Model<OrderAttributes, OrderCreationAttributes> implements OrderAttributes {
+  public id!: number;
+  public customerId!: number;
+  public storeId!: number;
+  public totalPrice!: string;
+  public status!: OrderStatus;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+
+  static initModel(sequelize: Sequelize): typeof Order {
+    Order.init(
+      {
+        id: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          autoIncrement: true,
+          primaryKey: true,
+        },
+        customerId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          field: 'customer_id',
+        },
+        storeId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          field: 'store_id',
+        },
+        totalPrice: {
+          type: DataTypes.DECIMAL(12, 2),
+          allowNull: false,
+          field: 'total_price',
+        },
+        status: {
+          type: DataTypes.ENUM(...Object.values(OrderStatus)),
+          allowNull: false,
+          defaultValue: OrderStatus.PENDING,
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'created_at',
+          defaultValue: DataTypes.NOW,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'updated_at',
+          defaultValue: DataTypes.NOW,
+        },
+      },
+      {
+        sequelize,
+        tableName: 'ORDERS',
+        modelName: 'Order',
+        paranoid: true,            // เปิด soft delete
+        deletedAt: 'deleted_at',   // ชื่อคอลัมน์ soft delete
+      }
+    );
+    return Order;
+  }
+}
