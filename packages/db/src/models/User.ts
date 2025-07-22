@@ -20,7 +20,7 @@ export interface UserAttributes {
   updatedAt?: Date; // mapped to edit_at in DB
 }
 
-export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'middleName' |'createdAt' | 'updatedAt'> {}
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;
@@ -69,7 +69,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
         },
         middleName: {
           type: DataTypes.STRING(191),
-          allowNull: false,
+          allowNull: true,
           field: 'middle_name',
         },
         role: {

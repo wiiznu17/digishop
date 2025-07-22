@@ -1,4 +1,3 @@
-// apps/backend/src/routes/user.route.ts
 import { Router } from 'express'
 import { getAllUsers, createUser, deleteUser } from '../controllers/userController'
 

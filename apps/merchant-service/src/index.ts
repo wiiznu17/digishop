@@ -1,25 +1,24 @@
 import express from 'express';
 import router from './iamRouter';
 import './helpers/dotenv.helper';
-import { checkDatabaseConnection } from '@digishop/db';
+import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
 
 const PORT = Number(process.env.PORT) || 4001;
 
 async function main() {
   try {
-    console.log('🔄 Starting application...');
+
     await checkDatabaseConnection();
-    console.log('Database connected. Starting server...');
 
     const app = express();
     app.use(express.json());
+
+    initModels(sequelize); 
     app.use(router);
 
     const server = app.listen(PORT, () => {
-      console.log('PORT is:', PORT);
-      console.log(`Portal Service listening at: http://localhost:${PORT}`);
-      console.log('🔥 Server is now listening for requests...');
+      console.log(`Merchant Service listening at: http://localhost:${PORT}`);
     });
 
     // Server error handling

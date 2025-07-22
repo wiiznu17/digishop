@@ -1,16 +1,17 @@
-// apps/backend/src/controllers/user.controller.ts
+import { User } from '@digishop/db/src/models/User'
 import { Request, Response } from 'express'
-import db from '@digishop/db'
 
 export const getAllUsers = async (req: Request, res: Response) => {
-  const users = await db.User.findAll()
+  console.log('hiiiiiiiiiiiiiiiiiiiiiiiiii')
+  const users = await User.findAll()
+  console.log('users: ', users)
   res.json(users)
 }
 
 export const createUser = async (req: Request, res: Response) => {
-  const { name, email } = req.body
+  const { email, password, firstName, lastName, middleName, role } = req.body
   try {
-    const user = await db.User.create({ name, email })
+    const user = await User.create({ email, password, firstName, lastName, middleName, role })
     console.log('user controller')
     res.status(201).json(user)
   } catch (err: any) {
@@ -20,7 +21,7 @@ export const createUser = async (req: Request, res: Response) => {
 
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params
-  const deleted = await db.User.destroy({ where: { id } })
+  const deleted = await User.destroy({ where: { id } })
   if (deleted) {
     res.status(204).send()
   } else {

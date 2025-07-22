@@ -1,5 +1,5 @@
-import { checkDatabaseConnection } from './db';
-import type { Sequelize } from 'sequelize';
+import { checkDatabaseConnection, sequelize } from './db';
+import { Sequelize } from 'sequelize';
 
 import { User } from '../src/models/User';
 import { Address } from '../src/models/Address';
@@ -125,3 +125,20 @@ export function initModels(sequelize: Sequelize) {
 }
 
 export { checkDatabaseConnection };
+export default sequelize;
+// export * from '../src/models/User';
+// export * from '../src/models/Address';
+// export * from '../src/models/Store';
+// export * from '../src/models/ShippingConfig';
+// export * from '../src/models/Category';
+// export * from '../src/models/Product';
+// export * from '../src/models/Order';
+// export * from '../src/models/OrderItem';
+// export * from '../src/models/Payment';
+// export * from '../src/models/ShippingInfo';
+// export * from '../src/models/Review';
+// export * from '../src/models/ProductView';
+// export * from '../src/models/StoreView';
+// export * from '../src/models/portal/AdminUser';
+// export * from '../src/models/portal/AdminSystemLog';
+// export * from '../src/models/Dispute';
