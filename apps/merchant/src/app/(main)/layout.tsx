@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import ClientBody from "./ClientBody"
+import MerchantLayout from "./MerchantLayout"
 
 export const metadata: Metadata = {
   title: "Merchant Dashboard",
@@ -12,5 +12,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  return <ClientBody>{children}</ClientBody>
+  return <MerchantLayout>{children}</MerchantLayout>
 }

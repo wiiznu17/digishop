@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "../../lib/auth-context"
+import { useAuth } from "../../../contexts/auth-context"
 import { SidebarNav } from "./sidebar-nav"
 import { Header } from "./header"
 import { AuthPage } from "@/components/auth/auth-page"

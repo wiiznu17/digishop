@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Merchant Dashboard",
+  title: "Register to Merchant Dashboard",
   description:
     "Complete merchant management platform for products, orders, and business insights"
 }

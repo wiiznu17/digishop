@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
   Calendar,
@@ -13,8 +13,8 @@ import {
   BarChart3,
   Plus,
   Users
-} from 'lucide-react'
-import Link from 'next/link'
+} from "lucide-react"
+import Link from "next/link"
 
 import {
   Sidebar,
@@ -26,48 +26,48 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
-} from '@/components/ui/sidebar'
+} from "@/components/ui/sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu"
 
 const items = [
   {
-    title: 'Dashboard',
-    url: '/',
+    title: "Dashboard",
+    url: "/",
     icon: Home
   },
   {
-    title: 'Orders',
-    url: '/orders',
+    title: "Orders",
+    url: "/orders",
     icon: ShoppingCart
   },
   {
-    title: 'Products',
-    url: '/products',
+    title: "Products",
+    url: "/products",
     icon: Package
   },
   {
-    title: 'Customers',
-    url: '/customers',
+    title: "Customers",
+    url: "/customers",
     icon: Users
   },
   {
-    title: 'Analytics',
-    url: '/analytics',
+    title: "Analytics",
+    url: "/analytics",
     icon: BarChart3
   },
   {
-    title: 'Profile',
-    url: '/profile',
+    title: "Profile",
+    url: "/profile",
     icon: User
   },
   {
-    title: 'Settings',
-    url: '/settings',
+    title: "Settings",
+    url: "/settings",
     icon: Settings
   }
 ]

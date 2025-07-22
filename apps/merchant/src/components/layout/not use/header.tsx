@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/contexts/auth-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Bell, Settings, User, LogOut } from "lucide-react"
 import Link from "next/link"
-import { ThemeToggle } from "../theme/ThemeToggle-not-use"
+import { ThemeToggle } from "../../theme/ThemeToggle-not-use"
 
 export function Header() {
   const { user, logout } = useAuth()

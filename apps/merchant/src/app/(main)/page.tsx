@@ -6,8 +6,6 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
 import {
   BarChart3,
   TrendingUp,
@@ -70,7 +68,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="col-span-4">
             <CardHeader>
               <CardTitle>Overview</CardTitle>
@@ -125,9 +123,9 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
-        </div> */}
+        </div>
 
-        {/* <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
@@ -175,7 +173,7 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
-        </div> */}
+        </div>
       </div>
     </div>
   )

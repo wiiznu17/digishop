@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { useEffect } from "react"
 
-export default function ClientBody({
+export default function MerchantLayout({
   children
 }: {
   children: React.ReactNode
