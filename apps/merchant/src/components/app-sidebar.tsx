@@ -33,6 +33,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
+import { Button } from "./ui/button"
 
 const items = [
   {
@@ -73,11 +76,14 @@ const items = [
 ]
 
 export function AppSidebar() {
+  const { logout, isLoading } = useAuth()
+  const router = useRouter()
+
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Merchant Dashboard</SidebarGroupLabel>
+          <SidebarGroupLabel>Merchant</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -115,7 +121,18 @@ export function AppSidebar() {
                   <span>Business Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span>Sign out</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                    disabled={isLoading}
+                    onClick={async () => {
+                      await logout()
+                      router.push("/login")
+                    }}
+                  >
+                    Logout
+                  </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

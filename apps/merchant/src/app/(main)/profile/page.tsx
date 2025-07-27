@@ -19,9 +19,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { DashboardHeader } from "@/components/dashboard-header"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+import { MerchantHeader } from "@/components/dashboard-header"
 import {
   User,
   Building,
@@ -74,7 +72,7 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <DashboardHeader
+      <MerchantHeader
         title="Profile"
         description="Manage your merchant account and business settings"
       >
@@ -82,7 +80,7 @@ export default function ProfilePage() {
           <Save className="mr-2 h-4 w-4" />
           Save Changes
         </Button>
-      </DashboardHeader>
+      </MerchantHeader>
 
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div className="grid gap-4 md:grid-cols-3">

@@ -14,7 +14,7 @@ router.get('/', async (req: Request, res: Response) => {
   }
 })
 
-router.use('/user', userRouter)
+router.use('/merchant', userRouter)
 
 export default router
 

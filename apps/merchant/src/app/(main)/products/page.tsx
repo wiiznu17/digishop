@@ -35,7 +35,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { MerchantHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Plus, Edit, Trash2, Package } from "lucide-react"
@@ -153,7 +153,7 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <DashboardHeader
+      <MerchantHeader
         title="Products"
         description="Manage your product inventory"
       >
@@ -280,7 +280,7 @@ export default function ProductsPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </DashboardHeader>
+      </MerchantHeader>
 
       <div className="flex flex-1 flex-col gap-4 p-4">
         <Card>

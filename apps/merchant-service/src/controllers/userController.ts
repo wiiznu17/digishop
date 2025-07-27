@@ -1,4 +1,6 @@
+import { Store } from '@digishop/db/src/models/Store'
 import { User } from '@digishop/db/src/models/User'
+import { StoreStatus, UserRole } from '@digishop/db/src/types/enum'
 import { Request, Response } from 'express'
 
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -8,12 +10,41 @@ export const getAllUsers = async (req: Request, res: Response) => {
   res.json(users)
 }
 
-export const createUser = async (req: Request, res: Response) => {
-  const { email, password, firstName, lastName, middleName, role } = req.body
+export const createStoreForUser = async (req: Request, res: Response) => {
+  const {
+    userId,
+    businessName,
+    description,
+    addressNumber,
+    addressStreet,
+    addressSubdistrict,
+    addressDistrict,
+    addressProvince,
+    addressZip,
+    logoUrl
+  } = req.body
+
   try {
-    const user = await User.create({ email, password, firstName, lastName, middleName, role })
-    console.log('user controller')
-    res.status(201).json(user)
+    // หา user จาก userId
+    const user = await User.findByPk(userId)
+    if (!user) {
+      return res.status(404).json({ error: "User not found" })
+    }
+
+    // สร้าง Store ใหม่
+    const store = await Store.create({
+      userId,
+      storeName: businessName,
+      description,
+      logoUrl: logoUrl || null,
+      status: StoreStatus.PENDING
+    })
+
+    // อัปเดต role เป็น merchant
+    user.role = UserRole.MERCHANT
+    await user.save()
+
+    res.status(201).json({ store, user })
   } catch (err: any) {
     res.status(400).json({ error: err.message })
   }

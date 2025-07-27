@@ -10,7 +10,7 @@ interface DashboardHeaderProps {
   children?: React.ReactNode
 }
 
-export function DashboardHeader({
+export function MerchantHeader({
   title,
   description,
   children
