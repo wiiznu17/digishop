@@ -4,7 +4,7 @@ import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
 
-const PORT = Number(process.env.PORT) || 4001;
+const PORT = Number(process.env.PORT);
 
 async function main() {
   try {
@@ -15,7 +15,7 @@ async function main() {
     app.use(express.json());
 
     initModels(sequelize); 
-    app.use(router);
+    app.use('/api', router);
 
     const server = app.listen(PORT, () => {
       console.log(`Merchant Service listening at: http://localhost:${PORT}`);

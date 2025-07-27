@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { MerchantHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
@@ -51,7 +51,7 @@ const customerInsights = [
 export default function AnalyticsPage() {
   return (
     <div>
-      <DashboardHeader
+      <MerchantHeader
         title="Analytics"
         description="Business insights and performance metrics"
       />

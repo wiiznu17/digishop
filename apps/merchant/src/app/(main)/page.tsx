@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { MerchantHeader } from "@/components/dashboard-header"
 import {
   BarChart3,
   TrendingUp,
@@ -46,7 +46,7 @@ const stats = [
 export default function Home() {
   return (
     <div>
-      <DashboardHeader
+      <MerchantHeader
         title="Dashboard"
         description="Welcome to your merchant dashboard"
       />

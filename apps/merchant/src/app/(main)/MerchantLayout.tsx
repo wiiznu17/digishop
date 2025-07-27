@@ -2,6 +2,8 @@
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 export default function MerchantLayout({
@@ -9,11 +11,21 @@ export default function MerchantLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Remove any extension-added classes during hydration
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
   useEffect(() => {
-    // This runs only on the client after hydration
-    document.body.className = "antialiased"
-  }, [])
+    console.log("User in MerchantLayout:", user)
+    if (!isLoading) {
+      if (!user) {
+        router.push("/login")
+      } else if (user.role !== "MERCHANT") {
+        router.replace("/register")
+      }
+    }
+  }, [user, isLoading, router])
+
+  // if (isLoading) return <p>Loading...</p>
 
   return (
     <div className="antialiased">

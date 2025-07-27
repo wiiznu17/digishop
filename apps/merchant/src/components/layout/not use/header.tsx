@@ -26,7 +26,7 @@ export function Header() {
     <header className="flex h-16 items-center justify-between border-b bg-background px-6">
       <div className="flex items-center space-x-4">
         <h1 className="text-xl font-semibold text-foreground">
-          Welcome back, {user?.firstName}!
+          Welcome back, {user?.email}!
         </h1>
       </div>
 
