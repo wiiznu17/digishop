@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -21,6 +21,12 @@ import {
 } from "@/components/ui/select"
 import { ModeToggle } from "@/components/mode-toggle"
 import Link from "next/link"
+import {
+  createMerchant,
+  fetchUser
+} from "@/utils/requestUtils/requestAuthUtils"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -39,6 +45,23 @@ export default function RegisterPage() {
     addressProvince: "",
     addressZip: ""
   })
+
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    console.log("User in Register Page:", user)
+    if (!isLoading) {
+      if (!user) {
+        router.push("/login")
+      } else if (user.role === "MERCHANT") {
+        router.push("/")
+      }
+    }
+  }, [user, isLoading, router])
+
+  // if (isLoading) return <p>Loading...</p>
+
   const [step, setStep] = useState(1)
 
   const handleChange = (field: string, value: string) => {
@@ -48,10 +71,26 @@ export default function RegisterPage() {
   const handleNext = () => setStep((s) => s + 1)
   const handleBack = () => setStep((s) => s - 1)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle registration logic here
-    console.log("Registration data:", formData)
+    // formData + user.id
+    const customAxiosData = {
+      ...formData,
+      userId: user?.id
+    }
+    try {
+      const res = await createMerchant(customAxiosData)
+      console.log("Response from createMerchant:", res)
+      console.log("Response:", res)
+      // const user = await fetchUser()
+      // console.log("Fetched user after registration:", user)
+      // router.refresh()
+      router.push("/")
+    } catch (error) {
+      console.error("Error creating merchant:", error)
+      // Handle error (e.g., show notification)
+      alert("Failed to create merchant account. Please try again later.")
+    }
   }
 
   return (
@@ -190,9 +229,14 @@ export default function RegisterPage() {
                       type="button"
                       variant="outline"
                       className="flex-1"
+                      // disabled={isLoading}
                       asChild
+                      // onClick={async () => {
+                      //   await logout()
+                      //   router.push("/login")
+                      // }}
                     >
-                      <Link href="/">Back to Dashboard</Link>
+                      <Link href="/">Back to Digishop</Link>
                     </Button>
                     <Button
                       type="button"

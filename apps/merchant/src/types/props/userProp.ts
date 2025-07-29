@@ -19,7 +19,7 @@ export interface User {
 export interface AuthContextType {
   user: UserAuth | null
   login: (email: string, password: string) => Promise<boolean>
-  register: (userData: RegisterData) => Promise<boolean>
+  // register: (userData: RegisterData) => Promise<boolean>
   logout: () => void
   isLoading: boolean
 }
@@ -39,6 +39,6 @@ export interface RegisterData {
   addressDistrict: string
   addressProvince: string
   addressZip: string
-  password: string
-  confirmPassword: string
+  // password: string
+  // confirmPassword: string
 }

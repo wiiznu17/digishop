@@ -24,7 +24,7 @@ export default {
         type: DataTypes.STRING(20),
         allowNull: false,
       },
-      number: {
+      address_number: {
         type: DataTypes.STRING(255),
         allowNull: false,
       },

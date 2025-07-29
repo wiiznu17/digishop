@@ -32,7 +32,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { MerchantHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Eye, Package, Clock, CheckCircle, XCircle, Truck } from "lucide-react"
@@ -145,7 +145,7 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <DashboardHeader
+      <MerchantHeader
         title="Orders"
         description="Manage customer orders and track shipments"
       />

@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from "cors"
 import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels } from '@digishop/db';
@@ -13,9 +14,17 @@ async function main() {
 
     const app = express();
     app.use(express.json());
-
+  
+    app.use(cors({
+      origin: ["http://localhost:4000"],
+      credentials: true
+    }))
     initModels(sequelize); 
     app.use('/api', router);
+    app.use((req, res, next) => {
+      console.log('[MERCHANT] Incoming', req.method, req.url)
+      next()
+    })
 
     const server = app.listen(PORT, () => {
       console.log(`Merchant Service listening at: http://localhost:${PORT}`);

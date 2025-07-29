@@ -26,7 +26,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { MerchantHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
@@ -148,7 +148,7 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <DashboardHeader
+      <MerchantHeader
         title="Customers"
         description="Manage your customer relationships and track their activity"
       />

@@ -6,7 +6,7 @@ export interface MerchantAddressAttributes {
   userId: number;
   ownerName: string;
   phone: string;
-  number: string;
+  address_number: string;
   building: string;
   subStreet: string;
   street: string;
@@ -28,7 +28,7 @@ export class MerchantAddress extends Model<MerchantAddressAttributes, AddressCre
   public userId!: number;
   public ownerName!: string;
   public phone!: string;
-  public number!: string;
+  public address_number!: string;
   public building!: string;
   public subStreet!: string;
   public street!: string;
@@ -63,10 +63,10 @@ export class MerchantAddress extends Model<MerchantAddressAttributes, AddressCre
           type: DataTypes.STRING(20),
           allowNull: false,
         },
-        number: {
+        address_number: {
           type: DataTypes.STRING(255),
           allowNull: false,
-          field: 'number',
+          field: 'address_number',
         },
         building: {
           type: DataTypes.STRING(255),
@@ -112,6 +112,18 @@ export class MerchantAddress extends Model<MerchantAddressAttributes, AddressCre
           type: DataTypes.ENUM(...Object.values(AddressType)),
           allowNull: true,
           field: 'address_type',
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'created_at',
+          defaultValue: DataTypes.NOW,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'updated_at',
+          defaultValue: DataTypes.NOW,
         },
       },
       {

@@ -7,7 +7,7 @@ export default {
         user_id: 1,  // ต้องตรงกับ USERS.id
         owner_name: 'Customer One',
         phone: '0812345678',
-        number: '123/4',
+        address_number: '123/4',
         building: 'อาคารพาณิชย์',
         sub_street: 'ซอยสุขุมวิท 1',
         street: 'ถนนสุขุมวิท',
@@ -25,7 +25,7 @@ export default {
         user_id: 2,  // Merchant One
         owner_name: 'Merchant One',
         phone: '0898765432',
-        number: '23/4',
+        address_number: '23/4',
         building: 'อาคารพาณิชย์',
         sub_street: 'ซอยสุขุมวิท 1',
         street: 'ถนนสุขุมวิท',
@@ -43,7 +43,7 @@ export default {
         user_id: 2,  // Merchant One
         owner_name: 'C One',
         phone: '0983358976',
-        number: '456/7',
+        address_number: '456/7',
         building: 'อาคารพาณิชย์',
         sub_street: 'ซอยสุขุมวิท 2',
         street: 'ถนนสุขุมวิท',

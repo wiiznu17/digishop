@@ -17,12 +17,14 @@ import { StoreView } from '../src/models/StoreView';
 import { AdminUser } from '../src/models/portal/AdminUser';
 import { AdminSystemLog } from '../src/models/portal/AdminSystemLog';
 import { Dispute } from '../src/models/Dispute';
+import { MerchantAddress } from '../src/models/StoreAddress';
 
 export function initModels(sequelize: Sequelize) {
   // init
   User.initModel(sequelize);
   Address.initModel(sequelize);
   Store.initModel(sequelize);
+  MerchantAddress.initModel(sequelize);
   ShippingConfig.initModel(sequelize);
   Category.initModel(sequelize);
   Product.initModel(sequelize);
@@ -70,6 +72,9 @@ export function initModels(sequelize: Sequelize) {
   Store.hasMany(StoreView, { foreignKey: 'store_id', as: 'views' });
   StoreView.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
 
+  Store.hasMany(MerchantAddress, { foreignKey: 'user_id', as: 'addresses' });
+  MerchantAddress.belongsTo(Store, { foreignKey: 'user_id', as: 'store' });
+
   // Category
   Category.hasMany(Category, { foreignKey: 'parent_id', as: 'children' });
   Category.belongsTo(Category, { foreignKey: 'parent_id', as: 'parent' });
@@ -108,6 +113,7 @@ export function initModels(sequelize: Sequelize) {
     User,
     Address,
     Store,
+    MerchantAddress,
     ShippingConfig,
     Category,
     Product,

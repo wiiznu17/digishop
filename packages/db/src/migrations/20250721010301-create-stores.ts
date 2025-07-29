@@ -16,6 +16,18 @@ export default {
         type: DataTypes.STRING(191),
         allowNull: false
       },
+      email: {
+        type: DataTypes.STRING(191),
+        allowNull: false
+      },
+      phone: {
+        type: DataTypes.STRING(191),
+        allowNull: false
+      },
+      business_type: {
+        type: DataTypes.STRING(191),
+        allowNull: false
+      },
       logo_url: {
         type: DataTypes.STRING(255),
         allowNull: true
