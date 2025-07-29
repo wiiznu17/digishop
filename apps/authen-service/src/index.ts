@@ -1,7 +1,7 @@
 import express from "express"
 import cors from "cors"
 import './helpers/dotenv.helper';
-import authRoutes from "./routes/auth"
+import authRoutes from "./routes/authRouter"
 import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
 const cookieParser = require("cookie-parser")  // ใช้ require แทน
@@ -13,7 +13,7 @@ async function main() {
     console.log("JWT", process.env.JWT_SECRET)
     
     app.use(cors({
-      origin: ["http://localhost:3000"],
+      origin: ["http://localhost:3000", "http://localhost:4000"],
       credentials: true
     }))
     app.use(cookieParser())
@@ -21,7 +21,10 @@ async function main() {
     initModels(sequelize);
 
     app.use("/api/auth", authRoutes)
-
+    app.use((req, res, next) => {
+      console.log('[MERCHANT] Incoming', req.url)
+      next()
+    })
     const PORT = process.env.PORT ||4001
     app.listen(PORT, () => {
       console.log(`Auth Service running on http://localhost:${PORT}`)

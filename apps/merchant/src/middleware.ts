@@ -23,7 +23,11 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next()
       }
     } else {
-      return NextResponse.next()
+      if (pathname === "/register") {
+        return NextResponse.redirect(new URL("/login", req.url))
+      } else {
+        return NextResponse.next()
+      }
     }
   }
 

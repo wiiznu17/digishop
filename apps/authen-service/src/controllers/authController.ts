@@ -49,6 +49,7 @@ export const login = async (req: Request, res: Response) => {
 }
 
 export const logout = (req: Request, res: Response) => {
+  console.log("Logging out user")
   res.clearCookie("token", {
     httpOnly: true,
     sameSite: "lax",
@@ -64,8 +65,8 @@ export const me = async (req: Request, res: Response) => {
     }
 
     const payload = verifyToken(token)
-    console.log("Type of payload: ", typeof payload)
-    console.log("Payload: ", payload)
+    // console.log("Type of payload: ", typeof payload)
+    // console.log("Payload: ", payload)
     if (!payload) {
       return res.status(401).json({ message: "Invalid token" })
     }
@@ -85,7 +86,7 @@ export const me = async (req: Request, res: Response) => {
     const user = await User.findByPk(userId, {
       attributes: ["id", "email", "role"]
     })
-    console.log("User that verify: ", user)
+    // console.log("User that verify: ", user)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
