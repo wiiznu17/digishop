@@ -7,6 +7,7 @@
     "dev:digishop": "turbo run dev --parallel --filter=digishop-service... --filter=digishop...",
     "dev:merchant": "turbo run dev --parallel --filter=merchant... --filter=merchant-service... --filter=authen-service... --filter=gateway-service...",
     "dev:portal": "turbo run dev --parallel --filter=portal... --filter=portal-service...",
+    "dev:customer": "turbo run dev --parallel --filter=customer-service... --filter=customer...",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
