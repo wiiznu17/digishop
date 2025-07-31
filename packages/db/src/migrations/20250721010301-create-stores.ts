@@ -8,6 +8,7 @@ export default {
       user_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
+        unique: true,
         references: { model: 'USERS', key: 'id' },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',

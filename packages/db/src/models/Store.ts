@@ -42,6 +42,7 @@ export class Store extends Model<StoreAttributes, StoreCreationAttributes> imple
         userId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
+          unique: true,
           field: 'user_id',
         },
         storeName: {
