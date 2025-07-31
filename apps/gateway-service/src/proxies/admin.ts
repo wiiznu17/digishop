@@ -2,7 +2,7 @@
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { config } from "../config";
 
-export const merchantProxy = createProxyMiddleware({
+export const adminProxy = createProxyMiddleware({
   target: config.services.merchant,
   changeOrigin: true,
   cookieDomainRewrite: "localhost",
