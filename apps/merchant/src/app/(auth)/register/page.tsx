@@ -30,7 +30,7 @@ import { useAuth } from "@/contexts/auth-context"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    businessName: "",
+    storeName: "",
     ownerName: "",
     email: "",
     phone: "",
@@ -140,7 +140,7 @@ export default function RegisterPage() {
                       <Label htmlFor="businessName">Business Name *</Label>
                       <Input
                         id="businessName"
-                        value={formData.businessName}
+                        value={formData.storeName}
                         onChange={(e) =>
                           handleChange("businessName", e.target.value)
                         }

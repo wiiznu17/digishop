@@ -18,7 +18,7 @@ export const authProxy: RequestHandler = createProxyMiddleware({
       proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
 
       proxyReq.write(bodyData);
-      // ❌ ไม่ต้อง proxyReq.end() ให้ middleware จัดการเอง
+      // ไม่ต้อง proxyReq.end() ให้ middleware จัดการเอง
     }
   },
   onProxyRes: (proxyRes) => {

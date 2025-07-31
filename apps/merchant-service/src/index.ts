@@ -4,6 +4,7 @@ import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
+const cookieParser = require("cookie-parser")
 
 const PORT = Number(process.env.PORT);
 
@@ -14,7 +15,7 @@ async function main() {
 
     const app = express();
     app.use(express.json());
-  
+    app.use(cookieParser())
     app.use(cors({
       origin: ["http://localhost:4000"],
       credentials: true

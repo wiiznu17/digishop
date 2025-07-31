@@ -3,29 +3,28 @@ export interface UserAuth {
   email: string
   role: string
 }
-export interface User {
-  id: string
-  email: string
-  businessName: string
-  firstName: string
-  lastName: string
-  phone?: string
-  businessAddress?: string
-  businessLogo?: string
-  businessType?: string
-  createdAt: Date
-}
+// export interface User {
+//   id: string
+//   email: string
+//   storeName: string
+//   ownerName: string
+//   description?: string
+//   phone?: string
+//   businessAddress?: string
+//   businessLogo?: string
+//   businessType?: string
+//   createdAt: Date
+// }
 
 export interface AuthContextType {
   user: UserAuth | null
   login: (email: string, password: string) => Promise<boolean>
-  // register: (userData: RegisterData) => Promise<boolean>
   logout: () => void
   isLoading: boolean
 }
 
 export interface RegisterData {
-  businessName: string
+  storeName: string
   ownerName: string
   email: string
   phone: string
@@ -39,6 +38,47 @@ export interface RegisterData {
   addressDistrict: string
   addressProvince: string
   addressZip: string
-  // password: string
-  // confirmPassword: string
+}
+
+export interface MerchantProfileFormValues {
+  id: number
+  role: string
+  store: {
+    id: number
+    storeName: string
+    email: string
+    phone: string
+    businessType: string
+    description: string
+    logoUrl: string
+    status: string
+    addresses: {
+      id: number
+      ownerName: string
+    }[]
+  }
+}
+export interface MerchantProfileProps {
+  merchant: MerchantProfileFormValues
+}
+
+export const defaultMerchant: MerchantProfileFormValues = {
+  id: 0,
+  role: "",
+  store: {
+    id: 0,
+    storeName: "",
+    email: "",
+    phone: "",
+    businessType: "",
+    description: "",
+    logoUrl: "",
+    status: "",
+    addresses: [
+      {
+        id: 0,
+        ownerName: ""
+      }
+    ]
+  }
 }

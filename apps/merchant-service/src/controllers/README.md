@@ -23,3 +23,5 @@ export const restoreUser = async (req: Request, res: Response) => {
   res.json({ message: 'User restored' });
 };
 ```
+# get profile
+

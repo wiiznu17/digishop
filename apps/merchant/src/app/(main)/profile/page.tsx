@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { use, useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -29,36 +29,35 @@ import {
   Save,
   Upload
 } from "lucide-react"
+import { fetchMerchantProfileRequester } from "@/utils/requestUtils/requestProfileUtils"
+import {
+  defaultMerchant,
+  MerchantProfileFormValues,
+  MerchantProfileProps
+} from "@/types/props/userProp"
 
-export default function ProfilePage() {
-  const [profileData, setProfileData] = useState({
-    // Business Information
-    businessName: "Tech Solutions Store",
-    ownerName: "John Doe",
-    email: "john@techsolutions.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Main Street, New York, NY 10001",
-    businessType: "Electronics",
-    description:
-      "We provide cutting-edge technology solutions for businesses and consumers.",
-    website: "https://techsolutions.com",
-    taxId: "123-45-6789",
+export default function ProfilePage({ merchant }: MerchantProfileProps) {
+  const [profileData, setProfileData] = useState<MerchantProfileFormValues>(
+    merchant ?? defaultMerchant
+  )
 
-    // Notification Settings
-    emailNotifications: true,
-    orderAlerts: true,
-    inventoryAlerts: true,
-    promotionUpdates: false,
+  // useEffect for fecth merchant detail
+  useEffect(() => {
+    handleFecthMerchantProfile()
+  }, [])
 
-    // Business Hours
-    mondayHours: "9:00 AM - 6:00 PM",
-    tuesdayHours: "9:00 AM - 6:00 PM",
-    wednesdayHours: "9:00 AM - 6:00 PM",
-    thursdayHours: "9:00 AM - 6:00 PM",
-    fridayHours: "9:00 AM - 6:00 PM",
-    saturdayHours: "10:00 AM - 4:00 PM",
-    sundayHours: "Closed"
-  })
+  const handleFecthMerchantProfile = async () => {
+    try {
+      const currentProfile = await fetchMerchantProfileRequester()
+      console.log("Fetched merchant profile:", currentProfile)
+      if (currentProfile) {
+        setProfileData(currentProfile)
+      }
+    } catch (error) {
+      // Handle error fetching profile
+      console.error("Error fetching merchant profile:", error)
+    }
+  }
 
   const handleChange = (field: string, value: string | boolean) => {
     setProfileData((prev) => ({ ...prev, [field]: value }))
@@ -101,7 +100,7 @@ export default function ProfilePage() {
                   <Label htmlFor="businessName">Business Name</Label>
                   <Input
                     id="businessName"
-                    value={profileData.businessName}
+                    value={profileData.store.storeName}
                     onChange={(e) =>
                       handleChange("businessName", e.target.value)
                     }
@@ -112,7 +111,7 @@ export default function ProfilePage() {
                   <Label htmlFor="ownerName">Owner Name</Label>
                   <Input
                     id="ownerName"
-                    value={profileData.ownerName}
+                    value={profileData.store.addresses[0].ownerName}
                     onChange={(e) => handleChange("ownerName", e.target.value)}
                   />
                 </div>
@@ -124,7 +123,7 @@ export default function ProfilePage() {
                   <Input
                     id="email"
                     type="email"
-                    value={profileData.email}
+                    value={profileData.store.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                   />
                 </div>
@@ -133,7 +132,7 @@ export default function ProfilePage() {
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
-                    value={profileData.phone}
+                    value={profileData.store.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
                   />
                 </div>
@@ -143,7 +142,7 @@ export default function ProfilePage() {
                 <Label htmlFor="address">Business Address</Label>
                 <Textarea
                   id="address"
-                  value={profileData.address}
+                  value={profileData.store.addresses[0].ownerName}
                   onChange={(e) => handleChange("address", e.target.value)}
                   rows={2}
                 />
@@ -153,7 +152,7 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label htmlFor="businessType">Business Type</Label>
                   <Select
-                    value={profileData.businessType}
+                    value={profileData.store.businessType}
                     onValueChange={(value) =>
                       handleChange("businessType", value)
                     }
@@ -164,6 +163,7 @@ export default function ProfilePage() {
                     <SelectContent>
                       <SelectItem value="Electronics">Electronics</SelectItem>
                       <SelectItem value="Fashion">Fashion</SelectItem>
+                      <SelectItem value="Retail">Retail</SelectItem>
                       <SelectItem value="Food & Beverage">
                         Food & Beverage
                       </SelectItem>
@@ -181,7 +181,7 @@ export default function ProfilePage() {
                   <Label htmlFor="website">Website</Label>
                   <Input
                     id="website"
-                    value={profileData.website}
+                    value={"profileData.store.website"}
                     onChange={(e) => handleChange("website", e.target.value)}
                     placeholder="https://yourwebsite.com"
                   />
@@ -192,7 +192,7 @@ export default function ProfilePage() {
                 <Label htmlFor="description">Business Description</Label>
                 <Textarea
                   id="description"
-                  value={profileData.description}
+                  value={profileData.store.description}
                   onChange={(e) => handleChange("description", e.target.value)}
                   rows={3}
                 />
@@ -202,7 +202,7 @@ export default function ProfilePage() {
                 <Label htmlFor="taxId">Tax ID Number</Label>
                 <Input
                   id="taxId"
-                  value={profileData.taxId}
+                  value={"profileData.taxId"}
                   onChange={(e) => handleChange("taxId", e.target.value)}
                   placeholder="xxx-xx-xxxx"
                 />
@@ -254,7 +254,7 @@ export default function ProfilePage() {
         {/* Business Hours */}
         <Card>
           <CardHeader>
-            <CardTitle>Business Hours</CardTitle>
+            <CardTitle>Business Hours Dummy</CardTitle>
             <CardDescription>
               Set your operating hours for customer reference
             </CardDescription>
@@ -311,7 +311,7 @@ export default function ProfilePage() {
                 <input
                   type="checkbox"
                   id="emailNotifications"
-                  checked={profileData.emailNotifications}
+                  checked={true}
                   onChange={(e) =>
                     handleChange("emailNotifications", e.target.checked)
                   }
@@ -329,7 +329,7 @@ export default function ProfilePage() {
                 <input
                   type="checkbox"
                   id="orderAlerts"
-                  checked={profileData.orderAlerts}
+                  checked={true}
                   onChange={(e) =>
                     handleChange("orderAlerts", e.target.checked)
                   }
@@ -347,7 +347,7 @@ export default function ProfilePage() {
                 <input
                   type="checkbox"
                   id="inventoryAlerts"
-                  checked={profileData.inventoryAlerts}
+                  checked={true}
                   onChange={(e) =>
                     handleChange("inventoryAlerts", e.target.checked)
                   }
@@ -365,7 +365,7 @@ export default function ProfilePage() {
                 <input
                   type="checkbox"
                   id="promotionUpdates"
-                  checked={profileData.promotionUpdates}
+                  checked={false}
                   onChange={(e) =>
                     handleChange("promotionUpdates", e.target.checked)
                   }

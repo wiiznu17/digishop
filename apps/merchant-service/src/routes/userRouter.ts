@@ -1,9 +1,10 @@
 import { Router } from 'express'
-import { getAllUsers, createStoreForUser, deleteUser } from '../controllers/userController'
+import { createStoreForUser, deleteUser, getMerchantProfile } from '../controllers/userController'
+import { authenticate } from '../middlewares/middleware'
 
 const router = Router()
 
-router.get('/', getAllUsers)
+router.get('/profile', authenticate, getMerchantProfile)
 router.post('/register', createStoreForUser)
 router.delete('/:id', deleteUser)
 
