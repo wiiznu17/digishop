@@ -3,13 +3,44 @@ import { User } from '@digishop/db/src/models/User'
 import { MerchantAddress } from '@digishop/db/src/models/StoreAddress'
 import { AddressType, StoreStatus, UserRole } from '@digishop/db/src/types/enum'
 import { Request, Response } from 'express'
+import { AuthenticatedRequest } from '../middlewares/middleware'
 
-export const getAllUsers = async (req: Request, res: Response) => {
-  console.log('hiiiiiiiiiiiiiiiiiiiiiiiiii')
-  const users = await User.findAll()
-  console.log('users: ', users)
-  res.json(users)
-}
+// get merchant detail
+export const getMerchantProfile = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user?.sub) {
+      return res.status(401).json({ error: "Unauthorized token" });
+    }
+
+    const merchantProfile = await User.findOne({
+      where: { id: req.user.sub },
+      attributes: ["id", "role"],
+      include: [
+        {
+          model: Store,
+          as: "store",
+          attributes: ["id", "storeName", "email", "phone", "businessType", "description", "logoUrl", "status"],
+          include: [
+            {
+              model: MerchantAddress,
+              as: "addresses",
+              attributes: ["id", "ownerName"]
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!merchantProfile) {
+      return res.status(404).json({ error: "Merchant not found" });
+    }
+    console.log("Merchant Profile:", merchantProfile);
+    return res.json({ user: merchantProfile });
+  } catch (error) {
+    console.error("Error fetching merchant profile:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export const createStoreForUser = async (req: Request, res: Response) => {
   const {
@@ -49,27 +80,6 @@ export const createStoreForUser = async (req: Request, res: Response) => {
       logoUrl: logoUrl || null,
       status: StoreStatus.PENDING
     })
-    console.log("create address")
-    // update role to merchant
-    // Admin should approve before changing role
-    console.log("store.userId:", store.userId);
-    console.log("addressType enum allowed:", Object.values(AddressType));
-    console.log("payload for MerchantAddress.create:", {
-      userId: store.userId,
-      ownerName,
-      phone,
-      number: addressNumber,
-      building: addressBuilding,
-      subStreet: addressSubStreet,
-      street: addressStreet,
-      subdistrict: addressSubdistrict,
-      district: addressDistrict,
-      province: addressProvince,
-      postalCode: addressZip,
-      addressType: addressType || 'HOME',
-      isDefault: true
-    });
-
     await MerchantAddress.create({
       userId: store.userId,
       ownerName,

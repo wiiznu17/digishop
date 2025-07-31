@@ -18,6 +18,7 @@ export default function MerchantLayout({
     console.log("User in MerchantLayout:", user)
     if (!isLoading) {
       if (!user) {
+        console.log("User not authenticated, redirecting to login")
         router.push("/login")
       } else if (user.role !== "MERCHANT") {
         router.replace("/register")
