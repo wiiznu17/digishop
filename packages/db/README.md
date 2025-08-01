@@ -20,3 +20,13 @@ npx sequelize-cli init --migrations-path src/migrations --seeders-path src/seede
 2. สร้าง migration, seeder, model ได้
 3. model/index.ts มีไว้ export model ให้ backend เอาไปใช้
 ```
+
+## env
+```sh
+NODE_ENV=development
+DB_USERNAME=root
+DB_PASSWORD=
+DB_NAME=digishop
+DB_HOST=127.0.0.1
+DB_DIALECT=mysql
+```

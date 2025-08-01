@@ -1,9 +1,13 @@
-Frontend ส่ง request มาที่ Gateway
+## env
 
-Gateway ตรวจ JWT ที่แนบใน Authorization: Bearer <token>
+```sh
+PORT=4000
 
-เช็คว่า role ตรงกับที่กำหนดไว้ไหม
+CORS_ORIGIN=http://localhost:3000,http://localhost:3001
 
-ถ้าตรง → ส่งต่อไปยัง backend service ที่กำหนด
+AUTH_SERVICE=http://localhost:4001
+CUSTOMER_SERVICE=http://localhost:4002
+MERCHANT_SERVICE=http://localhost:4003
+ADMIN_SERVICE=http://localhost:4004
 
-ถ้าไม่ตรง → ตอบ 403 Forbidden
+```
