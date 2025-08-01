@@ -92,6 +92,9 @@ export function initModels(sequelize: Sequelize) {
   Product.hasMany(ProductView, { foreignKey: 'product_id', as: 'views' });
   ProductView.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
+  Product.hasOne(Category, { foreignKey: 'id', as: 'categoryDetail' });
+  Category.belongsTo(Product, { foreignKey: 'id', as: 'productCategory' });
+
   // Order
   Order.hasMany(OrderItem, { foreignKey: 'order_id', as: 'items', onDelete: 'CASCADE' });
   OrderItem.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
