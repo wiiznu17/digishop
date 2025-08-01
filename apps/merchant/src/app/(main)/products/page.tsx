@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -39,92 +39,86 @@ import { MerchantHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Plus, Edit, Trash2, Package } from "lucide-react"
-
-interface Product {
-  id: string
-  name: string
-  category: string
-  price: number
-  stock: number
-  status: string
-  description: string
-}
-
-const initialProducts: Product[] = [
-  {
-    id: "1",
-    name: "Wireless Bluetooth Headphones",
-    category: "Electronics",
-    price: 79.99,
-    stock: 45,
-    status: "Active",
-    description: "High-quality wireless headphones with noise cancellation"
-  },
-  {
-    id: "2",
-    name: "Cotton T-Shirt",
-    category: "Fashion",
-    price: 24.99,
-    stock: 120,
-    status: "Active",
-    description: "Comfortable 100% cotton t-shirt available in multiple colors"
-  },
-  {
-    id: "3",
-    name: "Coffee Beans - Premium Blend",
-    category: "Food & Beverage",
-    price: 18.5,
-    stock: 0,
-    status: "Out of Stock",
-    description: "Premium arabica coffee beans, medium roast"
-  }
-]
+import {
+  createProductRequester,
+  deleteProductRequester,
+  fetchProductsRequester,
+  updateProductRequester
+} from "@/utils/requestUtils/requestProductUtils"
+import {
+  defaultProduct,
+  Product,
+  ProductStatus
+} from "@/types/props/productProp"
+import CATEGORYMASTER from "@/constants/master/categoryMaster.json"
+import PRODUCT_STATUS_MASTER from "@/constants/master/productStatusMaster.json"
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [products, setProducts] = useState<Product[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "",
-    price: "",
-    stock: "",
-    status: "Active",
-    description: ""
-  })
+  const [formData, setFormData] = useState<Product>(defaultProduct)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    handleFetchProducts()
+  }, [])
+
+  const handleFetchProducts = async () => {
+    try {
+      const response = await fetchProductsRequester()
+      if (response) {
+        setProducts(response)
+      } else {
+        console.error("Failed to fetch products")
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const productData = {
-      id: editingProduct?.id || Date.now().toString(),
+      // id: editingProduct?.id || undefined, // backend generate id ตอน create ก็ได้
       name: formData.name,
-      category: formData.category,
-      price: parseFloat(formData.price),
-      stock: parseInt(formData.stock),
+      categoryId: Number(formData.categoryId),
+      price: parseFloat(formData.price).toFixed(2),
+      stockQuantity: parseInt(formData.stockQuantity.toString(), 10),
       status: formData.status,
       description: formData.description
     }
 
-    if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === editingProduct.id ? productData : p))
-      )
-    } else {
-      setProducts((prev) => [...prev, productData])
-    }
+    try {
+      if (editingProduct && editingProduct.id) {
+        console.log("Updating product:", productData)
+        console.log("Editing product ID:", editingProduct.id)
+        // Update product
+        await updateProductRequester(editingProduct.id, productData)
+      } else {
+        console.log("Creating product:", productData)
+        // Create new product
+        await createProductRequester(productData)
+      }
 
-    resetForm()
-    setIsDialogOpen(false)
+      // Reload product list from backend
+      await handleFetchProducts()
+
+      resetForm()
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error saving product:", error)
+    }
   }
 
   const resetForm = () => {
     setFormData({
+      // id: "",
       name: "",
-      category: "",
-      price: "",
-      stock: "",
-      status: "Active",
+      categoryId: 1,
+      price: "0.00",
+      stockQuantity: 0,
+      status: ProductStatus.ACTIVE,
       description: ""
     })
     setEditingProduct(null)
@@ -132,10 +126,11 @@ export default function ProductsPage() {
 
   const handleEdit = (product: Product) => {
     setFormData({
+      id: product.id,
       name: product.name,
-      category: product.category,
-      price: product.price.toString(),
-      stock: product.stock.toString(),
+      categoryId: product.categoryId,
+      price: product.price,
+      stockQuantity: product.stockQuantity,
       status: product.status,
       description: product.description
     })
@@ -144,10 +139,14 @@ export default function ProductsPage() {
   }
 
   const handleDelete = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id))
+    // setProducts((prev) => prev.filter((p) => p.id !== id))
+    deleteProductRequester(id).then(() => {
+      console.log("Product deleted successfully")
+      handleFetchProducts()
+    })
   }
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -190,22 +189,25 @@ export default function ProductsPage() {
               <div className="space-y-2">
                 <Label htmlFor="category">Category *</Label>
                 <Select
-                  onValueChange={(value) => handleChange("category", value)}
-                  value={formData.category}
+                  onValueChange={(value) =>
+                    handleChange("categoryId", Number(value))
+                  }
+                  value={formData.categoryId.toString()}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Electronics">Electronics</SelectItem>
-                    <SelectItem value="Fashion">Fashion</SelectItem>
-                    <SelectItem value="Food & Beverage">
-                      Food & Beverage
-                    </SelectItem>
-                    <SelectItem value="Home & Garden">Home & Garden</SelectItem>
-                    <SelectItem value="Books">Books</SelectItem>
-                    <SelectItem value="Sports">Sports</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {(
+                      Object.values(CATEGORYMASTER) as {
+                        value: string
+                        label: string
+                      }[]
+                    ).map(({ value, label }) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -229,8 +231,10 @@ export default function ProductsPage() {
                   <Input
                     id="stock"
                     type="number"
-                    value={formData.stock}
-                    onChange={(e) => handleChange("stock", e.target.value)}
+                    value={formData.stockQuantity}
+                    onChange={(e) =>
+                      handleChange("stockQuantity", e.target.value)
+                    }
                     placeholder="0"
                     required
                   />
@@ -247,9 +251,16 @@ export default function ProductsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                    <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                    {(
+                      Object.entries(PRODUCT_STATUS_MASTER) as [
+                        string,
+                        { value: string; label: string }
+                      ][]
+                    ).map(([key, { value, label }]) => (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -316,23 +327,27 @@ export default function ProductsPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>
+                      {Object.values(CATEGORYMASTER).find(
+                        (cat) => cat.value === product.categoryId.toString()
+                      )?.label ?? "Unknown"}
+                    </TableCell>
+                    <TableCell>${product.price}</TableCell>
                     <TableCell>
                       <span
                         className={
-                          product.stock === 0 ? "text-destructive" : ""
+                          product.stockQuantity === 0 ? "text-destructive" : ""
                         }
                       >
-                        {product.stock}
+                        {product.stockQuantity}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
-                          product.status === "Active"
+                          product.status === "ACTIVE"
                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                            : product.status === "Out of Stock"
+                            : product.status === "OUT_OF_STOCK"
                               ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
                               : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
                         }`}
@@ -352,7 +367,11 @@ export default function ProductsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDelete(product.id)}
+                          onClick={() => {
+                            if (product.id) {
+                              handleDelete(product.id)
+                            }
+                          }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

@@ -1,6 +1,7 @@
 import { NextFunction, Response, Request, Router } from 'express'
 import sequelize from '@digishop/db'
 import userRouter from './routes/userRouter'
+import productRouter from './routes/productRouter'
 
 const router = Router()
 
@@ -15,6 +16,7 @@ router.get('/', async (req: Request, res: Response) => {
 })
 
 router.use('/merchant', userRouter)
+router.use('/merchant/products', productRouter)
 
 export default router
 

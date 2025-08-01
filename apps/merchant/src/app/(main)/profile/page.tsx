@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -48,14 +48,19 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
 
   const handleFecthMerchantProfile = async () => {
     try {
+      console.log("Fetching merchant profile...", defaultMerchant)
       const currentProfile = await fetchMerchantProfileRequester()
       console.log("Fetched merchant profile:", currentProfile)
-      if (currentProfile) {
+      if (!currentProfile?.store || !currentProfile?.store.addresses) {
+        console.warn("Invalid merchant profile, using default")
+        setProfileData(defaultMerchant)
+        return
+      } else {
         setProfileData(currentProfile)
       }
     } catch (error) {
-      // Handle error fetching profile
       console.error("Error fetching merchant profile:", error)
+      // setProfileData(defaultMerchant)
     }
   }
 

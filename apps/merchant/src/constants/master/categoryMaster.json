@@ -1,0 +1,26 @@
+{
+  "ELECTRONIC": {
+    "value": "1",
+    "label": "Electronics"
+  },
+  "FASHION": {
+    "value": "2",
+    "label": "Fashion"
+  },
+  "HOME_APPLIANCES": {
+    "value": "3",
+    "label": "Home Appliances"
+  },
+  "BOOKS": {
+    "value": "4",
+    "label": "Books"
+  },
+  "BEAUTY": {
+    "value": "5",
+    "label": "Beauty & Personal Care"
+  },
+  "SPORTS": {
+    "value": "6",
+    "label": "Sports & Outdoors"
+  }
+}
