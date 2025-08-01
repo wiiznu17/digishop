@@ -6,7 +6,7 @@ if (!JWT_SECRET) {
 }
 
 export const signToken = (payload: object): string => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "10M" })
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "10H" })
 }
 
 export const verifyToken = (token: string): JwtPayload | null => {
