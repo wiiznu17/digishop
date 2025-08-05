@@ -10,4 +10,10 @@ DB_DIALECT=mysql
 PORT=4003
 
 JWT_SECRET=supersecretkey
+
+
+AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=digishop;AccountKey=/7OKfeUDx/H1Et+4MH4IbTWZUcfdMcwPKFhHNw6MaS+q0MM1nEtyWPSMRsBk81X9sw+CkqAzVaK5+AStz18FYg==;EndpointSuffix=core.windows.net
+AZURE_STORAGE_CONTAINER_NAME=product
+AZURE_STORAGE_ACCOUNT_NAME=digishop
+AZURE_STORAGE_ACCOUNT_KEY=/7OKfeUDx/H1Et+4MH4IbTWZUcfdMcwPKFhHNw6MaS+q0MM1nEtyWPSMRsBk81X9sw+CkqAzVaK5+AStz18FYg==
 ```

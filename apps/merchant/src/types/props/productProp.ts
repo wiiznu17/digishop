@@ -3,7 +3,12 @@ export enum ProductStatus {
   INACTIVE = "INACTIVE",
   OUT_OF_STOCK = "OUT_OF_STOCK"
 }
-
+export interface ProductImage {
+  id?: string
+  url: string
+  fileName: string
+  isMain?: boolean // ระบุว่าเป็นรูปหลักหรือไม่
+}
 // product is array
 export interface Product {
   id?: string
@@ -11,11 +16,12 @@ export interface Product {
   description: string
   price: string
   cost?: number
-  categoryId: number
+  categoryId: string
   // sku: string
-  stockQuantity: number
+  stockQuantity: string
   // images: string[]
   status: ProductStatus
+  images?: ProductImage[]
   createdAt?: Date
   updatedAt?: Date
 }
@@ -26,9 +32,10 @@ export const defaultProduct: Product = {
   description: "",
   price: "",
   cost: 0,
-  categoryId: 0,
-  stockQuantity: 0,
+  categoryId: "",
+  stockQuantity: "",
   status: ProductStatus.ACTIVE,
+  images: [],
   createdAt: new Date(),
   updatedAt: new Date()
 }

@@ -3,18 +3,6 @@ export interface UserAuth {
   email: string
   role: string
 }
-// export interface User {
-//   id: string
-//   email: string
-//   storeName: string
-//   ownerName: string
-//   description?: string
-//   phone?: string
-//   businessAddress?: string
-//   businessLogo?: string
-//   businessType?: string
-//   createdAt: Date
-// }
 
 export interface AuthContextType {
   user: UserAuth | null

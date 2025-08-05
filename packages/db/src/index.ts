@@ -18,6 +18,7 @@ import { AdminUser } from '../src/models/portal/AdminUser';
 import { AdminSystemLog } from '../src/models/portal/AdminSystemLog';
 import { Dispute } from '../src/models/Dispute';
 import { MerchantAddress } from '../src/models/StoreAddress';
+import { ProductImage } from '../src/models/ProductImage'
 
 export function initModels(sequelize: Sequelize) {
   // init
@@ -94,6 +95,16 @@ export function initModels(sequelize: Sequelize) {
 
   Product.hasOne(Category, { foreignKey: 'id', as: 'categoryDetail' });
   Category.belongsTo(Product, { foreignKey: 'id', as: 'productCategory' });
+
+  Product.hasMany(ProductImage, {
+    foreignKey: 'productId',
+    as: 'images'
+  })
+
+  ProductImage.belongsTo(Product, {
+    foreignKey: 'productId',
+    as: 'product'
+  })
 
   // Order
   Order.hasMany(OrderItem, { foreignKey: 'order_id', as: 'items', onDelete: 'CASCADE' });

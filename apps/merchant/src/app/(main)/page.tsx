@@ -83,7 +83,10 @@ export default function Home() {
           <Card className="col-span-3">
             <CardHeader>
               <CardTitle>Recent Sales</CardTitle>
-              <CardDescription>You made 265 sales this month.</CardDescription>
+              <CardDescription>
+                You made <span className="text-green-500">265</span> sales this
+                month.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-8">

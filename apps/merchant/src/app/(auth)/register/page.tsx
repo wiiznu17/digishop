@@ -46,7 +46,7 @@ export default function RegisterPage() {
     addressZip: ""
   })
 
-  const { user, isLoading } = useAuth()
+  const { logout, user, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -225,6 +225,18 @@ export default function RegisterPage() {
                     />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="flex-1"
+                      disabled={isLoading}
+                      onClick={async () => {
+                        await logout()
+                        router.push("/login")
+                      }}
+                    >
+                      Logout
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"

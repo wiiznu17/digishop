@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize';
+import { Sequelize, Op } from 'sequelize';
 import { ConfigGroup } from './config/config';
 const configGroup = require('../src/config/config');
 
@@ -33,4 +33,5 @@ export async function checkDatabaseConnection(): Promise<void> {
   }
 }
 
+export { Op };
 
