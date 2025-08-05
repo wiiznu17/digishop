@@ -1,5 +1,6 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
 import { ProductStatus } from '../types/enum';
+import { ProductImage } from './ProductImage';
 
 export interface ProductAttributes {
   id: number;
@@ -26,6 +27,8 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
   public price!: string;
   public stockQuantity!: number;
   public status!: ProductStatus;
+  public images?: ProductImage[];
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 

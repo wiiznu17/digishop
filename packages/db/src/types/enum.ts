@@ -23,6 +23,7 @@ export enum ShippingType {
 export enum ProductStatus {
   ACTIVE = 'ACTIVE',
   SUSPENDED = 'SUSPENDED',
+  OUT_OF_STOCK = 'OUT_OF_STOCK'
 }
 
 export enum OrderStatus {

@@ -64,6 +64,30 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
     }
   }
 
+  const handleStoreChange = (field: string, value: string) => {
+    setProfileData((prev) => ({
+      ...prev,
+      store: {
+        ...prev.store,
+        [field]: value
+      }
+    }))
+  }
+
+  const handleAddressChange = (index: number, field: string, value: string) => {
+    const updatedAddresses = [...profileData.store.addresses]
+    updatedAddresses[index] = {
+      ...updatedAddresses[index],
+      [field]: value
+    }
+    setProfileData((prev) => ({
+      ...prev,
+      store: {
+        ...prev.store,
+        addresses: updatedAddresses
+      }
+    }))
+  }
   const handleChange = (field: string, value: string | boolean) => {
     setProfileData((prev) => ({ ...prev, [field]: value }))
   }
@@ -107,7 +131,7 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                     id="businessName"
                     value={profileData.store.storeName}
                     onChange={(e) =>
-                      handleChange("businessName", e.target.value)
+                      handleStoreChange("businessName", e.target.value)
                     }
                   />
                 </div>
@@ -148,7 +172,9 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                 <Textarea
                   id="address"
                   value={profileData.store.addresses[0].ownerName}
-                  onChange={(e) => handleChange("address", e.target.value)}
+                  onChange={(e) =>
+                    handleAddressChange(0, "address", e.target.value)
+                  }
                   rows={2}
                 />
               </div>
