@@ -13,6 +13,13 @@ export default {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
+      bank_account_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: true,
+        references: { model: 'BANK_ACCOUNTS', key: 'id' },
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE',
+      },
       store_name: {
         type: DataTypes.STRING(191),
         allowNull: false
@@ -28,6 +35,10 @@ export default {
       business_type: {
         type: DataTypes.STRING(191),
         allowNull: false
+      },
+      website: {
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       logo_url: {
         type: DataTypes.STRING(255),
@@ -59,7 +70,9 @@ export default {
     }, {
       engine: 'InnoDB', charset: 'utf8mb4', collate: 'utf8mb4_unicode_ci',
     });
+
     await queryInterface.addIndex('STORES', ['user_id']);
+    await queryInterface.addIndex('STORES', ['bank_account_id']);
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {

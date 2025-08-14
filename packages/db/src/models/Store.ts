@@ -8,6 +8,8 @@ export interface StoreAttributes {
   email: string;
   phone: string;
   businessType: string;
+  website?: string;
+  bankAccountId?: string;
   logoUrl?: string | null;
   description?: string | null;
   status: StoreStatus;
@@ -25,6 +27,8 @@ export class Store extends Model<StoreAttributes, StoreCreationAttributes> imple
   public email!: string;
   public phone!: string;
   public businessType!: string;
+  public website!: string;
+  public bankAccountId!: string;
   public logoUrl!: string | null;
   public description!: string | null;
   public status!: StoreStatus;
@@ -64,6 +68,20 @@ export class Store extends Model<StoreAttributes, StoreCreationAttributes> imple
           type: DataTypes.STRING(191),
           allowNull: false,
           field: 'business_type',
+        },
+          website: {
+          type: DataTypes.STRING(191),
+          allowNull: false,
+          field: 'website',
+        },
+        bankAccountId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: true,
+          field: 'bank_account_id',
+          references: {
+            model: 'BANK_ACCOUNTS',
+            key: 'id',
+          },
         },
         logoUrl: {
           type: DataTypes.STRING(255),
