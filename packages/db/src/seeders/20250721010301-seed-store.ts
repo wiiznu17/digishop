@@ -1,24 +1,43 @@
 import { QueryInterface } from 'sequelize';
+import { StoreStatus } from '../types/enum';
 
 export default {
-  up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Stores', [
+  async up(queryInterface: QueryInterface): Promise<void> {
+    await queryInterface.bulkInsert('STORES', [
       {
         user_id: 2,
-        store_name: 'Jane Shop',
-        email: 'example@gmail.com',
-        phone: '1234567890',
+        bank_account_id: 1, // เชื่อมกับ BANK_ACCOUNTS id=1
+        store_name: 'Test Store 1',
+        email: 'store1@example.com',
+        phone: '0812345678',
         business_type: 'Retail',
-        logo_url: 'https://example.com/logo.png',
-        description: 'Best shop in town',
-        status: 'approved',
+        website: 'https://store1.example.com',
+        logo_url: null,
+        description: 'This is the first test store',
+        status: StoreStatus.APPROVED,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        user_id: 3,
+        bank_account_id: 1, // ร้านนี้ใช้บัญชีเดียวกับร้านแรก
+        store_name: 'Test Store 2',
+        email: 'store2@example.com',
+        phone: '0898765432',
+        business_type: 'Wholesale',
+        website: null,
+        logo_url: null,
+        description: 'Second store linked to same bank account',
+        status: StoreStatus.PENDING,
         created_at: new Date(),
         updated_at: new Date(),
         deleted_at: null,
       },
     ]);
   },
-  down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete('Stores', {}, {});
+
+  async down(queryInterface: QueryInterface): Promise<void> {
+    await queryInterface.bulkDelete('STORES', {}, {});
   },
 };
