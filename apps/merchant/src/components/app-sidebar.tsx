@@ -64,6 +64,11 @@ const items = [
     icon: BarChart3
   },
   {
+    title: "Balance",
+    url: "/balance",
+    icon: Inbox
+  },
+  {
     title: "Profile",
     url: "/profile",
     icon: User
