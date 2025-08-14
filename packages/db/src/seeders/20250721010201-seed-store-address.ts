@@ -51,7 +51,7 @@ export default {
         district: 'คลองเตย',
         province: 'กรุงเทพมหานคร',
         postal_code: '10345',
-        is_default: false,
+        is_default: true,
         address_type: 'HOME',
         created_at: new Date(),
         updated_at: new Date(),

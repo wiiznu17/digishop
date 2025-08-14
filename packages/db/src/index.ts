@@ -19,9 +19,9 @@ import { AdminSystemLog } from '../src/models/portal/AdminSystemLog';
 import { Dispute } from '../src/models/Dispute';
 import { MerchantAddress } from '../src/models/StoreAddress';
 import { ProductImage } from '../src/models/ProductImage'
-
+import { BankAccount } from '../src/models/bank/BankAccount';
 export function initModels(sequelize: Sequelize) {
-  // init
+  // init main
   User.initModel(sequelize);
   Address.initModel(sequelize);
   Store.initModel(sequelize);
@@ -39,6 +39,8 @@ export function initModels(sequelize: Sequelize) {
   AdminUser.initModel(sequelize);
   AdminSystemLog.initModel(sequelize);
   Dispute.initModel(sequelize);
+  // Init bank
+  BankAccount.initModel(sequelize);
 
   // --- Associations ---
   // User
@@ -119,6 +121,16 @@ export function initModels(sequelize: Sequelize) {
   Order.hasMany(Dispute, { foreignKey: 'order_id', as: 'disputes', onDelete: 'CASCADE' });
   Dispute.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
+  // Bank account
+  BankAccount.hasMany(Store, {
+    foreignKey: 'bank_account_id',
+    as: 'stores',
+  });
+
+  Store.belongsTo(BankAccount, {
+    foreignKey: 'bank_account_id',
+    as: 'bankAccount',
+  });
   // Admin
   AdminUser.hasMany(AdminSystemLog, { foreignKey: 'admin_id', as: 'logs' });
   AdminSystemLog.belongsTo(AdminUser, { foreignKey: 'admin_id', as: 'admin' });
@@ -141,24 +153,9 @@ export function initModels(sequelize: Sequelize) {
     AdminUser,
     AdminSystemLog,
     Dispute,
+    BankAccount
   };
 }
 
 export { checkDatabaseConnection };
 export default sequelize;
-// export * from '../src/models/User';
-// export * from '../src/models/Address';
-// export * from '../src/models/Store';
-// export * from '../src/models/ShippingConfig';
-// export * from '../src/models/Category';
-// export * from '../src/models/Product';
-// export * from '../src/models/Order';
-// export * from '../src/models/OrderItem';
-// export * from '../src/models/Payment';
-// export * from '../src/models/ShippingInfo';
-// export * from '../src/models/Review';
-// export * from '../src/models/ProductView';
-// export * from '../src/models/StoreView';
-// export * from '../src/models/portal/AdminUser';
-// export * from '../src/models/portal/AdminSystemLog';
-// export * from '../src/models/Dispute';
