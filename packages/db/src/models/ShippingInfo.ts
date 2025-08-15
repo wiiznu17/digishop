@@ -69,7 +69,7 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
         shippingStatus: {
           type: DataTypes.ENUM(...Object.values(ShippingStatus)),
           allowNull: false,
-          defaultValue: ShippingStatus.PROCESSING,
+          defaultValue: ShippingStatus.IN_TRANSIT,
           field: 'shipping_status',
         },
         shippedAt: {
