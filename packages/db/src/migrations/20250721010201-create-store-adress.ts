@@ -56,6 +56,11 @@ export default {
         type: DataTypes.STRING(10),
         allowNull: false,
       },
+      country: {
+        type: DataTypes.STRING(40),
+        allowNull: false,
+        defaultValue: 'Thailand'
+      },
       is_default: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

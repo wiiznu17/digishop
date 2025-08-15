@@ -24,8 +24,28 @@ export default {
         type: DataTypes.STRING(20),
         allowNull: false,
       },
-      address_line: {
+      address_number: {
         type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      building: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      sub_street: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      street: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      sub_district: {
+        type: DataTypes.STRING(191),
+        allowNull: false,
+      },
+      district: {
+        type: DataTypes.STRING(191),
         allowNull: false,
       },
       province: {
@@ -35,6 +55,11 @@ export default {
       postal_code: {
         type: DataTypes.STRING(10),
         allowNull: false,
+      },
+      country: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+        defaultValue: 'Thailand'
       },
       is_default: {
         type: DataTypes.BOOLEAN,
