@@ -14,6 +14,7 @@ export interface MerchantAddressAttributes {
   district: string;
   province: string;
   postalCode: string;
+  country: string;
   isDefault: boolean;
   addressType: AddressType; // home, office
   createdAt?: Date;
@@ -36,6 +37,7 @@ export class MerchantAddress extends Model<MerchantAddressAttributes, AddressCre
   public district!: string;
   public province!: string;
   public postalCode!: string;
+  public country!: string;
   public isDefault!: boolean;
   public addressType!: AddressType;
   public readonly createdAt!: Date;
@@ -101,6 +103,11 @@ export class MerchantAddress extends Model<MerchantAddressAttributes, AddressCre
           type: DataTypes.STRING(10),
           allowNull: false,
           field: 'postal_code',
+        },
+        country: {
+          type: DataTypes.STRING(40),
+          allowNull: false,
+          defaultValue: 'Thailand',
         },
         isDefault: {
           type: DataTypes.BOOLEAN,

@@ -6,9 +6,15 @@ export interface AddressAttributes {
   userId: number;
   recipientName: string;
   phone: string;
-  addressLine: string;
+  address_number: string;
+  building: string;
+  subStreet: string;
+  street: string;
+  subdistrict: string;
+  district: string;
   province: string;
   postalCode: string;
+  country: string;
   isDefault: boolean;
   addressType: AddressType; // home, office
   createdAt?: Date;
@@ -23,9 +29,15 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
   public userId!: number;
   public recipientName!: string;
   public phone!: string;
-  public addressLine!: string;
+  public address_number!: string;
+  public building!: string;
+  public subStreet!: string;
+  public street!: string;
+  public subdistrict!: string;
+  public district!: string;
   public province!: string;
   public postalCode!: string;
+  public country!: string;
   public isDefault!: boolean;
   public addressType!: AddressType;
   public readonly createdAt!: Date;
@@ -53,10 +65,35 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
           type: DataTypes.STRING(20),
           allowNull: false,
         },
-        addressLine: {
+        address_number: {
           type: DataTypes.STRING(255),
           allowNull: false,
-          field: 'address_line',
+          field: 'address_number',
+        },
+        building: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+          field: 'building',
+        },
+        subStreet: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+          field: 'sub_street',
+        },
+        street: {
+          type: DataTypes.STRING(255),
+          allowNull: false,
+          field: 'street',
+        },
+        subdistrict: {
+          type: DataTypes.STRING(191),
+          allowNull: false,
+          field: 'sub_district',
+        },
+        district: {
+          type: DataTypes.STRING(191),
+          allowNull: false,
+          field: 'district',
         },
         province: {
           type: DataTypes.STRING(191),
@@ -66,6 +103,11 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
           type: DataTypes.STRING(10),
           allowNull: false,
           field: 'postal_code',
+        },
+        country: {
+          type: DataTypes.STRING(191),
+          allowNull: false,
+          defaultValue: 'Thailand',
         },
         isDefault: {
           type: DataTypes.BOOLEAN,
