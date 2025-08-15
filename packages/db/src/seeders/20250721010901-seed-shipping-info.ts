@@ -9,6 +9,7 @@ export default {
         carrier: 'DHL',
         shipping_type_id: 1,
         shipping_status: 'processing',
+        shipping_address: 1,
         shipped_at: new Date(),
         created_at: new Date(),
         updated_at: new Date(),

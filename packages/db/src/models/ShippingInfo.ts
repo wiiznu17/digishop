@@ -7,6 +7,7 @@ export interface ShippingInfoAttributes {
   trackingNumber?: string | null;
   carrier?: string | null;
   shippingTypeId: number;
+  shippingAddress: number;
   shippingStatus: ShippingStatus;
   shippedAt?: Date | null;
   createdAt?: Date;
@@ -23,6 +24,7 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
   public trackingNumber!: string | null;
   public carrier!: string | null;
   public shippingTypeId!: number;
+  public shippingAddress!: number;
   public shippingStatus!: ShippingStatus;
   public shippedAt!: Date | null;
   public readonly createdAt!: Date;
@@ -58,6 +60,11 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
             model: 'SHIPPING_TYPE',
             key: 'id',
           },
+        },
+        shippingAddress: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          field: 'shipping_address'
         },
         shippingStatus: {
           type: DataTypes.ENUM(...Object.values(ShippingStatus)),

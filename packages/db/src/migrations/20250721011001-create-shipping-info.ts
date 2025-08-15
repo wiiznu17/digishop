@@ -18,6 +18,13 @@ export default {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false 
       },
+      shipping_address: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
+        references: { model: 'ADDRESSES', key: 'id' },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      },
       shipping_status: { type: DataTypes.ENUM(...Object.values(ShippingStatus)), allowNull: false, defaultValue: ShippingStatus.PROCESSING },
       shipped_at: { type: DataTypes.DATE, allowNull: true },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
