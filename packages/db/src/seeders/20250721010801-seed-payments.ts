@@ -5,7 +5,7 @@ export default {
     await queryInterface.bulkInsert('Payments', [
       {
         order_id: 1,
-        payment_method: 'credit_card',
+        payment_method: 'CREDIT_CARD',
         status: 'success',
         paid_at: new Date(),
         created_at: new Date(),

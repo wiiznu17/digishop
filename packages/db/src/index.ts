@@ -113,7 +113,7 @@ export function initModels(sequelize: Sequelize) {
   Order.hasMany(OrderItem, { foreignKey: 'order_id', as: 'items', onDelete: 'CASCADE' });
   OrderItem.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
-  Order.hasMany(Payment, { foreignKey: 'order_id', as: 'payments', onDelete: 'CASCADE' });
+  Order.hasOne(Payment, { foreignKey: 'order_id', as: 'payments', onDelete: 'CASCADE' });
   Payment.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
   Order.hasOne(ShippingInfo, { foreignKey: 'order_id', as: 'shippingInfo', onDelete: 'CASCADE' });
@@ -125,6 +125,9 @@ export function initModels(sequelize: Sequelize) {
   // Shipping info
   ShippingInfo.belongsTo(ShippingType, { foreignKey: 'shippingTypeId', as: 'shippingType' });
   ShippingType.hasMany(ShippingInfo, { foreignKey: 'shippingTypeId', as: 'shippingInfos' });
+
+  Address.hasMany(ShippingInfo, { foreignKey: 'shipping_address', as: 'shippingAddressinfos' });
+  Address.belongsTo(ShippingInfo, { foreignKey: 'shipping_address', as: 'shippingAddress' });  
 
   // Bank account
   BankAccount.hasMany(Store, {

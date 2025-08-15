@@ -6,9 +6,7 @@ export interface OrderAttributes {
   customerId: number;
   storeId: number;
   totalPrice: string; // DECIMAL
-  shippingAddress: number
   status: OrderStatus;
-  paymentMethod: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -21,9 +19,7 @@ export class Order extends Model<OrderAttributes, OrderCreationAttributes> imple
   public customerId!: number;
   public storeId!: number;
   public totalPrice!: string;
-  public shippingAddress!: number;
   public status!: OrderStatus;
-  public paymentMethod!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -50,19 +46,10 @@ export class Order extends Model<OrderAttributes, OrderCreationAttributes> imple
           allowNull: false,
           field: 'total_price',
         },
-        shippingAddress: {
-          type: DataTypes.INTEGER.UNSIGNED,
-          allowNull: false,
-        },
         status: {
           type: DataTypes.ENUM(...Object.values(OrderStatus)),
           allowNull: false,
           defaultValue: OrderStatus.PENDING,
-        },
-        paymentMethod: {
-          type: DataTypes.STRING(191),
-          autoIncrement: true,
-          primaryKey: true,
         },
         createdAt: {
           type: DataTypes.DATE,
