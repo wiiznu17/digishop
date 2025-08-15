@@ -20,6 +20,7 @@ import { Dispute } from '../src/models/Dispute';
 import { MerchantAddress } from '../src/models/StoreAddress';
 import { ProductImage } from '../src/models/ProductImage'
 import { BankAccount } from '../src/models/bank/BankAccount';
+import { ShippingType } from '@models/ShippingType';
 export function initModels(sequelize: Sequelize) {
   // init main
   User.initModel(sequelize);
@@ -120,6 +121,10 @@ export function initModels(sequelize: Sequelize) {
 
   Order.hasMany(Dispute, { foreignKey: 'order_id', as: 'disputes', onDelete: 'CASCADE' });
   Dispute.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+
+  // Shipping info
+  ShippingInfo.belongsTo(ShippingType, { foreignKey: 'shippingTypeId', as: 'shippingType' });
+  ShippingType.hasMany(ShippingInfo, { foreignKey: 'shippingTypeId', as: 'shippingInfos' });
 
   // Bank account
   BankAccount.hasMany(Store, {

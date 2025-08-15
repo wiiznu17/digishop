@@ -14,6 +14,10 @@ export default {
       },
       tracking_number: { type: DataTypes.STRING(100), allowNull: true },
       carrier: { type: DataTypes.STRING(100), allowNull: true },
+      shipping_type_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false 
+      },
       shipping_status: { type: DataTypes.ENUM(...Object.values(ShippingStatus)), allowNull: false, defaultValue: ShippingStatus.PROCESSING },
       shipped_at: { type: DataTypes.DATE, allowNull: true },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
