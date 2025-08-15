@@ -73,7 +73,7 @@ export default function ProductsPage() {
       }
     } catch (error) {
       console.error("Error saving product:", error)
-      alert("เกิดข้อผิดพลาดในการบันทึกสินค้า")
+      alert("Error to save product")
     }
   }
 
