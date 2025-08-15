@@ -1,6 +1,7 @@
 import { Customer } from "./customerProp"
 import { Product } from "./productProp"
 
+export type shippingType = "STANDARD" | "EXPRESS"
 export type OrderStatus =
   | "PENDING"
   | "CUSTOMER_CANCELED"
@@ -51,6 +52,7 @@ export interface Order {
   tax: number
   status: OrderStatus
   paymentMethod: string
+  shippingType?: shippingType
   trackingNumber?: string
   orderitems: OrderItem[]
   notes?: string
