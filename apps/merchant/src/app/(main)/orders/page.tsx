@@ -19,6 +19,7 @@ export default function OrdersPage() {
   const {
     getStatusIcon,
     getStatusColor,
+    getStatusBadgeColor,
     getStatusText,
     getMerchantEditableStatuses
   } = useOrderStatus()
@@ -90,7 +91,7 @@ export default function OrdersPage() {
           onStatusFilterChange={handleStatusFilterChange}
           onViewDetails={viewOrderDetails}
           getStatusIcon={getStatusIcon}
-          getStatusColor={getStatusColor}
+          getStatusBadgeColor={getStatusBadgeColor}
           getStatusText={getStatusText}
         />
       </div>
@@ -103,7 +104,7 @@ export default function OrdersPage() {
         onStatusChange={handleStatusChange}
         onTrackingNumberUpdate={handleTrackingNumberUpdate}
         getStatusIcon={getStatusIcon}
-        getStatusColor={getStatusColor}
+        getStatusBadgeColor={getStatusBadgeColor}
         getStatusText={getStatusText}
         getMerchantEditableStatuses={getMerchantEditableStatuses}
       />

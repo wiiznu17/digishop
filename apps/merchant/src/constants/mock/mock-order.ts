@@ -245,6 +245,30 @@ export const initialOrders: Order[] = [
     ]
   },
   {
+    id: "ORD-2024-0017",
+    customerName: "Olivia Lee",
+    customerEmail: "olivia@example.com",
+    customerPhone: "086-555-7777",
+    shippingAddress: {
+      recipientName: "Olivia Lee",
+      phone: "0865557777",
+      street: "777 ถนนพระราม 9",
+      district: "ห้วยขวาง",
+      province: "กรุงเทพมหานคร",
+      postalCode: "10310",
+      country: "Thailand"
+    },
+    createdAt: "2024-01-09T17:00:00Z",
+    totalPrice: 1290,
+    shippingCost: 40,
+    tax: 90,
+    status: "RE_TRANSIT",
+    paymentMethod: "Bank Transfer",
+    orderitems: [
+      { id: "9", name: "สายชาร์จเร็ว", sku: "CB-009", quantity: 3, price: 430 }
+    ]
+  },
+  {
     id: "ORD-2024-010",
     customerName: "Liam Brown",
     customerEmail: "liam@example.com",

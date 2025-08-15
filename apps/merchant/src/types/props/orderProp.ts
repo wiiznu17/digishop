@@ -11,6 +11,7 @@ export type OrderStatus =
   | "DELIVERED"
   | "REFUND_REQUEST"
   | "TRANSIT_LACK"
+  | "RE_TRANSIT"
   | "AWAITING_RETURN"
   | "RETURN_FAIL"
   | "RETURN_VERIFIED"
