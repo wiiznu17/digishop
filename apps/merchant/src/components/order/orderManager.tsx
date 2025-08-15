@@ -99,9 +99,7 @@ export function OrderStatusManager({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">จัดการสถานะคำสั่งซื้อ</CardTitle>
-        <CardDescription>
-          ติดตามและอัพเดตสถานะตามขั้นตอนการจัดส่ง
-        </CardDescription>
+        <CardDescription>ติดตามและอัพเดตสถานะสินค้า</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Progress Timeline */}
