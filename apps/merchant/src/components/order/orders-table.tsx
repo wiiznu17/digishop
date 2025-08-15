@@ -36,7 +36,7 @@ interface OrdersTableProps {
   onStatusFilterChange: (value: string) => void
   onViewDetails: (order: Order) => void
   getStatusIcon: (status: OrderStatus) => React.ReactNode
-  getStatusColor: (status: OrderStatus) => string
+  getStatusBadgeColor: (status: OrderStatus) => string
   getStatusText: (status: OrderStatus) => string
 }
 
@@ -48,7 +48,7 @@ export function OrdersTable({
   onStatusFilterChange,
   onViewDetails,
   getStatusIcon,
-  getStatusColor,
+  getStatusBadgeColor,
   getStatusText
 }: OrdersTableProps) {
   const filteredOrders = orders.filter((order) => {
@@ -71,6 +71,7 @@ export function OrdersTable({
     { value: "PROCESSING", label: "กำลังเตรียมสินค้า" },
     { value: "READY_TO_SHIP", label: "พร้อมจัดส่ง" },
     { value: "SHIPPED", label: "จัดส่งแล้ว" },
+    { value: "RE_TRANSIT", label: "จัดส่งใหม่อีกครั้ง" },
     { value: "DELIVERED", label: "จัดส่งสำเร็จ" },
     { value: "REFUND_REQUEST", label: "ขอคืนเงิน" },
     { value: "COMPLETE", label: "เสร็จสิ้น" }
@@ -187,7 +188,7 @@ export function OrdersTable({
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={getStatusColor(order.status)}
+                        className={getStatusBadgeColor(order.status)}
                         variant="outline"
                       >
                         {getStatusIcon(order.status)}

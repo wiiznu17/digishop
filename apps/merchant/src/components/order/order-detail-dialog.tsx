@@ -36,7 +36,7 @@ interface OrderDetailDialogProps {
   onStatusChange: (orderId: string, newStatus: OrderStatus) => void
   onTrackingNumberUpdate: (orderId: string, trackingNumber: string) => void
   getStatusIcon: (status: OrderStatus) => React.ReactNode
-  getStatusColor: (status: OrderStatus) => string
+  getStatusBadgeColor: (status: OrderStatus) => string
   getStatusText: (status: OrderStatus) => string
   getMerchantEditableStatuses: (currentStatus: OrderStatus) => OrderStatus[]
 }
@@ -48,7 +48,7 @@ export function OrderDetailDialog({
   onStatusChange,
   onTrackingNumberUpdate,
   getStatusIcon,
-  getStatusColor,
+  getStatusBadgeColor,
   getStatusText,
   getMerchantEditableStatuses
 }: OrderDetailDialogProps) {
@@ -71,10 +71,14 @@ export function OrderDetailDialog({
           {/* สถานะและการชำระเงิน */}
           <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
             <div className="flex items-center gap-4">
-              <Badge className={getStatusColor(order.status)} variant="outline">
+              <Badge
+                className={`${getStatusBadgeColor(order.status)} px-5 py-4 text-base`}
+                variant="outline"
+              >
                 {getStatusIcon(order.status)}
                 <span className="ml-1">{getStatusText(order.status)}</span>
               </Badge>
+
               {order.refundReason && (
                 <div className="text-sm">
                   <span className="font-medium">เหตุผลขอคืน: </span>
@@ -241,7 +245,7 @@ export function OrderDetailDialog({
           </Card>
 
           {/* การจัดการสถานะ */}
-          {getMerchantEditableStatuses(order.status).length > 0 && (
+          {getMerchantEditableStatuses(order.status).length >= 0 && (
             <OrderStatusManager
               currentStatus={order.status}
               orderId={order.id}
