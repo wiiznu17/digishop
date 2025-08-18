@@ -25,7 +25,7 @@ export default {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
-      shipping_status: { type: DataTypes.ENUM(...Object.values(ShippingStatus)), allowNull: false, defaultValue: ShippingStatus.PROCESSING },
+      shipping_status: { type: DataTypes.ENUM(...Object.values(ShippingStatus)), allowNull: false, defaultValue: ShippingStatus.IN_TRANSIT },
       shipped_at: { type: DataTypes.DATE, allowNull: true },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
