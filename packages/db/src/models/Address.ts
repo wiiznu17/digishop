@@ -1,5 +1,6 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
 import { AddressType } from '../types/enum';
+import { User } from './User';
 
 export interface AddressAttributes {
   id: number;
@@ -120,6 +121,18 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
           allowNull: true,
           field: 'address_type',
         },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'created_at',
+          defaultValue: DataTypes.NOW,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'updated_at',
+          defaultValue: DataTypes.NOW,
+          },
       },
       {
         sequelize,
@@ -131,4 +144,5 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
     );
     return Address;
   }
+
 }
