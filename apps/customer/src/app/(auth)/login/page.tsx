@@ -1,40 +1,28 @@
 // pages/login.tsx or app/login/page.tsx
 'use client'
 import React, { useState } from 'react';
-import Button from '../../../components/button';
-import InputField from '../../../components/inputField';
-import { LogIn, ShoppingBag, ArrowRight } from 'lucide-react';
-
-interface LoginFormData {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-}
+import Button from '@/components/button';
+import InputField from '@/components/inputField';
+import { LogIn, ShoppingBag } from 'lucide-react';
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 const LoginPage: React.FC = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
+  const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    rememberMe: false
+    password: ''
   });
-
-  const [isLoading, setIsLoading] = useState(false);
+  const {login, isLoading, user} = useAuth()
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-
+  console.log(login)
+  console.log(isLoading)
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value} = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
     
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
   const validateForm = (): boolean => {
@@ -50,29 +38,27 @@ const LoginPage: React.FC = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  const router = useRouter()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
-    setIsLoading(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Login submitted:', formData);
-      // Add actual login logic here
-      
+      const success = await login(formData.email, formData.password)
+      if(success){
+        console.log('user in login page',user)
+        router.replace("/digishop")
+      }
     } catch (error) {
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
+      
+      // if (success) {
+    //   } else {
+    // }
+      console.log('error',error)
     }
   };
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br bg-[#add8e6] to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">

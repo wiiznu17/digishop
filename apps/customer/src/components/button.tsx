@@ -23,7 +23,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   className = '',
   type = 'button',
-  color = 'white',
+  color,
   colorHover = 'gray-400',
   colorHoverBorder = 'gray-500',
   text = 'black',
@@ -40,7 +40,7 @@ const Button: React.FC<ButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`font-medium rounded-xl ${sizeClasses[size]} text-${text} border-2 border-gray-300 bg-${color} hover:bg-${colorHover}  hover:border-${colorHoverBorder} focus:ring-gray-300 ${className}`}
+      className={`font-medium rounded-xl ${sizeClasses[size]} text-${text} border-2 border-gray-300 bg-${color} hover:bg-${colorHover}  hover:border-${colorHoverBorder} hover:cursor-pointer focus:ring-gray-300 ${className}`}
     >
       {children}
     </button>

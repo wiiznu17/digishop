@@ -4,7 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 interface InputFieldProps {
   label: string;
-  type?: 'text' | 'email' | 'password' | 'tel';
+  type?: 'text' | 'email' | 'password' | 'num';
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -18,12 +18,12 @@ interface InputFieldProps {
 
 const InputField: React.FC<InputFieldProps> = ({
   label,
-  type = 'text',
+  type,
   name,
   value,
   onChange,
   placeholder,
-  required = false,
+  required = true,
   className = '',
   maxLength,
   minLength,
@@ -67,8 +67,8 @@ const InputField: React.FC<InputFieldProps> = ({
           </button>
         )}
         {error && <p className="text-sm text-red-600 px-2">{error}</p>}
-        {!whiteListRegexText.test(value) && type === 'text' && value.length > 0 && <p className="text-sm text-red-600 px-2">* ข้อความต้องเป็นภาษาไทย อังกฤษเท่านั้น</p>}
-        {!whiteListRegexTel.test(value) && type === 'tel' && value != null && value.length > 0 && <p className="text-sm text-red-600 px-2">* ข้อความต้องเลข เท่านั้น</p>}
+        {!whiteListRegexText.test(value) && type === 'text' && value.length > 0 && <p className="text-sm text-red-600 px-2">* accept only ก-ฮ, a-z, A-Z</p>}
+        {!whiteListRegexTel.test(value) && type === 'num' && value != null && value.length > 0 && <p className="text-sm text-red-600 px-2">* accept only number</p>}
       </div>
       
     </div>

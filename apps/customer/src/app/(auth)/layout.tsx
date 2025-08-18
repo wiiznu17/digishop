@@ -1,3 +1,5 @@
+import { AuthProvider } from "@/contexts/auth-context";
+
 export const metadata = {
     title: "Next.js",
 };
@@ -7,16 +9,5 @@ export default function SettingLayout({
 }: {
     children: React.ReactNode
 }) {
-    return (
-        <>
-            <header style={{
-                    backgroundColor: "lightblue",
-                    padding: "1rem"
-                }}
-            >
-                <p>Authorize</p>    
-            </header>
-            {children}
-        </>
-    )
+    return <AuthProvider>{children}</AuthProvider>
 }
