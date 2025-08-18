@@ -2,13 +2,6 @@ import { Request, Response } from "express"
 import { User } from "../../../../packages/db/src/models/User"
 import { signToken, verifyToken } from "../utils/jwt"
 
-// export const getAllUsers = async (req: Request, res: Response) => {
-//   console.log('hiiiiiiiiiiiiiiiiiiiiiiiiii')
-//   const users = await User.findAll()
-//   console.log('users: ', users)
-//   res.json(users)
-// }
-
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body
 

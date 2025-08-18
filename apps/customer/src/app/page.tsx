@@ -1,10 +1,11 @@
 'use client'
 // pages/auth.tsx or app/auth/page.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Button from '../components/button';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-
+import { FormRegister } from '@/types/props/userProp';
+ 
 const AuthPage: React.FC = () => {
   const handleLogin = () => {
     console.log('Login clicked');
@@ -15,9 +16,10 @@ const AuthPage: React.FC = () => {
     console.log('Register clicked');
     // Add register logic here
   };
+ 
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-amber-200">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[url('./bg.png')]">
       <div className="w-full max-w-md">
         {/* Main Card */}
         <div className="bg-white rounded-2xl border p-6">

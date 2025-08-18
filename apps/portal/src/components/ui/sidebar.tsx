@@ -207,7 +207,7 @@ const Sidebar = React.forwardRef<
             className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
             style={
               {
-                "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+                "--sidebar-width": SIDEBAR_WIDTH_MOBILE
               } as React.CSSProperties
             }
             side={side}
