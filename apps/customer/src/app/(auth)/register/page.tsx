@@ -4,56 +4,53 @@ import React, { useState } from 'react';
 import Button from '../../../components/button';
 import InputField from '../../../components/inputField';
 import { UserPlus, Home, Building } from 'lucide-react';
-import Link from 'next/link';
-
-interface FormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  homeAddress: {
-    recipientName: string;
-    phone: string;
-    addressLine: string;
-    province: string;
-    postalCode: string;
-  };
-  officeAddress: {
-    recipientName: string;
-    phone: string;
-    addressLine: string;
-    province: string;
-    postalCode: string;
-  };
-  sameAsHome: boolean;
-}
+import { createUser } from '@/utils/requestUtils/requestAuthUtils';
+import { FormRegister } from '@/types/props/userProp';
+import { useRouter} from 'next/navigation';
 
 const RegisterPage: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<FormRegister>({
     firstName: '',
+    middleName: '',
     lastName: '',
     email: '',
     password: '',
-    homeAddress: {
-      recipientName: '',
-      phone: '',
-      addressLine: '',
-      province: '',
-      postalCode: ''
-    },
-    officeAddress: {
-      recipientName: '',
-      phone: '',
-      addressLine: '',
-      province: '',
-      postalCode: ''
-    },
-    sameAsHome: true
+    recipientName: '',
+    phone: '',
+    addressLine: '',
+    province: '',
+    postalCode: '',
+    isDefault: false,
+    addressType: ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const handleSubmit = async(e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    setIsLoading(true);
+    try {
+      const res = await createUser(formData)
+      if(res.data){
+        router.push('/login')
+      }
+      // if(res.error){
+      //   alert('email is already use')
+      // }
+      // console.log('data',res.data)
+      // console.log('error',res.error)
 
+    }catch (err){
+      console.log('error', err)
+    }
+  };
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setFormData({
+        ...formData,
+        [e.target.name]: e.target.value,
+      });
+    };
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -61,46 +58,6 @@ const RegisterPage: React.FC = () => {
     });
   };
 
-  const handleAddressChange = (addressType: 'homeAddress' | 'officeAddress', field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [addressType]: {
-        ...prev[addressType],
-        [field]: value
-      }
-    }));
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      sameAsHome: e.target.checked
-    }));
-  };
-
-    
-  //   if(!(formData.firstName && formData.lastName )){
-  //     newErrors.firstName= 'Name is required';
-  //   }else if (!/^[\u0E00-\u0E7Fa-zA-Z0-9 ]+$/.test(formData.firstName || formData.lastName)) {
-  //     newErrors.firstName = 'Please enter a valid name'
-  //   }
-
-  //   if (!formData.email) {
-  //     newErrors.email = 'Email is required';
-  //   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-  //     newErrors.email = 'Please enter a valid email address';
-  //   }
-    
-  //   if (!formData.password) {
-  //     newErrors.password = 'Password is required';
-  //   } else if (formData.password.length < 6) {
-  //     newErrors.password = 'Password must be at least 6 characters';
-  //   }
-    
-  //   setErrors(newErrors);
-  //   console.log(errors)
-  //   return errors.firstName
-  // };
   const validateForm = (): boolean => {
   const newErrors: {[key: string]: string} = {};
   
@@ -128,16 +85,9 @@ const RegisterPage: React.FC = () => {
   return Object.keys(newErrors).length === 0; // true = valid form
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setIsLoading(true);
-    console.log('Form submitted:', formData);
-    // handleActionSubmit(formData)
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+  const router = useRouter();
+  return (  
+    <div className="min-h-screen bg-gradient-to-br bg-[#C2D1F4] to-white py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -153,13 +103,22 @@ const RegisterPage: React.FC = () => {
           {/* Personal Information */}
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-900 border-b pb-2">Personal Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <InputField
                 label="First Name"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
                 placeholder="Enter your first name"
+                type='text'
+                error={errors.firstName}
+              />
+              <InputField
+                label="Middle Name"
+                name="middleName"
+                value={formData.middleName}
+                onChange={handleInputChange}
+                placeholder="Enter your middle name"
                 type='text'
                 error={errors.firstName}
               />
@@ -194,135 +153,92 @@ const RegisterPage: React.FC = () => {
             error={errors.password}
             minLength={6}
             />
+            {/* <InputField
+            label="Phone"
+            type="num"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="Enter your phone number"
+            error={errors.number}
+            maxLength={10}
+            minLength={10}
+            /> */}
           </div>
-
-          {/* Home Address */}
           <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <Home className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Home Address</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                label="Recipient Name"
-                name="homeRecipientName"
-                value={formData.homeAddress.recipientName}
-                onChange={(e) => handleAddressChange('homeAddress', 'recipientName', e.target.value)}
-                placeholder="Full name for delivery"
-              />
-              <InputField
-                label="Phone Number"
-                type="tel"
-                name="homePhone"
-                value={formData.homeAddress.phone}
-                onChange={(e) => handleAddressChange('homeAddress', 'phone', e.target.value)}
-                placeholder="Phone number"
-                maxLength={10}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <Home className="w-5 h-5 text-blue-600" />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Home Address
+            </h2>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
-              label="Address Line"
-              name="homeAddressLine"
-              value={formData.homeAddress.addressLine}
-              onChange={(e) => handleAddressChange('homeAddress', 'addressLine', e.target.value)}
-              placeholder="Street address, apartment, suite, etc."
+              label="Recipient Name"
+              name="recipientName"
+              value={formData.recipientName}
+              onChange={handleInputChange}
+              placeholder="Enter your last name"
+              type="text"
             />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                label="Province"
-                name="homeProvince"
-                value={formData.homeAddress.province}
-                onChange={(e) => handleAddressChange('homeAddress', 'province', e.target.value)}
-                placeholder="Province"
-              />
-              <InputField
-                label="Postal Code"
-                name="homePostalCode"
-                type='tel'
-                value={formData.homeAddress.postalCode}
-                onChange={(e) => handleAddressChange('homeAddress', 'postalCode', e.target.value)}
-                placeholder="Postal code"
-                maxLength={5}
-              />
-            </div>
+            <InputField
+              label="Phone Number"
+              type="num"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="Phone number"
+              maxLength={10}
+              minLength={10}
+            />
           </div>
 
-          {/* Office Address Checkbox */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="sameAsHome"
-                checked={formData.sameAsHome}
-                onChange={handleCheckboxChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="sameAsHome" className="text-sm font-medium text-gray-700">
-                My office address is the same as my home address
-              </label>
-            </div>
+          <InputField
+            label="Address Line"
+            name="addressLine"
+            value={formData.addressLine}
+            onChange={handleInputChange}
+            placeholder="Street address, apartment, suite, etc."
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField
+              label="Province"
+              name="province"
+              value={formData.province}
+              onChange={handleInputChange}
+              placeholder="Province"
+              type="text"
+            />
+            <InputField
+              label="Postal Code"
+              name="postalCode"
+              type="num"
+              value={formData.postalCode}
+              onChange={handleInputChange}
+              placeholder="Postal code"
+              maxLength={5}
+              minLength={5}
+            />
           </div>
-
-          {/* Office Address (Conditional) */}
-          {!formData.sameAsHome && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <Building className="w-5 h-5 text-orange-600" />
-                <h2 className="text-xl font-semibold text-gray-900">Office Address</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InputField
-                  label="Recipient Name"
-                  name="officeRecipientName"
-                  value={formData.officeAddress.recipientName}
-                  onChange={(e) => handleAddressChange('officeAddress', 'recipientName', e.target.value)}
-                  placeholder="Full name for delivery"
-                  required
-                />
-                <InputField
-                  label="Phone Number"
-                  type="tel"
-                  name="officePhone"
-                  value={formData.officeAddress.phone}
-                  onChange={(e) => handleAddressChange('officeAddress', 'phone', e.target.value)}
-                  placeholder="Phone number"
-                  required
-                />
-              </div>
-
-              <InputField
-                label="Address Line"
-                name="officeAddressLine"
-                value={formData.officeAddress.addressLine}
-                onChange={(e) => handleAddressChange('officeAddress', 'addressLine', e.target.value)}
-                placeholder="Street address, apartment, suite, etc."
-                required
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InputField
-                  label="Province"
-                  name="officeProvince"
-                  value={formData.officeAddress.province}
-                  onChange={(e) => handleAddressChange('officeAddress', 'province', e.target.value)}
-                  placeholder="Province"
-                  required
-                />
-                <InputField
-                  label="Postal Code"
-                  name="officePostalCode"
-                  value={formData.officeAddress.postalCode}
-                  onChange={(e) => handleAddressChange('officeAddress', 'postalCode', e.target.value)}
-                  placeholder="Postal code"
-                  required
-                />
-              </div>
-            </div>
-          )}
+          <div>
+            <h1>select address type</h1>
+            <select
+              name="addressType"
+              value={formData.addressType}
+              onChange={handleChange}
+            >
+              <option id="1" value="HOME" className="text-4xl">
+                HOME
+              </option>
+              <option id="2" value="OFFICE" className="text-4xl">
+                OFFICE
+              </option>
+            </select>
+          </div>
+        </div>
+    
           {/* Submit Button */}
           <Button
             type="submit"
