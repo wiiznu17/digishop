@@ -1,6 +1,5 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
 import { AddressType } from '../types/enum';
-import { User } from './User';
 
 export interface AddressAttributes {
   id: number;
