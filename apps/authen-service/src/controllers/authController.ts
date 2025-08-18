@@ -1,8 +1,6 @@
 import { Request, Response } from "express"
 import { User } from "../../../../packages/db/src/models/User"
 import { signToken, verifyToken } from "../utils/jwt"
-import { Op } from "sequelize"
-import { UserRole } from "@digishop/db/src/types/enum"
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body
