@@ -20,9 +20,10 @@ import { Dispute } from '../src/models/Dispute';
 import { MerchantAddress } from '../src/models/StoreAddress';
 import { ProductImage } from '../src/models/ProductImage'
 import { BankAccount } from '../src/models/bank/BankAccount';
-import { ShippingType } from '@models/ShippingType';
+import { ShippingType } from '../src/models/ShippingType';
+
 export function initModels(sequelize: Sequelize) {
-  // init main
+  // Initialize all models
   User.initModel(sequelize);
   Address.initModel(sequelize);
   Store.initModel(sequelize);
@@ -30,17 +31,18 @@ export function initModels(sequelize: Sequelize) {
   ShippingConfig.initModel(sequelize);
   Category.initModel(sequelize);
   Product.initModel(sequelize);
+  // ProductImage.initModel(sequelize);
   Order.initModel(sequelize);
   OrderItem.initModel(sequelize);
   Payment.initModel(sequelize);
   ShippingInfo.initModel(sequelize);
+  ShippingType.initModel(sequelize); // Added missing initialization
   Review.initModel(sequelize);
   ProductView.initModel(sequelize);
   StoreView.initModel(sequelize);
   AdminUser.initModel(sequelize);
   AdminSystemLog.initModel(sequelize);
   Dispute.initModel(sequelize);
-  // Init bank
   BankAccount.initModel(sequelize);
 
   // --- Associations ---
@@ -96,8 +98,8 @@ export function initModels(sequelize: Sequelize) {
   Product.hasMany(ProductView, { foreignKey: 'product_id', as: 'views' });
   ProductView.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
-  Product.hasOne(Category, { foreignKey: 'id', as: 'categoryDetail' });
-  Category.belongsTo(Product, { foreignKey: 'id', as: 'productCategory' });
+  // Product.hasOne(Category, { foreignKey: 'id', as: 'categoryDetail' });
+  // Category.belongsTo(Product, { foreignKey: 'id', as: 'productCategory' });
 
   Product.hasMany(ProductImage, {
     foreignKey: 'productId',

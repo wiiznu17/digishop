@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge"
 import { MerchantHeader } from "@/components/dashboard-header"
 import {
   Building2,
-  Smartphone,
   CheckCircle,
   XCircle,
   Plus,
@@ -22,7 +21,7 @@ import {
 import { useState } from "react"
 import BankAccountDialog from "@/components/balance/linkBankAccount"
 
-// Mock data
+// Mock data - เหลือแค่บัญชีธนาคาร
 const linkedAccounts = [
   {
     id: 1,
@@ -33,16 +32,6 @@ const linkedAccounts = [
     status: "verified",
     isDefault: true,
     icon: Building2
-  },
-  {
-    id: 2,
-    type: "ewallet",
-    provider: "TrueMoney Wallet",
-    accountNumber: "****5678",
-    accountName: "Somchai Jaidee",
-    status: "verified",
-    isDefault: false,
-    icon: Smartphone
   }
 ]
 
@@ -88,8 +77,8 @@ export default function AccountLinking() {
   return (
     <div>
       <MerchantHeader
-        title="Account Management"
-        description="Manage your bank accounts and e-wallets"
+        title="Bank Account Management"
+        description="Manage your bank accounts for receiving payments"
       />
 
       <div className="flex flex-1 flex-col gap-6 p-4">
@@ -98,14 +87,14 @@ export default function AccountLinking() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Accounts
+                Bank Accounts
               </CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{linkedAccounts.length}</div>
               <p className="text-xs text-muted-foreground">
-                Connected accounts
+                Connected bank accounts
               </p>
             </CardContent>
           </Card>
@@ -149,13 +138,13 @@ export default function AccountLinking() {
           </Card>
         </div>
 
-        {/* Connected accounts list */}
+        {/* Connected bank accounts list */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Connected Accounts</CardTitle>
+              <CardTitle>Bank Accounts</CardTitle>
               <CardDescription>
-                Manage your bank accounts and e-wallets
+                Manage your bank accounts for receiving payments
               </CardDescription>
             </div>
             <Button
@@ -168,102 +157,79 @@ export default function AccountLinking() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {linkedAccounts.map((account) => {
-                const Icon = account.icon
-                return (
-                  <div
-                    key={account.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Icon className="h-8 w-8 text-muted-foreground" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{account.provider}</h3>
-                          {account.isDefault && (
-                            <Badge variant="outline">Default</Badge>
-                          )}
-                          {getStatusBadge(account.status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {account.accountName}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {account.accountNumber}
-                        </p>
+              {linkedAccounts.map((account) => (
+                <div
+                  key={account.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="flex items-center gap-4">
+                    <Building2 className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium">{account.provider}</h3>
+                        {account.isDefault && (
+                          <Badge variant="outline">Default</Badge>
+                        )}
+                        {getStatusBadge(account.status)}
                       </div>
+                      <p className="text-sm text-muted-foreground">
+                        {account.accountName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {account.accountNumber}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {!account.isDefault && account.status === "verified" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSetDefault(account.id)}
-                        >
-                          Set as Default
-                        </Button>
-                      )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!account.isDefault && account.status === "verified" && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRemoveAccount(account.id)}
+                        onClick={() => handleSetDefault(account.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        Set as Default
                       </Button>
-                    </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRemoveAccount(account.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Add payment methods quickly</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setShowBankDialog(true)}
-                  className="p-4 border rounded-lg hover:bg-muted transition-colors text-left"
-                >
-                  <Building2 className="h-5 w-5 mb-2" />
-                  <div className="text-sm font-medium">Add Bank Account</div>
-                </button>
-                <div className="p-4 border rounded-lg hover:bg-muted transition-colors">
-                  <Smartphone className="h-5 w-5 mb-2" />
-                  <div className="text-sm font-medium">Add E-Wallet</div>
-                </div>
+        {/* Bank account info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Bank Account Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Bank-level security encryption</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Important Info</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>Bank-level security</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>Verification takes 1-2 business days</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>Full account numbers are not stored</span>
-                </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Account verification takes 1-2 business days</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Full account numbers are encrypted and secure</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Support for all major Thai banks</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bank Account Dialog */}

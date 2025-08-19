@@ -3,7 +3,7 @@
 import { useAuth } from "../../../contexts/auth-context"
 import { SidebarNav } from "./sidebar-nav"
 import { Header } from "./header"
-import { AuthPage } from "@/components/auth/auth-page"
+import { AuthPage } from "@/components/auth/auth-page-not-use"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
