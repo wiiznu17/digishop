@@ -8,7 +8,7 @@ export default {
         tracking_number: 'TRK123456789',
         carrier: 'DHL',
         shipping_type_id: 1,
-        shipping_status: 'processing',
+        shipping_status: 'IN_TRANSIT',
         shipping_address: 1,
         shipped_at: new Date(),
         created_at: new Date(),

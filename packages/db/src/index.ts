@@ -78,8 +78,8 @@ export function initModels(sequelize: Sequelize) {
   Store.hasMany(StoreView, { foreignKey: 'store_id', as: 'views' });
   StoreView.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
 
-  Store.hasMany(MerchantAddress, { foreignKey: 'user_id', as: 'addresses' });
-  MerchantAddress.belongsTo(Store, { foreignKey: 'user_id', as: 'store' });
+  Store.hasMany(MerchantAddress, { foreignKey: 'userId', sourceKey: 'userId', as: 'addresses' });
+  MerchantAddress.belongsTo(Store, { foreignKey: 'userId', targetKey: 'userId', as: 'store' });
 
   // Category
   Category.hasMany(Category, { foreignKey: 'parent_id', as: 'children' });
