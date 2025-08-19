@@ -21,6 +21,7 @@ import { MerchantAddress } from '../src/models/StoreAddress';
 import { ProductImage } from '../src/models/ProductImage'
 import { BankAccount } from '../src/models/bank/BankAccount';
 import { ShippingType } from '../src/models/ShippingType';
+import { ProfileMerchantImage } from '../src/models/ProfileImage';
 
 export function initModels(sequelize: Sequelize) {
   // Initialize all models
@@ -80,6 +81,9 @@ export function initModels(sequelize: Sequelize) {
 
   Store.hasMany(MerchantAddress, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'addresses' });
   MerchantAddress.belongsTo(Store, { foreignKey: 'user_id', targetKey: 'user_id', as: 'store' });
+
+  Store.hasMany(ProfileMerchantImage, { foreignKey: 'store_id', as: 'profileImages' })
+  ProfileMerchantImage.belongsTo(Store, { foreignKey: 'store_id', as: 'user' })
 
   // Category
   Category.hasMany(Category, { foreignKey: 'parent_id', as: 'children' });
@@ -163,7 +167,8 @@ export function initModels(sequelize: Sequelize) {
     AdminUser,
     AdminSystemLog,
     Dispute,
-    BankAccount
+    BankAccount,
+    ProfileMerchantImage
   };
 }
 
