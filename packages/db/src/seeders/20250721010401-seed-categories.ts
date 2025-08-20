@@ -2,7 +2,7 @@ import { QueryInterface } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Categories', [
+    await queryInterface.bulkInsert('CATEGORIES', [
       {
         name: 'Electronics',
         parent_id: null,

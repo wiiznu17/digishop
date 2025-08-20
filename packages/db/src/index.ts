@@ -20,7 +20,8 @@ import { Dispute } from '../src/models/Dispute';
 import { MerchantAddress } from '../src/models/StoreAddress';
 import { ProductImage } from '../src/models/ProductImage'
 import { BankAccount } from '../src/models/bank/BankAccount';
-import { ShippingType } from '@models/ShippingType';
+import { ShippingType } from '../src/models/ShippingType';
+
 export function initModels(sequelize: Sequelize) {
   // init main
   User.initModel(sequelize);
@@ -34,6 +35,7 @@ export function initModels(sequelize: Sequelize) {
   OrderItem.initModel(sequelize);
   Payment.initModel(sequelize);
   ShippingInfo.initModel(sequelize);
+  ShippingType.initModel(sequelize);
   Review.initModel(sequelize);
   ProductView.initModel(sequelize);
   StoreView.initModel(sequelize);
@@ -155,6 +157,7 @@ export function initModels(sequelize: Sequelize) {
     OrderItem,
     Payment,
     ShippingInfo,
+    ShippingType,
     Review,
     ProductView,
     StoreView,
