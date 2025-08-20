@@ -2,7 +2,7 @@ import { QueryInterface } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Product_Views', [
+    await queryInterface.bulkInsert('PRODUCT_VIEWS', [
       {
         product_id: 1,
         user_id: 1,

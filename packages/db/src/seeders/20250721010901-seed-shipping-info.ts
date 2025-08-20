@@ -2,13 +2,13 @@ import { QueryInterface } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Shipping_Info', [
+    await queryInterface.bulkInsert('SHIPPING_INFO', [
       {
         order_id: 1,
         tracking_number: 'TRK123456789',
         carrier: 'DHL',
         shipping_type_id: 1,
-        shipping_status: 'processing',
+        shipping_status: 'IN_TRANSIT',
         shipping_address: 1,
         shipped_at: new Date(),
         created_at: new Date(),

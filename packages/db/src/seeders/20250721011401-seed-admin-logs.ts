@@ -2,7 +2,7 @@ import { QueryInterface } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Admin_System_Logs', [
+    await queryInterface.bulkInsert('ADMIN_SYSTEM_LOGS', [
       {
         admin_id: 1,
         action: 'CREATE_USER',

@@ -51,7 +51,7 @@ export class ShippingType
       },
       {
         sequelize,
-        tableName: 'SHIPPING_TYPE',
+        tableName: 'SHIPPING_TYPES',
         modelName: 'ShippingType',
         timestamps: true,
       }
