@@ -1,9 +1,9 @@
 import axios from "@/lib/axios"
-
+const endpoint = 'http://localhost:4002'
 export const searchProduct = async (query: string) => {
     return await new Promise((resolve,reject) => {
         axios
-            .get(`http://localhost:4002/api/product/search?query=${query}`)
+            .get(`${endpoint}/api/product/search?query=${query}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -16,7 +16,7 @@ export const searchProduct = async (query: string) => {
 export const getProduct = async ( id: string ) => {
     return await new Promise((resolve, reject) => {
         axios
-            .get(`http://localhost:4002/api/product/${id}`)
+            .get(`${endpoint}/api/product/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
