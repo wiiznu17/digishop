@@ -19,19 +19,57 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Building2, Lock, User, AlertCircle, FileText } from "lucide-react"
-import { useState } from "react"
+import {
+  Building2,
+  Lock,
+  User,
+  AlertCircle,
+  FileText,
+  Edit
+} from "lucide-react"
+import { useState, useEffect } from "react"
+
+// Define types
+interface BankAccount {
+  id: number
+  type: string
+  provider: string
+  accountNumber: string
+  fullAccountNumber: string
+  accountName: string
+  accountType?: string
+  branchName?: string
+  idNumber?: string
+  status: "verified" | "pending" | "failed"
+  isDefault: boolean
+  icon: React.ComponentType<{ className?: string }>
+}
+
+interface BankAccountFormData {
+  provider: string
+  fullAccountNumber: string
+  accountNumber: string
+  accountName: string
+  accountType: string
+  branchName: string
+  idNumber: string
+  isDefault: boolean
+}
 
 interface BankAccountDialogProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   trigger?: React.ReactNode
+  editingAccount?: BankAccount | null
+  onSave?: (data: BankAccountFormData) => void
 }
 
 export function BankAccountDialog({
   open,
   onOpenChange,
-  trigger
+  trigger,
+  editingAccount,
+  onSave
 }: BankAccountDialogProps) {
   const [formData, setFormData] = useState({
     bankName: "",
@@ -45,6 +83,7 @@ export function BankAccountDialog({
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const isEditing = !!editingAccount
 
   const banks = [
     "Bangkok Bank",
@@ -57,16 +96,44 @@ export function BankAccountDialog({
     "GHB",
     "UOB",
     "Citibank"
-  ]
+  ] as const
 
   const accountTypes = [
     { value: "savings", label: "Savings Account" },
     { value: "current", label: "Current Account" },
     { value: "fixed", label: "Fixed Deposit Account" }
-  ]
+  ] as const
+
+  // Reset form when dialog opens/closes or editing account changes
+  useEffect(() => {
+    if (editingAccount) {
+      setFormData({
+        bankName: editingAccount.provider || "",
+        accountNumber: editingAccount.fullAccountNumber || "",
+        confirmAccountNumber: editingAccount.fullAccountNumber || "",
+        accountHolderName: editingAccount.accountName || "",
+        accountType: editingAccount.accountType || "savings",
+        branchName: editingAccount.branchName || "",
+        idNumber: editingAccount.idNumber || "",
+        setAsDefault: editingAccount.isDefault || false
+      })
+    } else {
+      setFormData({
+        bankName: "",
+        accountNumber: "",
+        confirmAccountNumber: "",
+        accountHolderName: "",
+        accountType: "",
+        branchName: "",
+        idNumber: "",
+        setAsDefault: false
+      })
+    }
+    setErrors({})
+  }, [editingAccount, open])
 
   // Validate form
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
     if (!formData.bankName) {
@@ -108,26 +175,60 @@ export function BankAccountDialog({
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
 
     if (validateForm()) {
-      console.log("Linking bank account:", formData)
+      const accountData: BankAccountFormData = {
+        provider: formData.bankName,
+        fullAccountNumber: formData.accountNumber,
+        accountNumber: `****${formData.accountNumber.slice(-4)}`,
+        accountName: formData.accountHolderName,
+        accountType: formData.accountType,
+        branchName: formData.branchName,
+        idNumber: formData.idNumber,
+        isDefault: formData.setAsDefault
+      }
 
-      // Reset form and close dialog
-      setFormData({
-        bankName: "",
-        accountNumber: "",
-        confirmAccountNumber: "",
-        accountHolderName: "",
-        accountType: "",
-        branchName: "",
-        idNumber: "",
-        setAsDefault: false
-      })
+      if (onSave) {
+        onSave(accountData)
+      } else {
+        console.log("Saving bank account:", accountData)
+        onOpenChange?.(false)
+      }
+
+      // Reset form
+      if (!isEditing) {
+        setFormData({
+          bankName: "",
+          accountNumber: "",
+          confirmAccountNumber: "",
+          accountHolderName: "",
+          accountType: "",
+          branchName: "",
+          idNumber: "",
+          setAsDefault: false
+        })
+      }
       setErrors({})
-      onOpenChange?.(false)
     }
+  }
+
+  const handleCancel = (): void => {
+    setErrors({})
+    onOpenChange?.(false)
+  }
+
+  const handleInputChange = (field: string, value: string): void => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }))
+    }
+  }
+
+  const handleNumberInputChange = (field: string, value: string): void => {
+    const numericValue = value.replace(/[^0-9]/g, "")
+    handleInputChange(field, numericValue)
   }
 
   return (
@@ -137,12 +238,17 @@ export function BankAccountDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Link Bank Account
+            {isEditing ? (
+              <Edit className="h-5 w-5" />
+            ) : (
+              <Building2 className="h-5 w-5" />
+            )}
+            {isEditing ? "Edit Bank Account" : "Link Bank Account"}
           </DialogTitle>
           <DialogDescription>
-            Add a bank account to receive payments from sales. Your information
-            is protected with bank-level security.
+            {isEditing
+              ? "Update your bank account information. Changes will require re-verification."
+              : "Add a bank account to receive payments from sales. Your information is protected with bank-level security."}
           </DialogDescription>
         </DialogHeader>
 
@@ -159,12 +265,7 @@ export function BankAccountDialog({
               <Label htmlFor="bank-name">Bank</Label>
               <Select
                 value={formData.bankName}
-                onValueChange={(value) => {
-                  setFormData({ ...formData, bankName: value })
-                  if (errors.bankName) {
-                    setErrors({ ...errors, bankName: "" })
-                  }
-                }}
+                onValueChange={(value) => handleInputChange("bankName", value)}
               >
                 <SelectTrigger
                   className={errors.bankName ? "border-red-500" : ""}
@@ -192,12 +293,9 @@ export function BankAccountDialog({
               <Label htmlFor="account-type">Account Type</Label>
               <Select
                 value={formData.accountType}
-                onValueChange={(value) => {
-                  setFormData({ ...formData, accountType: value })
-                  if (errors.accountType) {
-                    setErrors({ ...errors, accountType: "" })
-                  }
-                }}
+                onValueChange={(value) =>
+                  handleInputChange("accountType", value)
+                }
               >
                 <SelectTrigger
                   className={errors.accountType ? "border-red-500" : ""}
@@ -227,13 +325,9 @@ export function BankAccountDialog({
                 id="account-number"
                 placeholder="Enter account number (10-15 digits)"
                 value={formData.accountNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, "")
-                  setFormData({ ...formData, accountNumber: value })
-                  if (errors.accountNumber) {
-                    setErrors({ ...errors, accountNumber: "" })
-                  }
-                }}
+                onChange={(e) =>
+                  handleNumberInputChange("accountNumber", e.target.value)
+                }
                 maxLength={15}
                 className={errors.accountNumber ? "border-red-500" : ""}
               />
@@ -254,13 +348,12 @@ export function BankAccountDialog({
                 id="confirm-account-number"
                 placeholder="Enter account number again"
                 value={formData.confirmAccountNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, "")
-                  setFormData({ ...formData, confirmAccountNumber: value })
-                  if (errors.confirmAccountNumber) {
-                    setErrors({ ...errors, confirmAccountNumber: "" })
-                  }
-                }}
+                onChange={(e) =>
+                  handleNumberInputChange(
+                    "confirmAccountNumber",
+                    e.target.value
+                  )
+                }
                 maxLength={15}
                 className={errors.confirmAccountNumber ? "border-red-500" : ""}
               />
@@ -286,15 +379,9 @@ export function BankAccountDialog({
                 id="account-holder-name"
                 placeholder="Enter account holder name (as in bank book)"
                 value={formData.accountHolderName}
-                onChange={(e) => {
-                  setFormData({
-                    ...formData,
-                    accountHolderName: e.target.value
-                  })
-                  if (errors.accountHolderName) {
-                    setErrors({ ...errors, accountHolderName: "" })
-                  }
-                }}
+                onChange={(e) =>
+                  handleInputChange("accountHolderName", e.target.value)
+                }
                 className={errors.accountHolderName ? "border-red-500" : ""}
               />
               {errors.accountHolderName && (
@@ -311,12 +398,9 @@ export function BankAccountDialog({
                 id="branch-name"
                 placeholder="Enter the branch where the account was opened"
                 value={formData.branchName}
-                onChange={(e) => {
-                  setFormData({ ...formData, branchName: e.target.value })
-                  if (errors.branchName) {
-                    setErrors({ ...errors, branchName: "" })
-                  }
-                }}
+                onChange={(e) =>
+                  handleInputChange("branchName", e.target.value)
+                }
                 className={errors.branchName ? "border-red-500" : ""}
               />
               {errors.branchName && (
@@ -335,13 +419,9 @@ export function BankAccountDialog({
                 id="id-number"
                 placeholder="Enter 13-digit ID or company registration number"
                 value={formData.idNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, "")
-                  setFormData({ ...formData, idNumber: value })
-                  if (errors.idNumber) {
-                    setErrors({ ...errors, idNumber: "" })
-                  }
-                }}
+                onChange={(e) =>
+                  handleNumberInputChange("idNumber", e.target.value)
+                }
                 className={errors.idNumber ? "border-red-500" : ""}
               />
               {errors.idNumber && (
@@ -360,7 +440,10 @@ export function BankAccountDialog({
                 id="set-default"
                 checked={formData.setAsDefault}
                 onCheckedChange={(checked) =>
-                  setFormData({ ...formData, setAsDefault: checked as boolean })
+                  setFormData((prev) => ({
+                    ...prev,
+                    setAsDefault: checked as boolean
+                  }))
                 }
               />
               <Label htmlFor="set-default" className="text-sm">
@@ -384,6 +467,11 @@ export function BankAccountDialog({
                   are shown
                 </li>
                 <li>• Account verification may take 1-2 business days</li>
+                {isEditing && (
+                  <li className="text-amber-700 font-medium">
+                    • Changes will require re-verification of your account
+                  </li>
+                )}
               </ul>
             </div>
           </div>
@@ -393,7 +481,8 @@ export function BankAccountDialog({
             <FileText className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-amber-800">
               <p className="font-medium mb-1">
-                Documents that may be required for verification
+                Documents that may be required for {isEditing ? "re-" : ""}
+                verification
               </p>
               <ul className="space-y-1 text-xs">
                 <li>• Copy of bank book first page</li>
@@ -405,16 +494,16 @@ export function BankAccountDialog({
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange?.(false)}
-            >
+            <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button type="submit" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Link Account
+              {isEditing ? (
+                <Edit className="h-4 w-4" />
+              ) : (
+                <Building2 className="h-4 w-4" />
+              )}
+              {isEditing ? "Update Account" : "Link Account"}
             </Button>
           </div>
         </form>

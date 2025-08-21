@@ -79,7 +79,7 @@ export function OrdersTable({
     changeItemsPerPage
   } = usePagination({
     data: filteredOrders,
-    itemsPerPage: 20
+    itemsPerPage: 10
   })
 
   // Reset to first page when filters change
