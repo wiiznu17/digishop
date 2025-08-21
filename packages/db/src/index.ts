@@ -135,15 +135,14 @@ export function initModels(sequelize: Sequelize) {
   Address.hasMany(ShippingInfo, { foreignKey: 'shipping_address', as: 'shippingAddressinfos' });
   Address.belongsTo(ShippingInfo, { foreignKey: 'shipping_address', as: 'shippingAddress' });  
 
-  // Bank account
-  BankAccount.hasMany(Store, {
-    foreignKey: 'bank_account_id',
-    as: 'stores',
+  Store.hasMany(BankAccount, {
+    foreignKey: 'storeId',
+    as: 'bankAccounts', // เวลา query จะใช้ชื่อนี้ e.g., store.getBankAccounts()
   });
 
-  Store.belongsTo(BankAccount, {
-    foreignKey: 'bank_account_id',
-    as: 'bankAccount',
+  BankAccount.belongsTo(Store, {
+    foreignKey: 'storeId',
+    as: 'store',
   });
   // Admin
   AdminUser.hasMany(AdminSystemLog, { foreignKey: 'admin_id', as: 'logs' });

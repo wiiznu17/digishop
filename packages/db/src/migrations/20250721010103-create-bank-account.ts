@@ -8,6 +8,21 @@ export default {
         type: DataTypes.STRING(191),
         allowNull: false
       },
+      store_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
+        references: {
+          model: 'STORES',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      },
+      is_default: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       account_number: {
         type: DataTypes.STRING(50),
         allowNull: false

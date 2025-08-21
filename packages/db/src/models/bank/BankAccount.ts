@@ -2,6 +2,8 @@ import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
 
 export interface BankAccountAttributes {
   id: number;
+  storeId: number;
+  isDefault: boolean;
   bankName: string;
   accountNumber: string;
   accountHolderName: string;
@@ -16,6 +18,8 @@ export class BankAccount
   extends Model<BankAccountAttributes, BankAccountCreationAttributes>
   implements BankAccountAttributes {
   public id!: number;
+  public storeId!: number;
+  public isDefault!: boolean;
   public bankName!: string;
   public accountNumber!: string;
   public accountHolderName!: string;
@@ -29,6 +33,21 @@ export class BankAccount
           type: DataTypes.INTEGER.UNSIGNED,
           autoIncrement: true,
           primaryKey: true,
+        },
+        storeId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          field: 'store_id',
+          references: {
+            model: 'STORES',
+            key: 'id',
+          },
+        },
+        isDefault: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue: false,
+          field: 'is_default',
         },
         bankName: {
           type: DataTypes.STRING(100),
