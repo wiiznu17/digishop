@@ -1,18 +1,16 @@
 "use client"
 
 import {
-  Calendar,
   ChevronUp,
   Home,
-  Inbox,
   Package,
-  Search,
   Settings,
   ShoppingCart,
   User,
   BarChart3,
-  Plus,
-  Users
+  Users,
+  WalletCards,
+  WalletMinimal
 } from "lucide-react"
 import Link from "next/link"
 
@@ -64,9 +62,9 @@ const items = [
     icon: BarChart3
   },
   {
-    title: "Balance",
+    title: "Bank Account",
     url: "/balance",
-    icon: Inbox
+    icon: WalletMinimal
   },
   {
     title: "Profile",
