@@ -16,7 +16,7 @@ const app = express()
 app.use(corsMiddleware)
 app.use(loggerMiddleware)
 app.use(cookieParser())
-app.use(express.json())
+// app.use(express.json())
 
 // Health check
 app.get("/healthz", (_, res) => res.send("OK"))
