@@ -83,26 +83,32 @@ export const addBankAccountToStore = async (req: AuthenticatedRequest, res: Resp
 };
 
 export const setDefaultBankAccount = async (req: AuthenticatedRequest, res: Response) => {
+  console.log("hi 1")
   const transaction = await sequelize.transaction();
+  console.log("hi 2")
   try {
-    const { bankAccountId } = req.params;
+    const { accountId } = req.params;
+    console.log("id bank", accountId)
     const userId = req.user?.sub;
-    
+    console.log("userId: ", userId)
     if (!userId) {
+      console.log("no user id")
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const store = await Store.findOne({ where: { userId } });
     if (!store) {
+      console.log("no store")
       return res.status(404).json({ error: "Store not found." });
     }
 
     // ตรวจสอบให้แน่ใจว่า bank account นี้เป็นของ store นี้จริง
     const accountToSetDefault = await BankAccount.findOne({
-      where: { id: bankAccountId, storeId: store.id }
+      where: { id: accountId, storeId: store.id }
     });
 
     if (!accountToSetDefault) {
+      console.log("wrong store")
       return res.status(404).json({ error: "Bank account not found in your store." });
     }
 
@@ -152,6 +158,7 @@ export const deleteBankAccount = async (req: AuthenticatedRequest, res: Response
 
     // 3. [Edge Case] ป้องกันการลบบัญชีที่เป็น Default
     if (accountToDelete.isDefault) {
+      console.log("Default account can not delete")
       return res.status(400).json({
         error: "Cannot delete the default bank account. Please set another account as default first."
       });
