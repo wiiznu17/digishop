@@ -17,7 +17,6 @@ import {
   Plus,
   Trash2,
   AlertCircle,
-  Edit,
   Loader2
 } from "lucide-react"
 import { useState, useEffect } from "react"
@@ -26,7 +25,6 @@ import { useToast } from "@/hooks/use-toast"
 import {
   getBankAccountsRequester,
   createBankAccountRequester,
-  updateBankAccountRequester,
   deleteBankAccountRequester,
   setDefaultBankAccountRequester,
   type BankAccount,
@@ -40,28 +38,37 @@ interface BankAccountFormData {
   isDefault: boolean
 }
 
+// mask
+function maskAccountNumber(accountNumber: string) {
+  if (!accountNumber) return accountNumber
+  if (accountNumber.length <= 6) return accountNumber
+  return accountNumber.slice(0, 2) + "xxxxxx" + accountNumber.slice(-4)
+}
+
 export default function AccountLinking() {
   const { toast } = useToast()
   const [showBankDialog, setShowBankDialog] = useState<boolean>(false)
-  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null)
   const [linkedAccounts, setLinkedAccounts] = useState<BankAccount[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [actionLoading, setActionLoading] = useState<boolean>(false)
+  const [removingAccountId, setRemovingAccountId] = useState<number | null>(
+    null
+  )
+  const [defaultingAccountId, setDefaultingAccountId] = useState<number | null>(
+    null
+  )
 
-  // Load bank accounts on component mount
   useEffect(() => {
     loadBankAccounts()
   }, [])
 
-  const loadBankAccounts = async (): Promise<void> => {
+  const loadBankAccounts = async () => {
     setLoading(true)
     try {
       const accounts = await getBankAccountsRequester()
       if (accounts) {
-        console.log("loading bank accounts: ", accounts)
         setLinkedAccounts(accounts)
       } else {
-        console.error("Error loading bank accounts")
         toast({
           title: "Error",
           description: "Failed to load bank accounts",
@@ -69,7 +76,7 @@ export default function AccountLinking() {
         })
       }
     } catch (error) {
-      console.error("Error loading bank accounts:", error)
+      console.log("Error to load bank account: ", error)
       toast({
         title: "Error",
         description: "Failed to load bank accounts",
@@ -80,12 +87,11 @@ export default function AccountLinking() {
     }
   }
 
-  const handleRemoveAccount = async (accountId: number): Promise<void> => {
+  const handleRemoveAccount = async (accountId: number) => {
     if (!confirm("Are you sure you want to remove this bank account?")) {
       return
     }
-
-    setActionLoading(true)
+    setRemovingAccountId(accountId)
     try {
       const success = await deleteBankAccountRequester(accountId)
       if (success) {
@@ -102,18 +108,19 @@ export default function AccountLinking() {
         })
       }
     } catch (error) {
-      console.error("Error removing bank account:", error)
+      console.log("Error to remove bank account: ", error)
       toast({
         title: "Error",
         description: "Failed to remove bank account",
         variant: "destructive"
       })
     } finally {
-      setActionLoading(false)
+      setRemovingAccountId(null)
     }
   }
 
-  const handleSetDefault = async (accountId: number): Promise<void> => {
+  const handleSetDefault = async (accountId: number) => {
+    setDefaultingAccountId(accountId)
     setActionLoading(true)
     try {
       const success = await setDefaultBankAccountRequester(accountId)
@@ -136,96 +143,16 @@ export default function AccountLinking() {
         })
       }
     } catch (error) {
-      console.error("Error setting default bank account:", error)
+      console.log("Error to set default for this bank account: ", error)
       toast({
         title: "Error",
         description: "Failed to set default bank account",
         variant: "destructive"
       })
     } finally {
+      setDefaultingAccountId(null)
       setActionLoading(false)
     }
-  }
-
-  const handleEditAccount = (account: BankAccount): void => {
-    setEditingAccount(account)
-    setShowBankDialog(true)
-  }
-
-  const handleSaveAccount = async (
-    accountData: BankAccountFormData
-  ): Promise<void> => {
-    setActionLoading(true)
-    try {
-      const requestData: CreateBankAccountRequest = {
-        bankName: accountData.bankName,
-        accountNumber: accountData.confirmAccountNumber,
-        accountHolderName: accountData.accountHolderName,
-        isDefault: accountData.isDefault
-      }
-
-      if (editingAccount) {
-        // Update existing account
-        const updatedAccount = await updateBankAccountRequester({
-          ...requestData,
-          id: editingAccount.id
-        })
-
-        if (updatedAccount) {
-          setLinkedAccounts((prev) =>
-            prev.map((acc) =>
-              acc.id === editingAccount.id ? updatedAccount : acc
-            )
-          )
-          toast({
-            title: "Success",
-            description: "Bank account updated successfully"
-          })
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to update bank account",
-            variant: "destructive"
-          })
-          return
-        }
-      } else {
-        // Create new account
-        const newAccount = await createBankAccountRequester(requestData)
-
-        if (newAccount) {
-          setLinkedAccounts((prev) => [...prev, newAccount])
-          toast({
-            title: "Success",
-            description: "Bank account added successfully"
-          })
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to add bank account",
-            variant: "destructive"
-          })
-          return
-        }
-      }
-
-      setEditingAccount(null)
-      setShowBankDialog(false)
-    } catch (error) {
-      console.error("Error saving bank account:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save bank account",
-        variant: "destructive"
-      })
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleDialogClose = (): void => {
-    setEditingAccount(null)
-    setShowBankDialog(false)
   }
 
   const getStatusBadge = (status: BankAccount["status"]) => {
@@ -271,9 +198,8 @@ export default function AccountLinking() {
         title="Bank Account Management"
         description="Manage your bank accounts for receiving payments"
       />
-
       <div className="flex flex-1 flex-col gap-6 p-4">
-        {/* Account summary */}
+        {/* สรุปข้อมูลบัญชี */}
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -289,7 +215,6 @@ export default function AccountLinking() {
               </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -309,7 +234,6 @@ export default function AccountLinking() {
               </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -329,7 +253,7 @@ export default function AccountLinking() {
           </Card>
         </div>
 
-        {/* Connected bank accounts list */}
+        {/* รายการบัญชี */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -361,7 +285,6 @@ export default function AccountLinking() {
                   <Button
                     onClick={() => setShowBankDialog(true)}
                     className="flex items-center gap-2 mx-auto"
-                    disabled={actionLoading}
                   >
                     <Plus className="h-4 w-4" />
                     Add Bank Account
@@ -387,7 +310,7 @@ export default function AccountLinking() {
                           {account.accountHolderName}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {account.accountNumber}
+                          {maskAccountNumber(account.accountNumber)}
                         </p>
                       </div>
                     </div>
@@ -397,9 +320,9 @@ export default function AccountLinking() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleSetDefault(account.id)}
-                          disabled={actionLoading}
+                          disabled={defaultingAccountId === account.id}
                         >
-                          {actionLoading ? (
+                          {defaultingAccountId === account.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             "Set as Default"
@@ -409,20 +332,11 @@ export default function AccountLinking() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEditAccount(account)}
-                        className="text-blue-600 hover:text-blue-700"
-                        disabled={actionLoading}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
                         onClick={() => handleRemoveAccount(account.id)}
                         className="text-red-600 hover:text-red-700"
-                        disabled={actionLoading}
+                        disabled={removingAccountId === account.id}
                       >
-                        {actionLoading ? (
+                        {removingAccountId === account.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <Trash2 className="h-4 w-4" />
@@ -436,7 +350,7 @@ export default function AccountLinking() {
           </CardContent>
         </Card>
 
-        {/* Bank account info */}
+        {/* ข้อมูลความปลอดภัย */}
         <Card>
           <CardHeader>
             <CardTitle>Bank Account Information</CardTitle>
@@ -459,23 +373,37 @@ export default function AccountLinking() {
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
                 <span>Support for all major Thai banks</span>
               </div>
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5" />
-                <span>
-                  Editing account details will require re-verification
-                </span>
-              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Bank Account Dialog */}
+      {/* Dialog เพิ่มบัญชี */}
       <BankAccountDialog
         open={showBankDialog}
-        onOpenChange={handleDialogClose}
-        editingAccount={editingAccount}
-        onSave={handleSaveAccount}
+        onOpenChange={setShowBankDialog}
+        onSave={async (accountData) => {
+          const requestData: CreateBankAccountRequest = {
+            bankName: accountData.bankName,
+            accountNumber: accountData.confirmAccountNumber,
+            accountHolderName: accountData.accountHolderName,
+            isDefault: accountData.isDefault
+          }
+          const newAccount = await createBankAccountRequester(requestData)
+          if (newAccount) {
+            setLinkedAccounts((prev) => [...prev, newAccount])
+            toast({
+              title: "Success",
+              description: "Bank account added successfully"
+            })
+            setShowBankDialog(false)
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to add bank account",
+              variant: "destructive"
+            })
+          }
+        }}
       />
     </div>
   )

@@ -19,19 +19,8 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Building2, Lock, User, AlertCircle, Edit } from "lucide-react"
+import { Building2, Lock, User, AlertCircle, Plus } from "lucide-react"
 import { useState, useEffect } from "react"
-
-// Define types
-interface BankAccount {
-  id: number
-  bankName: string
-  accountNumber: string
-  confirmAccountNumber: string
-  accountHolderName: string
-  status: "VERIFIED" | "PENDING" | "FAILED"
-  isDefault: boolean
-}
 
 interface BankAccountFormData {
   bankName: string
@@ -44,7 +33,6 @@ interface BankAccountDialogProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   trigger?: React.ReactNode
-  editingAccount?: BankAccount | null
   onSave?: (data: BankAccountFormData) => void
 }
 
@@ -52,7 +40,6 @@ export function BankAccountDialog({
   open,
   onOpenChange,
   trigger,
-  editingAccount,
   onSave
 }: BankAccountDialogProps) {
   const [formData, setFormData] = useState({
@@ -64,7 +51,6 @@ export function BankAccountDialog({
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const isEditing = !!editingAccount
 
   const banks = [
     "Bangkok Bank",
@@ -79,27 +65,17 @@ export function BankAccountDialog({
     "Citibank"
   ] as const
 
-  // Reset form when dialog opens/closes or editing account changes
+  // Reset form when dialog open/close
   useEffect(() => {
-    if (editingAccount) {
-      setFormData({
-        bankName: editingAccount.bankName || "",
-        accountNumber: editingAccount.confirmAccountNumber || "",
-        confirmAccountNumber: editingAccount.confirmAccountNumber || "",
-        accountHolderName: editingAccount.accountHolderName || "",
-        setAsDefault: editingAccount.isDefault || false
-      })
-    } else {
-      setFormData({
-        bankName: "",
-        accountNumber: "",
-        confirmAccountNumber: "",
-        accountHolderName: "",
-        setAsDefault: false
-      })
-    }
+    setFormData({
+      bankName: "",
+      accountNumber: "",
+      confirmAccountNumber: "",
+      accountHolderName: "",
+      setAsDefault: false
+    })
     setErrors({})
-  }, [editingAccount, open])
+  }, [open])
 
   // Validate form
   const validateForm = (): boolean => {
@@ -108,7 +84,6 @@ export function BankAccountDialog({
     if (!formData.bankName) {
       newErrors.bankName = "Please select a bank"
     }
-
     if (!formData.accountNumber) {
       newErrors.accountNumber = "Please enter your account number"
     } else if (
@@ -117,24 +92,20 @@ export function BankAccountDialog({
     ) {
       newErrors.accountNumber = "Account number is invalid"
     }
-
     if (!formData.confirmAccountNumber) {
       newErrors.confirmAccountNumber = "Please confirm your account number"
     } else if (formData.accountNumber !== formData.confirmAccountNumber) {
       newErrors.confirmAccountNumber = "Account numbers do not match"
     }
-
     if (!formData.accountHolderName.trim()) {
       newErrors.accountHolderName = "Please enter the account holder's name"
     }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
-
     if (validateForm()) {
       const accountData: BankAccountFormData = {
         bankName: formData.bankName,
@@ -142,24 +113,16 @@ export function BankAccountDialog({
         accountHolderName: formData.accountHolderName,
         isDefault: formData.setAsDefault
       }
-
       if (onSave) {
         onSave(accountData)
-      } else {
-        console.log("Saving bank account:", accountData)
-        onOpenChange?.(false)
       }
-
-      // Reset form
-      if (!isEditing) {
-        setFormData({
-          bankName: "",
-          accountNumber: "",
-          confirmAccountNumber: "",
-          accountHolderName: "",
-          setAsDefault: false
-        })
-      }
+      setFormData({
+        bankName: "",
+        accountNumber: "",
+        confirmAccountNumber: "",
+        accountHolderName: "",
+        setAsDefault: false
+      })
       setErrors({})
     }
   }
@@ -184,24 +147,17 @@ export function BankAccountDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isEditing ? (
-              <Edit className="h-5 w-5" />
-            ) : (
-              <Building2 className="h-5 w-5" />
-            )}
-            {isEditing ? "Edit Bank Account" : "Link Bank Account"}
+            <Building2 className="h-5 w-5" />
+            Link Bank Account
           </DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Update your bank account information. Changes will require re-verification."
-              : "Add a bank account to receive payments from sales. Your information is protected with bank-level security."}
+            Add a bank account to receive payments from sales. Your information
+            is protected with bank-level security.
           </DialogDescription>
         </DialogHeader>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Bank Information */}
           <div className="space-y-4">
@@ -209,7 +165,6 @@ export function BankAccountDialog({
               <Building2 className="h-4 w-4" />
               Bank Information
             </div>
-
             {/* Bank Selection */}
             <div className="space-y-2">
               <Label htmlFor="bank-name">Bank</Label>
@@ -237,7 +192,6 @@ export function BankAccountDialog({
                 </p>
               )}
             </div>
-
             {/* Account Number */}
             <div className="space-y-2">
               <Label htmlFor="account-number">Account Number</Label>
@@ -258,7 +212,6 @@ export function BankAccountDialog({
                 </p>
               )}
             </div>
-
             {/* Confirm Account Number */}
             <div className="space-y-2">
               <Label htmlFor="confirm-account-number">
@@ -285,14 +238,12 @@ export function BankAccountDialog({
               )}
             </div>
           </div>
-
           {/* Account Holder Information */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <User className="h-4 w-4" />
               Account Holder Information
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="account-holder-name">Account Holder Name</Label>
               <Input
@@ -312,7 +263,6 @@ export function BankAccountDialog({
               )}
             </div>
           </div>
-
           {/* Options */}
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
@@ -331,7 +281,6 @@ export function BankAccountDialog({
               </Label>
             </div>
           </div>
-
           {/* Security Notice */}
           <div className="flex items-start gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <Lock className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -347,27 +296,17 @@ export function BankAccountDialog({
                   are shown
                 </li>
                 <li>• Account verification may take 1-2 business days</li>
-                {isEditing && (
-                  <li className="text-amber-700 font-medium">
-                    • Changes will require re-verification of your account
-                  </li>
-                )}
               </ul>
             </div>
           </div>
-
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button type="submit" className="flex items-center gap-2">
-              {isEditing ? (
-                <Edit className="h-4 w-4" />
-              ) : (
-                <Building2 className="h-4 w-4" />
-              )}
-              {isEditing ? "Update Account" : "Link Account"}
+              <Plus className="h-4 w-4" />
+              Link Account
             </Button>
           </div>
         </form>
