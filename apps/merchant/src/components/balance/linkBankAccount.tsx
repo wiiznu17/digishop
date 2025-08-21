@@ -19,40 +19,24 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Building2,
-  Lock,
-  User,
-  AlertCircle,
-  FileText,
-  Edit
-} from "lucide-react"
+import { Building2, Lock, User, AlertCircle, Edit } from "lucide-react"
 import { useState, useEffect } from "react"
 
 // Define types
 interface BankAccount {
   id: number
-  type: string
-  provider: string
+  bankName: string
   accountNumber: string
-  fullAccountNumber: string
-  accountName: string
-  accountType?: string
-  branchName?: string
-  idNumber?: string
-  status: "verified" | "pending" | "failed"
+  confirmAccountNumber: string
+  accountHolderName: string
+  status: "VERIFIED" | "PENDING" | "FAILED"
   isDefault: boolean
-  icon: React.ComponentType<{ className?: string }>
 }
 
 interface BankAccountFormData {
-  provider: string
-  fullAccountNumber: string
-  accountNumber: string
-  accountName: string
-  accountType: string
-  branchName: string
-  idNumber: string
+  bankName: string
+  confirmAccountNumber: string
+  accountHolderName: string
   isDefault: boolean
 }
 
@@ -76,9 +60,6 @@ export function BankAccountDialog({
     accountNumber: "",
     confirmAccountNumber: "",
     accountHolderName: "",
-    accountType: "",
-    branchName: "",
-    idNumber: "",
     setAsDefault: false
   })
 
@@ -98,23 +79,14 @@ export function BankAccountDialog({
     "Citibank"
   ] as const
 
-  const accountTypes = [
-    { value: "savings", label: "Savings Account" },
-    { value: "current", label: "Current Account" },
-    { value: "fixed", label: "Fixed Deposit Account" }
-  ] as const
-
   // Reset form when dialog opens/closes or editing account changes
   useEffect(() => {
     if (editingAccount) {
       setFormData({
-        bankName: editingAccount.provider || "",
-        accountNumber: editingAccount.fullAccountNumber || "",
-        confirmAccountNumber: editingAccount.fullAccountNumber || "",
-        accountHolderName: editingAccount.accountName || "",
-        accountType: editingAccount.accountType || "savings",
-        branchName: editingAccount.branchName || "",
-        idNumber: editingAccount.idNumber || "",
+        bankName: editingAccount.bankName || "",
+        accountNumber: editingAccount.confirmAccountNumber || "",
+        confirmAccountNumber: editingAccount.confirmAccountNumber || "",
+        accountHolderName: editingAccount.accountHolderName || "",
         setAsDefault: editingAccount.isDefault || false
       })
     } else {
@@ -123,9 +95,6 @@ export function BankAccountDialog({
         accountNumber: "",
         confirmAccountNumber: "",
         accountHolderName: "",
-        accountType: "",
-        branchName: "",
-        idNumber: "",
         setAsDefault: false
       })
     }
@@ -159,18 +128,6 @@ export function BankAccountDialog({
       newErrors.accountHolderName = "Please enter the account holder's name"
     }
 
-    if (!formData.accountType) {
-      newErrors.accountType = "Please select an account type"
-    }
-
-    if (!formData.branchName.trim()) {
-      newErrors.branchName = "Please enter the branch name"
-    }
-
-    if (!formData.idNumber.trim()) {
-      newErrors.idNumber = "Please enter your ID or company registration number"
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -180,13 +137,9 @@ export function BankAccountDialog({
 
     if (validateForm()) {
       const accountData: BankAccountFormData = {
-        provider: formData.bankName,
-        fullAccountNumber: formData.accountNumber,
-        accountNumber: `****${formData.accountNumber.slice(-4)}`,
-        accountName: formData.accountHolderName,
-        accountType: formData.accountType,
-        branchName: formData.branchName,
-        idNumber: formData.idNumber,
+        bankName: formData.bankName,
+        confirmAccountNumber: formData.confirmAccountNumber,
+        accountHolderName: formData.accountHolderName,
         isDefault: formData.setAsDefault
       }
 
@@ -204,9 +157,6 @@ export function BankAccountDialog({
           accountNumber: "",
           confirmAccountNumber: "",
           accountHolderName: "",
-          accountType: "",
-          branchName: "",
-          idNumber: "",
           setAsDefault: false
         })
       }
@@ -235,7 +185,7 @@ export function BankAccountDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isEditing ? (
@@ -284,36 +234,6 @@ export function BankAccountDialog({
                 <p className="text-sm text-red-500 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
                   {errors.bankName}
-                </p>
-              )}
-            </div>
-
-            {/* Account Type */}
-            <div className="space-y-2">
-              <Label htmlFor="account-type">Account Type</Label>
-              <Select
-                value={formData.accountType}
-                onValueChange={(value) =>
-                  handleInputChange("accountType", value)
-                }
-              >
-                <SelectTrigger
-                  className={errors.accountType ? "border-red-500" : ""}
-                >
-                  <SelectValue placeholder="Select account type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.accountType && (
-                <p className="text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.accountType}
                 </p>
               )}
             </div>
@@ -391,46 +311,6 @@ export function BankAccountDialog({
                 </p>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="branch-name">Branch Name</Label>
-              <Input
-                id="branch-name"
-                placeholder="Enter the branch where the account was opened"
-                value={formData.branchName}
-                onChange={(e) =>
-                  handleInputChange("branchName", e.target.value)
-                }
-                className={errors.branchName ? "border-red-500" : ""}
-              />
-              {errors.branchName && (
-                <p className="text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.branchName}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="id-number">
-                ID / Company Registration Number
-              </Label>
-              <Input
-                id="id-number"
-                placeholder="Enter 13-digit ID or company registration number"
-                value={formData.idNumber}
-                onChange={(e) =>
-                  handleNumberInputChange("idNumber", e.target.value)
-                }
-                className={errors.idNumber ? "border-red-500" : ""}
-              />
-              {errors.idNumber && (
-                <p className="text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.idNumber}
-                </p>
-              )}
-            </div>
           </div>
 
           {/* Options */}
@@ -472,22 +352,6 @@ export function BankAccountDialog({
                     • Changes will require re-verification of your account
                   </li>
                 )}
-              </ul>
-            </div>
-          </div>
-
-          {/* Document Requirements */}
-          <div className="flex items-start gap-2 p-4 bg-amber-50 rounded-lg border border-amber-200">
-            <FileText className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-amber-800">
-              <p className="font-medium mb-1">
-                Documents that may be required for {isEditing ? "re-" : ""}
-                verification
-              </p>
-              <ul className="space-y-1 text-xs">
-                <li>• Copy of bank book first page</li>
-                <li>• Copy of ID card or company registration certificate</li>
-                <li>• Additional documents as required by the bank</li>
               </ul>
             </div>
           </div>
