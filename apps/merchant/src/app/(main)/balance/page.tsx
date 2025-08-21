@@ -17,87 +17,134 @@ import {
   Plus,
   Trash2,
   AlertCircle,
-  Edit
+  Edit,
+  Loader2
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import BankAccountDialog from "@/components/balance/linkBankAccount"
-
-// Define types
-interface BankAccount {
-  id: number
-  type: string
-  provider: string
-  accountNumber: string
-  fullAccountNumber: string
-  accountName: string
-  accountType?: string
-  branchName?: string
-  idNumber?: string
-  status: "verified" | "pending" | "failed"
-  isDefault: boolean
-  icon: React.ComponentType<{ className?: string }>
-}
+import { useToast } from "@/hooks/use-toast"
+import {
+  getBankAccountsRequester,
+  createBankAccountRequester,
+  updateBankAccountRequester,
+  deleteBankAccountRequester,
+  setDefaultBankAccountRequester,
+  type BankAccount,
+  type CreateBankAccountRequest
+} from "../../../utils/requestUtils/requestBankUtils"
 
 interface BankAccountFormData {
-  provider: string
-  fullAccountNumber: string
-  accountNumber: string
-  accountName: string
-  accountType: string
-  branchName: string
-  idNumber: string
+  bankName: string
+  confirmAccountNumber: string
+  accountHolderName: string
   isDefault: boolean
 }
 
-// Mock data - เหลือแค่บัญชีธนาคาร
-const initialAccounts: BankAccount[] = [
-  {
-    id: 1,
-    type: "bank",
-    provider: "Bangkok Bank",
-    accountNumber: "****1234",
-    fullAccountNumber: "1234567890",
-    accountName: "Online Store Co., Ltd.",
-    accountType: "savings",
-    branchName: "Central World",
-    idNumber: "1234567890123",
-    status: "verified",
-    isDefault: true,
-    icon: Building2
-  },
-  {
-    id: 2,
-    type: "bank",
-    provider: "Kasikorn Bank",
-    accountNumber: "****5678",
-    fullAccountNumber: "0987654321",
-    accountName: "Online Store Co., Ltd.",
-    accountType: "current",
-    branchName: "Siam Paragon",
-    idNumber: "1234567890123",
-    status: "pending",
-    isDefault: false,
-    icon: Building2
-  }
-]
-
 export default function AccountLinking() {
+  const { toast } = useToast()
   const [showBankDialog, setShowBankDialog] = useState<boolean>(false)
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null)
-  const [linkedAccounts, setLinkedAccounts] =
-    useState<BankAccount[]>(initialAccounts)
+  const [linkedAccounts, setLinkedAccounts] = useState<BankAccount[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [actionLoading, setActionLoading] = useState<boolean>(false)
 
-  const handleRemoveAccount = (accountId: number): void => {
-    setLinkedAccounts((prev) => prev.filter((acc) => acc.id !== accountId))
+  // Load bank accounts on component mount
+  useEffect(() => {
+    loadBankAccounts()
+  }, [])
+
+  const loadBankAccounts = async (): Promise<void> => {
+    setLoading(true)
+    try {
+      const accounts = await getBankAccountsRequester()
+      if (accounts) {
+        console.log("loading bank accounts: ", accounts)
+        setLinkedAccounts(accounts)
+      } else {
+        console.error("Error loading bank accounts")
+        toast({
+          title: "Error",
+          description: "Failed to load bank accounts",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error loading bank accounts:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load bank accounts",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSetDefault = (accountId: number): void => {
-    setLinkedAccounts((prev) =>
-      prev.map((acc) => ({
-        ...acc,
-        isDefault: acc.id === accountId
-      }))
-    )
+  const handleRemoveAccount = async (accountId: number): Promise<void> => {
+    if (!confirm("Are you sure you want to remove this bank account?")) {
+      return
+    }
+
+    setActionLoading(true)
+    try {
+      const success = await deleteBankAccountRequester(accountId)
+      if (success) {
+        setLinkedAccounts((prev) => prev.filter((acc) => acc.id !== accountId))
+        toast({
+          title: "Success",
+          description: "Bank account removed successfully"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to remove bank account",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error removing bank account:", error)
+      toast({
+        title: "Error",
+        description: "Failed to remove bank account",
+        variant: "destructive"
+      })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleSetDefault = async (accountId: number): Promise<void> => {
+    setActionLoading(true)
+    try {
+      const success = await setDefaultBankAccountRequester(accountId)
+      if (success) {
+        setLinkedAccounts((prev) =>
+          prev.map((acc) => ({
+            ...acc,
+            isDefault: acc.id === accountId
+          }))
+        )
+        toast({
+          title: "Success",
+          description: "Default bank account updated successfully"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to set default bank account",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error setting default bank account:", error)
+      toast({
+        title: "Error",
+        description: "Failed to set default bank account",
+        variant: "destructive"
+      })
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const handleEditAccount = (account: BankAccount): void => {
@@ -105,47 +152,75 @@ export default function AccountLinking() {
     setShowBankDialog(true)
   }
 
-  const handleSaveAccount = (accountData: BankAccountFormData): void => {
-    if (editingAccount) {
-      // Update existing account
-      setLinkedAccounts((prev) =>
-        prev.map((acc) =>
-          acc.id === editingAccount.id
-            ? {
-                ...acc,
-                provider: accountData.provider,
-                fullAccountNumber: accountData.fullAccountNumber,
-                accountNumber: accountData.accountNumber,
-                accountName: accountData.accountName,
-                accountType: accountData.accountType,
-                branchName: accountData.branchName,
-                idNumber: accountData.idNumber,
-                isDefault: accountData.isDefault,
-                status: "pending" as const // Reset status when edited
-              }
-            : acc
-        )
-      )
-    } else {
-      // Add new account
-      const newAccount: BankAccount = {
-        id: Date.now(),
-        type: "bank",
-        provider: accountData.provider,
-        fullAccountNumber: accountData.fullAccountNumber,
-        accountNumber: accountData.accountNumber,
-        accountName: accountData.accountName,
-        accountType: accountData.accountType,
-        branchName: accountData.branchName,
-        idNumber: accountData.idNumber,
-        icon: Building2,
-        status: "pending",
-        isDefault: linkedAccounts.length === 0 || accountData.isDefault
+  const handleSaveAccount = async (
+    accountData: BankAccountFormData
+  ): Promise<void> => {
+    setActionLoading(true)
+    try {
+      const requestData: CreateBankAccountRequest = {
+        bankName: accountData.bankName,
+        accountNumber: accountData.confirmAccountNumber,
+        accountHolderName: accountData.accountHolderName,
+        isDefault: accountData.isDefault
       }
-      setLinkedAccounts((prev) => [...prev, newAccount])
+
+      if (editingAccount) {
+        // Update existing account
+        const updatedAccount = await updateBankAccountRequester({
+          ...requestData,
+          id: editingAccount.id
+        })
+
+        if (updatedAccount) {
+          setLinkedAccounts((prev) =>
+            prev.map((acc) =>
+              acc.id === editingAccount.id ? updatedAccount : acc
+            )
+          )
+          toast({
+            title: "Success",
+            description: "Bank account updated successfully"
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to update bank account",
+            variant: "destructive"
+          })
+          return
+        }
+      } else {
+        // Create new account
+        const newAccount = await createBankAccountRequester(requestData)
+
+        if (newAccount) {
+          setLinkedAccounts((prev) => [...prev, newAccount])
+          toast({
+            title: "Success",
+            description: "Bank account added successfully"
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to add bank account",
+            variant: "destructive"
+          })
+          return
+        }
+      }
+
+      setEditingAccount(null)
+      setShowBankDialog(false)
+    } catch (error) {
+      console.error("Error saving bank account:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save bank account",
+        variant: "destructive"
+      })
+    } finally {
+      setActionLoading(false)
     }
-    setEditingAccount(null)
-    setShowBankDialog(false)
   }
 
   const handleDialogClose = (): void => {
@@ -155,21 +230,21 @@ export default function AccountLinking() {
 
   const getStatusBadge = (status: BankAccount["status"]) => {
     switch (status) {
-      case "verified":
+      case "VERIFIED":
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Verified
           </Badge>
         )
-      case "pending":
+      case "PENDING":
         return (
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Pending
           </Badge>
         )
-      case "failed":
+      case "FAILED":
         return (
           <Badge variant="destructive">
             <XCircle className="w-3 h-3 mr-1" />
@@ -179,6 +254,15 @@ export default function AccountLinking() {
       default:
         return null
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading bank accounts...</span>
+      </div>
+    )
   }
 
   return (
@@ -216,7 +300,7 @@ export default function AccountLinking() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {
-                  linkedAccounts.filter((acc) => acc.status === "verified")
+                  linkedAccounts.filter((acc) => acc.status === "VERIFIED")
                     .length
                 }
               </div>
@@ -235,7 +319,7 @@ export default function AccountLinking() {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {linkedAccounts.find((acc) => acc.isDefault)?.provider ||
+                {linkedAccounts.find((acc) => acc.isDefault)?.bankName ||
                   "Not set"}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -257,6 +341,7 @@ export default function AccountLinking() {
             <Button
               onClick={() => setShowBankDialog(true)}
               className="flex items-center gap-2"
+              disabled={actionLoading}
             >
               <Plus className="h-4 w-4" />
               Add Bank Account
@@ -276,6 +361,7 @@ export default function AccountLinking() {
                   <Button
                     onClick={() => setShowBankDialog(true)}
                     className="flex items-center gap-2 mx-auto"
+                    disabled={actionLoading}
                   >
                     <Plus className="h-4 w-4" />
                     Add Bank Account
@@ -291,14 +377,14 @@ export default function AccountLinking() {
                       <Building2 className="h-8 w-8 text-muted-foreground" />
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{account.provider}</h3>
+                          <h3 className="font-medium">{account.bankName}</h3>
                           {account.isDefault && (
                             <Badge variant="outline">Default</Badge>
                           )}
                           {getStatusBadge(account.status)}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {account.accountName}
+                          {account.accountHolderName}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {account.accountNumber}
@@ -306,13 +392,18 @@ export default function AccountLinking() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!account.isDefault && account.status === "verified" && (
+                      {!account.isDefault && account.status === "VERIFIED" && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleSetDefault(account.id)}
+                          disabled={actionLoading}
                         >
-                          Set as Default
+                          {actionLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Set as Default"
+                          )}
                         </Button>
                       )}
                       <Button
@@ -320,6 +411,7 @@ export default function AccountLinking() {
                         size="sm"
                         onClick={() => handleEditAccount(account)}
                         className="text-blue-600 hover:text-blue-700"
+                        disabled={actionLoading}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -328,8 +420,13 @@ export default function AccountLinking() {
                         size="sm"
                         onClick={() => handleRemoveAccount(account.id)}
                         className="text-red-600 hover:text-red-700"
+                        disabled={actionLoading}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {actionLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>

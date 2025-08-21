@@ -1,4 +1,5 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
+import { BankAccountStatus } from '../../types/enum';
 
 export interface BankAccountAttributes {
   id: number;
@@ -7,6 +8,7 @@ export interface BankAccountAttributes {
   bankName: string;
   accountNumber: string;
   accountHolderName: string;
+  status?: BankAccountStatus
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -23,6 +25,7 @@ export class BankAccount
   public bankName!: string;
   public accountNumber!: string;
   public accountHolderName!: string;
+  public status!: BankAccountStatus;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
@@ -64,12 +67,19 @@ export class BankAccount
           allowNull: false,
           field: 'account_holder_name',
         },
+        status: {
+          type: DataTypes.ENUM(...Object.values(BankAccountStatus)),
+          allowNull: false,
+          defaultValue: BankAccountStatus.PENDING,
+          field: 'status',
+        },
       },
       {
         sequelize,
         tableName: 'BANK_ACCOUNTS',
         modelName: 'BankAccount',
         timestamps: true,
+        underscored: true,
       }
     );
 

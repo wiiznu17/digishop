@@ -1,4 +1,5 @@
 import { QueryInterface, DataTypes } from 'sequelize';
+import { BankAccountStatus } from '../types/enum';
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
@@ -31,6 +32,10 @@ export default {
         type: DataTypes.STRING(191),
         allowNull: false
       },
+      status: {
+        type: DataTypes.ENUM(...Object.values(BankAccountStatus)),
+        allowNull: false,
+        defaultValue: BankAccountStatus.PENDING },
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
