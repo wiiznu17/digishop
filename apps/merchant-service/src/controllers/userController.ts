@@ -55,7 +55,7 @@ export const getMerchantProfile = async (req: AuthenticatedRequest, res: Respons
             },
             {
               model: BankAccount,
-              as: "bankAccount",
+              as: "bankAccounts",
               attributes: [
                 "id",
                 "bankName",
@@ -81,13 +81,6 @@ export const getMerchantProfile = async (req: AuthenticatedRequest, res: Respons
 
     const profileJson = merchantProfile.toJSON() as any;
 
-    // // map full URL ถ้าจำเป็น
-    // if (profileJson.store?.profileImages?.length) {
-    //   profileJson.store.profileImage = profileJson.store.profileImages[0].url;
-    //   delete profileJson.store.profileImages; // ลบ array เดิม
-    // } else {
-    //   profileJson.store.profileImage = null;
-    // }
     console.log('from db: ', profileJson)
     return res.json({ user: profileJson });
   } catch (error) {
