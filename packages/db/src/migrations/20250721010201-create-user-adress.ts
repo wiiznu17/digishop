@@ -21,7 +21,7 @@ export default {
         allowNull: false,
       },
       phone: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(10),
         allowNull: false,
       },
       address_number: {
@@ -30,34 +30,34 @@ export default {
       },
       building: {
         type: DataTypes.STRING(255),
-        allowNull: false,
-      },
-      sub_street: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,
       },
       street: {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
-      sub_district: {
-        type: DataTypes.STRING(191),
-        allowNull: false,
+      sub_street: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
       },
       district: {
         type: DataTypes.STRING(191),
         allowNull: false,
+      },
+      sub_district: {
+        type: DataTypes.STRING(191),
+        allowNull: true,
       },
       province: {
         type: DataTypes.STRING(191),
         allowNull: false,
       },
       postal_code: {
-        type: DataTypes.STRING(10),
+        type: DataTypes.STRING(5),
         allowNull: false,
       },
       country: {
-        type: DataTypes.STRING(10),
+        type: DataTypes.STRING(255),
         allowNull: false,
         defaultValue: 'Thailand'
       },
@@ -68,7 +68,7 @@ export default {
       },
       address_type: {
         type: DataTypes.STRING(50),
-        allowNull: true,
+        allowNull: false,
       },
       created_at: {
         type: DataTypes.DATE,

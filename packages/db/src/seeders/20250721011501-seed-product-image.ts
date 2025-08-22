@@ -27,7 +27,7 @@ export default {
       },
       {
         id: 'b3333333-aaaa-bbbb-cccc-333333333333',
-        productId: '1',
+        productId: '2',
         url: 'https://example.com/images/product2-main.jpg',
         blobName: 'product2-main.jpg',
         fileName: 'product2-main.jpg',
