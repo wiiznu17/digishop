@@ -7,7 +7,7 @@ import { LogIn, ShoppingBag } from 'lucide-react';
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 
-const LoginPage: React.FC = () => {
+export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -23,6 +23,13 @@ const LoginPage: React.FC = () => {
       [name]: value
     }));
     
+    // Clear error when user starts typing
+    // if (errors[name]) {
+    //   setErrors(prev => ({
+    //     ...prev,
+    //     [name]: ''
+    //   }));
+    // }
   };
 
   const validateForm = (): boolean => {
@@ -42,21 +49,26 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    try {
-      const success = await login(formData.email, formData.password)
-      if(success){
-        console.log('user in login page',user)
-        router.replace("/digishop")
-      }
-    } catch (error) {
+    const success = await login(formData.email, formData.password)
+    if (success) {
+      router.push("/digishop")
+    } else {
       
-      // if (success) {
-    //   } else {
-    // }
-      console.log('error',error)
-    }
-  };
-  
+      try {
+        const success = await login(formData.email, formData.password)
+        if(success){
+          console.log('user in login page',user)
+          router.replace("/digishop")
+        }
+      } catch (error) {
+      
+        // if (success) {
+      //   } else {
+      // }
+        console.log('error',error)
+      }
+    };
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br bg-[#add8e6] to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -118,5 +130,3 @@ const LoginPage: React.FC = () => {
     </div>
   );
 };
-
-export default LoginPage;

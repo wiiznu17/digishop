@@ -1,9 +1,9 @@
 import axios from "@/lib/axios"
-import { FormLogin, FormRegister } from "@/types/props/userProp"
-
+import { FormLogin } from "@/types/props/userProp"
+const endpoint = process.env.NEXT_PUBLIC_GATEWAY_URL
 export async function fetchUser(): Promise<FormLogin | null> {
   try {
-    const res = await axios.get('http://localhost:4000/api/auth/me', { withCredentials: true })
+    const res = await axios.get(`${endpoint}api/auth/me`, { withCredentials: true })
     return res.data.user
   } catch (error) {
     console.error("Error fetching user:", error)
@@ -17,7 +17,7 @@ export async function loginUser(
 ): Promise<FormLogin | null> {
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/auth/login",
+      `${endpoint}api/auth/login`,
       { email, password },
       { withCredentials: true }
     )
@@ -31,7 +31,7 @@ export async function loginUser(
 
 export async function logoutUser(): Promise<void> {
   try {
-    await axios.post("http://localhost:4000/api/auth/logout", null, { withCredentials: true })
+    await axios.post(`${endpoint}api/auth/logout`, null, { withCredentials: true })
   } catch (error) {
     console.error("Logout error:", error)
   }

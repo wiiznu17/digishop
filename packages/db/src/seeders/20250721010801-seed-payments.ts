@@ -2,7 +2,7 @@ import { QueryInterface } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Payments', [
+    await queryInterface.bulkInsert('PAYMENTS', [
       {
         order_id: 1,
         payment_method: 'CREDIT_CARD',
