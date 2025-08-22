@@ -6,7 +6,13 @@ export interface FormRegister {
   password: string;
   recipientName: string;
   phone: string;
-  addressLine: string;
+  address_number: string;
+  building: string;
+  subStreet: string;
+  street: string;
+  subdistrict: string;
+  district: string;
+  country: string;
   province: string;
   postalCode: string;
   isDefault: boolean;
