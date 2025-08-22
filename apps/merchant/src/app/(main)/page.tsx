@@ -19,7 +19,7 @@ import Link from "next/link"
 const stats = [
   {
     title: "Total Revenue",
-    value: "$45,231.89",
+    value: "฿45,231.89",
     change: "+20.1% from last month",
     icon: DollarSign
   },
@@ -99,7 +99,7 @@ export default function Home() {
                       olivia.martin@email.com
                     </p>
                   </div>
-                  <div className="ml-auto font-medium">+$1,999.00</div>
+                  <div className="ml-auto font-medium">+฿1,999.00</div>
                 </div>
                 <div className="flex items-center">
                   <div className="ml-4 space-y-1">
@@ -110,7 +110,7 @@ export default function Home() {
                       jackson.lee@email.com
                     </p>
                   </div>
-                  <div className="ml-auto font-medium">+$39.00</div>
+                  <div className="ml-auto font-medium">+฿39.00</div>
                 </div>
                 <div className="flex items-center">
                   <div className="ml-4 space-y-1">
@@ -121,7 +121,7 @@ export default function Home() {
                       isabella.nguyen@email.com
                     </p>
                   </div>
-                  <div className="ml-auto font-medium">+$299.00</div>
+                  <div className="ml-auto font-medium">+฿299.00</div>
                 </div>
               </div>
             </CardContent>
@@ -167,7 +167,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Average Order Value</span>
-                  <span className="text-sm font-medium">$89.50</span>
+                  <span className="text-sm font-medium">฿89.50</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Customer Satisfaction</span>
