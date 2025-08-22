@@ -1,18 +1,16 @@
 "use client"
 
 import {
-  Calendar,
   ChevronUp,
   Home,
-  Inbox,
   Package,
-  Search,
   Settings,
   ShoppingCart,
   User,
   BarChart3,
-  Plus,
-  Users
+  Users,
+  WalletCards,
+  WalletMinimal
 } from "lucide-react"
 import Link from "next/link"
 
@@ -23,6 +21,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
@@ -64,9 +63,9 @@ const items = [
     icon: BarChart3
   },
   {
-    title: "Balance",
+    title: "Bank Account",
     url: "/balance",
-    icon: Inbox
+    icon: WalletMinimal
   },
   {
     title: "Profile",
@@ -79,6 +78,23 @@ const items = [
     icon: Settings
   }
 ]
+// วางฟังก์ชันนี้ไว้นอก AppSidebar หรือจะ import มาจากไฟล์อื่นก็ได้
+function Logo() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="mr-2 h-6 w-6"
+    >
+      <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+    </svg>
+  )
+}
 
 export function AppSidebar() {
   const { logout, isLoading } = useAuth()
@@ -88,7 +104,13 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Merchant</SidebarGroupLabel>
+          {/* <SidebarGroupLabel>Merchant</SidebarGroupLabel> */}
+          <SidebarHeader>
+            <div className="flex items-center gap-2">
+              <Logo />
+              <h2 className="text-xl font-semibold tracking-tight">DigiShop</h2>
+            </div>
+          </SidebarHeader>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

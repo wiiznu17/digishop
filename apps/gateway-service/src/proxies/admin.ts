@@ -1,4 +1,3 @@
-// pathRewrite: { "^/api/admin": "/api/admin" }
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { config } from "../config";
 
@@ -7,27 +6,15 @@ export const adminProxy = createProxyMiddleware({
   changeOrigin: true,
   cookieDomainRewrite: "localhost",
   pathRewrite: { "^/api/admin": "/api/admin" },
-  onProxyReq: (proxyReq, req, res) => {
+  logLevel: "debug", // จะได้เห็นว่า proxy ส่งอะไรไปบ้าง
+
+  onProxyReq: (proxyReq, req) => {
     console.log(`[Gateway] Proxying request to: ${config.services.merchant}${req.url}`);
-
-    // ส่ง body เฉพาะ POST, PUT, PATCH
-    if (
-      req.method !== "GET" &&
-      req.method !== "HEAD" &&
-      req.body &&
-      Object.keys(req.body).length
-    ) {
-      const bodyData = JSON.stringify(req.body);
-
-      proxyReq.setHeader("Content-Type", "application/json");
-      proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-
-      proxyReq.write(bodyData);
-      // ไม่ต้อง proxyReq.end() ให้ middleware จัดการเอง
-    }
+    // ❌ ไม่ต้องเขียน body เอง ปล่อยให้ middleware จัดการ
   },
+
   onError: (err, req, res) => {
-    console.error("[Gateway] Merchant proxy error:", err);
+    console.error("[Gateway] Admin proxy error:", err);
     if (!res.headersSent) {
       res.status(500).send("Proxy error");
     }

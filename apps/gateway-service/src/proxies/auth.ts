@@ -7,20 +7,13 @@ export const authProxy: RequestHandler = createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: { "^/api/auth": "/api/auth" },
   cookieDomainRewrite: "localhost",
-  onProxyReq: (proxyReq, req, res) => {
+  logLevel: "debug",
+
+  onProxyReq: (proxyReq, req) => {
     console.log(`[Gateway] Proxying request to: ${config.services.auth}${req.url}`);
-
-    // ส่ง body เฉพาะ POST, PUT, PATCH เท่านั้น
-    if (req.method !== "GET" && req.method !== "HEAD" && req.body && Object.keys(req.body).length) {
-      const bodyData = JSON.stringify(req.body);
-
-      proxyReq.setHeader("Content-Type", "application/json");
-      proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-
-      proxyReq.write(bodyData);
-      // ไม่ต้อง proxyReq.end() ให้ middleware จัดการเอง
-    }
+    // ❌ ไม่ต้องเขียน body เอง
   },
+
   onProxyRes: (proxyRes) => {
     const cookies = proxyRes.headers["set-cookie"];
     if (cookies) {
@@ -29,8 +22,9 @@ export const authProxy: RequestHandler = createProxyMiddleware({
       );
     }
   },
+
   onError: (err, req, res) => {
-    console.error("[Gateway] Proxy error:", err);
+    console.error("[Gateway] Auth proxy error:", err);
     if (!res.headersSent) {
       res.status(500).send("Proxy error");
     }

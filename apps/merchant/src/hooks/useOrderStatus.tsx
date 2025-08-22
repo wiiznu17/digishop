@@ -105,12 +105,12 @@ export const useOrderStatus = () => {
         return ["READY_TO_SHIP"]
       case "READY_TO_SHIP":
         return ["SHIPPED"]
-      case "SHIPPED":
-        return ["DELIVERED", "TRANSIT_LACK"]
-      case "TRANSIT_LACK":
-        return ["RE_TRANSIT"]
-      case "RE_TRANSIT":
-        return ["TRANSIT_LACK", "DELIVERED"]
+      // case "SHIPPED":
+      //   return ["DELIVERED", "TRANSIT_LACK"]
+      // case "TRANSIT_LACK":
+      //   return ["RE_TRANSIT"]
+      // case "RE_TRANSIT":
+      //   return ["TRANSIT_LACK", "DELIVERED"]
       case "REFUND_REQUEST":
         return ["REFUND_APPROVED"]
       case "AWAITING_RETURN":

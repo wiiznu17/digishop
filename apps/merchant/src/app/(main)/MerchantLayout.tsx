@@ -3,6 +3,7 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { useAuth } from "@/contexts/auth-context"
+import { ToastProvider } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
@@ -32,7 +33,9 @@ export default function MerchantLayout({
     <div className="antialiased">
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+          <ToastProvider>{children}</ToastProvider>
+        </SidebarInset>
       </SidebarProvider>
     </div>
   )

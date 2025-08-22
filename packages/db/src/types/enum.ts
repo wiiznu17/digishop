@@ -15,6 +15,12 @@ export enum StoreStatus {
   BANNED = 'BANNED',
 }
 
+export enum BankAccountStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'VERIFIED',
+  BANNED = 'FAILED',
+}
+
 export enum ShippingType {
   STANDARD = 'STANDARD',
   EXPRESS = 'EXPRESS',

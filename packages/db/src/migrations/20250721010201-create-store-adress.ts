@@ -12,7 +12,7 @@ export default {
       user_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
-        references: { model: 'USERS', key: 'id' },
+        references: { model: 'STORES', key: 'user_id' },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },

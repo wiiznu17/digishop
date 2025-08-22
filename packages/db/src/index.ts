@@ -21,9 +21,10 @@ import { MerchantAddress } from '../src/models/StoreAddress';
 import { ProductImage } from '../src/models/ProductImage'
 import { BankAccount } from '../src/models/bank/BankAccount';
 import { ShippingType } from '../src/models/ShippingType';
+import { ProfileMerchantImage } from '../src/models/ProfileImage';
 
 export function initModels(sequelize: Sequelize) {
-  // init main
+  // Initialize all models
   User.initModel(sequelize);
   Address.initModel(sequelize);
   Store.initModel(sequelize);
@@ -31,18 +32,17 @@ export function initModels(sequelize: Sequelize) {
   ShippingConfig.initModel(sequelize);
   Category.initModel(sequelize);
   Product.initModel(sequelize);
+  // ProductImage.initModel(sequelize);
   Order.initModel(sequelize);
   OrderItem.initModel(sequelize);
   Payment.initModel(sequelize);
   ShippingInfo.initModel(sequelize);
-  ShippingType.initModel(sequelize);
   Review.initModel(sequelize);
   ProductView.initModel(sequelize);
   StoreView.initModel(sequelize);
   AdminUser.initModel(sequelize);
   AdminSystemLog.initModel(sequelize);
   Dispute.initModel(sequelize);
-  // Init bank
   BankAccount.initModel(sequelize);
 
   // --- Associations ---
@@ -78,8 +78,11 @@ export function initModels(sequelize: Sequelize) {
   Store.hasMany(StoreView, { foreignKey: 'store_id', as: 'views' });
   StoreView.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
 
-  Store.hasMany(MerchantAddress, { foreignKey: 'user_id', as: 'addresses' });
-  MerchantAddress.belongsTo(Store, { foreignKey: 'user_id', as: 'store' });
+  Store.hasMany(MerchantAddress, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'addresses' });
+  MerchantAddress.belongsTo(Store, { foreignKey: 'user_id', targetKey: 'user_id', as: 'store' });
+
+  Store.hasMany(ProfileMerchantImage, { foreignKey: 'store_id', as: 'profileImages' })
+  ProfileMerchantImage.belongsTo(Store, { foreignKey: 'store_id', as: 'user' })
 
   // Category
   Category.hasMany(Category, { foreignKey: 'parent_id', as: 'children' });
@@ -98,8 +101,8 @@ export function initModels(sequelize: Sequelize) {
   Product.hasMany(ProductView, { foreignKey: 'product_id', as: 'views' });
   ProductView.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
-  Product.hasOne(Category, { foreignKey: 'id', as: 'categoryDetail' });
-  Category.belongsTo(Product, { foreignKey: 'id', as: 'productCategory' });
+  // Product.hasOne(Category, { foreignKey: 'id', as: 'categoryDetail' });
+  // Category.belongsTo(Product, { foreignKey: 'id', as: 'productCategory' });
 
   Product.hasMany(ProductImage, {
     foreignKey: 'productId',
@@ -131,15 +134,14 @@ export function initModels(sequelize: Sequelize) {
   Address.hasMany(ShippingInfo, { foreignKey: 'shipping_address', as: 'shippingAddressinfos' });
   Address.belongsTo(ShippingInfo, { foreignKey: 'shipping_address', as: 'shippingAddress' });  
 
-  // Bank account
-  BankAccount.hasMany(Store, {
-    foreignKey: 'bank_account_id',
-    as: 'stores',
+  Store.hasMany(BankAccount, {
+    foreignKey: 'storeId',
+    as: 'bankAccounts', // เวลา query จะใช้ชื่อนี้ e.g., store.getBankAccounts()
   });
 
-  Store.belongsTo(BankAccount, {
-    foreignKey: 'bank_account_id',
-    as: 'bankAccount',
+  BankAccount.belongsTo(Store, {
+    foreignKey: 'storeId',
+    as: 'store',
   });
   // Admin
   AdminUser.hasMany(AdminSystemLog, { foreignKey: 'admin_id', as: 'logs' });
@@ -164,7 +166,8 @@ export function initModels(sequelize: Sequelize) {
     AdminUser,
     AdminSystemLog,
     Dispute,
-    BankAccount
+    BankAccount,
+    ProfileMerchantImage
   };
 }
 

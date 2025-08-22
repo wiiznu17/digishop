@@ -12,68 +12,201 @@ import { Badge } from "@/components/ui/badge"
 import { MerchantHeader } from "@/components/dashboard-header"
 import {
   Building2,
-  Smartphone,
   CheckCircle,
   XCircle,
   Plus,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import BankAccountDialog from "@/components/balance/linkBankAccount"
+import { useToast } from "@/hooks/use-toast"
+import {
+  getBankAccountsRequester,
+  createBankAccountRequester,
+  deleteBankAccountRequester,
+  setDefaultBankAccountRequester,
+  type BankAccount,
+  type CreateBankAccountRequest
+} from "../../../utils/requestUtils/requestBankUtils"
 
-// Mock data
-const linkedAccounts = [
-  {
-    id: 1,
-    type: "bank",
-    provider: "Bangkok Bank",
-    accountNumber: "****1234",
-    accountName: "Online Store Co., Ltd.",
-    status: "verified",
-    isDefault: true,
-    icon: Building2
-  },
-  {
-    id: 2,
-    type: "ewallet",
-    provider: "TrueMoney Wallet",
-    accountNumber: "****5678",
-    accountName: "Somchai Jaidee",
-    status: "verified",
-    isDefault: false,
-    icon: Smartphone
-  }
-]
+interface BankAccountFormData {
+  bankName: string
+  confirmAccountNumber: string
+  accountHolderName: string
+  isDefault: boolean
+}
+
+// mask
+function maskAccountNumber(accountNumber: string) {
+  if (!accountNumber) return accountNumber
+  if (accountNumber.length <= 6) return accountNumber
+  return accountNumber.slice(0, 2) + "xxxxxx" + accountNumber.slice(-4)
+}
 
 export default function AccountLinking() {
-  const [showBankDialog, setShowBankDialog] = useState(false)
+  const { toast } = useToast()
+  const [showBankDialog, setShowBankDialog] = useState<boolean>(false)
+  const [linkedAccounts, setLinkedAccounts] = useState<BankAccount[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [actionLoading, setActionLoading] = useState<boolean>(false)
+  const [removingAccountId, setRemovingAccountId] = useState<number | null>(
+    null
+  )
+  const [defaultingAccountId, setDefaultingAccountId] = useState<number | null>(
+    null
+  )
 
-  const handleRemoveAccount = (accountId: number) => {
-    console.log("Removing account:", accountId)
+  useEffect(() => {
+    loadBankAccounts()
+  }, [])
+
+  const handleSaveBankAccount = async (accountData: BankAccountFormData) => {
+    try {
+      const requestData: CreateBankAccountRequest = {
+        bankName: accountData.bankName,
+        accountNumber: accountData.confirmAccountNumber,
+        accountHolderName: accountData.accountHolderName,
+        isDefault: accountData.isDefault
+      }
+
+      const newAccount = await createBankAccountRequester(requestData)
+
+      if (newAccount) {
+        setLinkedAccounts((prev) => [...prev, newAccount])
+        toast({
+          title: "Success",
+          description: "Bank account added successfully"
+        })
+        await loadBankAccounts() // refresh data
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add bank account",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error adding bank account:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      })
+    }
   }
 
-  const handleSetDefault = (accountId: number) => {
-    console.log("Setting default account:", accountId)
+  const loadBankAccounts = async () => {
+    setLoading(true)
+    try {
+      const accounts = await getBankAccountsRequester()
+      if (accounts) {
+        setLinkedAccounts(accounts)
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load bank accounts",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.log("Error to load bank account: ", error)
+      toast({
+        title: "Error",
+        description: "Failed to load bank accounts",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const getStatusBadge = (status: string) => {
+  const handleRemoveAccount = async (accountId: number) => {
+    if (!confirm("Are you sure you want to remove this bank account?")) {
+      return
+    }
+    setRemovingAccountId(accountId)
+    try {
+      const success = await deleteBankAccountRequester(accountId)
+      if (success) {
+        setLinkedAccounts((prev) => prev.filter((acc) => acc.id !== accountId))
+        toast({
+          title: "Success",
+          description: "Bank account removed successfully"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to remove bank account",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.log("Error to remove bank account: ", error)
+      toast({
+        title: "Error",
+        description: "Failed to remove bank account",
+        variant: "destructive"
+      })
+    } finally {
+      setRemovingAccountId(null)
+    }
+  }
+
+  const handleSetDefault = async (accountId: number) => {
+    setDefaultingAccountId(accountId)
+    setActionLoading(true)
+    try {
+      const success = await setDefaultBankAccountRequester(accountId)
+      if (success) {
+        setLinkedAccounts((prev) =>
+          prev.map((acc) => ({
+            ...acc,
+            isDefault: acc.id === accountId
+          }))
+        )
+        toast({
+          title: "Success",
+          description: "Default bank account updated successfully"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to set default bank account",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.log("Error to set default for this bank account: ", error)
+      toast({
+        title: "Error",
+        description: "Failed to set default bank account",
+        variant: "destructive"
+      })
+    } finally {
+      setDefaultingAccountId(null)
+      setActionLoading(false)
+    }
+  }
+
+  const getStatusBadge = (status: BankAccount["status"]) => {
     switch (status) {
-      case "verified":
+      case "VERIFIED":
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Verified
           </Badge>
         )
-      case "pending":
+      case "PENDING":
         return (
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Pending
           </Badge>
         )
-      case "failed":
+      case "FAILED":
         return (
           <Badge variant="destructive">
             <XCircle className="w-3 h-3 mr-1" />
@@ -85,31 +218,38 @@ export default function AccountLinking() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading bank accounts...</span>
+      </div>
+    )
+  }
+
   return (
     <div>
       <MerchantHeader
-        title="Account Management"
-        description="Manage your bank accounts and e-wallets"
+        title="Bank Account Management"
+        description="Manage your bank accounts for receiving payments"
       />
-
       <div className="flex flex-1 flex-col gap-6 p-4">
-        {/* Account summary */}
+        {/* สรุปข้อมูลบัญชี */}
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Accounts
+                Bank Accounts
               </CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{linkedAccounts.length}</div>
               <p className="text-xs text-muted-foreground">
-                Connected accounts
+                Connected bank accounts
               </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -120,7 +260,7 @@ export default function AccountLinking() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {
-                  linkedAccounts.filter((acc) => acc.status === "verified")
+                  linkedAccounts.filter((acc) => acc.status === "VERIFIED")
                     .length
                 }
               </div>
@@ -129,7 +269,6 @@ export default function AccountLinking() {
               </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -139,7 +278,7 @@ export default function AccountLinking() {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {linkedAccounts.find((acc) => acc.isDefault)?.provider ||
+                {linkedAccounts.find((acc) => acc.isDefault)?.bankName ||
                   "Not set"}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -149,18 +288,19 @@ export default function AccountLinking() {
           </Card>
         </div>
 
-        {/* Connected accounts list */}
+        {/* รายการบัญชี */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Connected Accounts</CardTitle>
+              <CardTitle>Bank Accounts</CardTitle>
               <CardDescription>
-                Manage your bank accounts and e-wallets
+                Manage your bank accounts for receiving payments
               </CardDescription>
             </div>
             <Button
               onClick={() => setShowBankDialog(true)}
               className="flex items-center gap-2"
+              disabled={actionLoading}
             >
               <Plus className="h-4 w-4" />
               Add Bank Account
@@ -168,108 +308,115 @@ export default function AccountLinking() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {linkedAccounts.map((account) => {
-                const Icon = account.icon
-                return (
+              {linkedAccounts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium mb-2">
+                    No bank accounts added
+                  </h3>
+                  <p className="text-sm mb-4">
+                    Add your first bank account to start receiving payments
+                  </p>
+                  <Button
+                    onClick={() => setShowBankDialog(true)}
+                    className="flex items-center gap-2 mx-auto"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Bank Account
+                  </Button>
+                </div>
+              ) : (
+                linkedAccounts.map((account) => (
                   <div
                     key={account.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <Icon className="h-8 w-8 text-muted-foreground" />
+                      <Building2 className="h-8 w-8 text-muted-foreground" />
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{account.provider}</h3>
+                          <h3 className="font-medium">{account.bankName}</h3>
                           {account.isDefault && (
                             <Badge variant="outline">Default</Badge>
                           )}
                           {getStatusBadge(account.status)}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {account.accountName}
+                          {account.accountHolderName}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {account.accountNumber}
+                          {maskAccountNumber(account.accountNumber)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!account.isDefault && account.status === "verified" && (
+                      {!account.isDefault && account.status === "VERIFIED" && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleSetDefault(account.id)}
+                          disabled={defaultingAccountId === account.id}
                         >
-                          Set as Default
+                          {defaultingAccountId === account.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Set as Default"
+                          )}
                         </Button>
                       )}
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleRemoveAccount(account.id)}
+                        className="text-red-600 hover:text-red-700"
+                        disabled={removingAccountId === account.id}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {removingAccountId === account.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
-                )
-              })}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Add payment methods quickly</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setShowBankDialog(true)}
-                  className="p-4 border rounded-lg hover:bg-muted transition-colors text-left"
-                >
-                  <Building2 className="h-5 w-5 mb-2" />
-                  <div className="text-sm font-medium">Add Bank Account</div>
-                </button>
-                <div className="p-4 border rounded-lg hover:bg-muted transition-colors">
-                  <Smartphone className="h-5 w-5 mb-2" />
-                  <div className="text-sm font-medium">Add E-Wallet</div>
-                </div>
+        {/* ข้อมูลความปลอดภัย */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Bank Account Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Bank-level security encryption</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Important Info</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>Bank-level security</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>Verification takes 1-2 business days</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>Full account numbers are not stored</span>
-                </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Account verification takes 1-2 business days</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Full account numbers are encrypted and secure</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span>Support for all major Thai banks</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Bank Account Dialog */}
+      {/* Dialog เพิ่มบัญชี */}
       <BankAccountDialog
         open={showBankDialog}
         onOpenChange={setShowBankDialog}
+        onSave={handleSaveBankAccount}
       />
     </div>
   )
