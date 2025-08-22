@@ -16,29 +16,34 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("ALL")
 
-  const {
-    getStatusIcon,
-    getStatusColor,
-    getStatusBadgeColor,
-    getStatusText,
-    getMerchantEditableStatuses
-  } = useOrderStatus()
+  // << 1. ลดการเรียกใช้ hook เหลือเฉพาะที่จำเป็นในหน้านี้
+  const { getStatusIcon, getStatusBadgeColor, getStatusText } = useOrderStatus()
 
-  // sync selectedOrder กับ orders array
+  // Sync selectedOrder with the main orders array to reflect updates
   useEffect(() => {
-    if (selectedOrder && isDetailOpen) {
+    if (selectedOrder) {
       const updatedOrder = orders.find((order) => order.id === selectedOrder.id)
       if (updatedOrder) {
         setSelectedOrder(updatedOrder)
       }
     }
-  }, [orders, selectedOrder?.id, isDetailOpen, selectedOrder])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders, selectedOrder?.id])
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
+      prev.map((order) => {
+        if (order.id === orderId) {
+          // << 2. อัปเดตทั้ง status และ statusHistory พร้อมกัน
+          // นี่คือส่วนที่สำคัญที่สุด!
+          const newHistory = [
+            ...(order.statusHistory || [order.status]),
+            newStatus
+          ]
+          return { ...order, status: newStatus, statusHistory: newHistory }
+        }
+        return order
+      })
     )
   }
 
@@ -60,7 +65,8 @@ export default function OrdersPage() {
 
   const handleCloseDialog = () => {
     setIsDetailOpen(false)
-    setSelectedOrder(null)
+    // Delay setting selectedOrder to null to prevent content flicker during closing animation
+    setTimeout(() => setSelectedOrder(null), 300)
   }
 
   const handleSearchChange = (value: string) => {
@@ -74,15 +80,13 @@ export default function OrdersPage() {
   return (
     <div>
       <MerchantHeader
-        title="จัดการคำสั่งซื้อ"
-        description="ติดตามและจัดการคำสั่งซื้อของลูกค้า"
+        title="Order Management"
+        description="Track and manage customer orders"
       />
 
       <div className="flex flex-1 flex-col gap-6 p-4">
-        {/* สถิติภาพรวม */}
         <OrderStats orders={orders} />
 
-        {/* รายการคำสั่งซื้อ */}
         <OrdersTable
           orders={orders}
           searchTerm={searchTerm}
@@ -96,17 +100,13 @@ export default function OrdersPage() {
         />
       </div>
 
-      {/* Order Detail Dialog */}
+      {/* << 3. ลบ props ที่ไม่จำเป็นออกทั้งหมด */}
       <OrderDetailDialog
         order={selectedOrder}
         isOpen={isDetailOpen}
         onClose={handleCloseDialog}
         onStatusChange={handleStatusChange}
         onTrackingNumberUpdate={handleTrackingNumberUpdate}
-        getStatusIcon={getStatusIcon}
-        getStatusBadgeColor={getStatusBadgeColor}
-        getStatusText={getStatusText}
-        getMerchantEditableStatuses={getMerchantEditableStatuses}
       />
     </div>
   )

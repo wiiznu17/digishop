@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { Order, OrderStatus } from "@/types/props/orderProp"
 import { OrderStatusManager } from "@/components/order/orderManager"
+import { useOrderStatus } from "@/hooks/useOrderStatus"
 
 interface OrderDetailDialogProps {
   order: Order | null
@@ -35,10 +36,10 @@ interface OrderDetailDialogProps {
   onClose: () => void
   onStatusChange: (orderId: string, newStatus: OrderStatus) => void
   onTrackingNumberUpdate: (orderId: string, trackingNumber: string) => void
-  getStatusIcon: (status: OrderStatus) => React.ReactNode
-  getStatusBadgeColor: (status: OrderStatus) => string
-  getStatusText: (status: OrderStatus) => string
-  getMerchantEditableStatuses: (currentStatus: OrderStatus) => OrderStatus[]
+  // getStatusIcon: (status: OrderStatus) => React.ReactNode
+  // getStatusBadgeColor: (status: OrderStatus) => string
+  // getStatusText: (status: OrderStatus) => string
+  // getMerchantEditableStatuses: (currentStatus: OrderStatus) => OrderStatus[]
 }
 
 export function OrderDetailDialog({
@@ -46,12 +47,19 @@ export function OrderDetailDialog({
   isOpen,
   onClose,
   onStatusChange,
-  onTrackingNumberUpdate,
-  getStatusIcon,
-  getStatusBadgeColor,
-  getStatusText,
-  getMerchantEditableStatuses
+  onTrackingNumberUpdate
+  // getStatusIcon,
+  // getStatusBadgeColor,
+  // getStatusText,
+  // getMerchantEditableStatuses
 }: OrderDetailDialogProps) {
+  const {
+    getStatusBadgeColor,
+    getStatusIcon,
+    getStatusText,
+    getMerchantEditableStatuses
+  } = useOrderStatus()
+
   if (!order) return null
 
   return (
@@ -60,15 +68,15 @@ export function OrderDetailDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            รายละเอียดคำสั่งซื้อ - {order.id}
+            Order Details - {order.id}
           </DialogTitle>
           <DialogDescription>
-            ข้อมูลครบถ้วนของคำสั่งซื้อและสินค้า
+            Complete information about the order and products
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* สถานะและการชำระเงิน */}
+          {/* Status and Payment */}
           <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
             <div className="flex items-center gap-4">
               <Badge
@@ -81,7 +89,7 @@ export function OrderDetailDialog({
 
               {order.refundReason && (
                 <div className="text-sm">
-                  <span className="font-medium">เหตุผลขอคืน: </span>
+                  <span className="font-medium">Refund Reason: </span>
                   <span className="text-muted-foreground">
                     {order.refundReason}
                   </span>
@@ -97,19 +105,19 @@ export function OrderDetailDialog({
               </div>
               {order.refundAmount && (
                 <div className="text-sm text-red-600">
-                  ยอดคืน: ฿{order.refundAmount.toLocaleString()}
+                  Refund Amount: ฿{order.refundAmount.toLocaleString()}
                 </div>
               )}
             </div>
           </div>
 
-          {/* ข้อมูลลูกค้าและการจัดส่ง */}
+          {/* Customer Information and Shipping */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  ข้อมูลลูกค้า
+                  Customer Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -128,7 +136,7 @@ export function OrderDetailDialog({
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {new Date(order.createdAt).toLocaleDateString("th-TH", {
+                    {new Date(order.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -144,7 +152,7 @@ export function OrderDetailDialog({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  ที่อยู่จัดส่ง
+                  Shipping Address
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -162,7 +170,7 @@ export function OrderDetailDialog({
                     <div className="flex items-center gap-2">
                       <Truck className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">
-                        หมายเลขติดตาม:
+                        Tracking Number:
                       </span>
                       <code className="text-sm bg-muted px-2 py-1 rounded">
                         {order.trackingNumber}
@@ -174,20 +182,20 @@ export function OrderDetailDialog({
             </Card>
           </div>
 
-          {/* รายการสินค้า */}
+          {/* Product List */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">รายการสินค้า</CardTitle>
+              <CardTitle className="text-lg">Order Items</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>สินค้า</TableHead>
+                    <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
-                    <TableHead className="text-center">จำนวน</TableHead>
-                    <TableHead className="text-right">ราคา/ชิ้น</TableHead>
-                    <TableHead className="text-right">รวม</TableHead>
+                    <TableHead className="text-center">Quantity</TableHead>
+                    <TableHead className="text-right">Unit Price</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -215,10 +223,10 @@ export function OrderDetailDialog({
                 </TableBody>
               </Table>
 
-              {/* สรุปยอดเงิน */}
+              {/* Order Summary */}
               <div className="mt-4 space-y-2 border-t pt-4">
                 <div className="flex justify-between text-sm">
-                  <span>ยอดรวมสินค้า:</span>
+                  <span>Subtotal:</span>
                   <span>
                     ฿
                     {(
@@ -229,25 +237,26 @@ export function OrderDetailDialog({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>ค่าจัดส่ง:</span>
+                  <span>Shipping:</span>
                   <span>฿{order.shippingCost.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>ภาษี:</span>
+                  <span>Tax:</span>
                   <span>฿{order.tax.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>ยอดรวมทั้งสิ้น:</span>
+                  <span>Total:</span>
                   <span>฿{order.totalPrice.toLocaleString()}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* การจัดการสถานะ */}
+          {/* Status Management */}
           {getMerchantEditableStatuses(order.status).length >= 0 && (
             <OrderStatusManager
               currentStatus={order.status}
+              statusHistory={order.statusHistory}
               orderId={order.id}
               trackingNumber={order.trackingNumber}
               onStatusChange={onStatusChange}
@@ -255,11 +264,11 @@ export function OrderDetailDialog({
             />
           )}
 
-          {/* หมายเหตุ */}
+          {/* Notes */}
           {order.notes && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">หมายเหตุ</CardTitle>
+                <CardTitle className="text-lg">Notes</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm bg-muted p-3 rounded-lg">{order.notes}</p>

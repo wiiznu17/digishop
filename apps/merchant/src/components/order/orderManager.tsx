@@ -32,6 +32,7 @@ import { useOrderStatus } from "@/hooks/useOrderStatus"
 
 interface OrderStatusManagerProps {
   currentStatus: OrderStatus
+  statusHistory: OrderStatus[]
   orderId: string
   trackingNumber?: string
   onStatusChange: (orderId: string, newStatus: OrderStatus) => void
@@ -42,6 +43,7 @@ export function OrderStatusManager({
   currentStatus,
   orderId,
   trackingNumber,
+  statusHistory,
   onStatusChange,
   onTrackingNumberUpdate
 }: OrderStatusManagerProps) {
@@ -51,7 +53,9 @@ export function OrderStatusManager({
     trackingNumber || ""
   )
 
+  // --- 1. เรียกใช้ functions จาก hook เวอร์ชันล่าสุด ---
   const {
+    isTerminalStatus,
     getStatusTimeline,
     getMerchantEditableStatuses,
     getStatusIcon,
@@ -59,113 +63,108 @@ export function OrderStatusManager({
     getStatusColor
   } = useOrderStatus()
 
+  // --- 2. Logic หลัก: ตัดสินใจว่าจะแสดง Timeline แบบไหน ---
+  const isOrderFinished = isTerminalStatus(currentStatus)
+
+  // ถ้าออเดอร์สิ้นสุดแล้ว -> ใช้ประวัติจริง (statusHistory)
+  // ถ้ายังไม่สิ้นสุด -> ใช้ Ideal Timeline จาก getStatusTimeline
+  const timelineToDisplay = isOrderFinished
+    ? statusHistory
+    : getStatusTimeline(currentStatus)
+
   const editableStatuses = getMerchantEditableStatuses(currentStatus)
-  const timeline = getStatusTimeline(currentStatus)
-  const currentIndex = timeline.indexOf(currentStatus)
 
   const handleStatusUpdate = () => {
     if (selectedStatus) {
       onStatusChange(orderId, selectedStatus)
-      if (newTrackingNumber !== trackingNumber) {
-        onTrackingNumberUpdate(orderId, newTrackingNumber)
-      }
     } else if (editableStatuses.length === 1) {
       onStatusChange(orderId, editableStatuses[0])
-      if (newTrackingNumber !== trackingNumber) {
-        onTrackingNumberUpdate(orderId, newTrackingNumber)
-      }
+    }
+    // อัปเดต tracking number แยกต่างหาก ถ้ามีการเปลี่ยนแปลง
+    if (newTrackingNumber !== trackingNumber) {
+      onTrackingNumberUpdate(orderId, newTrackingNumber)
     }
     setIsConfirmDialogOpen(false)
     setSelectedStatus(null)
   }
 
   const handleConfirm = (status?: OrderStatus) => {
-    if (status) {
-      setSelectedStatus(status)
+    const statusToConfirm = status || selectedStatus
+    if (statusToConfirm) {
+      setSelectedStatus(statusToConfirm)
+      setIsConfirmDialogOpen(true)
     }
-    setIsConfirmDialogOpen(true)
   }
 
   const getConfirmMessage = () => {
-    const targetStatus =
-      selectedStatus ||
-      (editableStatuses.length === 1 ? editableStatuses[0] : null)
+    const targetStatus = selectedStatus
     if (!targetStatus) return ""
 
-    return `คุณต้องการเปลี่ยนสถานะจาก "${getStatusText(currentStatus)}" เป็น "${getStatusText(targetStatus)}" หรือไม่?`
+    return `Do you want to change the status from "${getStatusText(
+      currentStatus
+    )}" to "${getStatusText(targetStatus)}"?`
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">จัดการสถานะคำสั่งซื้อ</CardTitle>
-        <CardDescription>ติดตามและอัพเดตสถานะสินค้า</CardDescription>
+        <CardTitle className="text-lg">Order Status Management</CardTitle>
+        <CardDescription>Track and update order status</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Progress Timeline */}
+        {/* --- START: Vertical Timeline --- */}
         <div className="space-y-4">
-          <h4 className="font-medium text-sm">ขั้นตอนการดำเนินการ</h4>
-          <div className="relative">
-            {/* Progress Line */}
-            <div className="absolute top-6 left-6 right-6 h-0.5 bg-gray-200 -translate-y-1/2" />
-            <div
-              className="absolute top-6 left-6 h-0.5 bg-green-400 -translate-y-1/2 transition-all duration-300"
-              style={{
-                width:
-                  currentIndex >= 0
-                    ? `${(currentIndex / (timeline.length - 1)) * 100}%`
-                    : "0%"
-              }}
-            />
+          <h4 className="font-medium text-sm">Order Timeline</h4>
+          <div className="relative flex flex-col">
+            {timelineToDisplay.map((status, index) => {
+              // --- 3. แก้ไข Logic การแสดงผลให้รองรับ Ideal Timeline ---
+              const isActive = status === currentStatus
+              const isStatusInHistory = statusHistory.includes(status)
+              // สถานะที่ผ่านมาแล้ว คือสถานะที่มีอยู่ในประวัติ และไม่ใช่สถานะปัจจุบัน
+              const isPassed = isStatusInHistory && !isActive
 
-            {/* Status Circles */}
-            <div className="relative flex justify-between">
-              {timeline.map((status, index) => {
-                const isActive = status === currentStatus
-                const isPassed = index < currentIndex
-
-                return (
-                  <div
-                    key={status}
-                    className="flex flex-col items-center space-y-2"
-                  >
+              return (
+                <div key={`${status}-${index}`} className="flex items-start">
+                  {/* Left side: Circle and connecting line */}
+                  <div className="flex flex-col items-center mr-4">
                     <div
                       className={`
-                        w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                        w-10 h-10 rounded-full border-2 flex items-center justify-center z-10
                         ${getStatusColor(status, isActive, isPassed)}
                       `}
                     >
                       {getStatusIcon(status)}
                     </div>
-                    <div className="text-center">
-                      <div className="text-xs font-medium max-w-20 leading-tight">
-                        {getStatusText(status)}
-                      </div>
-                      {isActive && (
-                        <div className="text-xs text-blue-600 font-medium mt-1">
-                          ปัจจุบัน
-                        </div>
-                      )}
-                    </div>
+                    {/* Connecting Line */}
+                    {index < timelineToDisplay.length - 1 && (
+                      <div className="w-0.5 h-12 bg-gray-200" />
+                    )}
                   </div>
-                )
-              })}
-            </div>
+                  {/* Right side: Text content */}
+                  <div
+                    className={`pt-1.5 ${isActive ? "font-bold" : isPassed ? "text-foreground" : "text-muted-foreground"}`}
+                  >
+                    <p className="text-sm">{getStatusText(status)}</p>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
+        {/* --- END: Vertical Timeline --- */}
 
-        {/* Status Management */}
-        <div className="space-y-4 pt-4 border-t">
-          <h4 className="font-medium text-sm">อัพเดตสถานะ</h4>
-
-          {editableStatuses.length > 0 ? (
+        {/* Actions Section */}
+        {editableStatuses.length > 0 && (
+          <div className="space-y-4 pt-4 border-t">
+            {/* ... โค้ดส่วน Action เหมือนเดิม ไม่ต้องแก้ไข ... */}
+            <h4 className="font-medium text-sm">Update Status</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Status Selection */}
               <div className="space-y-3">
                 {editableStatuses.length > 1 ? (
                   /* Multiple Options - Show Dropdown */
                   <div className="space-y-2">
-                    <Label>เลือกสถานะถัดไป:</Label>
+                    <Label>Select next status:</Label>
                     <Select
                       value={selectedStatus || ""}
                       onValueChange={(value) =>
@@ -173,7 +172,7 @@ export function OrderStatusManager({
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="เลือกสถานะที่ต้องการอัพเดต" />
+                        <SelectValue placeholder="Choose status to update" />
                       </SelectTrigger>
                       <SelectContent>
                         {editableStatuses.map((status) => (
@@ -191,13 +190,13 @@ export function OrderStatusManager({
                       disabled={!selectedStatus}
                       className="w-full"
                     >
-                      ยืนยันการอัพเดตสถานะ
+                      Confirm Status Update
                     </Button>
                   </div>
                 ) : (
                   /* Single Option - Show Confirm Button */
                   <div className="space-y-2">
-                    <Label>สถานะถัดไป:</Label>
+                    <Label>Next status:</Label>
                     <div className="p-3 border rounded-lg bg-muted/50">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(editableStatuses[0])}
@@ -210,57 +209,60 @@ export function OrderStatusManager({
                       onClick={() => handleConfirm(editableStatuses[0])}
                       className="w-full"
                     >
-                      ยืนยันไปยังขั้นตอนถัดไป
+                      Proceed to Next Step
                     </Button>
                   </div>
                 )}
               </div>
 
               {/* Tracking Number Input */}
-              {(currentStatus === "SHIPPED" ||
-                currentStatus === "READY_TO_SHIP" ||
+              {(currentStatus === "READY_TO_SHIP" ||
                 editableStatuses.includes("SHIPPED")) && (
                 <div className="space-y-2">
-                  <Label htmlFor="tracking">หมายเลขติดตาม:</Label>
+                  <Label htmlFor="tracking">Tracking Number:</Label>
                   <Input
                     id="tracking"
-                    placeholder="กรอกหมายเลขติดตาม"
+                    placeholder="Enter tracking number"
                     value={newTrackingNumber}
                     onChange={(e) => setNewTrackingNumber(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    หมายเลขติดตามจะถูกส่งให้ลูกค้าอัตโนมัติ
+                    Tracking number will be updated upon status change.
                   </p>
                 </div>
               )}
             </div>
-          ) : (
-            /* No Merchant Actions Available */
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-2 text-blue-800">
-                <Clock className="h-5 w-5" />
-                <span className="font-medium">Waiting for customer action</span>
+          </div>
+        )}
+
+        {editableStatuses.length === 0 && (
+          <div className="p-4 bg-gray-50 border rounded-lg">
+            <div className="flex items-center gap-3 text-gray-700">
+              <Clock className="h-5 w-5" />
+              <div>
+                <span className="font-medium">No actions available</span>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Waiting for system or customer update.
+                </p>
               </div>
-              <p className="text-sm text-blue-600 mt-1">
-                ขณะนี้ไม่สามารถอัพเดตสถานะได้ กรุณารอการดำเนินการจากลูกค้า
-              </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
 
       {/* Confirmation Dialog */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>ยืนยันการเปลี่ยนสถานะ</DialogTitle>
+            <DialogTitle>Confirm Status Change</DialogTitle>
             <DialogDescription>{getConfirmMessage()}</DialogDescription>
           </DialogHeader>
 
           {newTrackingNumber !== trackingNumber && newTrackingNumber && (
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-800">
-                <strong>หมายเลขติดตาม:</strong> {newTrackingNumber}
+                <strong>Tracking Number will be updated to:</strong>{" "}
+                {newTrackingNumber}
               </p>
             </div>
           )}
@@ -273,9 +275,9 @@ export function OrderStatusManager({
                 setSelectedStatus(null)
               }}
             >
-              ยกเลิก
+              Cancel
             </Button>
-            <Button onClick={handleStatusUpdate}>ยืนยัน</Button>
+            <Button onClick={handleStatusUpdate}>Confirm</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

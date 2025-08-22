@@ -37,18 +37,18 @@ export function Pagination({
     endItem
   })
 
-  // สร้างอาร์เรย์ของเลขหน้า
+  // Generate array of page numbers
   const getPageNumbers = () => {
     const delta = 2
     const pages: (number | string)[] = []
 
-    // ถ้ามีหน้าเดียว ให้แสดงเลขหน้า 1
+    // If there's only one page, show page number 1
     if (totalPages === 1) {
       pages.push(1)
       return pages
     }
 
-    // ถ้าหน้าปัจจุบันอยู่ไกลจากหน้าแรก
+    // If current page is far from the first page
     if (currentPage > delta + 1) {
       pages.push(1)
       if (currentPage > delta + 2) {
@@ -56,7 +56,7 @@ export function Pagination({
       }
     }
 
-    // หน้าปัจจุบันและหน้าใกล้เคียง
+    // Current page and nearby pages
     for (
       let i = Math.max(1, currentPage - delta);
       i <= Math.min(totalPages, currentPage + delta);
@@ -65,7 +65,7 @@ export function Pagination({
       pages.push(i)
     }
 
-    // ถ้าหน้าปัจจุบันอยู่ไกลจากหน้าสุดท้าย
+    // If current page is far from the last page
     if (currentPage < totalPages - delta) {
       if (currentPage < totalPages - delta - 1) {
         pages.push("...")
@@ -76,7 +76,7 @@ export function Pagination({
     return pages
   }
 
-  // แสดง pagination เมื่อมีมากกว่า 1 หน้าหรือมี items per page selector
+  // Show pagination when there are more than 1 page or items per page selector
   const shouldShowPagination =
     totalPages > 1 || (showItemsPerPageSelector && totalItems > 0)
 
@@ -90,8 +90,8 @@ export function Pagination({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {showInfo && totalItems > 0 && (
           <div className="text-sm text-muted-foreground">
-            แสดงรายการ {startItem.toLocaleString()}-{endItem.toLocaleString()}{" "}
-            จากทั้งหมด {totalItems.toLocaleString()} รายการ
+            Showing {startItem.toLocaleString()}-{endItem.toLocaleString()} of{" "}
+            {totalItems.toLocaleString()} items
           </div>
         )}
 
@@ -104,11 +104,11 @@ export function Pagination({
         )}
       </div>
 
-      {/* Page Navigation - แสดงเมื่อมีมากกว่า 1 หน้า */}
+      {/* Page Navigation - Show when there are more than 1 page */}
       {totalPages > 1 && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground sm:order-1">
-            หน้า {currentPage} จาก {totalPages}
+            Page {currentPage} of {totalPages}
           </div>
 
           <div className="flex items-center justify-center space-x-2 sm:order-0">
@@ -121,7 +121,7 @@ export function Pagination({
               className="flex items-center gap-1"
             >
               <ChevronLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">ก่อนหน้า</span>
+              <span className="hidden sm:inline">Previous</span>
             </Button>
 
             {/* Page Numbers */}
@@ -156,7 +156,7 @@ export function Pagination({
               disabled={currentPage >= totalPages}
               className="flex items-center gap-1"
             >
-              <span className="hidden sm:inline">ถัดไป</span>
+              <span className="hidden sm:inline">Next</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

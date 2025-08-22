@@ -79,7 +79,7 @@ export function OrdersTable({
     changeItemsPerPage
   } = usePagination({
     data: filteredOrders,
-    itemsPerPage: 10
+    itemsPerPage: 50
   })
 
   // Reset to first page when filters change
@@ -88,17 +88,17 @@ export function OrdersTable({
   }, [searchTerm, statusFilter, resetPage])
 
   const statusOptions = [
-    { value: "ALL", label: "สถานะทั้งหมด" },
-    { value: "PENDING", label: "รอการชำระเงิน" },
-    { value: "CUSTOMER_CANCELED", label: "ลูกค้ายกเลิก" },
-    { value: "PAID", label: "ชำระเงินแล้ว" },
-    { value: "PROCESSING", label: "กำลังเตรียมสินค้า" },
-    { value: "READY_TO_SHIP", label: "พร้อมจัดส่ง" },
-    { value: "SHIPPED", label: "จัดส่งแล้ว" },
-    { value: "RE_TRANSIT", label: "จัดส่งใหม่อีกครั้ง" },
-    { value: "DELIVERED", label: "จัดส่งสำเร็จ" },
-    { value: "REFUND_REQUEST", label: "ขอคืนเงิน" },
-    { value: "COMPLETE", label: "เสร็จสิ้น" }
+    { value: "ALL", label: "All Statuses" },
+    { value: "PENDING", label: "Pending Payment" },
+    { value: "CUSTOMER_CANCELED", label: "Customer Canceled" },
+    { value: "PAID", label: "Payment Completed" },
+    { value: "PROCESSING", label: "Processing" },
+    { value: "READY_TO_SHIP", label: "Ready to Ship" },
+    { value: "SHIPPED", label: "Shipped" },
+    { value: "RE_TRANSIT", label: "Re-transit" },
+    { value: "DELIVERED", label: "Delivered" },
+    { value: "REFUND_REQUEST", label: "Refund Requested" },
+    { value: "COMPLETE", label: "Complete" }
   ]
 
   const clearFilters = () => {
@@ -113,10 +113,8 @@ export function OrdersTable({
       <CardHeader>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>รายการคำสั่งซื้อ</CardTitle>
-            <CardDescription>
-              ดูรายการคำสั่งซื้อทั้งหมดและรายละเอียด
-            </CardDescription>
+            <CardTitle>Order List</CardTitle>
+            <CardDescription>View all orders and their details</CardDescription>
           </div>
 
           {/* Clear filters button */}
@@ -128,16 +126,16 @@ export function OrdersTable({
               className="flex items-center gap-2"
             >
               <RotateCcw className="h-4 w-4" />
-              ล้างตัวกรอง
+              Clear Filters
             </Button>
           )}
         </div>
 
-        {/* ฟิลเตอร์และค้นหา */}
+        {/* Filter and search */}
         <div className="flex flex-col gap-4 pt-4 sm:flex-row">
           <div className="flex-1">
             <Input
-              placeholder="ค้นหาด้วยรหัสคำสั่งซื้อ, ชื่อลูกค้า หรือ email..."
+              placeholder="Search by order ID, customer name, or email..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full"
@@ -160,15 +158,13 @@ export function OrdersTable({
         {/* Summary Info */}
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>พบ {totalItems.toLocaleString()} รายการ</span>
+            <span>Found {totalItems.toLocaleString()} results</span>
             {hasActiveFilters && (
               <>
-                <span>
-                  จากทั้งหมด {orders.length.toLocaleString()} คำสั่งซื้อ
-                </span>
+                <span>from {orders.length.toLocaleString()} total orders</span>
                 {totalItems !== orders.length && (
                   <Badge variant="secondary" className="text-xs">
-                    กรองแล้ว
+                    Filtered
                   </Badge>
                 )}
               </>
@@ -176,7 +172,7 @@ export function OrdersTable({
           </div>
           {totalPages > 1 && (
             <p className="text-sm text-muted-foreground">
-              หน้า {currentPage} จาก {totalPages}
+              Page {currentPage} of {totalPages}
             </p>
           )}
         </div>
@@ -188,12 +184,12 @@ export function OrdersTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[140px]">รหัสคำสั่งซื้อ</TableHead>
-                  <TableHead className="min-w-[200px]">ลูกค้า</TableHead>
-                  <TableHead className="w-[160px]">วันที่</TableHead>
-                  <TableHead className="w-[120px] text-right">ยอดรวม</TableHead>
-                  <TableHead className="w-[160px]">สถานะ</TableHead>
-                  <TableHead className="w-[140px]">การดำเนินการ</TableHead>
+                  <TableHead className="w-[140px]">Order ID</TableHead>
+                  <TableHead className="min-w-[200px]">Customer</TableHead>
+                  <TableHead className="w-[160px]">Date</TableHead>
+                  <TableHead className="w-[120px] text-right">Total</TableHead>
+                  <TableHead className="min-w-[180px]">Status</TableHead>
+                  <TableHead className="w-[140px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -203,8 +199,8 @@ export function OrdersTable({
                       <div className="flex flex-col items-center gap-3 text-muted-foreground">
                         <div className="text-sm">
                           {hasActiveFilters
-                            ? "ไม่พบข้อมูลที่ตรงกับการค้นหา"
-                            : "ไม่มีคำสั่งซื้อ"}
+                            ? "No orders match your search criteria"
+                            : "No orders found"}
                         </div>
                         {hasActiveFilters && (
                           <Button
@@ -214,7 +210,7 @@ export function OrdersTable({
                             className="flex items-center gap-2"
                           >
                             <RotateCcw className="h-4 w-4" />
-                            ล้างตัวกรอง
+                            Clear Filters
                           </Button>
                         )}
                       </div>
@@ -224,10 +220,6 @@ export function OrdersTable({
                   paginatedData.map((order, index) => {
                     const globalIndex =
                       (currentPage - 1) * itemsPerPage + index + 1
-                    console.log(
-                      "badge color: ",
-                      getStatusBadgeColor(order.status)
-                    )
                     return (
                       <TableRow
                         key={order.id}
@@ -256,7 +248,7 @@ export function OrdersTable({
                           <div className="space-y-1">
                             <div className="text-sm">
                               {new Date(order.createdAt).toLocaleDateString(
-                                "th-TH",
+                                "en-US",
                                 {
                                   year: "numeric",
                                   month: "short",
@@ -266,7 +258,7 @@ export function OrdersTable({
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {new Date(order.createdAt).toLocaleTimeString(
-                                "th-TH",
+                                "en-US",
                                 {
                                   hour: "2-digit",
                                   minute: "2-digit"
@@ -302,7 +294,7 @@ export function OrdersTable({
                             className="w-full text-xs"
                           >
                             <Eye className="h-4 w-4 mr-1" />
-                            รายละเอียด
+                            View Details
                           </Button>
                         </TableCell>
                       </TableRow>
