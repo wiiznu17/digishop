@@ -116,6 +116,7 @@ export function BankAccountDialog({
       if (onSave) {
         onSave(accountData)
       }
+      // onOpenChange?.(false)
       setFormData({
         bankName: "",
         accountNumber: "",
