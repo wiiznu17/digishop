@@ -6,29 +6,15 @@ export const customerProxy = createProxyMiddleware({
   changeOrigin: true,
   cookieDomainRewrite: "localhost",
   pathRewrite: { "^/api/customer": "/api/customer" },
+  logLevel: "debug",
 
-  onProxyReq: (proxyReq, req, res) => {
+  onProxyReq: (proxyReq, req) => {
     console.log(`[Gateway] Proxying request to: ${config.services.merchant}${req.url}`);
-
-    // ส่ง body เฉพาะ POST, PUT, PATCH
-    if (
-      req.method !== "GET" &&
-      req.method !== "HEAD" &&
-      req.body &&
-      Object.keys(req.body).length
-    ) {
-      const bodyData = JSON.stringify(req.body);
-
-      proxyReq.setHeader("Content-Type", "application/json");
-      proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-
-      proxyReq.write(bodyData);
-      // ไม่ต้อง proxyReq.end() ให้ middleware จัดการเอง
-    }
+    // ❌ ไม่ต้องเขียน body เอง
   },
 
   onError: (err, req, res) => {
-    console.error("[Gateway] Merchant proxy error:", err);
+    console.error("[Gateway] Customer proxy error:", err);
     if (!res.headersSent) {
       res.status(500).send("Proxy error");
     }

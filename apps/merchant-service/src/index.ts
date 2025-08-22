@@ -20,7 +20,7 @@ async function main() {
       origin: ["http://localhost:4000"],
       credentials: true
     }))
-    initModels(sequelize); 
+    initModels(sequelize);
     app.use('/api', router);
     app.use((req, res, next) => {
       console.log('[MERCHANT] Incoming', req.method, req.url)

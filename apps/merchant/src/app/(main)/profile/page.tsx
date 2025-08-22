@@ -29,28 +29,36 @@ import {
   Save,
   Upload
 } from "lucide-react"
-import { fetchMerchantProfileRequester } from "@/utils/requestUtils/requestProfileUtils"
+import {
+  fetchMerchantProfileRequester,
+  updateMerchantProfileRequester
+} from "@/utils/requestUtils/requestProfileUtils"
 import {
   defaultMerchant,
   MerchantProfileFormValues,
-  MerchantProfileProps
+  MerchantProfileProps,
+  ProfileMerchantImage
 } from "@/types/props/userProp"
+import { ProfileLogoUpload } from "@/components/profile/profileUpload"
 
 export default function ProfilePage({ merchant }: MerchantProfileProps) {
   const [profileData, setProfileData] = useState<MerchantProfileFormValues>(
     merchant ?? defaultMerchant
   )
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
-  // useEffect for fecth merchant detail
+  // useEffect for fetch merchant detail
   useEffect(() => {
-    handleFecthMerchantProfile()
+    handleFetchMerchantProfile()
   }, [])
 
-  const handleFecthMerchantProfile = async () => {
+  const handleFetchMerchantProfile = async () => {
     try {
-      console.log("Fetching merchant profile...", defaultMerchant)
+      setIsLoading(true)
       const currentProfile = await fetchMerchantProfileRequester()
       console.log("Fetched merchant profile:", currentProfile)
+
       if (!currentProfile?.store || !currentProfile?.store.addresses) {
         console.warn("Invalid merchant profile, using default")
         setProfileData(defaultMerchant)
@@ -60,8 +68,19 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
       }
     } catch (error) {
       console.error("Error fetching merchant profile:", error)
-      // setProfileData(defaultMerchant)
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  const handleImagesChange = (images: ProfileMerchantImage[]) => {
+    setProfileData((prev) => ({
+      ...prev,
+      store: {
+        ...prev.store,
+        profileImages: images
+      }
+    }))
   }
 
   const handleStoreChange = (field: string, value: string) => {
@@ -88,14 +107,65 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
       }
     }))
   }
+
   const handleChange = (field: string, value: string | boolean) => {
     setProfileData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Profile updated:", profileData)
-    // Show success message
+  const handleSave = async () => {
+    try {
+      setIsSaving(true)
+
+      // Convert blob URLs to actual files for new images (เหมือน ProductDialog)
+      const imageFiles: File[] = []
+
+      if (
+        profileData.store.profileImages &&
+        profileData.store.profileImages.length > 0
+      ) {
+        const image = profileData.store.profileImages[0] // เอารูปเดียว
+        // Only process new images (blob URLs)
+        if (image.url.startsWith("blob:")) {
+          try {
+            const response = await fetch(image.url)
+            const blob = await response.blob()
+            const file = new File([blob], image.fileName, { type: blob.type })
+            imageFiles.push(file)
+          } catch (error) {
+            console.error("Error converting blob to file:", error)
+          }
+        }
+      }
+
+      console.log("Profile data to save:", profileData)
+      console.log("Images to upload:", imageFiles.length)
+
+      // เรียกใช้ updateMerchantProfileRequester แบบแยกกัน
+      const result = await updateMerchantProfileRequester(
+        profileData,
+        imageFiles
+      )
+
+      if (result) {
+        // Clean up blob URLs after successful save
+        profileData.store.profileImages?.forEach((image) => {
+          if (image.url.startsWith("blob:")) {
+            URL.revokeObjectURL(image.url)
+          }
+        })
+
+        // รีเฟรชข้อมูลใหม่จากเซิร์ฟเวอร์
+        await handleFetchMerchantProfile()
+
+        console.log("Profile updated successfully")
+        alert("Profile updated successfully!")
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error)
+      alert("Error saving profile. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -104,9 +174,9 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
         title="Profile"
         description="Manage your merchant account and business settings"
       >
-        <Button onClick={handleSave}>
+        <Button onClick={handleSave} disabled={isSaving || isLoading}>
           <Save className="mr-2 h-4 w-4" />
-          Save Changes
+          {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </MerchantHeader>
 
@@ -126,12 +196,12 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name</Label>
+                  <Label htmlFor="storeName">Business Name</Label>
                   <Input
-                    id="businessName"
+                    id="storeName"
                     value={profileData.store.storeName}
                     onChange={(e) =>
-                      handleStoreChange("businessName", e.target.value)
+                      handleStoreChange("storeName", e.target.value)
                     }
                   />
                 </div>
@@ -140,8 +210,10 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   <Label htmlFor="ownerName">Owner Name</Label>
                   <Input
                     id="ownerName"
-                    value={profileData.store.addresses[0].ownerName}
-                    onChange={(e) => handleChange("ownerName", e.target.value)}
+                    value={profileData.store.addresses[0]?.ownerName}
+                    onChange={(e) =>
+                      handleAddressChange(0, "ownerName", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -153,7 +225,7 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                     id="email"
                     type="email"
                     value={profileData.store.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
+                    onChange={(e) => handleStoreChange("email", e.target.value)}
                   />
                 </div>
 
@@ -162,30 +234,161 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   <Input
                     id="phone"
                     value={profileData.store.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
+                    onChange={(e) => handleStoreChange("phone", e.target.value)}
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Business Address</Label>
-                <Textarea
-                  id="address"
-                  value={profileData.store.addresses[0].ownerName}
-                  onChange={(e) =>
-                    handleAddressChange(0, "address", e.target.value)
-                  }
-                  rows={2}
-                />
-              </div>
-
+              <Card>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4 py-4">
+                    <Label htmlFor="address">Business Address</Label>
+                    <div className="grid grid-cols-4 md:grid-cols-4 grid-rows-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="!text-xs" htmlFor="addressNumber">
+                          Address Number
+                        </Label>
+                        <Input
+                          id="addressNumber"
+                          value={profileData.store.addresses[0]?.address_number}
+                          onChange={(e) =>
+                            handleAddressChange(
+                              0,
+                              "addressNumber",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Address number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="!text-xs" htmlFor="addressNumber">
+                          Address SubStreet
+                        </Label>
+                        <Input
+                          id="addressSubStreet"
+                          value={profileData.store.addresses[0]?.subStreet}
+                          onChange={(e) =>
+                            handleAddressChange(
+                              0,
+                              "addressSubStreet",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Address SubStreet"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="!text-xs" htmlFor="addressStreet">
+                          Address Street
+                        </Label>
+                        <Input
+                          id="addressStreet"
+                          value={profileData.store.addresses[0]?.street}
+                          onChange={(e) =>
+                            handleAddressChange(
+                              0,
+                              "addressStreet",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Address Street"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="!text-xs" htmlFor="addressBuilding">
+                          Address Building
+                        </Label>
+                        <Input
+                          id="addressBuilding"
+                          value={profileData.store.addresses[0]?.building}
+                          onChange={(e) =>
+                            handleAddressChange(
+                              0,
+                              "addressBuilding",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Address Building"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          className="!text-xs"
+                          htmlFor="addressSubdistrict"
+                        >
+                          Address Subdistrict
+                        </Label>
+                        <Input
+                          id="addressSubdistrict"
+                          value={profileData.store.addresses[0]?.subdistrict}
+                          onChange={(e) =>
+                            handleAddressChange(
+                              0,
+                              "addressSubdistrict",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Address Subdistrict"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="!text-xs" htmlFor="addressDistrict">
+                          Address District
+                        </Label>
+                        <Input
+                          id="addressDistrict"
+                          value={profileData.store.addresses[0]?.district}
+                          onChange={(e) =>
+                            handleAddressChange(
+                              0,
+                              "addressDistrict",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Address District"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="!text-xs" htmlFor="addressProvince">
+                          Address Province
+                        </Label>
+                        <Input
+                          id="addressProvince"
+                          value={profileData.store.addresses[0]?.province}
+                          onChange={(e) =>
+                            handleAddressChange(
+                              0,
+                              "addressProvince",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Address Province"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="!text-xs" htmlFor="addressZip">
+                          Address Zip
+                        </Label>
+                        <Input
+                          id="addressZip"
+                          value={profileData.store.addresses[0]?.postalCode}
+                          onChange={(e) =>
+                            handleAddressChange(0, "addressZip", e.target.value)
+                          }
+                          placeholder="Address Zip"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="businessType">Business Type</Label>
                   <Select
                     value={profileData.store.businessType}
                     onValueChange={(value) =>
-                      handleChange("businessType", value)
+                      handleStoreChange("businessType", value)
                     }
                   >
                     <SelectTrigger>
@@ -212,8 +415,10 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   <Label htmlFor="website">Website</Label>
                   <Input
                     id="website"
-                    value={"profileData.store.website"}
-                    onChange={(e) => handleChange("website", e.target.value)}
+                    value={profileData.store.website}
+                    onChange={(e) =>
+                      handleStoreChange("website", e.target.value)
+                    }
                     placeholder="https://yourwebsite.com"
                   />
                 </div>
@@ -224,7 +429,9 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                 <Textarea
                   id="description"
                   value={profileData.store.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
+                  onChange={(e) =>
+                    handleStoreChange("description", e.target.value)
+                  }
                   rows={3}
                 />
               </div>
@@ -234,7 +441,7 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                 <Input
                   id="taxId"
                   value={"profileData.taxId"}
-                  onChange={(e) => handleChange("taxId", e.target.value)}
+                  onChange={(e) => handleStoreChange("taxId", e.target.value)}
                   placeholder="xxx-xx-xxxx"
                 />
               </div>
@@ -250,15 +457,13 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
-                  <User className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <Button variant="outline" size="sm">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Photo
-                </Button>
-              </div>
+              {!isLoading && (
+                <ProfileLogoUpload
+                  images={profileData.store.profileImages || []}
+                  onImagesChange={handleImagesChange}
+                  maxImages={1}
+                />
+              )}
 
               <div className="space-y-2 pt-4">
                 <div className="flex justify-between">
@@ -278,155 +483,6 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   <span className="text-sm font-medium">4.8/5</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Business Hours */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Business Hours Dummy</CardTitle>
-            <CardDescription>
-              Set your operating hours for customer reference
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { day: "Monday", field: "mondayHours" },
-                { day: "Tuesday", field: "tuesdayHours" },
-                { day: "Wednesday", field: "wednesdayHours" },
-                { day: "Thursday", field: "thursdayHours" },
-                { day: "Friday", field: "fridayHours" },
-                { day: "Saturday", field: "saturdayHours" },
-                { day: "Sunday", field: "sundayHours" }
-              ].map(({ day, field }) => (
-                <div key={day} className="space-y-2">
-                  <Label htmlFor={field}>{day}</Label>
-                  <Input
-                    id={field}
-                    value={
-                      profileData[field as keyof typeof profileData] as string
-                    }
-                    onChange={(e) => handleChange(field, e.target.value)}
-                    placeholder="9:00 AM - 6:00 PM"
-                  />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notification Settings */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notification Preferences
-              </CardTitle>
-              <CardDescription>
-                Choose how you want to receive updates
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="emailNotifications">
-                    Email Notifications
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive general updates via email
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  id="emailNotifications"
-                  checked={true}
-                  onChange={(e) =>
-                    handleChange("emailNotifications", e.target.checked)
-                  }
-                  className="rounded"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="orderAlerts">Order Alerts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Get notified about new orders
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  id="orderAlerts"
-                  checked={true}
-                  onChange={(e) =>
-                    handleChange("orderAlerts", e.target.checked)
-                  }
-                  className="rounded"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="inventoryAlerts">Inventory Alerts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Low stock notifications
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  id="inventoryAlerts"
-                  checked={true}
-                  onChange={(e) =>
-                    handleChange("inventoryAlerts", e.target.checked)
-                  }
-                  className="rounded"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="promotionUpdates">Promotion Updates</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Marketing and promotion tips
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  id="promotionUpdates"
-                  checked={false}
-                  onChange={(e) =>
-                    handleChange("promotionUpdates", e.target.checked)
-                  }
-                  className="rounded"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Security Settings
-              </CardTitle>
-              <CardDescription>Manage your account security</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full justify-start">
-                Change Password
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                Enable Two-Factor Authentication
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                Review Login Activity
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                Download Account Data
-              </Button>
             </CardContent>
           </Card>
         </div>

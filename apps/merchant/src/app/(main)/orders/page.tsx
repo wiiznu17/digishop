@@ -32,7 +32,7 @@ export default function OrdersPage() {
         setSelectedOrder(updatedOrder)
       }
     }
-  }, [orders, selectedOrder?.id, isDetailOpen])
+  }, [orders, selectedOrder?.id, isDetailOpen, selectedOrder])
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>

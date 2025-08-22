@@ -6,7 +6,6 @@ export default {
     await queryInterface.bulkInsert('STORES', [
       {
         user_id: 2,
-        bank_account_id: 1, // เชื่อมกับ BANK_ACCOUNTS id=1
         store_name: 'Test Store 1',
         email: 'store1@example.com',
         phone: '0812345678',
@@ -21,7 +20,6 @@ export default {
       },
       {
         user_id: 3,
-        bank_account_id: 1, // ร้านนี้ใช้บัญชีเดียวกับร้านแรก
         store_name: 'Test Store 2',
         email: 'store2@example.com',
         phone: '0898765432',
