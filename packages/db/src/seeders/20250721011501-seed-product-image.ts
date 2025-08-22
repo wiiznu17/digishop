@@ -2,7 +2,7 @@ import { QueryInterface } from 'sequelize';
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
-    await queryInterface.bulkInsert('product_images', [
+    await queryInterface.bulkInsert('PRODUCT_IMAGES', [
       {
         id: 'b1111111-aaaa-bbbb-cccc-111111111111',
         productId: '1', // ตรวจสอบให้มี productId นี้ใน DB
@@ -27,7 +27,7 @@ export default {
       },
       {
         id: 'b3333333-aaaa-bbbb-cccc-333333333333',
-        productId: '1',
+        productId: '2',
         url: 'https://example.com/images/product2-main.jpg',
         blobName: 'product2-main.jpg',
         fileName: 'product2-main.jpg',
@@ -40,6 +40,6 @@ export default {
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
-    await queryInterface.bulkDelete('product_images', {}, {});
+    await queryInterface.bulkDelete('PRODUCT_IMAGES', {}, {});
   },
 };

@@ -18,12 +18,25 @@ export interface Order1 {
     userId: string
 }
 export interface Order {
+    id?:number
     customerId: number,
     storeId: number,
     totalPrice: number,
     productId:number,
     quantity:number,
     unitPrice:number,
+    shippingTypeId:number,
+    shippingAddress:number,
+    createdAt?: Date
+    updatedAt?: Date
+}
+export interface Shipping {
+    id?: number,
+    name: string,
+    description?: string,
+    estimatedDays: number,
+    price: string,
+    isActive: boolean,
     createdAt?: Date
     updatedAt?: Date
 }

@@ -2,7 +2,7 @@ import { QueryInterface } from 'sequelize';
 
 export default {
   async up(queryInterface: QueryInterface) {
-    await queryInterface.bulkInsert('ShippingTypes', [
+    await queryInterface.bulkInsert('SHIPPING_TYPES', [
       {
         name: 'Standard Shipping',
         description: 'Delivery within 3-5 business days',

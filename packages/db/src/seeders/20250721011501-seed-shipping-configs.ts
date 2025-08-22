@@ -3,7 +3,7 @@ import { ShippingType } from '../types/enum';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Shipping_Configs', [
+    await queryInterface.bulkInsert('SHIPPING_CONFIGS', [
       {
         store_id: 1,
         carrier: 'DHL',

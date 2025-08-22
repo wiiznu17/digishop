@@ -9,15 +9,14 @@ import {
 import InputField from '@/components/inputField';
 import {  Home} from 'lucide-react';
 import { Address } from "@/types/props/addressProp";
-import { flushAllTraces } from "next/dist/trace";
 
 interface CreateAddress {
-    isShowAddress: boolean
-    setIsShowAddress:React.Dispatch<SetStateAction<boolean>>
-    handleOnCancel: () => void
-    handleOnConfirm: (e: React.FormEvent) => Promise<void>
-    address: Address
-    setAddress: React.Dispatch<SetStateAction<Address>>
+  isShowAddress: boolean
+  setIsShowAddress:React.Dispatch<SetStateAction<boolean>>
+  handleOnCancel: () => void
+  handleOnConfirm: (e: React.FormEvent) => Promise<void>
+  address: Address
+  setAddress: React.Dispatch<SetStateAction<Address>>
 }
 export const DialogAddress = ({
   isShowAddress,
@@ -42,9 +41,6 @@ export const DialogAddress = ({
           if (!address.phone) {
             newErrors.phone = 'phone is required';
           } 
-          if (!address.addressLine) {
-            newErrors.addressLine = 'addressLine is required';
-          }
           if (!address.province) {
             newErrors.province = 'province is required';
           }
@@ -78,7 +74,6 @@ export const DialogAddress = ({
             >
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:size-10"></div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                     <form onSubmit={handleOnConfirm}>
                       <div className="space-y-6">
@@ -111,55 +106,98 @@ export const DialogAddress = ({
                             required
                           />
                         </div>
-
-                        <InputField
-                          label="Address Line"
-                          name="addressLine"
-                          value={address.addressLine}
-                          onChange={handleInputChange}
-                          placeholder="Street address, apartment, suite, etc."
-                          required
-                        />
-
+                        <h1 className="my-2 text-black">Address</h1>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <InputField
-                            label="Province"
-                            name="province"
-                            value={address.province}
+                            label="Address Number"
+                            name="address_number"
+                            value={address.address_number}
                             onChange={handleInputChange}
-                            placeholder="Province"
-                            type="text"
-                            required
+                            placeholder="address number"
                           />
                           <InputField
-                            label="Postal Code"
-                            name="postalCode"
-                            type="num"
-                            value={address.postalCode}
+                            label="Building"
+                            name="building"
+                            value={address.building}
                             onChange={handleInputChange}
-                            placeholder="Postal code"
-                            maxLength={5}
-                            minLength={5}
-                            required
+                            placeholder="building"
                           />
+                          <InputField
+                            label="Street"
+                            name="street"
+                            value={address.street}
+                            onChange={handleInputChange}
+                            placeholder="street"
+                          />
+                          <InputField
+                            label="Sub Street"
+                            name="subStreet"
+                            value={address.subStreet}
+                            onChange={handleInputChange}
+                            placeholder="subStreet"
+                          />
+                          <InputField
+                            label="District"
+                            name="district"
+                            value={address.district}
+                            onChange={handleInputChange}
+                            placeholder="district"
+                          />
+                          <InputField
+                            label="Sub district"
+                            name="subdistrict"
+                            value={address.subdistrict}
+                            onChange={handleInputChange}
+                            placeholder="sub district"
+                          />
+                            <InputField
+                              label="Province"
+                              name="province"
+                              value={address.province}
+                              onChange={handleInputChange}
+                              placeholder="Province"
+                              type="text"
+                              required
+                            />
+                            <InputField
+                              label="Postal Code"
+                              name="postalCode"
+                              type="num"
+                              value={address.postalCode}
+                              onChange={handleInputChange}
+                              placeholder="Postal code"
+                              maxLength={5}
+                              minLength={5}
+                              required
+                            />
+                            <InputField
+                              label="Country"
+                              name="country"
+                              value={address.country}
+                              onChange={handleInputChange}
+                              placeholder="Country"
+                              type="text"
+                              required
+                            />
                         </div>
-                        <div>
-                          <h1 className="text-black">select address type</h1>
-                          <select
-                            name="addressType"
-                            value={address.addressType}
-                            onChange={handleChange}
-                          >
-                            <option id="1" value="HOME" className="text-xl">
-                              HOME
-                            </option>
-                            <option id="2" value="OFFICE" className="text-xl">
-                              OFFICE
-                            </option>
-                          </select>
-                        </div>
-                      </div>                      
-                    </form>
+                          <div>
+                            <h1 className="text-black">select address type</h1>
+                            <select
+                              name="addressType"
+                              value={address.addressType}
+                              onChange={handleChange}
+                              className="text-black"
+                            >
+                              <option id="1" value="HOME" className="text-xl text-black">
+                                HOME
+                              </option>
+                              <option id="2" value="OFFICE" className="text-xl text-black">
+                                OFFICE
+                              </option>
+                            </select>
+                          </div>
+                      </div>
+                      </form>
                   </div>
                 </div>
               </div>
@@ -168,7 +206,7 @@ export const DialogAddress = ({
                   type="button"
                   onClick={handleOnConfirm}
                   disabled={!validateForm()}
-                  className={`${!validateForm() ? 'bg-gray-300':'bg-green-500 hover:bg-red-400'} inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-white sm:ml-3 sm:w-auto`}
+                  className={`${!validateForm() ? "bg-gray-300" : "bg-green-500 hover:bg-red-400"} inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-white sm:ml-3 sm:w-auto`}
                 >
                   Confirm
                 </button>

@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert('Admin_Users', [
+    await queryInterface.bulkInsert('ADMIN_USERS', [
       {
         email: 'admin@example.com',
         name: 'Super Admin',

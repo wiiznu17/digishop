@@ -62,7 +62,7 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
           field: 'recipient_name',
         },
         phone: {
-          type: DataTypes.STRING(20),
+          type: DataTypes.STRING(10),
           allowNull: false,
         },
         address_number: {
@@ -100,7 +100,7 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
           allowNull: false,
         },
         postalCode: {
-          type: DataTypes.STRING(10),
+          type: DataTypes.STRING(5),
           allowNull: false,
           field: 'postal_code',
         },

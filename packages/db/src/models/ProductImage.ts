@@ -67,7 +67,7 @@ ProductImage.init(
   },
   {
     sequelize,
-    tableName: 'product_images',
+    tableName: 'PRODUCT_IMAGES',
     timestamps: true
   }
 )

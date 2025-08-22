@@ -37,7 +37,7 @@ export function initModels(sequelize: Sequelize) {
   OrderItem.initModel(sequelize);
   Payment.initModel(sequelize);
   ShippingInfo.initModel(sequelize);
-  ShippingType.initModel(sequelize); // Added missing initialization
+  ShippingType.initModel(sequelize);
   Review.initModel(sequelize);
   ProductView.initModel(sequelize);
   StoreView.initModel(sequelize);
@@ -160,6 +160,7 @@ export function initModels(sequelize: Sequelize) {
     OrderItem,
     Payment,
     ShippingInfo,
+    ShippingType,
     Review,
     ProductView,
     StoreView,

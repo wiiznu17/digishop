@@ -16,7 +16,10 @@ export default {
       carrier: { type: DataTypes.STRING(100), allowNull: true },
       shipping_type_id: {
         type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false 
+        allowNull: false, 
+        references: { model: 'SHIPPING_TYPES', key: 'id' },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       shipping_address: {
         type: DataTypes.INTEGER.UNSIGNED,

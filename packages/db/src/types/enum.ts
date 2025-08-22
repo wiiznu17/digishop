@@ -59,6 +59,7 @@ export enum PaymentStatus {
 }
 
 export enum ShippingStatus {
+  PENDING = 'PENDING',
   IN_TRANSIT = 'IN_TRANSIT',
   CUSTOMER_REJECT = 'CUSTOMER_REJECT',
   TRANSIT_ISSUE = 'TRANSIT_ISSUE',

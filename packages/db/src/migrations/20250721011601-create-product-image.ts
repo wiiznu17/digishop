@@ -3,7 +3,7 @@ import { QueryInterface, DataTypes } from 'sequelize';
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
     await queryInterface.createTable(
-      'product_images',
+      'PRODUCT_IMAGES',
       {
         id: {
           type: DataTypes.UUID,
@@ -16,7 +16,7 @@ export default {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           references: {
-            model: 'products',
+            model: 'PRODUCTS',
             key: 'id',
           },
           onDelete: 'CASCADE',
@@ -63,11 +63,11 @@ export default {
     );
 
     // Index เพื่อประสิทธิภาพในการค้นหา
-    await queryInterface.addIndex('product_images', ['productId']);
-    await queryInterface.addIndex('product_images', ['isMain']);
+    await queryInterface.addIndex('PRODUCT_IMAGES', ['productId']);
+    await queryInterface.addIndex('PRODUCT_IMAGES', ['isMain']);
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
-    await queryInterface.dropTable('product_images');
+    await queryInterface.dropTable('PRODUCT_IMAGES');
   },
 };
