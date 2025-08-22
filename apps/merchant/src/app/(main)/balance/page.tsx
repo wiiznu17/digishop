@@ -62,6 +62,41 @@ export default function AccountLinking() {
     loadBankAccounts()
   }, [])
 
+  const handleSaveBankAccount = async (accountData: BankAccountFormData) => {
+    try {
+      const requestData: CreateBankAccountRequest = {
+        bankName: accountData.bankName,
+        accountNumber: accountData.confirmAccountNumber,
+        accountHolderName: accountData.accountHolderName,
+        isDefault: accountData.isDefault
+      }
+
+      const newAccount = await createBankAccountRequester(requestData)
+
+      if (newAccount) {
+        setLinkedAccounts((prev) => [...prev, newAccount])
+        toast({
+          title: "Success",
+          description: "Bank account added successfully"
+        })
+        await loadBankAccounts() // refresh data
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add bank account",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error adding bank account:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      })
+    }
+  }
+
   const loadBankAccounts = async () => {
     setLoading(true)
     try {
@@ -381,29 +416,7 @@ export default function AccountLinking() {
       <BankAccountDialog
         open={showBankDialog}
         onOpenChange={setShowBankDialog}
-        onSave={async (accountData) => {
-          const requestData: CreateBankAccountRequest = {
-            bankName: accountData.bankName,
-            accountNumber: accountData.confirmAccountNumber,
-            accountHolderName: accountData.accountHolderName,
-            isDefault: accountData.isDefault
-          }
-          const newAccount = await createBankAccountRequester(requestData)
-          if (newAccount) {
-            setLinkedAccounts((prev) => [...prev, newAccount])
-            toast({
-              title: "Success",
-              description: "Bank account added successfully"
-            })
-            setShowBankDialog(false)
-          } else {
-            toast({
-              title: "Error",
-              description: "Failed to add bank account",
-              variant: "destructive"
-            })
-          }
-        }}
+        onSave={handleSaveBankAccount}
       />
     </div>
   )
