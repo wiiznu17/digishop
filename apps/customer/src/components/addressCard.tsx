@@ -4,14 +4,31 @@ interface AddressCard {
   item: Address;
 }
 export default function AddressCard({ item }: AddressCard) {
+  const formatAddress = (items: Address): string => {
+    return [
+      items.address_number,
+      items.building,
+      items.street,
+      items.subStreet,
+      items.district,
+      items.subdistrict,
+      items.province,
+      items.postalCode,
+      items.country
+    ]
+      .filter(Boolean)
+      .join(' ')
+  }
   return (
-    <div className={`border ${item.isDefault == true ? "border-amber-600" : "border-black"} rounded-2xl mb-3 p-4`}>
+    <div className={`border ${item.isDefault == true ? "border-amber-600" : "border-black"} rounded-2xl mb-3 p-4 w-fit`}>
       <div
          className="" 
-      >
-        <h5 className="font-bold text-black mb-6 ">{item.addressType}</h5>
+      > 
+        <div className="flex">
+          <h5 className="font-bold text-black mb-6 ">{item.addressType}</h5>
+          {item.isDefault == true && <div className="mx-3">is Default</div>}
+        </div>
         <div className="space-y-6">
-          {item.isDefault == true && <div>is Default</div>}
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
               <User size={18} className="text-gray-600" />
@@ -32,7 +49,7 @@ export default function AddressCard({ item }: AddressCard) {
                 Address
               </label>
               <p className="text-gray-800 text-lg">
-                {item.addressLine}, {item.province}, {item.postalCode}
+                {formatAddress(item)}
               </p>
             </div>
           </div>

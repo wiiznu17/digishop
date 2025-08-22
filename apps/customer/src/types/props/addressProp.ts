@@ -1,8 +1,15 @@
 
 export interface Address {
+    id?: number
     recipientName: string;
     phone: string;
-    addressLine: string;
+    address_number: string;
+    building: string;
+    street: string;
+    subStreet: string;
+    district: string;
+    subdistrict: string;
+    country: string;
     province: string;
     postalCode: string;
     isDefault: boolean;
