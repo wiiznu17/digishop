@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 
 interface UsePaginationProps<T> {
   data: T[]
@@ -30,49 +30,52 @@ export function usePagination<T>({
     paginatedDataLength: paginatedData.length
   })
 
-  const goToPage = (page: number) => {
-    const clampedPage = Math.max(1, Math.min(page, totalPages))
-    console.log("goToPage:", { page, clampedPage, totalPages })
-    setCurrentPage(clampedPage)
-  }
+  const goToPage = useCallback(
+    (page: number) => {
+      const clampedPage = Math.max(1, Math.min(page, totalPages))
+      console.log("goToPage:", { page, clampedPage, totalPages })
+      setCurrentPage(clampedPage)
+    },
+    [totalPages]
+  ) // ← ขึ้นอยู่กับ totalPages
 
-  const changeItemsPerPage = (newItemsPerPage: number) => {
-    console.log("changeItemsPerPage:", {
-      old: itemsPerPage,
-      new: newItemsPerPage,
-      currentPage,
-      dataLength: data.length
-    })
+  const changeItemsPerPage = useCallback(
+    (newItemsPerPage: number) => {
+      console.log("changeItemsPerPage:", {
+        old: itemsPerPage,
+        new: newItemsPerPage,
+        currentPage,
+        dataLength: data.length
+      })
 
-    // คำนวณรายการแรกของหน้าปัจจุบัน
-    const currentFirstItem = (currentPage - 1) * itemsPerPage + 1
+      const currentFirstItem = (currentPage - 1) * itemsPerPage + 1
+      const newPage = Math.max(1, Math.ceil(currentFirstItem / newItemsPerPage))
 
-    // คำนวณหน้าใหม่ที่ควรไปอยู่
-    const newPage = Math.max(1, Math.ceil(currentFirstItem / newItemsPerPage))
+      setItemsPerPage(newItemsPerPage)
+      setCurrentPage(newPage)
+    },
+    [currentPage, itemsPerPage, data.length]
+  ) // ← dependencies ที่ใช้ในฟังก์ชัน
 
-    setItemsPerPage(newItemsPerPage)
-    setCurrentPage(newPage)
-  }
-
-  const goToNextPage = () => {
+  const goToNextPage = useCallback(() => {
     goToPage(currentPage + 1)
-  }
+  }, [goToPage, currentPage])
 
-  const goToPreviousPage = () => {
+  const goToPreviousPage = useCallback(() => {
     goToPage(currentPage - 1)
-  }
+  }, [goToPage, currentPage])
 
-  const goToFirstPage = () => {
+  const goToFirstPage = useCallback(() => {
     goToPage(1)
-  }
+  }, [goToPage])
 
-  const goToLastPage = () => {
+  const goToLastPage = useCallback(() => {
     goToPage(totalPages)
-  }
+  }, [goToPage, totalPages])
 
-  const resetPage = () => {
+  const resetPage = useCallback(() => {
     setCurrentPage(1)
-  }
+  }, []) // ← ไม่มี dependencies
 
   return {
     currentPage,

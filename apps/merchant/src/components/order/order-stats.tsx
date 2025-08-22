@@ -78,51 +78,51 @@ export function OrderStats({ orders }: OrderStatsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
       <StatCard
-        title="คำสั่งซื้อทั้งหมด"
+        title="Total Orders"
         value={stats.total}
         icon={<Package className="h-4 w-4" />}
         colorClass="text-muted-foreground"
-        description="คำสั่งซื้อทั้งหมดในระบบ"
+        description="All orders in the system"
       />
 
       <StatCard
-        title="รอชำระเงิน"
+        title="Pending Payment"
         value={stats.pending}
         icon={<Clock className="h-4 w-4" />}
         colorClass="text-yellow-600"
-        description="รอการชำระเงินจากลูกค้า"
+        description="Waiting for customer payment"
       />
 
       <StatCard
-        title="ชำระแล้ว"
+        title="Paid Orders"
         value={stats.paid}
         icon={<CreditCard className="h-4 w-4" />}
         colorClass="text-green-600"
-        description="ชำระเงินเรียบร้อยแล้ว"
+        description="Successfully paid orders"
       />
 
       <StatCard
-        title="กำลังเตรียม"
+        title="Processing"
         value={stats.processing}
         icon={<Package className="h-4 w-4" />}
         colorClass="text-blue-600"
-        description="กำลังเตรียมสินค้าและจัดส่ง"
+        description="Preparing and shipping orders"
       />
 
       <StatCard
-        title="การคืนเงิน"
+        title="Refund Requests"
         value={stats.refunds}
         icon={<RotateCcw className="h-4 w-4" />}
         colorClass="text-orange-600"
-        description="คำขอคืนเงินทั้งหมด"
+        description="All refund requests"
       />
 
       <StatCard
-        title="ยอดขายรวม"
+        title="Total Revenue"
         value={`฿${stats.revenue.toLocaleString()}`}
         icon={<DollarSign className="h-4 w-4" />}
         colorClass="text-green-600"
-        description={`เสร็จสิ้นวันนี้: ${completedOrdersToday} คำสั่ง`}
+        description={`Completed today: ${completedOrdersToday} orders`}
       />
     </div>
   )
