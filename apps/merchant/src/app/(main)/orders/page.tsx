@@ -21,6 +21,7 @@ export default function OrdersPage() {
 
   // Sync selectedOrder with the main orders array to reflect updates
   useEffect(() => {
+    console.log(initialOrders)
     if (selectedOrder) {
       const updatedOrder = orders.find((order) => order.id === selectedOrder.id)
       if (updatedOrder) {

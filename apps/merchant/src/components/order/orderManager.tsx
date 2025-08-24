@@ -53,24 +53,22 @@ export function OrderStatusManager({
     trackingNumber || ""
   )
 
-  // --- 1. เรียกใช้ functions จาก hook เวอร์ชันล่าสุด ---
+  // --- Hook helpers for order status ---
   const {
     isTerminalStatus,
     getStatusTimeline,
+    getMergedTimeline,
     getMerchantEditableStatuses,
     getStatusIcon,
     getStatusText,
     getStatusColor
   } = useOrderStatus()
 
-  // --- 2. Logic หลัก: ตัดสินใจว่าจะแสดง Timeline แบบไหน ---
+  // --- Determine which timeline to show ---
   const isOrderFinished = isTerminalStatus(currentStatus)
 
-  // ถ้าออเดอร์สิ้นสุดแล้ว -> ใช้ประวัติจริง (statusHistory)
-  // ถ้ายังไม่สิ้นสุด -> ใช้ Ideal Timeline จาก getStatusTimeline
-  const timelineToDisplay = isOrderFinished
-    ? statusHistory
-    : getStatusTimeline(currentStatus)
+  // Merge history + ideal path (instead of raw history/ideal only)
+  const timelineToDisplay = getMergedTimeline(currentStatus, statusHistory)
 
   const editableStatuses = getMerchantEditableStatuses(currentStatus)
 
@@ -80,7 +78,7 @@ export function OrderStatusManager({
     } else if (editableStatuses.length === 1) {
       onStatusChange(orderId, editableStatuses[0])
     }
-    // อัปเดต tracking number แยกต่างหาก ถ้ามีการเปลี่ยนแปลง
+    // update tracking number separately if changed
     if (newTrackingNumber !== trackingNumber) {
       onTrackingNumberUpdate(orderId, newTrackingNumber)
     }
@@ -99,7 +97,6 @@ export function OrderStatusManager({
   const getConfirmMessage = () => {
     const targetStatus = selectedStatus
     if (!targetStatus) return ""
-
     return `Do you want to change the status from "${getStatusText(
       currentStatus
     )}" to "${getStatusText(targetStatus)}"?`
@@ -112,20 +109,18 @@ export function OrderStatusManager({
         <CardDescription>Track and update order status</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* --- START: Vertical Timeline --- */}
+        {/* --- Order Timeline Section --- */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Order Timeline</h4>
           <div className="relative flex flex-col">
             {timelineToDisplay.map((status, index) => {
-              // --- 3. แก้ไข Logic การแสดงผลให้รองรับ Ideal Timeline ---
               const isActive = status === currentStatus
               const isStatusInHistory = statusHistory.includes(status)
-              // สถานะที่ผ่านมาแล้ว คือสถานะที่มีอยู่ในประวัติ และไม่ใช่สถานะปัจจุบัน
-              const isPassed = isStatusInHistory && !isActive
+              const isPassed = isStatusInHistory && !isActive // past statuses
 
               return (
                 <div key={`${status}-${index}`} className="flex items-start">
-                  {/* Left side: Circle and connecting line */}
+                  {/* Left: Circle + connector */}
                   <div className="flex flex-col items-center mr-4">
                     <div
                       className={`
@@ -135,14 +130,20 @@ export function OrderStatusManager({
                     >
                       {getStatusIcon(status)}
                     </div>
-                    {/* Connecting Line */}
+                    {/* Connector line */}
                     {index < timelineToDisplay.length - 1 && (
                       <div className="w-0.5 h-12 bg-gray-200" />
                     )}
                   </div>
-                  {/* Right side: Text content */}
+                  {/* Right: Label */}
                   <div
-                    className={`pt-1.5 ${isActive ? "font-bold" : isPassed ? "text-foreground" : "text-muted-foreground"}`}
+                    className={`pt-1.5 ${
+                      isActive
+                        ? "font-bold"
+                        : isPassed
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                    }`}
                   >
                     <p className="text-sm">{getStatusText(status)}</p>
                   </div>
@@ -151,18 +152,17 @@ export function OrderStatusManager({
             })}
           </div>
         </div>
-        {/* --- END: Vertical Timeline --- */}
+        {/* --- End Timeline --- */}
 
-        {/* Actions Section */}
+        {/* --- Actions Section --- */}
         {editableStatuses.length > 0 && (
           <div className="space-y-4 pt-4 border-t">
-            {/* ... โค้ดส่วน Action เหมือนเดิม ไม่ต้องแก้ไข ... */}
             <h4 className="font-medium text-sm">Update Status</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Status Selection */}
               <div className="space-y-3">
                 {editableStatuses.length > 1 ? (
-                  /* Multiple Options - Show Dropdown */
+                  // Multiple options -> show dropdown
                   <div className="space-y-2">
                     <Label>Select next status:</Label>
                     <Select
@@ -194,7 +194,7 @@ export function OrderStatusManager({
                     </Button>
                   </div>
                 ) : (
-                  /* Single Option - Show Confirm Button */
+                  // Single option -> show button only
                   <div className="space-y-2">
                     <Label>Next status:</Label>
                     <div className="p-3 border rounded-lg bg-muted/50">
@@ -235,6 +235,7 @@ export function OrderStatusManager({
           </div>
         )}
 
+        {/* No available actions */}
         {editableStatuses.length === 0 && (
           <div className="p-4 bg-gray-50 border rounded-lg">
             <div className="flex items-center gap-3 text-gray-700">
@@ -250,7 +251,7 @@ export function OrderStatusManager({
         )}
       </CardContent>
 
-      {/* Confirmation Dialog */}
+      {/* --- Confirmation Dialog --- */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
         <DialogContent>
           <DialogHeader>

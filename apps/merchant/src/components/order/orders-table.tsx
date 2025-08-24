@@ -95,9 +95,18 @@ export function OrdersTable({
     { value: "PROCESSING", label: "Processing" },
     { value: "READY_TO_SHIP", label: "Ready to Ship" },
     { value: "SHIPPED", label: "Shipped" },
+    { value: "TRANSIT_LACK", label: "Transit Issue" },
     { value: "RE_TRANSIT", label: "Re-transit" },
     { value: "DELIVERED", label: "Delivered" },
     { value: "REFUND_REQUEST", label: "Refund Requested" },
+    { value: "AWAITING_RETURN", label: "Awaiting Return" },
+    { value: "RECEIVE_RETURN", label: "Return Received" },
+    { value: "RETURN_VERIFIED", label: "Return Verified" },
+    { value: "RETURN_FAIL", label: "Return Failed" },
+    { value: "REFUND_APPROVED", label: "Refund Approved" },
+    { value: "REFUND_SUCCESS", label: "Refund Success" },
+    { value: "REFUND_FAIL", label: "Refund Failed" },
+    { value: "MERCHANT_REJECT", label: "Merchant Rejected" },
     { value: "COMPLETE", label: "Complete" }
   ]
 
