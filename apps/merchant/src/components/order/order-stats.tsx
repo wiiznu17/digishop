@@ -51,18 +51,39 @@ function StatCard({
 export function OrderStats({ orders }: OrderStatsProps) {
   const stats = {
     total: orders.length,
+
+    // Pending = current status only
     pending: orders.filter((o) => o.status === "PENDING").length,
-    paid: orders.filter((o) => o.status === "PAID").length,
-    processing: orders.filter((o) =>
-      ["PROCESSING", "READY_TO_SHIP"].includes(o.status)
+
+    // Paid Orders = any order that ever reached PAID
+    paid: orders.filter(
+      (o) =>
+        o.statusHistory.includes("PAID") &&
+        !o.statusHistory.includes("CUSTOMER_CANCELED")
     ).length,
-    shipped: orders.filter((o) => ["SHIPPED", "DELIVERED"].includes(o.status))
-      .length,
-    refunds: orders.filter((o) => o.status.includes("REFUND")).length,
+
+    // Processing = ever reached PROCESSING or READY_TO_SHIP
+    processing: orders.filter((o) =>
+      o.statusHistory.some((s) => ["PROCESSING", "READY_TO_SHIP"].includes(s))
+    ).length,
+
+    // Shipped = ever reached SHIPPED or DELIVERED
+    shipped: orders.filter((o) =>
+      o.statusHistory.some((s) => ["SHIPPED", "DELIVERED"].includes(s))
+    ).length,
+
+    // Refunds = ever entered refund flow
+    refunds: orders.filter((o) =>
+      o.statusHistory.some((s) => s.includes("REFUND"))
+    ).length,
+
+    // Revenue = exclude canceled & refund-success
     revenue: orders
       .filter(
         (o) =>
-          !["PENDING", "CUSTOMER_CANCELED", "REFUND_SUCCESS"].includes(o.status)
+          !o.statusHistory.includes("CUSTOMER_CANCELED") &&
+          !o.statusHistory.includes("REFUND_SUCCESS") &&
+          !o.statusHistory.includes("MERCHANT_REJECT")
       )
       .reduce((sum, order) => sum + order.totalPrice, 0)
   }
