@@ -5,8 +5,8 @@ export default {
     await queryInterface.bulkInsert('REVIEWS', [
       {
         user_id: 1,
-        product_id: 1,
-        order_id: 1,
+        product_id: 1005,
+        order_id: 6001,
         rating: 5,
         comment: 'Great product!',
         created_at: new Date(),

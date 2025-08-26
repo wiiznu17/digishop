@@ -4,7 +4,7 @@ export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkInsert('PRODUCT_VIEWS', [
       {
-        product_id: 1,
+        product_id: 1005,
         user_id: 1,
         session_id: 'sess123',
         viewed_at: new Date(),
