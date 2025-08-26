@@ -19,6 +19,12 @@ export default {
         onDelete: 'RESTRICT',
         onUpdate: 'CASCADE',
       },
+      reference: {
+        type: DataTypes.STRING(32),
+        allowNull: true,
+        onDelete: 'RESTRICT',
+        onUpdate: 'CASCADE',
+      },
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
       status: { type: DataTypes.ENUM(...Object.values(OrderStatus)), allowNull: false, defaultValue: OrderStatus.PENDING },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },

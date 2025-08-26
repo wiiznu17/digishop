@@ -5,6 +5,7 @@ export interface OrderAttributes {
   id: number;
   customerId: number;
   storeId: number;
+  reference: number;
   totalPrice: string; // DECIMAL
   status: OrderStatus;
   createdAt?: Date;
@@ -12,12 +13,13 @@ export interface OrderAttributes {
 }
 
 export interface OrderCreationAttributes
-  extends Optional<OrderAttributes, 'id' | 'status' | 'createdAt' | 'updatedAt'> {}
+  extends Optional<OrderAttributes, 'id' | 'reference' | 'status' | 'createdAt' | 'updatedAt'> {}
 
 export class Order extends Model<OrderAttributes, OrderCreationAttributes> implements OrderAttributes {
   public id!: number;
   public customerId!: number;
   public storeId!: number;
+  public reference!: number;
   public totalPrice!: string;
   public status!: OrderStatus;
   public readonly createdAt!: Date;
@@ -38,6 +40,11 @@ export class Order extends Model<OrderAttributes, OrderCreationAttributes> imple
         },
         storeId: {
           type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          field: 'store_id',
+        },
+        reference: {
+          type: DataTypes.STRING(32),
           allowNull: false,
           field: 'store_id',
         },
