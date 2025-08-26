@@ -58,32 +58,32 @@ export function OrderStats({ orders }: OrderStatsProps) {
     // Paid Orders = any order that ever reached PAID
     paid: orders.filter(
       (o) =>
-        o.statusHistory.includes("PAID") &&
-        !o.statusHistory.includes("CUSTOMER_CANCELED")
+        o.statusHistory?.includes("PAID") &&
+        !o.statusHistory?.includes("CUSTOMER_CANCELED")
     ).length,
 
     // Processing = ever reached PROCESSING or READY_TO_SHIP
     processing: orders.filter((o) =>
-      o.statusHistory.some((s) => ["PROCESSING", "READY_TO_SHIP"].includes(s))
+      o.statusHistory?.some((s) => ["PROCESSING", "READY_TO_SHIP"].includes(s))
     ).length,
 
     // Shipped = ever reached SHIPPED or DELIVERED
     shipped: orders.filter((o) =>
-      o.statusHistory.some((s) => ["SHIPPED", "DELIVERED"].includes(s))
+      o.statusHistory?.some((s) => ["SHIPPED", "DELIVERED"].includes(s))
     ).length,
 
     // Refunds = ever entered refund flow
     refunds: orders.filter((o) =>
-      o.statusHistory.some((s) => s.includes("REFUND"))
+      o.statusHistory?.some((s) => s.includes("REFUND"))
     ).length,
 
     // Revenue = exclude canceled & refund-success
     revenue: orders
       .filter(
         (o) =>
-          !o.statusHistory.includes("CUSTOMER_CANCELED") &&
-          !o.statusHistory.includes("REFUND_SUCCESS") &&
-          !o.statusHistory.includes("MERCHANT_REJECT")
+          !o.statusHistory?.includes("CUSTOMER_CANCELED") &&
+          !o.statusHistory?.includes("REFUND_SUCCESS") &&
+          !o.statusHistory?.includes("MERCHANT_CANCELED")
       )
       .reduce((sum, order) => sum + order.totalPrice, 0)
   }
