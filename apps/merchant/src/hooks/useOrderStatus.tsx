@@ -26,7 +26,7 @@ export const useOrderStatus = () => {
     return [
       "COMPLETE",
       "CUSTOMER_CANCELED",
-      "MERCHANT_REJECT", // canceled by merchant
+      "MERCHANT_CANCELED", // canceled by merchant
       "REFUND_SUCCESS",
       "REFUND_FAIL",
       "RETURN_FAIL" // end state
@@ -235,8 +235,8 @@ export const useOrderStatus = () => {
       return ["PENDING", "CUSTOMER_CANCELED"]
     }
 
-    if (["MERCHANT_REJECT"].includes(currentStatus)) {
-      return ["PENDING", "PAID", "MERCHANT_REJECT"]
+    if (["MERCHANT_CANCELED"].includes(currentStatus)) {
+      return ["PENDING", "PAID", "MERCHANT_CANCELED"]
     }
 
     return NORMAL_FLOW
@@ -250,7 +250,7 @@ export const useOrderStatus = () => {
   ): OrderStatus[] => {
     switch (currentStatus) {
       case "PAID":
-        return ["PROCESSING", "REFUND_APPROVED", "MERCHANT_REJECT"]
+        return ["PROCESSING", "REFUND_APPROVED", "MERCHANT_CANCELED"]
       case "PROCESSING":
         return ["READY_TO_SHIP"]
       case "READY_TO_SHIP":
@@ -289,7 +289,7 @@ export const useOrderStatus = () => {
         return <ThumbsUp className="h-4 w-4" />
       case "CUSTOMER_CANCELED":
         return <Ban className="h-4 w-4" />
-      case "MERCHANT_REJECT":
+      case "MERCHANT_CANCELED":
         return <Ban className="h-4 w-4 text-red-500" />
       case "REFUND_REQUEST":
         return <RotateCcw className="h-4 w-4" />
@@ -327,7 +327,7 @@ export const useOrderStatus = () => {
       DELIVERED: "Delivered",
       COMPLETE: "Completed",
       CUSTOMER_CANCELED: "Customer canceled",
-      MERCHANT_REJECT: "Order Canceled by Merchant",
+      MERCHANT_CANCELED: "Order Canceled by Merchant",
       REFUND_REQUEST: "Refund requested",
       AWAITING_RETURN: "Awaiting return",
       RECEIVE_RETURN: "Return received",
@@ -366,7 +366,7 @@ export const useOrderStatus = () => {
           return "bg-emerald-500 border-emerald-500 text-white"
         case "CUSTOMER_CANCELED":
           return "bg-gray-500 border-gray-500 text-white"
-        case "MERCHANT_REJECT":
+        case "MERCHANT_CANCELED":
           return "bg-red-500 border-red-500 text-white"
         case "REFUND_REQUEST":
           return "bg-orange-500 border-orange-500 text-white"
@@ -409,7 +409,7 @@ export const useOrderStatus = () => {
         return "bg-emerald-100 text-emerald-800 border-emerald-300"
       case "CUSTOMER_CANCELED":
         return "bg-gray-100 text-gray-800 border-gray-300"
-      case "MERCHANT_REJECT":
+      case "MERCHANT_CANCELED":
         return "bg-red-100 text-red-800 border-red-300"
       case "REFUND_REQUEST":
         return "bg-orange-100 text-orange-800 border-orange-300"

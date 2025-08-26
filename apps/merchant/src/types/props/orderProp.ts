@@ -9,7 +9,7 @@ export type OrderStatus =
   | "DELIVERED"
   | "COMPLETE"
   | "CUSTOMER_CANCELED"
-  | "MERCHANT_REJECT"
+  | "MERCHANT_CANCELED"
   | "TRANSIT_LACK"
   | "RE_TRANSIT"
   | "REFUND_REQUEST"
