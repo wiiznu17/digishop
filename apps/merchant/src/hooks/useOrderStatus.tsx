@@ -19,39 +19,38 @@ import {
 import { OrderStatus } from "@/types/props/orderProp"
 
 export const useOrderStatus = () => {
-  /**
-   * Check if a status is terminal (order cannot progress further)
-   */
+  /** Terminal statuses (สิ้นสุดกระบวนการ) */
   const isTerminalStatus = (status: OrderStatus): boolean => {
     return [
       "COMPLETE",
       "CUSTOMER_CANCELED",
-      "MERCHANT_CANCELED", // canceled by merchant
+      "MERCHANT_CANCELED",
       "REFUND_SUCCESS",
       "REFUND_FAIL",
-      "RETURN_FAIL" // end state
+      "RETURN_FAIL"
     ].includes(status)
   }
 
-  /**
-   * Merge real history + remaining ideal timeline
-   */
+  /** เส้นทางปกติ */
   const NORMAL_FLOW: OrderStatus[] = [
     "PENDING",
     "PAID",
     "PROCESSING",
     "READY_TO_SHIP",
+    "HANDED_OVER",
     "SHIPPED",
     "DELIVERED",
     "COMPLETE"
   ]
 
+  /** เส้นทางคืนเงิน: กรณีขอคืนตั้งแต่ยังไม่ส่งถึงมือ */
   const REFUND_FLOW_FROM_PAID: OrderStatus[] = [
     "REFUND_REQUEST",
     "REFUND_APPROVED",
-    "REFUND_SUCCESS" // can end in success or fail
+    "REFUND_SUCCESS"
   ]
 
+  /** เส้นทางคืนเงิน: กรณีขอคืนหลังได้รับของ */
   const REFUND_FLOW_FROM_DELIVERED: OrderStatus[] = [
     "REFUND_REQUEST",
     "AWAITING_RETURN",
@@ -61,7 +60,7 @@ export const useOrderStatus = () => {
     "REFUND_SUCCESS"
   ]
 
-  // All refund-related statuses
+  /** กลุ่มสถานะใน flow คืนเงิน */
   const REFUND_FAMILY = new Set<OrderStatus>([
     "REFUND_REQUEST",
     "AWAITING_RETURN",
@@ -73,7 +72,7 @@ export const useOrderStatus = () => {
     "REFUND_FAIL"
   ])
 
-  // Hint: refund branch comes from delivered side
+  /** ตัวบ่งชี้ว่าเป็นฝั่งที่เกิดหลังส่งถึงลูกค้า */
   const RETURN_SIDE_HINT = new Set<OrderStatus>([
     "AWAITING_RETURN",
     "RECEIVE_RETURN",
@@ -81,7 +80,7 @@ export const useOrderStatus = () => {
     "RETURN_FAIL"
   ])
 
-  // Dedupe while preserving order
+  /** unique โดยคงลำดับ */
   const uniqInOrder = (arr: OrderStatus[]) => {
     const seen = new Set<OrderStatus>()
     const out: OrderStatus[] = []
@@ -91,34 +90,24 @@ export const useOrderStatus = () => {
         out.push(s)
       }
     }
-    console.log("Timeline", out)
     return out
   }
 
   /**
-   * Build merged timeline:
-   * - start from normal flow
-   * - insert transit issues if exist
-   * - insert refund branch if exist
-   * - append remaining ideal path after history
-   * - dedupe
+   * รวม timeline จาก history + ideal path
    */
   const getMergedTimeline = (
     currentStatus: OrderStatus,
     history: OrderStatus[]
   ): OrderStatus[] => {
     const hist = history && history.length ? history : [currentStatus]
-    // console.log("History", hist)
-    // stop if last status is terminal
     const last = hist[hist.length - 1]
-    if (isTerminalStatus(last)) {
-      return hist
-    }
+    if (isTerminalStatus(last)) return hist
 
-    // 1) base = normal flow
+    // 1) เริ่มจาก flow ปกติ
     let composite: OrderStatus[] = [...NORMAL_FLOW]
 
-    // 2) insert transit issues (TRANSIT_LACK / RE_TRANSIT) if present
+    // 2) แทรกปัญหาระหว่างขนส่งถ้ามี (หลัง SHIPPED ก่อน DELIVERED)
     const hasTransitLack =
       hist.includes("TRANSIT_LACK") || currentStatus === "TRANSIT_LACK"
     const hasReTransit =
@@ -143,7 +132,7 @@ export const useOrderStatus = () => {
       }
     }
 
-    // 3) add refund branch if exists
+    // 3) กรณี refund
     const isRefundCase =
       hist.some((s) => REFUND_FAMILY.has(s)) || REFUND_FAMILY.has(currentStatus)
 
@@ -165,20 +154,17 @@ export const useOrderStatus = () => {
       composite = [...baseUpToPivot, ...refundSegment]
     }
 
-    // 4) merge history + remaining path
+    // 4) ต่อจากสถานะล่าสุดใน history ไปยังอนาคตที่เหลือ
     const lastIdxInComposite = composite.indexOf(last)
     const remaining =
       lastIdxInComposite >= 0
         ? composite.slice(lastIdxInComposite + 1)
         : composite
 
-    // 5) return merged + deduped
     return uniqInOrder([...hist, ...remaining])
   }
 
-  /**
-   * Ideal timelines for different flows
-   */
+  /** Ideal timeline ตามสถานะปัจจุบัน (ใช้วาดเส้น) */
   const getStatusTimeline = (currentStatus: OrderStatus): OrderStatus[] => {
     if (
       [
@@ -186,6 +172,7 @@ export const useOrderStatus = () => {
         "PAID",
         "PROCESSING",
         "READY_TO_SHIP",
+        "HANDED_OVER",
         "SHIPPED",
         "DELIVERED",
         "COMPLETE"
@@ -223,6 +210,7 @@ export const useOrderStatus = () => {
         "PAID",
         "PROCESSING",
         "READY_TO_SHIP",
+        "HANDED_OVER",
         "SHIPPED",
         "TRANSIT_LACK",
         "RE_TRANSIT",
@@ -231,20 +219,18 @@ export const useOrderStatus = () => {
       ]
     }
 
-    if (["CUSTOMER_CANCELED"].includes(currentStatus)) {
+    if (currentStatus === "CUSTOMER_CANCELED") {
       return ["PENDING", "CUSTOMER_CANCELED"]
     }
 
-    if (["MERCHANT_CANCELED"].includes(currentStatus)) {
+    if (currentStatus === "MERCHANT_CANCELED") {
       return ["PENDING", "PAID", "MERCHANT_CANCELED"]
     }
 
     return NORMAL_FLOW
   }
 
-  /**
-   * Merchant editable statuses from current state
-   */
+  /** สถานะที่ร้านกดเปลี่ยนได้จากสถานะปัจจุบัน */
   const getMerchantEditableStatuses = (
     currentStatus: OrderStatus
   ): OrderStatus[] => {
@@ -254,7 +240,8 @@ export const useOrderStatus = () => {
       case "PROCESSING":
         return ["READY_TO_SHIP"]
       case "READY_TO_SHIP":
-        return ["SHIPPED"]
+        // ตอนนี้ร้านทำได้ถึง "ส่งมอบให้ขนส่ง" เท่านั้น
+        return ["HANDED_OVER"]
       case "REFUND_REQUEST":
         return ["REFUND_APPROVED"]
       case "AWAITING_RETURN":
@@ -268,9 +255,7 @@ export const useOrderStatus = () => {
     }
   }
 
-  /**
-   * Map status -> icon
-   */
+  /** Map: status -> icon */
   const getStatusIcon = (status: OrderStatus) => {
     switch (status) {
       case "PENDING":
@@ -281,6 +266,8 @@ export const useOrderStatus = () => {
         return <Package className="h-4 w-4" />
       case "READY_TO_SHIP":
         return <PackageCheck className="h-4 w-4" />
+      case "HANDED_OVER":
+        return <Truck className="h-4 w-4" />
       case "SHIPPED":
         return <Truck className="h-4 w-4" />
       case "DELIVERED":
@@ -314,20 +301,19 @@ export const useOrderStatus = () => {
     }
   }
 
-  /**
-   * Map status -> label text
-   */
+  /** Map: status -> label */
   const getStatusText = (status: OrderStatus) => {
-    const statusMap = {
+    const statusMap: Record<OrderStatus, string> = {
       PENDING: "Awaiting payment",
       PAID: "Payment completed",
       PROCESSING: "Processing order",
       READY_TO_SHIP: "Ready to ship",
+      HANDED_OVER: "Handed over to courier",
       SHIPPED: "Shipped",
       DELIVERED: "Delivered",
       COMPLETE: "Completed",
       CUSTOMER_CANCELED: "Customer canceled",
-      MERCHANT_CANCELED: "Order Canceled by Merchant",
+      MERCHANT_CANCELED: "Order canceled by merchant",
       REFUND_REQUEST: "Refund requested",
       AWAITING_RETURN: "Awaiting return",
       RECEIVE_RETURN: "Return received",
@@ -342,9 +328,7 @@ export const useOrderStatus = () => {
     return statusMap[status]
   }
 
-  /**
-   * Status color in timeline (active/passed/future)
-   */
+  /** สีของขั้นใน timeline */
   const getStatusColor = (
     status: OrderStatus,
     isActive = false,
@@ -360,6 +344,8 @@ export const useOrderStatus = () => {
           return "bg-blue-500 border-blue-500 text-white"
         case "READY_TO_SHIP":
           return "bg-indigo-500 border-indigo-500 text-white"
+        case "HANDED_OVER":
+          return "bg-sky-500 border-sky-500 text-white"
         case "SHIPPED":
           return "bg-purple-500 border-purple-500 text-white"
         case "DELIVERED":
@@ -369,9 +355,7 @@ export const useOrderStatus = () => {
         case "MERCHANT_CANCELED":
           return "bg-red-500 border-red-500 text-white"
         case "REFUND_REQUEST":
-          return "bg-orange-500 border-orange-500 text-white"
         case "AWAITING_RETURN":
-          return "bg-orange-500 border-orange-500 text-white"
         case "RECEIVE_RETURN":
           return "bg-orange-500 border-orange-500 text-white"
         case "TRANSIT_LACK":
@@ -388,9 +372,7 @@ export const useOrderStatus = () => {
     }
   }
 
-  /**
-   * Status badge color for table/list
-   */
+  /** สี badge ในตาราง */
   const getStatusBadgeColor = (status: OrderStatus) => {
     switch (status) {
       case "PENDING":
@@ -401,10 +383,11 @@ export const useOrderStatus = () => {
         return "bg-blue-100 text-blue-800 border-blue-300"
       case "READY_TO_SHIP":
         return "bg-indigo-100 text-indigo-800 border-indigo-300"
+      case "HANDED_OVER":
+        return "bg-sky-100 text-sky-800 border-sky-300"
       case "SHIPPED":
         return "bg-purple-100 text-purple-800 border-purple-300"
       case "DELIVERED":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300"
       case "COMPLETE":
         return "bg-emerald-100 text-emerald-800 border-emerald-300"
       case "CUSTOMER_CANCELED":
@@ -414,7 +397,6 @@ export const useOrderStatus = () => {
       case "REFUND_REQUEST":
         return "bg-orange-100 text-orange-800 border-orange-300"
       case "AWAITING_RETURN":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300"
       case "RECEIVE_RETURN":
         return "bg-yellow-100 text-yellow-800 border-yellow-300"
       case "RETURN_VERIFIED":
@@ -422,7 +404,6 @@ export const useOrderStatus = () => {
       case "RETURN_FAIL":
         return "bg-red-100 text-red-800 border-red-300"
       case "REFUND_APPROVED":
-        return "bg-green-100 text-green-800 border-green-300"
       case "REFUND_SUCCESS":
         return "bg-green-100 text-green-800 border-green-300"
       case "REFUND_FAIL":

@@ -33,26 +33,31 @@ export enum ProductStatus {
 }
 
 export enum OrderStatus {
-  PENDING = "PENDING",
-  CUSTOMER_CANCELED = "CUSTOMER_CANCELED",
-  PAID = "PAID",
-  MERCHANT_REJECT = "MERCHANT_CANCELED",
-  PROCESSING = "PROCESSING",
-  READY_TO_SHIP = "READY_TO_SHIP",
-  SHIPPED = "SHIPPED",
-  DELIVERED = "DELIVERED",
-  REFUND_REQUEST = "REFUND_REQUEST",
-  TRANSIT_LACK = "TRANSIT_LACK",
-  RE_TRANSIT = "RE_TRANSIT",
-  AWAITING_RETURN = "AWAITING_RETURN",
-  RECIEVE_RETURN = "RECEIVE_RETURN",
-  RETURN_FAIL = "RETURN_FAIL",
-  RETURN_VERIFIED = "RETURN_VERIFIED",
-  REFUND_APPROVED = "REFUND_APPROVED",
-  REFUND_FAIL = "REFUND_FAIL",
-  REFUND_SUCCESS = "REFUND_SUCCESS",
-  COMPLETE = "COMPLETE",
+  PENDING = "PENDING",                  // รอการชำระเงิน (ลูกค้ายังไม่ได้จ่าย)
+  CUSTOMER_CANCELED = "CUSTOMER_CANCELED", // ลูกค้ายกเลิกเองก่อนจ่าย
+  PAID = "PAID",                        // ชำระเงินแล้ว (prepaid)
+  MERCHANT_CANCELED = "MERCHANT_CANCELED", // ร้านค้าปฏิเสธ/ยกเลิกหลังชำระ
+  PROCESSING = "PROCESSING",            // ร้านค้ากำลังเตรียมสินค้า
+  READY_TO_SHIP = "READY_TO_SHIP",      // ร้านค้าเตรียมเสร็จ พร้อมส่ง
+  HANDED_OVER = "HANDED_OVER",          // ร้านค้าส่งมอบพัสดุให้ขนส่งแล้ว
+  SHIPPED = "SHIPPED",                  // บริษัทขนส่งรับของ / แสกนครั้งแรก
+  DELIVERED = "DELIVERED",              // ลูกค้าได้รับสินค้า
+  COMPLETE = "COMPLETE",                // ออเดอร์เสร็จสมบูรณ์ (ลูกค้ายืนยันแล้ว)
+
+  TRANSIT_LACK = "TRANSIT_LACK",        // ปัญหาระหว่างขนส่ง
+  RE_TRANSIT = "RE_TRANSIT",            // ส่งใหม่อีกครั้ง
+
+  REFUND_REQUEST = "REFUND_REQUEST",    // ลูกค้าขอคืนเงิน
+  AWAITING_RETURN = "AWAITING_RETURN",  // รอการส่งสินค้าคืน
+  RECEIVE_RETURN = "RECEIVE_RETURN",    // ร้านค้าได้รับสินค้าคืน
+  RETURN_VERIFIED = "RETURN_VERIFIED",  // ร้านค้าตรวจสอบสินค้าคืนแล้ว
+  RETURN_FAIL = "RETURN_FAIL",          // การคืนสินค้าล้มเหลว
+
+  REFUND_APPROVED = "REFUND_APPROVED",  // ร้านค้าอนุมัติการคืนเงิน
+  REFUND_SUCCESS = "REFUND_SUCCESS",    // คืนเงินสำเร็จ (API provider success)
+  REFUND_FAIL = "REFUND_FAIL",          // คืนเงินล้มเหลว (API provider fail)
 }
+
 
 export enum PaymentStatus {
   SUCCESS = 'SUCCESS',
