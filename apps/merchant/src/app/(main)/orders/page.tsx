@@ -7,27 +7,21 @@ import { OrderDetailDialog } from "@/components/order/order-detail-dialog"
 import { OrdersTable } from "@/components/order/orders-table"
 import { OrderStats } from "@/components/order/order-stats"
 import { useOrderStatus } from "@/hooks/useOrderStatus"
-import { listOrdersRequester } from "@/utils/requestUtils/requestOrderUtils"
+import {
+  listOrdersRequester,
+  updateOrderRequester,
+  handOverOrderRequester,
+  type ListOrdersParams as _ListOrdersParams,
+  type ListOrdersResponse as _ListOrdersResponse
+} from "@/utils/requestUtils/requestOrderUtils"
 
 /** --- Strongly typed API response from listOrders --- */
-type ListOrdersResponse = {
-  data: Order[]
-  meta: {
-    page: number
-    pageSize: number
-    total: number
-  }
-}
+type ListOrdersResponse = _ListOrdersResponse
 
 /** --- Strongly typed request options for listOrders --- */
-type ListOrdersParams = {
-  page: number
-  pageSize: number
-  status: string
-  q: string
+type ListOrdersParams = _ListOrdersParams & {
   sortBy: "created_at" | "updated_at"
   sortDir: "ASC" | "DESC"
-  signal?: AbortSignal
 }
 
 export default function OrdersPage() {
@@ -45,7 +39,7 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false)
 
-  // only what the page needs from the hook
+  // helpers from hook
   const { getStatusIcon, getStatusBadgeColor, getStatusText } = useOrderStatus()
 
   // debounce search (250ms)
@@ -76,14 +70,11 @@ export default function OrdersPage() {
           signal: ac.signal
         }
         const res: ListOrdersResponse = await listOrdersRequester(params)
-        console.log("All order: ", res)
+        console.log("Fetched orders:", res.data)
         setOrders(res.data)
         setTotal(res.meta.total)
       } catch (e: unknown) {
-        // แยกกรณีถูกยกเลิกกับ error จริง
-        if (isAbortError(e)) {
-          // ignore
-        } else {
+        if (!isAbortError(e)) {
           setError("Failed to load orders")
           setOrders([])
           setTotal(0)
@@ -97,24 +88,112 @@ export default function OrdersPage() {
     return () => ac.abort()
   }, [page, pageSize, statusFilter, debouncedQ])
 
-  // optimistic local updates (ยังไม่ยิง API เปลี่ยนสถานะ)
-  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => {
+  // ===== Backed-by-API updates =====
+
+  // Update status (optimistic -> call API -> rollback if failed)
+  const handleStatusChange = async (
+    orderId: string,
+    newStatus: OrderStatus
+  ) => {
+    const prev = orders.find((o) => o.id === orderId)
+    if (!prev) return
+
+    // optimistic
+    setOrders((prevList) =>
+      prevList.map((o) => {
         if (o.id !== orderId) return o
         const newHistory = [...(o.statusHistory || [o.status]), newStatus]
         return { ...o, status: newStatus, statusHistory: newHistory }
       })
     )
+
+    try {
+      const res = await updateOrderRequester(orderId, { status: newStatus })
+      const updated = res.data
+      setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
+      setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
+    } catch (e) {
+      // rollback
+      setOrders((list) =>
+        list.map((o) => (o.id === orderId ? (prev as Order) : o))
+      )
+      setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
+      console.error(e)
+      alert("Failed to update order status. Please try again.")
+    }
   }
 
-  const handleTrackingNumberUpdate = (
+  // Update tracking number only (ใช้กรณีสถานะอื่น ๆ)
+  const handleTrackingNumberUpdate = async (
     orderId: string,
-    trackingNumber: string
+    trackingNumber: string,
+    carrier?: string
   ) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, trackingNumber } : o))
+    const prev = orders.find((o) => o.id === orderId)
+    if (!prev) return
+
+    // optimistic
+    setOrders((list) =>
+      list.map((o) => (o.id === orderId ? { ...o, trackingNumber } : o))
     )
+
+    try {
+      const res = await updateOrderRequester(orderId, {
+        trackingNumber,
+        ...(carrier ? { carrier } : {})
+      })
+      const updated = res.data
+      setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
+      setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
+    } catch (e) {
+      // rollback
+      setOrders((list) =>
+        list.map((o) => (o.id === orderId ? (prev as Order) : o))
+      )
+      setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
+      console.error(e)
+      alert("Failed to update tracking number. Please try again.")
+    }
+  }
+
+  // Handed over (อัปเดตสถานะเป็น HANDED_OVER + ตั้ง tracking พร้อมกันใน API เดียว)
+  const handleHandedOver = async (
+    orderId: string,
+    trackingNumber: string,
+    carrier?: string
+  ) => {
+    const prev = orders.find((o) => o.id === orderId)
+    if (!prev) return
+
+    // optimistic: เปลี่ยนสถานะ + ใส่ tracking
+    setOrders((list) =>
+      list.map((o) => {
+        if (o.id !== orderId) return o
+        const newStatus: OrderStatus = "HANDED_OVER"
+        const newHistory = [...(o.statusHistory || [o.status]), newStatus]
+        return {
+          ...o,
+          status: newStatus,
+          statusHistory: newHistory,
+          trackingNumber
+        }
+      })
+    )
+
+    try {
+      const res = await handOverOrderRequester(orderId, trackingNumber, carrier)
+      const updated = res.data
+      setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
+      setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
+    } catch (e) {
+      // rollback
+      setOrders((list) =>
+        list.map((o) => (o.id === orderId ? (prev as Order) : o))
+      )
+      setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
+      console.error(e)
+      alert("Failed to hand over order. Please try again.")
+    }
   }
 
   const viewOrderDetails = (order: Order) => {
@@ -159,7 +238,7 @@ export default function OrdersPage() {
           getStatusIcon={getStatusIcon}
           getStatusBadgeColor={getStatusBadgeColor}
           getStatusText={getStatusText}
-          // ถ้ามี pagination ใน table ให้เชื่อมต่อ state ด้านล่าง
+          // pagination
           page={page}
           pageSize={pageSize}
           total={total}
@@ -175,6 +254,8 @@ export default function OrdersPage() {
         onClose={handleCloseDialog}
         onStatusChange={handleStatusChange}
         onTrackingNumberUpdate={handleTrackingNumberUpdate}
+        /** ⬇️ ส่งเข้าไปเพื่อให้ OrderStatusManager ใช้ input tracking + ปุ่ม hand over */
+        onHandedOver={handleHandedOver}
       />
     </div>
   )
@@ -199,28 +280,23 @@ function useDebouncedValue<T>(value: T, delay = 250): T {
 /** narrow unknown error into “abort-like” error safely */
 function isAbortError(err: unknown): boolean {
   if (!err) return false
-  // Axios cancellation (v1) uses 'CanceledError' or message 'canceled'
   if (
     typeof err === "object" &&
     "name" in err &&
     (err as { name?: string }).name === "CanceledError"
-  ) {
+  )
     return true
-  }
   if (
     typeof err === "object" &&
     "message" in err &&
     (err as { message?: string }).message === "canceled"
-  ) {
+  )
     return true
-  }
-  // Native AbortController
   if (
     typeof err === "object" &&
     "name" in err &&
     (err as { name?: string }).name === "AbortError"
-  ) {
+  )
     return true
-  }
   return false
 }

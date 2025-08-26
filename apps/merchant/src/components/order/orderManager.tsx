@@ -37,6 +37,11 @@ interface OrderStatusManagerProps {
   trackingNumber?: string
   onStatusChange: (orderId: string, newStatus: OrderStatus) => void
   onTrackingNumberUpdate: (orderId: string, trackingNumber: string) => void
+  onHandedOver?: (
+    orderId: string,
+    trackingNumber: string,
+    carrier?: string
+  ) => void
 }
 
 export function OrderStatusManager({
@@ -45,43 +50,54 @@ export function OrderStatusManager({
   trackingNumber,
   statusHistory,
   onStatusChange,
-  onTrackingNumberUpdate
+  onTrackingNumberUpdate,
+  onHandedOver
 }: OrderStatusManagerProps) {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [newTrackingNumber, setNewTrackingNumber] = useState(
     trackingNumber || ""
   )
+  const [carrier, setCarrier] = useState<string>("") // NEW
 
   // --- Hook helpers for order status ---
   const {
-    isTerminalStatus,
-    getStatusTimeline,
     getMergedTimeline,
     getMerchantEditableStatuses,
     getStatusIcon,
     getStatusText,
+    getStatusTextForReal,
     getStatusColor
   } = useOrderStatus()
 
-  // --- Determine which timeline to show ---
-  const isOrderFinished = isTerminalStatus(currentStatus)
-
-  // Merge history + ideal path (instead of raw history/ideal only)
   const timelineToDisplay = getMergedTimeline(currentStatus, statusHistory)
-
   const editableStatuses = getMerchantEditableStatuses(currentStatus)
 
   const handleStatusUpdate = () => {
     if (selectedStatus) {
-      onStatusChange(orderId, selectedStatus)
+      if (selectedStatus === "HANDED_OVER") {
+        // ต้องมี tracking + carrier
+        onHandedOver?.(orderId, newTrackingNumber, carrier)
+      } else {
+        onStatusChange(orderId, selectedStatus)
+      }
     } else if (editableStatuses.length === 1) {
-      onStatusChange(orderId, editableStatuses[0])
+      const next = editableStatuses[0]
+      if (next === "HANDED_OVER") {
+        onHandedOver?.(orderId, newTrackingNumber, carrier)
+      } else {
+        onStatusChange(orderId, next)
+      }
     }
-    // update tracking number separately if changed
-    if (newTrackingNumber !== trackingNumber) {
+
+    // update tracking number แยก กรณี status อื่น
+    if (
+      newTrackingNumber !== trackingNumber &&
+      selectedStatus !== "HANDED_OVER"
+    ) {
       onTrackingNumberUpdate(orderId, newTrackingNumber)
     }
+
     setIsConfirmDialogOpen(false)
     setSelectedStatus(null)
   }
@@ -109,20 +125,16 @@ export function OrderStatusManager({
         <CardDescription>Track and update order status</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* --- Order Timeline Section --- */}
+        {/* Timeline */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Order Timeline</h4>
           <div className="relative flex flex-col">
             {timelineToDisplay.map((status, index) => {
               const isActive = status === currentStatus
-              console.log("Status", status, isActive)
               const isStatusInHistory = statusHistory.includes(status)
-              console.log("In history", isStatusInHistory)
-              const isPassed = isStatusInHistory && !isActive // past statuses
-              console.log("Is passed", isPassed)
+              const isPassed = isStatusInHistory && !isActive
               return (
                 <div key={`${status}-${index}`} className="flex items-start">
-                  {/* Left: Circle + connector */}
                   <div className="flex flex-col items-center mr-4">
                     <div
                       className={`
@@ -132,12 +144,10 @@ export function OrderStatusManager({
                     >
                       {getStatusIcon(status)}
                     </div>
-                    {/* Connector line */}
                     {index < timelineToDisplay.length - 1 && (
                       <div className="w-0.5 h-12 bg-gray-200" />
                     )}
                   </div>
-                  {/* Right: Label */}
                   <div
                     className={`pt-1.5 ${
                       isActive
@@ -154,9 +164,8 @@ export function OrderStatusManager({
             })}
           </div>
         </div>
-        {/* --- End Timeline --- */}
 
-        {/* --- Actions Section --- */}
+        {/* Actions */}
         {editableStatuses.length > 0 && (
           <div className="space-y-4 pt-4 border-t">
             <h4 className="font-medium text-sm">Update Status</h4>
@@ -164,7 +173,6 @@ export function OrderStatusManager({
               {/* Status Selection */}
               <div className="space-y-3">
                 {editableStatuses.length > 1 ? (
-                  // Multiple options -> show dropdown
                   <div className="space-y-2">
                     <Label>Select next status:</Label>
                     <Select
@@ -181,7 +189,7 @@ export function OrderStatusManager({
                           <SelectItem key={status} value={status}>
                             <div className="flex items-center gap-2">
                               {getStatusIcon(status)}
-                              <span>{getStatusText(status)}</span>
+                              <span>{getStatusTextForReal(status)}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -196,7 +204,6 @@ export function OrderStatusManager({
                     </Button>
                   </div>
                 ) : (
-                  // Single option -> show button only
                   <div className="space-y-2">
                     <Label>Next status:</Label>
                     <div className="p-3 border rounded-lg bg-muted/50">
@@ -217,9 +224,9 @@ export function OrderStatusManager({
                 )}
               </div>
 
-              {/* Tracking Number Input */}
+              {/* Tracking + Carrier Inputs */}
               {(currentStatus === "READY_TO_SHIP" ||
-                editableStatuses.includes("SHIPPED")) && (
+                editableStatuses.includes("HANDED_OVER")) && (
                 <div className="space-y-2">
                   <Label htmlFor="tracking">Tracking Number:</Label>
                   <Input
@@ -228,8 +235,24 @@ export function OrderStatusManager({
                     value={newTrackingNumber}
                     onChange={(e) => setNewTrackingNumber(e.target.value)}
                   />
+                  <Label className="mt-3">Carrier:</Label>
+                  <Select value={carrier} onValueChange={setCarrier}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select carrier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kerry">Kerry Express</SelectItem>
+                      <SelectItem value="flash">Flash Express</SelectItem>
+                      <SelectItem value="j&t">J&T Express</SelectItem>
+                      <SelectItem value="thailand-post">
+                        Thailand Post
+                      </SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground">
-                    Tracking number will be updated upon status change.
+                    Tracking number and carrier will be updated upon status
+                    change.
                   </p>
                 </div>
               )}
@@ -237,7 +260,7 @@ export function OrderStatusManager({
           </div>
         )}
 
-        {/* No available actions */}
+        {/* No actions */}
         {editableStatuses.length === 0 && (
           <div className="p-4 bg-gray-50 border rounded-lg">
             <div className="flex items-center gap-3 text-gray-700">
@@ -253,7 +276,7 @@ export function OrderStatusManager({
         )}
       </CardContent>
 
-      {/* --- Confirmation Dialog --- */}
+      {/* Confirm Dialog */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -261,12 +284,16 @@ export function OrderStatusManager({
             <DialogDescription>{getConfirmMessage()}</DialogDescription>
           </DialogHeader>
 
-          {newTrackingNumber !== trackingNumber && newTrackingNumber && (
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+          {newTrackingNumber && (
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-1">
               <p className="text-sm text-blue-800">
-                <strong>Tracking Number will be updated to:</strong>{" "}
-                {newTrackingNumber}
+                <strong>Tracking:</strong> {newTrackingNumber}
               </p>
+              {carrier && (
+                <p className="text-sm text-blue-800">
+                  <strong>Carrier:</strong> {carrier}
+                </p>
+              )}
             </div>
           )}
 

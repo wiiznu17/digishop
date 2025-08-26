@@ -36,6 +36,12 @@ interface OrderDetailDialogProps {
   onClose: () => void
   onStatusChange: (orderId: string, newStatus: OrderStatus) => void
   onTrackingNumberUpdate: (orderId: string, trackingNumber: string) => void
+  /** NEW: สำหรับอัพเดตเป็น HANDED_OVER + tracking พร้อมกัน */
+  onHandedOver?: (
+    orderId: string,
+    trackingNumber: string,
+    carrier?: string
+  ) => void
 }
 
 export function OrderDetailDialog({
@@ -43,7 +49,8 @@ export function OrderDetailDialog({
   isOpen,
   onClose,
   onStatusChange,
-  onTrackingNumberUpdate
+  onTrackingNumberUpdate,
+  onHandedOver // <-- NEW
 }: OrderDetailDialogProps) {
   const {
     getStatusBadgeColor,
@@ -53,7 +60,7 @@ export function OrderDetailDialog({
   } = useOrderStatus()
 
   if (!order) return null
-  console.log(order)
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -262,16 +269,16 @@ export function OrderDetailDialog({
           </Card>
 
           {/* Status Management */}
-          {getMerchantEditableStatuses(order.status).length >= 0 && (
-            <OrderStatusManager
-              currentStatus={order.status}
-              statusHistory={order.statusHistory ?? []}
-              orderId={order.id}
-              trackingNumber={order.trackingNumber ?? undefined}
-              onStatusChange={onStatusChange}
-              onTrackingNumberUpdate={onTrackingNumberUpdate}
-            />
-          )}
+          <OrderStatusManager
+            currentStatus={order.status}
+            statusHistory={order.statusHistory ?? []}
+            orderId={order.id}
+            trackingNumber={order.trackingNumber ?? undefined}
+            onStatusChange={onStatusChange}
+            onTrackingNumberUpdate={onTrackingNumberUpdate}
+            /** ⬇️ ส่ง handler hand over ลงไป */
+            onHandedOver={onHandedOver}
+          />
 
           {/* Notes */}
           {order.notes && (

@@ -236,11 +236,10 @@ export const useOrderStatus = () => {
   ): OrderStatus[] => {
     switch (currentStatus) {
       case "PAID":
-        return ["PROCESSING", "REFUND_APPROVED", "MERCHANT_CANCELED"]
+        return ["PROCESSING", "MERCHANT_CANCELED"]
       case "PROCESSING":
         return ["READY_TO_SHIP"]
       case "READY_TO_SHIP":
-        // ตอนนี้ร้านทำได้ถึง "ส่งมอบให้ขนส่ง" เท่านั้น
         return ["HANDED_OVER"]
       case "REFUND_REQUEST":
         return ["REFUND_APPROVED"]
@@ -314,6 +313,32 @@ export const useOrderStatus = () => {
       COMPLETE: "Completed",
       CUSTOMER_CANCELED: "Customer canceled",
       MERCHANT_CANCELED: "Order canceled by merchant",
+      REFUND_REQUEST: "Refund requested",
+      AWAITING_RETURN: "Awaiting return",
+      RECEIVE_RETURN: "Return received",
+      RETURN_VERIFIED: "Return verified",
+      RETURN_FAIL: "Return failed",
+      REFUND_APPROVED: "Refund approved",
+      REFUND_SUCCESS: "Refund successful",
+      REFUND_FAIL: "Refund failed",
+      TRANSIT_LACK: "Shipping issue",
+      RE_TRANSIT: "Reshipping"
+    }
+    return statusMap[status]
+  }
+
+  const getStatusTextForReal = (status: OrderStatus) => {
+    const statusMap: Record<OrderStatus, string> = {
+      PENDING: "Awaiting payment",
+      PAID: "Payment completed",
+      PROCESSING: "Processing order",
+      READY_TO_SHIP: "Ready to ship",
+      HANDED_OVER: "Handed over to courier",
+      SHIPPED: "Shipped",
+      DELIVERED: "Delivered",
+      COMPLETE: "Completed",
+      CUSTOMER_CANCELED: "Customer canceled",
+      MERCHANT_CANCELED: "Canceled order",
       REFUND_REQUEST: "Refund requested",
       AWAITING_RETURN: "Awaiting return",
       RECEIVE_RETURN: "Return received",
@@ -424,6 +449,7 @@ export const useOrderStatus = () => {
     getMerchantEditableStatuses,
     getStatusIcon,
     getStatusText,
+    getStatusTextForReal,
     getStatusColor,
     getStatusBadgeColor
   }
