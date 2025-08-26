@@ -1,49 +1,109 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { MerchantHeader } from "@/components/dashboard-header"
 import { Order, OrderStatus } from "@/types/props/orderProp"
-import { initialOrders } from "@/constants/mock/mock-order"
 import { OrderDetailDialog } from "@/components/order/order-detail-dialog"
 import { OrdersTable } from "@/components/order/orders-table"
 import { OrderStats } from "@/components/order/order-stats"
 import { useOrderStatus } from "@/hooks/useOrderStatus"
+import { listOrdersRequester } from "@/utils/requestUtils/requestOrderUtils"
+
+/** --- Strongly typed API response from listOrders --- */
+type ListOrdersResponse = {
+  data: Order[]
+  meta: {
+    page: number
+    pageSize: number
+    total: number
+  }
+}
+
+/** --- Strongly typed request options for listOrders --- */
+type ListOrdersParams = {
+  page: number
+  pageSize: number
+  status: string
+  q: string
+  sortBy: "created_at" | "updated_at"
+  sortDir: "ASC" | "DESC"
+  signal?: AbortSignal
+}
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders)
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
+  // table data & ui state
+  const [orders, setOrders] = useState<Order[]>([])
+  const [total, setTotal] = useState<number>(0)
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(20)
   const [statusFilter, setStatusFilter] = useState<string>("ALL")
+  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // << 1. ลดการเรียกใช้ hook เหลือเฉพาะที่จำเป็นในหน้านี้
+  // detail dialog state
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false)
+
+  // only what the page needs from the hook
   const { getStatusIcon, getStatusBadgeColor, getStatusText } = useOrderStatus()
 
-  // Sync selectedOrder with the main orders array to reflect updates
+  // debounce search (250ms)
+  const debouncedQ = useDebouncedValue<string>(searchTerm, 250)
+
+  // keep selectedOrder in sync after list reload
   useEffect(() => {
-    console.log(initialOrders)
-    if (selectedOrder) {
-      const updatedOrder = orders.find((order) => order.id === selectedOrder.id)
-      if (updatedOrder) {
-        setSelectedOrder(updatedOrder)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!selectedOrder) return
+    const fresh = orders.find((o) => o.id === selectedOrder.id)
+    if (fresh) setSelectedOrder(fresh)
   }, [orders, selectedOrder?.id])
 
+  // fetch list
+  useEffect(() => {
+    const ac = new AbortController()
+
+    const run = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const params: ListOrdersParams = {
+          page,
+          pageSize,
+          status: statusFilter,
+          q: debouncedQ,
+          sortBy: "created_at",
+          sortDir: "DESC",
+          signal: ac.signal
+        }
+        const res: ListOrdersResponse = await listOrdersRequester(params)
+        console.log("All order: ", res)
+        setOrders(res.data)
+        setTotal(res.meta.total)
+      } catch (e: unknown) {
+        // แยกกรณีถูกยกเลิกกับ error จริง
+        if (isAbortError(e)) {
+          // ignore
+        } else {
+          setError("Failed to load orders")
+          setOrders([])
+          setTotal(0)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    run()
+    return () => ac.abort()
+  }, [page, pageSize, statusFilter, debouncedQ])
+
+  // optimistic local updates (ยังไม่ยิง API เปลี่ยนสถานะ)
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>
-      prev.map((order) => {
-        if (order.id === orderId) {
-          // << 2. อัปเดตทั้ง status และ statusHistory พร้อมกัน
-          // นี่คือส่วนที่สำคัญที่สุด!
-          const newHistory = [
-            ...(order.statusHistory || [order.status]),
-            newStatus
-          ]
-          return { ...order, status: newStatus, statusHistory: newHistory }
-        }
-        return order
+      prev.map((o) => {
+        if (o.id !== orderId) return o
+        const newHistory = [...(o.statusHistory || [o.status]), newStatus]
+        return { ...o, status: newStatus, statusHistory: newHistory }
       })
     )
   }
@@ -53,9 +113,7 @@ export default function OrdersPage() {
     trackingNumber: string
   ) => {
     setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId ? { ...order, trackingNumber } : order
-      )
+      prev.map((o) => (o.id === orderId ? { ...o, trackingNumber } : o))
     )
   }
 
@@ -66,16 +124,7 @@ export default function OrdersPage() {
 
   const handleCloseDialog = () => {
     setIsDetailOpen(false)
-    // Delay setting selectedOrder to null to prevent content flicker during closing animation
     setTimeout(() => setSelectedOrder(null), 300)
-  }
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value)
-  }
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value)
   }
 
   return (
@@ -86,22 +135,40 @@ export default function OrdersPage() {
       />
 
       <div className="flex flex-1 flex-col gap-6 p-4">
+        {error && (
+          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <OrderStats orders={orders} />
 
         <OrdersTable
           orders={orders}
           searchTerm={searchTerm}
           statusFilter={statusFilter}
-          onSearchChange={handleSearchChange}
-          onStatusFilterChange={handleStatusFilterChange}
+          onSearchChange={(v) => {
+            setPage(1)
+            setSearchTerm(v)
+          }}
+          onStatusFilterChange={(v) => {
+            setPage(1)
+            setStatusFilter(v)
+          }}
           onViewDetails={viewOrderDetails}
           getStatusIcon={getStatusIcon}
           getStatusBadgeColor={getStatusBadgeColor}
           getStatusText={getStatusText}
+          // ถ้ามี pagination ใน table ให้เชื่อมต่อ state ด้านล่าง
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          loading={loading}
         />
       </div>
 
-      {/* << 3. ลบ props ที่ไม่จำเป็นออกทั้งหมด */}
       <OrderDetailDialog
         order={selectedOrder}
         isOpen={isDetailOpen}
@@ -111,4 +178,49 @@ export default function OrdersPage() {
       />
     </div>
   )
+}
+
+/** small debounce hook — no `any`, no NodeJS.Timeout */
+function useDebouncedValue<T>(value: T, delay = 250): T {
+  const [v, setV] = useState<T>(value)
+  const tRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (tRef.current) clearTimeout(tRef.current)
+    tRef.current = setTimeout(() => setV(value), delay)
+    return () => {
+      if (tRef.current) clearTimeout(tRef.current)
+    }
+  }, [value, delay])
+
+  return v
+}
+
+/** narrow unknown error into “abort-like” error safely */
+function isAbortError(err: unknown): boolean {
+  if (!err) return false
+  // Axios cancellation (v1) uses 'CanceledError' or message 'canceled'
+  if (
+    typeof err === "object" &&
+    "name" in err &&
+    (err as { name?: string }).name === "CanceledError"
+  ) {
+    return true
+  }
+  if (
+    typeof err === "object" &&
+    "message" in err &&
+    (err as { message?: string }).message === "canceled"
+  ) {
+    return true
+  }
+  // Native AbortController
+  if (
+    typeof err === "object" &&
+    "name" in err &&
+    (err as { name?: string }).name === "AbortError"
+  ) {
+    return true
+  }
+  return false
 }

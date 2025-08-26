@@ -4,7 +4,7 @@ export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkInsert('DISPUTES', [
       {
-        order_id: 1,
+        order_id: 6001,
         customer_id: 1,
         reason: 'Product not delivered',
         status: 'open',

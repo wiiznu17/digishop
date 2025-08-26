@@ -6,7 +6,7 @@ export interface AddressAttributes {
   userId: number;
   recipientName: string;
   phone: string;
-  address_number: string;
+  addressNumber: string;
   building: string;
   subStreet: string;
   street: string;
@@ -29,7 +29,7 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
   public userId!: number;
   public recipientName!: string;
   public phone!: string;
-  public address_number!: string;
+  public addressNumber!: string;
   public building!: string;
   public subStreet!: string;
   public street!: string;
@@ -65,7 +65,7 @@ export class Address extends Model<AddressAttributes, AddressCreationAttributes>
           type: DataTypes.STRING(10),
           allowNull: false,
         },
-        address_number: {
+        addressNumber: {
           type: DataTypes.STRING(255),
           allowNull: false,
           field: 'address_number',

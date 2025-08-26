@@ -36,10 +36,6 @@ interface OrderDetailDialogProps {
   onClose: () => void
   onStatusChange: (orderId: string, newStatus: OrderStatus) => void
   onTrackingNumberUpdate: (orderId: string, trackingNumber: string) => void
-  // getStatusIcon: (status: OrderStatus) => React.ReactNode
-  // getStatusBadgeColor: (status: OrderStatus) => string
-  // getStatusText: (status: OrderStatus) => string
-  // getMerchantEditableStatuses: (currentStatus: OrderStatus) => OrderStatus[]
 }
 
 export function OrderDetailDialog({
@@ -48,10 +44,6 @@ export function OrderDetailDialog({
   onClose,
   onStatusChange,
   onTrackingNumberUpdate
-  // getStatusIcon,
-  // getStatusBadgeColor,
-  // getStatusText,
-  // getMerchantEditableStatuses
 }: OrderDetailDialogProps) {
   const {
     getStatusBadgeColor,
@@ -61,7 +53,7 @@ export function OrderDetailDialog({
   } = useOrderStatus()
 
   if (!order) return null
-
+  console.log(order)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -98,10 +90,10 @@ export function OrderDetailDialog({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">
-                ฿{order.totalPrice.toLocaleString()}
+                ฿{order.totalPrice?.toLocaleString() ?? "0"}
               </div>
               <div className="text-sm text-muted-foreground">
-                {order.paymentMethod}
+                {order.paymentMethod ?? "-"}
               </div>
               {order.refundAmount && (
                 <div className="text-sm text-red-600">
@@ -123,26 +115,30 @@ export function OrderDetailDialog({
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{order.customerName}</span>
+                  <span className="font-medium">
+                    {order.customerName || "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{order.customerEmail}</span>
+                  <span>{order.customerEmail || "N/A"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{order.customerPhone}</span>
+                  <span>{order.customerPhone || "-"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {new Date(order.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
+                    {order.createdAt
+                      ? new Date(order.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })
+                      : "N/A"}
                   </span>
                 </div>
               </CardContent>
@@ -156,15 +152,22 @@ export function OrderDetailDialog({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1 text-sm">
-                  <p>{order.shippingAddress.street}</p>
-                  <p>{order.shippingAddress.district}</p>
-                  <p>
-                    {order.shippingAddress.province}{" "}
-                    {order.shippingAddress.postalCode}
-                  </p>
-                  <p>{order.shippingAddress.country}</p>
-                </div>
+                {order.shippingAddress ? (
+                  <div className="space-y-1 text-sm">
+                    <p>{order.shippingAddress?.street ?? "-"}</p>
+                    <p>{order.shippingAddress?.district ?? "-"}</p>
+                    <p>
+                      {order.shippingAddress?.province ?? "-"}{" "}
+                      {order.shippingAddress?.postalCode ?? ""}
+                    </p>
+                    <p>{order.shippingAddress?.country ?? "-"}</p>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    No shipping address available.
+                  </div>
+                )}
+
                 {order.trackingNumber && (
                   <div className="mt-3 pt-3 border-t">
                     <div className="flex items-center gap-2">
@@ -188,40 +191,46 @@ export function OrderDetailDialog({
               <CardTitle className="text-lg">Order Items</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead className="text-center">Quantity</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {order.orderitems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="font-medium">{item.name}</div>
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">
-                          {item.sku}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {item.quantity}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        ฿{item.price.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        ฿{(item.quantity * item.price).toLocaleString()}
-                      </TableCell>
+              {order.orderItems?.length ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead className="text-center">Quantity</TableHead>
+                      <TableHead className="text-right">Unit Price</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {order.orderItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="font-medium">{item.name}</div>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-sm bg-muted px-2 py-1 rounded">
+                            {item.sku}
+                          </code>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {item.quantity}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          ฿{item.price?.toLocaleString() ?? "0"}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          ฿{(item.quantity * item.price).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No products in this order.
+                </p>
+              )}
 
               {/* Order Summary */}
               <div className="mt-4 space-y-2 border-t pt-4">
@@ -231,22 +240,22 @@ export function OrderDetailDialog({
                     ฿
                     {(
                       order.totalPrice -
-                      order.shippingCost -
-                      order.tax
+                      (order.shippingCost ?? 0) -
+                      (order.tax ?? 0)
                     ).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Shipping:</span>
-                  <span>฿{order.shippingCost.toLocaleString()}</span>
+                  <span>฿{order.shippingCost?.toLocaleString() ?? "0"}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Tax:</span>
-                  <span>฿{order.tax.toLocaleString()}</span>
+                  <span>฿{order.tax?.toLocaleString() ?? "0"}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Total:</span>
-                  <span>฿{order.totalPrice.toLocaleString()}</span>
+                  <span>฿{order.totalPrice?.toLocaleString() ?? "0"}</span>
                 </div>
               </div>
             </CardContent>
@@ -256,9 +265,9 @@ export function OrderDetailDialog({
           {getMerchantEditableStatuses(order.status).length >= 0 && (
             <OrderStatusManager
               currentStatus={order.status}
-              statusHistory={order.statusHistory}
+              statusHistory={order.statusHistory ?? []}
               orderId={order.id}
-              trackingNumber={order.trackingNumber}
+              trackingNumber={order.trackingNumber ?? undefined}
               onStatusChange={onStatusChange}
               onTrackingNumberUpdate={onTrackingNumberUpdate}
             />
