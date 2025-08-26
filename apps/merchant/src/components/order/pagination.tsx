@@ -28,14 +28,14 @@ export function Pagination({
   const startItem = (currentPage - 1) * itemsPerPage + 1
   const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
-  console.log("Pagination Debug:", {
-    currentPage,
-    totalPages,
-    totalItems,
-    itemsPerPage,
-    startItem,
-    endItem
-  })
+  // console.log("Pagination Debug:", {
+  //   currentPage,
+  //   totalPages,
+  //   totalItems,
+  //   itemsPerPage,
+  //   startItem,
+  //   endItem
+  // })
 
   // Generate array of page numbers
   const getPageNumbers = () => {

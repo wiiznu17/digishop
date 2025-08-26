@@ -115,9 +115,11 @@ export function OrderStatusManager({
           <div className="relative flex flex-col">
             {timelineToDisplay.map((status, index) => {
               const isActive = status === currentStatus
+              console.log("Status", status, isActive)
               const isStatusInHistory = statusHistory.includes(status)
+              console.log("In history", isStatusInHistory)
               const isPassed = isStatusInHistory && !isActive // past statuses
-
+              console.log("Is passed", isPassed)
               return (
                 <div key={`${status}-${index}`} className="flex items-start">
                   {/* Left: Circle + connector */}
