@@ -57,14 +57,18 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
           allowNull: false,
           field: 'shipping_type_id',
           references: {
-            model: 'SHIPPING_TYPE',
+            model: 'SHIPPING_TYPES',
             key: 'id',
           },
         },
         shippingAddress: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
-          field: 'shipping_address'
+          field: 'shipping_address',
+          references: {
+            model: 'ADDRESSES',
+            key: 'id',
+          },
         },
         shippingStatus: {
           type: DataTypes.ENUM(...Object.values(ShippingStatus)),
@@ -77,13 +81,25 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
           allowNull: true,
           field: 'shipped_at',
         },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: "created_at"
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: "updated_at"
+        }
       },
       {
         sequelize,
+        timestamps: true,
+        underscored: true,
         tableName: 'SHIPPING_INFO',
         modelName: 'ShippingInfo',
-        paranoid: true,            // เปิด soft delete
-        deletedAt: 'deleted_at',   // ชื่อคอลัมน์ soft delete
+        paranoid: true,
+        deletedAt: 'deleted_at',
       }
     );
     return ShippingInfo;

@@ -28,16 +28,29 @@ import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/order/pagination"
 import { Eye, RotateCcw } from "lucide-react"
 import { Order, OrderStatus } from "@/types/props/orderProp"
-import { usePagination } from "@/hooks/usePagination"
-import { useEffect } from "react"
 
 interface OrdersTableProps {
-  orders: Order[]
+  // data
+  orders: Order[] // current page data (from server)
+  total: number // total rows from server
+  page: number
+  pageSize: number
+  loading?: boolean
+
+  // filters (controlled by parent)
   searchTerm: string
   statusFilter: string
   onSearchChange: (value: string) => void
   onStatusFilterChange: (value: string) => void
+
+  // pagination controls (parent changes state => refetch)
+  onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
+
+  // row actions
   onViewDetails: (order: Order) => void
+
+  // helpers
   getStatusIcon: (status: OrderStatus) => React.ReactNode
   getStatusBadgeColor: (status: OrderStatus) => string
   getStatusText: (status: OrderStatus) => string
@@ -45,48 +58,21 @@ interface OrdersTableProps {
 
 export function OrdersTable({
   orders,
+  total,
+  page,
+  pageSize,
+  loading = false,
   searchTerm,
   statusFilter,
   onSearchChange,
   onStatusFilterChange,
+  onPageChange,
+  onPageSizeChange,
   onViewDetails,
   getStatusIcon,
   getStatusBadgeColor,
   getStatusText
 }: OrdersTableProps) {
-  // Filter orders first
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesStatus =
-      statusFilter === "ALL" || order.status === statusFilter
-
-    return matchesSearch && matchesStatus
-  })
-
-  // Use pagination hook
-  const {
-    currentPage,
-    totalPages,
-    paginatedData,
-    totalItems,
-    itemsPerPage,
-    goToPage,
-    resetPage,
-    changeItemsPerPage
-  } = usePagination({
-    data: filteredOrders,
-    itemsPerPage: 50
-  })
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    resetPage()
-  }, [searchTerm, statusFilter, resetPage])
-
   const statusOptions = [
     { value: "ALL", label: "All Statuses" },
     { value: "PENDING", label: "Pending Payment" },
@@ -110,12 +96,39 @@ export function OrdersTable({
     { value: "COMPLETE", label: "Complete" }
   ]
 
+  const hasActiveFilters = Boolean(searchTerm) || statusFilter !== "ALL"
+
   const clearFilters = () => {
     onSearchChange("")
     onStatusFilterChange("ALL")
+    // รีเซ็ตไปหน้าแรก
+    onPageChange(1)
   }
 
-  const hasActiveFilters = searchTerm || statusFilter !== "ALL"
+  // formatters (fixed locale -> ไม่มี hydration mismatch)
+  const fmtTHB = (n: number) =>
+    new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      maximumFractionDigits: 0
+    }).format(n)
+
+  const fmtDate = (iso: string) =>
+    new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    }).format(new Date(iso))
+
+  const fmtTime = (iso: string) =>
+    new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(new Date(iso))
+
+  // index แถวแรกของหน้านี้ (สำหรับ #globalIndex)
+  const startIndex = (page - 1) * pageSize
 
   return (
     <Card>
@@ -126,7 +139,6 @@ export function OrdersTable({
             <CardDescription>View all orders and their details</CardDescription>
           </div>
 
-          {/* Clear filters button */}
           {hasActiveFilters && (
             <Button
               variant="outline"
@@ -140,19 +152,28 @@ export function OrdersTable({
           )}
         </div>
 
-        {/* Filter and search */}
+        {/* Filters */}
         <div className="flex flex-col gap-4 pt-4 sm:flex-row">
           <div className="flex-1">
             <Input
               placeholder="Search by order ID, customer name, or email..."
               value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => {
+                onSearchChange(e.target.value)
+                onPageChange(1) // เปลี่ยน search -> กลับไปหน้า 1
+              }}
               className="w-full"
             />
           </div>
-          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => {
+              onStatusFilterChange(v)
+              onPageChange(1) // เปลี่ยน status -> กลับไปหน้า 1
+            }}
+          >
             <SelectTrigger className="w-full sm:w-[250px]">
-              <SelectValue />
+              <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((option) => (
@@ -164,30 +185,28 @@ export function OrdersTable({
           </Select>
         </div>
 
-        {/* Summary Info */}
+        {/* Summary */}
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>Found {totalItems.toLocaleString()} results</span>
-            {hasActiveFilters && (
-              <>
-                <span>from {orders.length.toLocaleString()} total orders</span>
-                {totalItems !== orders.length && (
-                  <Badge variant="secondary" className="text-xs">
-                    Filtered
-                  </Badge>
-                )}
-              </>
+            <span>
+              Showing {orders.length.toLocaleString()} of{" "}
+              {total.toLocaleString()} results
+            </span>
+            {hasActiveFilters && orders.length !== total && (
+              <Badge variant="secondary" className="text-xs">
+                Filtered
+              </Badge>
             )}
           </div>
-          {totalPages > 1 && (
+          {total > pageSize && (
             <p className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
+              Page {page} of {Math.max(1, Math.ceil(total / pageSize))}
             </p>
           )}
         </div>
       </CardHeader>
+
       <CardContent className="space-y-4">
-        {/* Table */}
         <div className="rounded-md border overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
@@ -202,7 +221,13 @@ export function OrdersTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedData.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      Loading orders…
+                    </TableCell>
+                  </TableRow>
+                ) : orders.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center">
                       <div className="flex flex-col items-center gap-3 text-muted-foreground">
@@ -226,9 +251,8 @@ export function OrdersTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedData.map((order, index) => {
-                    const globalIndex =
-                      (currentPage - 1) * itemsPerPage + index + 1
+                  orders.map((order, index) => {
+                    const globalIndex = startIndex + index + 1
                     return (
                       <TableRow
                         key={order.id}
@@ -256,29 +280,16 @@ export function OrdersTable({
                         <TableCell>
                           <div className="space-y-1">
                             <div className="text-sm">
-                              {new Date(order.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric"
-                                }
-                              )}
+                              {fmtDate(order.createdAt)}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleTimeString(
-                                "en-US",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit"
-                                }
-                              )}
+                              {fmtTime(order.createdAt)}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           <div className="text-sm">
-                            ฿{order.totalPrice.toLocaleString()}
+                            {fmtTHB(order.totalPrice)}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -315,16 +326,16 @@ export function OrdersTable({
           </div>
         </div>
 
-        {/* Pagination */}
-        {totalItems > 0 && (
+        {/* Server-side Pagination */}
+        {total > 0 && (
           <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={goToPage}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={changeItemsPerPage}
-            showItemsPerPageSelector={true}
+            currentPage={page}
+            totalPages={Math.max(1, Math.ceil(total / pageSize))}
+            onPageChange={onPageChange}
+            totalItems={total}
+            itemsPerPage={pageSize}
+            onItemsPerPageChange={onPageSizeChange}
+            showItemsPerPageSelector
             itemsPerPageOptions={[10, 20, 50, 100]}
           />
         )}

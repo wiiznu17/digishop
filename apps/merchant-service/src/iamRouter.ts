@@ -3,6 +3,7 @@ import sequelize from '@digishop/db'
 import userRouter from './routes/userRouter'
 import productRouter from './routes/productRouter'
 import bankRouter from './routes/bankRouter'
+import orderRouter from './routes/orderRouter'
 
 const router = Router()
 
@@ -19,6 +20,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.use('/merchant', userRouter)
 router.use('/merchant/products', productRouter)
 router.use('/merchant/bank-accounts', bankRouter)
+router.use('/merchant/orders', orderRouter)
 
 export default router
 

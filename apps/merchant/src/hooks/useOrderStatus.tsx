@@ -91,6 +91,7 @@ export const useOrderStatus = () => {
         out.push(s)
       }
     }
+    console.log("Timeline", out)
     return out
   }
 
@@ -107,7 +108,7 @@ export const useOrderStatus = () => {
     history: OrderStatus[]
   ): OrderStatus[] => {
     const hist = history && history.length ? history : [currentStatus]
-
+    // console.log("History", hist)
     // stop if last status is terminal
     const last = hist[hist.length - 1]
     if (isTerminalStatus(last)) {
