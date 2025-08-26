@@ -5,7 +5,7 @@ import {
   CreditCard,
   DollarSign,
   RotateCcw,
-  TrendingUp
+  Truck
 } from "lucide-react"
 import { Order } from "@/types/props/orderProp"
 
@@ -36,7 +36,9 @@ function StatCard({
       </CardHeader>
       <CardContent>
         <div
-          className={`text-2xl font-bold ${colorClass.includes("text-") ? colorClass.split(" ")[1] : ""}`}
+          className={`text-2xl font-bold ${
+            colorClass.includes("text-") ? colorClass.split(" ")[1] : ""
+          }`}
         >
           {value}
         </div>
@@ -66,6 +68,10 @@ export function OrderStats({ orders }: OrderStatsProps) {
     processing: orders.filter((o) =>
       o.statusHistory?.some((s) => ["PROCESSING", "READY_TO_SHIP"].includes(s))
     ).length,
+
+    // Handed over = ever reached HANDED_OVER
+    handedOver: orders.filter((o) => o.statusHistory?.includes("HANDED_OVER"))
+      .length,
 
     // Shipped = ever reached SHIPPED or DELIVERED
     shipped: orders.filter((o) =>
@@ -97,7 +103,7 @@ export function OrderStats({ orders }: OrderStatsProps) {
   }).length
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
       <StatCard
         title="Total Orders"
         value={stats.total}
@@ -128,6 +134,14 @@ export function OrderStats({ orders }: OrderStatsProps) {
         icon={<Package className="h-4 w-4" />}
         colorClass="text-blue-600"
         description="Preparing and shipping orders"
+      />
+
+      <StatCard
+        title="Handed Over"
+        value={stats.handedOver}
+        icon={<Truck className="h-4 w-4" />}
+        colorClass="text-indigo-600"
+        description="Orders handed over to courier"
       />
 
       <StatCard

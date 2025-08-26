@@ -31,8 +31,8 @@ import { Order, OrderStatus } from "@/types/props/orderProp"
 
 interface OrdersTableProps {
   // data
-  orders: Order[] // current page data (from server)
-  total: number // total rows from server
+  orders: Order[]
+  total: number
   page: number
   pageSize: number
   loading?: boolean
@@ -43,7 +43,7 @@ interface OrdersTableProps {
   onSearchChange: (value: string) => void
   onStatusFilterChange: (value: string) => void
 
-  // pagination controls (parent changes state => refetch)
+  // pagination controls
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
 
@@ -77,9 +77,11 @@ export function OrdersTable({
     { value: "ALL", label: "All Statuses" },
     { value: "PENDING", label: "Pending Payment" },
     { value: "CUSTOMER_CANCELED", label: "Customer Canceled" },
+    { value: "MERCHANT_CANCELED", label: "Merchant Canceled" },
     { value: "PAID", label: "Payment Completed" },
     { value: "PROCESSING", label: "Processing" },
     { value: "READY_TO_SHIP", label: "Ready to Ship" },
+    { value: "HANDED_OVER", label: "Handed Over" },
     { value: "SHIPPED", label: "Shipped" },
     { value: "TRANSIT_LACK", label: "Transit Issue" },
     { value: "RE_TRANSIT", label: "Re-transit" },
@@ -92,7 +94,6 @@ export function OrdersTable({
     { value: "REFUND_APPROVED", label: "Refund Approved" },
     { value: "REFUND_SUCCESS", label: "Refund Success" },
     { value: "REFUND_FAIL", label: "Refund Failed" },
-    { value: "MERCHANT_REJECT", label: "Merchant Rejected" },
     { value: "COMPLETE", label: "Complete" }
   ]
 
@@ -101,11 +102,10 @@ export function OrdersTable({
   const clearFilters = () => {
     onSearchChange("")
     onStatusFilterChange("ALL")
-    // รีเซ็ตไปหน้าแรก
     onPageChange(1)
   }
 
-  // formatters (fixed locale -> ไม่มี hydration mismatch)
+  // formatters
   const fmtTHB = (n: number) =>
     new Intl.NumberFormat("th-TH", {
       style: "currency",
@@ -127,7 +127,6 @@ export function OrdersTable({
       hour12: false
     }).format(new Date(iso))
 
-  // index แถวแรกของหน้านี้ (สำหรับ #globalIndex)
   const startIndex = (page - 1) * pageSize
 
   return (
@@ -160,7 +159,7 @@ export function OrdersTable({
               value={searchTerm}
               onChange={(e) => {
                 onSearchChange(e.target.value)
-                onPageChange(1) // เปลี่ยน search -> กลับไปหน้า 1
+                onPageChange(1)
               }}
               className="w-full"
             />
@@ -169,7 +168,7 @@ export function OrdersTable({
             value={statusFilter}
             onValueChange={(v) => {
               onStatusFilterChange(v)
-              onPageChange(1) // เปลี่ยน status -> กลับไปหน้า 1
+              onPageChange(1)
             }}
           >
             <SelectTrigger className="w-full sm:w-[250px]">
