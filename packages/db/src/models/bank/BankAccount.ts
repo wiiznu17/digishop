@@ -53,7 +53,7 @@ export class BankAccount
           field: 'is_default',
         },
         bankName: {
-          type: DataTypes.STRING(100),
+          type: DataTypes.STRING(191),
           allowNull: false,
           field: 'bank_name',
         },
