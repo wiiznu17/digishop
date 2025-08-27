@@ -3,6 +3,7 @@ import { OrderItem } from "@digishop/db/src/models/OrderItem";
 import { Product } from "@digishop/db/src/models/Product";
 import { ShippingInfo } from "@digishop/db/src/models/ShippingInfo";
 import { ShippingType } from "@digishop/db/src/models/ShippingType";
+import { Store } from "@digishop/db/src/models/Store";
 import { OrderStatus, ShippingStatus } from "@digishop/db/src/types/enum";
 import axios from "axios";
 import crypto from "crypto";
@@ -40,8 +41,6 @@ const contentSignature = (
 }
   )).digest("base64");
 };
-// const hmac = crypto.createHmac('sha256', Buffer.from(merchantCredential.signKey, 'base64'))
-// const contentSignature = hmac.update(JSON.stringify(data)).digest('base64')
 
 export const findOrder = async (
   req: Request,
@@ -63,10 +62,31 @@ export const findUserOrder = async (
 ) => {
   const id = req.params.id;
   try {
-    const getUserOrders = await Order.findAndCountAll({
-      where: { customerId: id },
+    const getUserOrders = await OrderItem.findAndCountAll({
+      attributes: ['quantity'],
+      include: [
+        {
+          model: Order,
+          as: 'order',
+          where: { customerId: id },
+          attributes: ['id','reference','status','total_price'],
+          include: [
+            {
+              model: Store,
+              as: 'store',
+              attributes: ['store_name']
+            },
+          ]
+        },
+        {
+          model: Product,
+          as: 'product',
+          attributes: ['name']
+
+        }
+      ]
     });
-    return res.status(200).json({ body: getUserOrders });
+    return res.status(200).json({ body:getUserOrders.rows ,count: getUserOrders.count});
   } catch (error) {
     console.log("error", error);
   }
@@ -129,6 +149,7 @@ export const createOrder = async (
         "X-Content-Signature": contentSignature(String(orderData.id),productName,totalPrice,15,'http://localhost:3000/digishop/payment/callback','http://localhost:3000/digishop/setting'),
       },
     });
+    
     res.status(200).json({ data: responsePayment.data });
   } catch (error) {
     res.status(404).json({ error: error });

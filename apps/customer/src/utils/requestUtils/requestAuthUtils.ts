@@ -1,6 +1,6 @@
 import axios from "@/lib/axios"
 import { FormRegister } from "@/types/props/userProp"
-const endpoint = 'http://localhost:4003'
+const endpoint = 'http://localhost:4002'
 export const createUser = async (data: FormRegister) => {
   return await new Promise((resolve, reject) => {
     axios

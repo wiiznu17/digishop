@@ -56,7 +56,6 @@ export default function OrderPage() {
   useEffect(() => {
     if (!user || !product || !selectAddress || !selectAddress.id ) return;
     setOrder({
-      // orderId: 'DGS' + 
       productName: product.name,
       customerId: user.id,
       storeId: product.store.id,
@@ -70,31 +69,12 @@ export default function OrderPage() {
   },[amount,user,product,selectAddress,price,selectShippingTypeId])
 
   const handleOrder = async () => {
-    console.log('press order')
     if (!order) return
     const res = await createOrder(order);
-    console.log('response',res)
     setLinkPayment(res.data.redirect_url)
     setProcessStatus(2)
   };
 
-  const statusConfig = {
-    "1": {
-      label: "1",
-      color: "text-white font-extrabold bg-black ",
-      bg: "",
-    },
-    "2": {
-      label: "2",
-      color: "text-white font-extrabold bg-black",
-      bg: "bg-black",
-    },
-    "3": {
-      label: "3",
-      color: "text-white font-extrabold bg-black",
-      bg: "bg-black",
-    },
-  };
   if (user == null || user.id <= 0) return;
   const handleOnClickSelectAddress = ():void => {
     setIsShowSelectAddress(true)
@@ -106,16 +86,6 @@ export default function OrderPage() {
   return (
     <>
       <div className="min-h-screen p-3">
-        <div className="flex justify-center items-center mb-3">
-          {Object.entries(statusConfig).map(([status, config]) => (
-            <div
-              key={status}
-              className={`flex flex-col items-center rounded-[35px]  text-xl w-[70px] h-[70px] p-5 mx-10 ${processStatus === status ? `${config.color}` : "text-white bg-gray-300 "}`}
-            >
-              {config.label}
-            </div>
-          ))}
-        </div>
         {processStatus === 1 && product && (
           <>
             {/* store info */}
