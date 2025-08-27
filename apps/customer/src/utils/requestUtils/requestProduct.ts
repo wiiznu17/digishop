@@ -1,5 +1,5 @@
 import axios from "@/lib/axios"
-const endpoint = 'http://localhost:4002'
+const endpoint = 'http://localhost:4003'
 export const searchProduct = async (query: string) => {
     return await new Promise((resolve,reject) => {
         axios

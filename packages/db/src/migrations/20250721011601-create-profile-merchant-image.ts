@@ -14,7 +14,7 @@ export = {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
-          model: "stores",
+          model: "STORES",
           key: "id",
         },
         onUpdate: "CASCADE",

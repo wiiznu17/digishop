@@ -1,16 +1,17 @@
+import {OrderStatus} from '../../../../../packages/db/src/types/enum'
 export interface Orders {
-    id: string,
-    productName: string,
-    customer: string,
-    price: number,
-    orderDate: '2024-01-12',
-    status: 
-    "pending"
-    | "confirmed"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
+    quantity: number,
+    order: {
+        id: number,
+        reference: number,
+        status: OrderStatus,
+        total_price: string,
+        store_name: string
+    },
+    product: {
+        name: string,
+    }
+    // urlPayment: string,
 }
 
 export interface Order1 {
@@ -22,6 +23,7 @@ export interface Order {
     customerId: number,
     storeId: number,
     totalPrice: number,
+    productName:string,
     productId:number,
     quantity:number,
     unitPrice:number,
