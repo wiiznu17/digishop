@@ -1,6 +1,6 @@
 import axios from "@/lib/axios"
 import { Address } from "@/types/props/addressProp"
-const endpoint = 'http://localhost:4002'
+const endpoint = 'http://localhost:4003'
 export const getUserDetail = async(id:number) => {
     if( typeof(id) == undefined){
         return console.log('id is undefined')

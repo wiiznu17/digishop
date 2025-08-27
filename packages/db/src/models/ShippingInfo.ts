@@ -84,13 +84,15 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
         createdAt: {
           type: DataTypes.DATE,
           allowNull: false,
-          field: "created_at"
+          field: 'created_at',
+          defaultValue: DataTypes.NOW,
         },
         updatedAt: {
           type: DataTypes.DATE,
           allowNull: false,
-          field: "updated_at"
-        }
+          field: 'updated_at',
+          defaultValue: DataTypes.NOW,
+        },
       },
       {
         sequelize,

@@ -6,9 +6,8 @@ interface ShippingCard {
 }
 
 export default function ShippingCardDetail({item,selected}:ShippingCard) {
-    console.log('hi in shipping card')
     return (
-    <div>
+    
         <div className={`m-4 p-4  rounded-2xl w-[500px] ${item.id == selected ? 'border-8 border-amber-500':'border-2 border-black'}`}>
             <div className="flex flex-col-1 md:flex-col-2 gap-[50px]">
                 <div>
@@ -24,6 +23,5 @@ export default function ShippingCardDetail({item,selected}:ShippingCard) {
                 </div>
             </div>
         </div>
-    </div>
      )
 }
