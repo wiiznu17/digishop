@@ -22,6 +22,7 @@ export interface Order {
     customerId: number,
     storeId: number,
     totalPrice: number,
+    productName:string,
     productId:number,
     quantity:number,
     unitPrice:number,

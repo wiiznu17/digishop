@@ -93,7 +93,7 @@ const UserProfilePage = () => {
     };
     fetchData();
   }, [user, isShowAddress]);
-
+  console.log('currentUser',currentUser)
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}

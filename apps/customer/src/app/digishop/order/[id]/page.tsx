@@ -1,16 +1,14 @@
 "use client";
-import NotFound from "@/components/notFound";
 import { useAuth } from "@/contexts/auth-context";
 import { Address } from "@/types/props/addressProp";
 import { Order, Shipping } from "@/types/props/orderProp";
 import { Product } from "@/types/props/productProp";
-import { createOrder, getShippingType } from "@/utils/requestUtils/requestOrderUtils";
+import { createOrder, getShippingType, payment } from "@/utils/requestUtils/requestOrderUtils";
 import { getProduct } from "@/utils/requestUtils/requestProduct";
 import { getAddress } from "@/utils/requestUtils/requestUserUtils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { MouseEventHandler, useEffect, useState } from "react";
-import { DialogAddress } from "@/components/createAddress";
+import { useEffect, useState } from "react";
 import AddressCard from "@/components/addressCard";
 import ShippingCardDetail from "@/components/shippingCard";
 import { DialogSelectAddress } from "@/components/dialogSelectAddress";
@@ -18,7 +16,7 @@ import { DialogSelectAddress } from "@/components/dialogSelectAddress";
 export default function OrderPage() {
   const { id } = useParams();
   const productName = String(id);
-  const [processStatus, setProcessStatus] = useState("1");
+  const [processStatus, setProcessStatus] = useState<number>(1);
   const [amount, setAmount] = useState(1);
   const [price, setPrice] = useState(0);
   const [order, setOrder] = useState<Order>();
@@ -28,7 +26,11 @@ export default function OrderPage() {
   const [shipping, setShipping] = useState<Shipping[]>();
   const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1)
   const [isShowSelectAddress, setIsShowSelectAddress] = useState(false);  
+  const [linkPayment, setLinkPayment] = useState('/digishop');
   const { user } = useAuth();
+  useEffect(() => {
+    // const orderData = await getOrder()
+  },[processStatus])
   useEffect(() => {
     const fetchData = async () => {
       const resProduct = await getProduct(productName);
@@ -40,7 +42,6 @@ export default function OrderPage() {
     };
     fetchData();
   }, [productName, user]);
-  console.log(shipping)
   useEffect(() => {
     const isMain = addresses?.filter((item) => item.isDefault === true);
     if(isMain) {
@@ -49,14 +50,14 @@ export default function OrderPage() {
   },[addresses])
   useEffect(() => {
     if(!shipping) return
-    console.log(shipping[selectShippingTypeId - 1].price)
-    console.log(product?.price)
-    const sumprice = Number() + Number(product?.price) * amount;    
+    const sumprice = Number(shipping[selectShippingTypeId - 1].price) + Number(product?.price) * amount;    
     setPrice(sumprice);
   }, [amount, product?.price,selectShippingTypeId,shipping]);
   useEffect(() => {
     if (!user || !product || !selectAddress || !selectAddress.id ) return;
     setOrder({
+      // orderId: 'DGS' + 
+      productName: product.name,
       customerId: user.id,
       storeId: product.store.id,
       totalPrice: price,
@@ -69,13 +70,12 @@ export default function OrderPage() {
   },[amount,user,product,selectAddress,price,selectShippingTypeId])
 
   const handleOrder = async () => {
-      console.log('press order')
-      if (!order) return
-      // const res = await createOrder(order);
-      console.log(order)
-      if (res.data) {
-        setProcessStatus("2");
-      }
+    console.log('press order')
+    if (!order) return
+    const res = await createOrder(order);
+    console.log('response',res)
+    setLinkPayment(res.data.redirect_url)
+    setProcessStatus(2)
   };
 
   const statusConfig = {
@@ -102,9 +102,6 @@ export default function OrderPage() {
   const handleOnCancelSelectAddress = ():void => {
     setIsShowSelectAddress(false)
   };
-  const handleOnConfirm = (): void => {
-    setIsShowSelectAddress(false)
-  }
 
   return (
     <>
@@ -119,7 +116,7 @@ export default function OrderPage() {
             </div>
           ))}
         </div>
-        {processStatus === "1" && product && (
+        {processStatus === 1 && product && (
           <>
             {/* store info */}
             <div className="flex mb-3">
@@ -192,8 +189,13 @@ export default function OrderPage() {
             </button>
           </>
         )}
-        {processStatus === "2" && <h1>redirect payment</h1>}
-        {processStatus === "3" && (
+        {processStatus === 2 && linkPayment && <div>
+          <h1>redirect payment</h1>
+          <Link href={linkPayment}>
+            <button className="m-4 p-4 bg-green-300">go to pay</button>
+          </Link>
+          </div>}
+        {processStatus === 3 && (
           <div className="flex justify-center items-center text-black">
             <div>Process finished</div>
             <div className="grid grid-cols-1">
