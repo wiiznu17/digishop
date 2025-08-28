@@ -24,8 +24,8 @@ import { ShippingType } from '../src/models/ShippingType';
 import { ProfileMerchantImage } from '../src/models/ProfileImage';
 import { OrderStatusHistory } from '../src/models/OrderStatusHistory';
 import { RefundOrder } from '../src/models/RefundOrder';
-import { RefundImage } from '@models/RefundImage';
-import { RefundStatusHistory } from '@models/RefundStatusHistory';
+import { RefundImage } from '../src/models/RefundImage';
+import { RefundStatusHistory } from '../src/models/RefundStatusHistory';
 
 export function initModels(sequelize: Sequelize) {
   // Initialize all models
