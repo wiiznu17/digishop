@@ -4,6 +4,7 @@ import { PaymentStatus } from '../types/enum';
 export interface PaymentAttributes {
   id: number;
   orderId: number;
+  urlRedirect?: string;
   paymentMethod: string;
   status: PaymentStatus;
   paidAt?: Date | null;
@@ -17,6 +18,7 @@ export interface PaymentCreationAttributes
 export class Payment extends Model<PaymentAttributes, PaymentCreationAttributes> implements PaymentAttributes {
   public id!: number;
   public orderId!: number;
+  public urlRedirect!: string;
   public paymentMethod!: string;
   public status!: PaymentStatus;
   public paidAt!: Date | null;
@@ -36,6 +38,11 @@ export class Payment extends Model<PaymentAttributes, PaymentCreationAttributes>
           allowNull: false,
           field: 'order_id',
         },
+        urlRedirect: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+          field: 'url_redirect',
+        },
         paymentMethod: {
           type: DataTypes.STRING(50),
           allowNull: false,
@@ -50,6 +57,18 @@ export class Payment extends Model<PaymentAttributes, PaymentCreationAttributes>
           type: DataTypes.DATE,
           allowNull: true,
           field: 'paid_at',
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'created_at',
+          defaultValue: DataTypes.NOW,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'updated_at',
+          defaultValue: DataTypes.NOW,
         },
       },
       {
