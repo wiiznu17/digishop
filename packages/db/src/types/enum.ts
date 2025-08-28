@@ -84,7 +84,7 @@ export enum DisputeStatus {
   RESOLVED = 'RESOLVED',
   REJECTED = 'REJECTED',
 }
-export enum PaymentStatus {
+export enum paymentMethod {
   CREDIT_CARD = 'CREDIT_CARD',
   QR = 'QR',
   PROMPTPAY = 'PROMPTPAY',

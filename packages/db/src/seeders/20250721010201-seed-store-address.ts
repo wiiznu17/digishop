@@ -4,7 +4,7 @@ export default {
   async up(queryInterface: QueryInterface) {
     await queryInterface.bulkInsert('MERCHANT_ADDRESSES', [
       {
-        user_id: 2,  // Merchant One
+        store_id: 1,  // Merchant One
         owner_name: 'Merchant One',
         phone: '0898765432',
         address_number: '23/4',
@@ -23,7 +23,7 @@ export default {
         deleted_at: null,
       },
       {
-        user_id: 2,  // Merchant One
+        store_id: 1,  // Merchant One
         owner_name: 'C One',
         phone: '0983358976',
         address_number: '456/7',
@@ -42,7 +42,7 @@ export default {
         deleted_at: null,
       },  
       {
-        user_id: 3,  // Merchant One
+        store_id: 2,  // Merchant One
         owner_name: 'C One',
         phone: '0983358976',
         address_number: '456/7',
@@ -61,7 +61,7 @@ export default {
         deleted_at: null,
       },
       {
-        user_id: 3,  // Merchant One
+        store_id: 2,  // Merchant One
         owner_name: 'C One',
         phone: '0983358976',
         address_number: '456/7',

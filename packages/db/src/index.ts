@@ -81,8 +81,8 @@ ShippingConfig.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
 Store.hasMany(StoreView, { foreignKey: 'store_id', as: 'views' });
 StoreView.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
 
-Store.hasMany(MerchantAddress, { foreignKey: 'user_id', sourceKey: 'user_id', as: 'addresses' });
-MerchantAddress.belongsTo(Store, { foreignKey: 'user_id', targetKey: 'user_id', as: 'store' });
+Store.hasMany(MerchantAddress, { foreignKey: 'store_id', as: 'addresses' });
+MerchantAddress.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
 
 Store.hasMany(ProfileMerchantImage, { foreignKey: 'store_id', as: 'profileImages' });
 ProfileMerchantImage.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });

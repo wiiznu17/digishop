@@ -9,10 +9,10 @@ export default {
         primaryKey: true,
         allowNull: false,
       },
-      user_id: {
+      store_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
-        references: { model: 'STORES', key: 'user_id' },
+        references: { model: 'STORES', key: 'id' },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
@@ -89,7 +89,7 @@ export default {
       charset: 'utf8mb4',
       collate: 'utf8mb4_unicode_ci',
     });
-    await queryInterface.addIndex('MERCHANT_ADDRESSES', ['user_id']);
+    await queryInterface.addIndex('MERCHANT_ADDRESSES', ['store_id']);
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
