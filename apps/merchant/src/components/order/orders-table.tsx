@@ -92,6 +92,7 @@ export function OrdersTable({
     { value: "RETURN_VERIFIED", label: "Return Verified" },
     { value: "RETURN_FAIL", label: "Return Failed" },
     { value: "REFUND_APPROVED", label: "Refund Approved" },
+    { value: "REFUND_REJECT", label: "Refund Rejected" },
     { value: "REFUND_SUCCESS", label: "Refund Success" },
     { value: "REFUND_FAIL", label: "Refund Failed" },
     { value: "COMPLETE", label: "Complete" }

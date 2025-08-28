@@ -14,6 +14,7 @@ export type OrderStatus =
   | "TRANSIT_LACK" // ปัญหาระหว่างขนส่ง
   | "RE_TRANSIT" // ส่งใหม่
   | "REFUND_REQUEST" // ลูกค้าขอคืนเงิน
+  | "REFUND_REJECTED" // ร้านปฏิเสธการคืนเงิน
   | "AWAITING_RETURN" // รอสินค้าคืน
   | "RECEIVE_RETURN" // ร้านค้าได้รับสินค้าคืน
   | "RETURN_VERIFIED" // ร้านตรวจสอบสินค้าคืนแล้ว
