@@ -4,6 +4,13 @@ export enum UserRole {
   MERCHANT = 'MERCHANT',
 }
 
+export enum ActorType {
+  CUSTOMER = 'CUSTOMER',
+  MERCHANT = 'MERCHANT',
+  ADMIN = 'ADMIN',
+  SYSTEM = 'SYSTEM'
+}
+
 export enum AddressType {
   HOME = 'HOME',
   OFFICE = 'OFFICE',
@@ -48,6 +55,7 @@ export enum OrderStatus {
   RE_TRANSIT = "RE_TRANSIT",            // ส่งใหม่อีกครั้ง
 
   REFUND_REQUEST = "REFUND_REQUEST",    // ลูกค้าขอคืนเงิน
+  REFUND_REJECTED = "REFUND_REJECTED",    // ร้านค้าปฏิเสธการคืนเงิน
   AWAITING_RETURN = "AWAITING_RETURN",  // รอการส่งสินค้าคืน
   RECEIVE_RETURN = "RECEIVE_RETURN",    // ร้านค้าได้รับสินค้าคืน
   RETURN_VERIFIED = "RETURN_VERIFIED",  // ร้านค้าตรวจสอบสินค้าคืนแล้ว
@@ -65,8 +73,18 @@ export enum PaymentStatus {
   PENDING = 'PENDING',
 }
 
+export enum RefundStatus {
+  REQUESTED = "REQUESTED",
+  APPROVED  = "APPROVED",
+  SUCCESS   = "SUCCESS",
+  FAIL      = "FAIL",
+  CANCELED  = "CANCELED",
+}
+
+
 export enum ShippingStatus {
   PENDING = 'PENDING',
+  RECIEVE_PARCEL = 'RECIEVE_PARCEL',
   IN_TRANSIT = 'IN_TRANSIT',
   CUSTOMER_REJECT = 'CUSTOMER_REJECT',
   TRANSIT_ISSUE = 'TRANSIT_ISSUE',
@@ -88,5 +106,5 @@ export enum paymentMethod {
   CREDIT_CARD = 'CREDIT_CARD',
   QR = 'QR',
   PROMPTPAY = 'PROMPTPAY',
-  CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
+  // CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
 }
