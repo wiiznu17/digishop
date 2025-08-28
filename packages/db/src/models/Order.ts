@@ -3,9 +3,10 @@ import { OrderStatus } from '../types/enum';
 
 export interface OrderAttributes {
   id: number;
+  orderCode: string;
   customerId: number;
   storeId: number;
-  reference: number;
+  reference: string;
   totalPrice: string; // DECIMAL
   status: OrderStatus;
   createdAt?: Date;
@@ -17,9 +18,10 @@ export interface OrderCreationAttributes
 
 export class Order extends Model<OrderAttributes, OrderCreationAttributes> implements OrderAttributes {
   public id!: number;
+  public orderCode!: string
   public customerId!: number;
   public storeId!: number;
-  public reference!: number;
+  public reference!: string;
   public totalPrice!: string;
   public status!: OrderStatus;
   public readonly createdAt!: Date;
@@ -33,6 +35,11 @@ export class Order extends Model<OrderAttributes, OrderCreationAttributes> imple
           autoIncrement: true,
           primaryKey: true,
         },
+        orderCode: {
+          type: DataTypes.STRING(255),
+          allowNull: false,
+          field: 'order_code'
+        },
         customerId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
@@ -44,9 +51,9 @@ export class Order extends Model<OrderAttributes, OrderCreationAttributes> imple
           field: 'store_id',
         },
         reference: {
-          type: DataTypes.STRING(32),
+          type: DataTypes.STRING(255),
           allowNull: false,
-          field: 'store_id',
+          field: 'reference',
         },
         totalPrice: {
           type: DataTypes.DECIMAL(12, 2),
