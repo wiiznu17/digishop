@@ -12,6 +12,7 @@ export default {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
+      url_redirect: { type: DataTypes.STRING(255), allowNull: true },
       payment_method: { type: DataTypes.STRING(50), allowNull: false },
       status: { type: DataTypes.ENUM(...Object.values(PaymentStatus)), allowNull: false, defaultValue: PaymentStatus.PENDING },
       paid_at: { type: DataTypes.DATE, allowNull: true },
