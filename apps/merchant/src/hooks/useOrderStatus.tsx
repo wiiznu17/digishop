@@ -242,7 +242,7 @@ export const useOrderStatus = () => {
       case "READY_TO_SHIP":
         return ["HANDED_OVER"]
       case "REFUND_REQUEST":
-        return ["REFUND_APPROVED"]
+        return ["REFUND_APPROVED", "REFUND_REJECTED"]
       case "AWAITING_RETURN":
         return ["RETURN_FAIL"]
       case "RECEIVE_RETURN":
@@ -279,6 +279,8 @@ export const useOrderStatus = () => {
         return <Ban className="h-4 w-4 text-red-500" />
       case "REFUND_REQUEST":
         return <RotateCcw className="h-4 w-4" />
+      case "REFUND_REJECTED":
+        return <XCircle className="h-4 w-4" />
       case "AWAITING_RETURN":
         return <Undo2 className="h-4 w-4" />
       case "RECEIVE_RETURN":
@@ -314,6 +316,7 @@ export const useOrderStatus = () => {
       CUSTOMER_CANCELED: "Customer canceled",
       MERCHANT_CANCELED: "Order canceled by merchant",
       REFUND_REQUEST: "Refund requested",
+      REFUND_REJECTED: "Refund rejected",
       AWAITING_RETURN: "Awaiting return",
       RECEIVE_RETURN: "Return received",
       RETURN_VERIFIED: "Return verified",
@@ -340,6 +343,7 @@ export const useOrderStatus = () => {
       CUSTOMER_CANCELED: "Customer canceled",
       MERCHANT_CANCELED: "Canceled order",
       REFUND_REQUEST: "Refund requested",
+      REFUND_REJECTED: "Refund rejected",
       AWAITING_RETURN: "Awaiting return",
       RECEIVE_RETURN: "Return received",
       RETURN_VERIFIED: "Return verified",
@@ -383,6 +387,7 @@ export const useOrderStatus = () => {
         case "AWAITING_RETURN":
         case "RECEIVE_RETURN":
           return "bg-orange-500 border-orange-500 text-white"
+        case "REFUND_REJECTED":
         case "TRANSIT_LACK":
           return "bg-red-500 border-red-500 text-white"
         case "RE_TRANSIT":
@@ -432,6 +437,7 @@ export const useOrderStatus = () => {
       case "REFUND_SUCCESS":
         return "bg-green-100 text-green-800 border-green-300"
       case "REFUND_FAIL":
+      case "REFUND_REJECTED":
         return "bg-red-100 text-red-800 border-red-300"
       case "TRANSIT_LACK":
         return "bg-red-100 text-red-800 border-red-300"
