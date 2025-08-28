@@ -1,11 +1,31 @@
+// src/seeders/20250828094500-seed-order-items-for-all-orders.ts
 import { QueryInterface } from "sequelize";
 
 export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkInsert("ORDER_ITEMS", [
-      // Order 6001 → Smartphone X (1001)
+      // 6001 = 1200
       {
         order_id: 6001,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      // 6002 = 2000 (1200 + 500 + 300)
+      {
+        order_id: 6002,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6002,
         product_id: 1001,
         quantity: 1,
         unit_price: 500,
@@ -13,43 +33,36 @@ export default {
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6002 → Smartphone Y (1002)
       {
         order_id: 6002,
-        product_id: 1002,
-        quantity: 2,
-        unit_price: 500,
+        product_id: 1005,
+        quantity: 1,
+        unit_price: 300,
         created_at: new Date(),
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6003 → Laptop Pro 15 (1003)
+      // 6003 = 3500 (1200*2 + 500 + 300*2)
       {
         order_id: 6003,
         product_id: 1003,
-        quantity: 1,
+        quantity: 2,
         unit_price: 1200,
         created_at: new Date(),
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6004 → Wireless Earbuds (1004)
       {
-        order_id: 6004,
-        product_id: 1004,
-        quantity: 3,
-        unit_price: 150,
+        order_id: 6003,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
         created_at: new Date(),
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6005 → Smartwatch Z (1005)
       {
-        order_id: 6005,
+        order_id: 6003,
         product_id: 1005,
         quantity: 2,
         unit_price: 300,
@@ -57,8 +70,63 @@ export default {
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6006 → Smartphone X + Earbuds
+      // 6004 = 4500 (1200*3 + 300*3)
+      {
+        order_id: 6004,
+        product_id: 1003,
+        quantity: 3,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6004,
+        product_id: 1005,
+        quantity: 3,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      // 6005 = 5600 (1200*4 + 500 + 300)
+      {
+        order_id: 6005,
+        product_id: 1003,
+        quantity: 4,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6005,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6005,
+        product_id: 1005,
+        quantity: 1,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      // 6006 = 2300 (1200 + 500 + 300*2)
+      {
+        order_id: 6006,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
       {
         order_id: 6006,
         product_id: 1001,
@@ -70,15 +138,14 @@ export default {
       },
       {
         order_id: 6006,
-        product_id: 1004,
+        product_id: 1005,
         quantity: 2,
-        unit_price: 150,
+        unit_price: 300,
         created_at: new Date(),
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6007 → Laptop Pro 15 + Smartwatch Z
+      // 6007 = 2200 (1200 + 500 + 500)
       {
         order_id: 6007,
         product_id: 1003,
@@ -90,18 +157,35 @@ export default {
       },
       {
         order_id: 6007,
-        product_id: 1005,
+        product_id: 1001,
         quantity: 1,
-        unit_price: 300,
+        unit_price: 500,
         created_at: new Date(),
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6008 → Smartphone Y + Earbuds
+      {
+        order_id: 6007,
+        product_id: 1002,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      // 6008 = 3200 (1200*2 + 500 + 300)
       {
         order_id: 6008,
-        product_id: 1002,
+        product_id: 1003,
+        quantity: 2,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6008,
+        product_id: 1001,
         quantity: 1,
         unit_price: 500,
         created_at: new Date(),
@@ -110,6 +194,138 @@ export default {
       },
       {
         order_id: 6008,
+        product_id: 1005,
+        quantity: 1,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      // 6009 = 2800 (1200 + 500*2 + 300*2)
+      {
+        order_id: 6009,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6009,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6009,
+        product_id: 1002,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6009,
+        product_id: 1005,
+        quantity: 2,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      // 6010 = 3100 (1200 + 500*2 + 300*3)
+      {
+        order_id: 6010,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6010,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6010,
+        product_id: 1002,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6010,
+        product_id: 1005,
+        quantity: 3,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6011 = 1900 (500*2 + 300*3)
+      {
+        order_id: 6011,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6011,
+        product_id: 1002,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6011,
+        product_id: 1005,
+        quantity: 3,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6012 = 1950 (1200 + 300*2 + 150)
+      {
+        order_id: 6012,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6012,
+        product_id: 1005,
+        quantity: 2,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6012,
         product_id: 1004,
         quantity: 1,
         unit_price: 150,
@@ -118,9 +334,67 @@ export default {
         deleted_at: null,
       },
 
-      // Order 6009 → Laptop Pro 15
+      // 6013 = 4100 (1200*3 + 500)
       {
-        order_id: 6009,
+        order_id: 6013,
+        product_id: 1003,
+        quantity: 3,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6013,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6014 = 2500 (1200 + 500*2 + 300)
+      {
+        order_id: 6014,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6014,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6014,
+        product_id: 1002,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6014,
+        product_id: 1005,
+        quantity: 1,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6015 = 2550 (1200*2 + 150)
+      {
+        order_id: 6015,
         product_id: 1003,
         quantity: 2,
         unit_price: 1200,
@@ -128,10 +402,191 @@ export default {
         updated_at: new Date(),
         deleted_at: null,
       },
-
-      // Order 6010 → Smartwatch Z
       {
-        order_id: 6010,
+        order_id: 6015,
+        product_id: 1004,
+        quantity: 1,
+        unit_price: 150,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6016 = 2600 (1200 + 500 + 300*3)
+      {
+        order_id: 6016,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6016,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6016,
+        product_id: 1005,
+        quantity: 3,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6017 = 2650 (1200 + 500*2 + 300 + 150)
+      {
+        order_id: 6017,
+        product_id: 1003,
+        quantity: 1,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6017,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6017,
+        product_id: 1002,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6017,
+        product_id: 1005,
+        quantity: 1,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6017,
+        product_id: 1004,
+        quantity: 1,
+        unit_price: 150,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6018 = 4200 (1200*3 + 300*2)
+      {
+        order_id: 6018,
+        product_id: 1003,
+        quantity: 3,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6018,
+        product_id: 1005,
+        quantity: 2,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6019 = 4300 (1200*2 + 500*2 + 300*3)
+      {
+        order_id: 6019,
+        product_id: 1003,
+        quantity: 2,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6019,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6019,
+        product_id: 1002,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6019,
+        product_id: 1005,
+        quantity: 3,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6020 = 5100 (1200*4 + 300)
+      {
+        order_id: 6020,
+        product_id: 1003,
+        quantity: 4,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6020,
+        product_id: 1005,
+        quantity: 1,
+        unit_price: 300,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+
+      // 6021 = 4400 (1200*3 + 500 + 300)
+      {
+        order_id: 6021,
+        product_id: 1003,
+        quantity: 3,
+        unit_price: 1200,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6021,
+        product_id: 1001,
+        quantity: 1,
+        unit_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
+      {
+        order_id: 6021,
         product_id: 1005,
         quantity: 1,
         unit_price: 300,
@@ -144,7 +599,10 @@ export default {
 
   down: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkDelete("ORDER_ITEMS", {
-      order_id: [6001,6002,6003,6004,6005,6006,6007,6008,6009,6010],
+      order_id: [
+        6001,6002,6003,6004,6005,6006,6007,6008,6009,6010,
+        6011,6012,6013,6014,6015,6016,6017,6018,6019,6020,6021
+      ],
     });
   },
 };

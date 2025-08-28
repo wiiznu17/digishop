@@ -23,6 +23,9 @@ import { BankAccount } from '../src/models/bank/BankAccount';
 import { ShippingType } from '../src/models/ShippingType';
 import { ProfileMerchantImage } from '../src/models/ProfileImage';
 import { OrderStatusHistory } from '../src/models/OrderStatusHistory';
+import { RefundOrder } from '../src/models/RefundOrder';
+import { RefundImage } from '@models/RefundImage';
+import { RefundStatusHistory } from '@models/RefundStatusHistory';
 
 export function initModels(sequelize: Sequelize) {
   // Initialize all models
@@ -47,6 +50,9 @@ export function initModels(sequelize: Sequelize) {
   AdminSystemLog.initModel(sequelize);
   Dispute.initModel(sequelize);
   BankAccount.initModel(sequelize);
+  RefundOrder.initModel(sequelize);
+  RefundImage.initModel(sequelize);
+  RefundStatusHistory.initModel(sequelize);
 
 // --- Associations ---
 // User
@@ -111,7 +117,6 @@ ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 Order.hasMany(OrderItem, { foreignKey: 'order_id', as: 'items', onDelete: 'CASCADE' });
 OrderItem.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
-// ✅ ใช้ alias เอกพจน์ 'payment' (hasOne)
 Order.hasOne(Payment, { foreignKey: 'order_id', as: 'payment', onDelete: 'CASCADE' });
 Payment.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
@@ -124,12 +129,20 @@ Dispute.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 Order.hasMany(OrderStatusHistory, { foreignKey: 'order_id', as: 'statusHistory', onDelete: 'CASCADE' });
 OrderStatusHistory.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
+Order.hasOne(RefundOrder, { foreignKey: "order_id", as: "refundOrder" });
+RefundOrder.belongsTo(Order, { foreignKey: "order_id", as: "order" });
+
+// RefundOrder
+RefundOrder.hasMany(RefundImage, { foreignKey: { name: "refundOrderId", field: "refund_order_id" }, as: "images", onDelete: "CASCADE" });
+RefundImage.belongsTo(RefundOrder, { foreignKey: { name: "refundOrderId", field: "refund_order_id" }, as: "refundOrder" });
+
+RefundOrder.hasMany(RefundStatusHistory, { foreignKey: { name: "refundOrderId", field: "refund_order_id" }, as: "statusHistory", onDelete: "CASCADE" });
+RefundStatusHistory.belongsTo(RefundOrder, { foreignKey: { name: "refundOrderId", field: "refund_order_id" }, as: "refundOrder" });
+
 // Shipping info
 ShippingInfo.belongsTo(ShippingType, { foreignKey: 'shippingTypeId', as: 'shippingType' });
 ShippingType.hasMany(ShippingInfo, { foreignKey: 'shippingTypeId', as: 'shippingInfos' });
 
-// ❌ เดิม: Address.belongsTo(ShippingInfo) (ผิดทิศ) / foreignKey ไม่ตรง
-// ✅ ใหม่: ShippingInfo.belongsTo(Address) + Address.hasMany(ShippingInfo)
 ShippingInfo.belongsTo(Address, {
   as: 'address',
   foreignKey: { name: 'shippingAddress', field: 'shipping_address' },
@@ -159,6 +172,9 @@ AdminSystemLog.belongsTo(AdminUser, { foreignKey: 'admin_id', as: 'admin' });
     Order,
     OrderItem,
     Payment,
+    RefundOrder,
+    RefundImage,
+    RefundStatusHistory,
     ShippingInfo,
     ShippingType,
     Review,
