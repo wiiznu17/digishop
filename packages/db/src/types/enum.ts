@@ -62,6 +62,7 @@ export enum OrderStatus {
   RETURN_FAIL = "RETURN_FAIL",          // การคืนสินค้าล้มเหลว
 
   REFUND_APPROVED = "REFUND_APPROVED",  // ร้านค้าอนุมัติการคืนเงิน
+  REFUND_PROCESSING = "REFUND_PROCESSING", // กำลังคืนเงิน (อยู่ระหว่างดำเนินการ)
   REFUND_SUCCESS = "REFUND_SUCCESS",    // คืนเงินสำเร็จ (API provider success)
   REFUND_FAIL = "REFUND_FAIL",          // คืนเงินล้มเหลว (API provider fail)
 }
