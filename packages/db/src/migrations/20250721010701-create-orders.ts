@@ -5,6 +5,7 @@ export default {
   async up(queryInterface: QueryInterface): Promise<void> {
     await queryInterface.createTable('ORDERS', {
       id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true, allowNull: false },
+      order_code: { type: DataTypes.STRING(255), allowNull: false},
       customer_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
@@ -20,10 +21,8 @@ export default {
         onUpdate: 'CASCADE',
       },
       reference: {
-        type: DataTypes.STRING(32),
-        allowNull: true,
-        onDelete: 'RESTRICT',
-        onUpdate: 'CASCADE',
+        type: DataTypes.STRING(255),
+        allowNull: false,
       },
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
       status: { type: DataTypes.ENUM(...Object.values(OrderStatus)), allowNull: false, defaultValue: OrderStatus.PENDING },
