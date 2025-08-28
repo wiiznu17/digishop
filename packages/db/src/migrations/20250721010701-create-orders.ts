@@ -24,6 +24,10 @@ export default {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
+      order_note: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+      },
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
       status: { type: DataTypes.ENUM(...Object.values(OrderStatus)), allowNull: false, defaultValue: OrderStatus.PENDING },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },

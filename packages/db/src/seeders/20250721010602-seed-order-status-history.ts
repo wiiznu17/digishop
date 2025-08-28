@@ -1,4 +1,4 @@
-// seeders/20250721000002-seed-order-status-history.ts
+// seeders/20250828095500-seed-order-status-history-all.ts
 import { QueryInterface } from "sequelize"
 
 export default {
@@ -6,7 +6,8 @@ export default {
     const now = new Date()
 
     await queryInterface.bulkInsert("ORDER_STATUS_HISTORY", [
-      // Order 6001: PENDING
+      // ─────────────────────────────────────────────────────────────
+      // 6001: PENDING
       {
         order_id: 6001,
         from_status: null,
@@ -21,7 +22,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6002: CUSTOMER_CANCELED
+      // ─────────────────────────────────────────────────────────────
+      // 6002: CUSTOMER_CANCELED
       {
         order_id: 6002,
         from_status: null,
@@ -49,7 +51,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6003: PAID
+      // ─────────────────────────────────────────────────────────────
+      // 6003: PAID
       {
         order_id: 6003,
         from_status: null,
@@ -77,7 +80,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6004: PROCESSING
+      // ─────────────────────────────────────────────────────────────
+      // 6004: PROCESSING
       {
         order_id: 6004,
         from_status: null,
@@ -118,7 +122,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6005: READY_TO_SHIP
+      // ─────────────────────────────────────────────────────────────
+      // 6005: READY_TO_SHIP
       {
         order_id: 6005,
         from_status: null,
@@ -172,7 +177,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6006: SHIPPED
+      // ─────────────────────────────────────────────────────────────
+      // 6006: SHIPPED
       {
         order_id: 6006,
         from_status: null,
@@ -231,7 +237,7 @@ export default {
         to_status: "HANDED_OVER",
         changed_by_type: "MERCHANT",
         changed_by_id: 2,
-        reason: "Prepared for shipping",
+        reason: "Handed to courier",
         source: "DASHBOARD",
         correlation_id: "req-6006-d",
         metadata: JSON.stringify({}),
@@ -252,7 +258,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6007: DELIVERED
+      // ─────────────────────────────────────────────────────────────
+      // 6007: DELIVERED
       {
         order_id: 6007,
         from_status: null,
@@ -311,7 +318,7 @@ export default {
         to_status: "HANDED_OVER",
         changed_by_type: "MERCHANT",
         changed_by_id: 2,
-        reason: "Shipped",
+        reason: "Handed to courier",
         source: "DASHBOARD",
         correlation_id: "req-6007-d",
         metadata: JSON.stringify({}),
@@ -335,9 +342,9 @@ export default {
         order_id: 6007,
         from_status: "SHIPPED",
         to_status: "DELIVERED",
-        changed_by_type: "CUSTOMER",
-        changed_by_id: 1,
-        reason: "Received by customer",
+        changed_by_type: "SYSTEM",
+        changed_by_id: 0,
+        reason: "Delivered by carrier",
         source: "SYSTEM",
         correlation_id: "req-6007-f",
         metadata: JSON.stringify({}),
@@ -345,7 +352,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6008: COMPLETE
+      // ─────────────────────────────────────────────────────────────
+      // 6008: COMPLETE
       {
         order_id: 6008,
         from_status: null,
@@ -404,7 +412,7 @@ export default {
         to_status: "HANDED_OVER",
         changed_by_type: "MERCHANT",
         changed_by_id: 2,
-        reason: "Shipped",
+        reason: "Handed to courier",
         source: "DASHBOARD",
         correlation_id: "req-6008-d",
         metadata: JSON.stringify({}),
@@ -428,9 +436,9 @@ export default {
         order_id: 6008,
         from_status: "SHIPPED",
         to_status: "DELIVERED",
-        changed_by_type: "CUSTOMER",
-        changed_by_id: 1,
-        reason: "Received",
+        changed_by_type: "SYSTEM",
+        changed_by_id: 0,
+        reason: "Delivered",
         source: "SYSTEM",
         correlation_id: "req-6008-f",
         metadata: JSON.stringify({}),
@@ -451,7 +459,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6009: REFUND_REQUEST
+      // ─────────────────────────────────────────────────────────────
+      // 6009: REFUND_REQUEST (from PAID)
       {
         order_id: 6009,
         from_status: null,
@@ -492,7 +501,8 @@ export default {
         updated_at: now,
       },
 
-      // Order 6010: REFUND_SUCCESS
+      // ─────────────────────────────────────────────────────────────
+      // 6010: REFUND_SUCCESS (from PAID)
       {
         order_id: 6010,
         from_status: null,
@@ -558,12 +568,541 @@ export default {
         created_at: now,
         updated_at: now,
       },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6011: TRANSIT_LACK (shipping issue)
+      {
+        order_id: 6011,
+        from_status: null,
+        to_status: "PENDING",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Order created",
+        source: "API",
+        correlation_id: "req-6011-a",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6011,
+        from_status: "PENDING",
+        to_status: "PAID",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Payment success (COD order confirmed)",
+        source: "WEBHOOK",
+        correlation_id: "txn-6011",
+        metadata: JSON.stringify({ method: "COD" }),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6011,
+        from_status: "PAID",
+        to_status: "PROCESSING",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Processing",
+        source: "DASHBOARD",
+        correlation_id: "req-6011-b",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6011,
+        from_status: "PROCESSING",
+        to_status: "READY_TO_SHIP",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Ready to ship",
+        source: "DASHBOARD",
+        correlation_id: "req-6011-c",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6011,
+        from_status: "READY_TO_SHIP",
+        to_status: "HANDED_OVER",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Handed to courier",
+        source: "DASHBOARD",
+        correlation_id: "req-6011-d",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6011,
+        from_status: "HANDED_OVER",
+        to_status: "SHIPPED",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Shipped",
+        source: "DASHBOARD",
+        correlation_id: "req-6011-e",
+        metadata: JSON.stringify({ carrier: "Flash" }),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6011,
+        from_status: "SHIPPED",
+        to_status: "TRANSIT_LACK",
+        changed_by_type: "SYSTEM",
+        changed_by_id: 0,
+        reason: "Transit failed",
+        source: "SYSTEM",
+        correlation_id: "req-6011-f",
+        metadata: JSON.stringify({ code: "NO_ANSWER" }),
+        created_at: now,
+        updated_at: now,
+      },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6012: RE_TRANSIT
+      {
+        order_id: 6012,
+        from_status: null,
+        to_status: "PENDING",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Order created",
+        source: "API",
+        correlation_id: "req-6012-a",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6012,
+        from_status: "PENDING",
+        to_status: "PAID",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Payment success",
+        source: "WEBHOOK",
+        correlation_id: "txn-6012",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6012,
+        from_status: "PAID",
+        to_status: "PROCESSING",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Processing",
+        source: "DASHBOARD",
+        correlation_id: "req-6012-b",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6012,
+        from_status: "PROCESSING",
+        to_status: "READY_TO_SHIP",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Ready to ship",
+        source: "DASHBOARD",
+        correlation_id: "req-6012-c",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6012,
+        from_status: "READY_TO_SHIP",
+        to_status: "HANDED_OVER",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Handed to courier",
+        source: "DASHBOARD",
+        correlation_id: "req-6012-d",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6012,
+        from_status: "HANDED_OVER",
+        to_status: "SHIPPED",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Shipped",
+        source: "DASHBOARD",
+        correlation_id: "req-6012-e",
+        metadata: JSON.stringify({ carrier: "Kerry" }),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6012,
+        from_status: "SHIPPED",
+        to_status: "TRANSIT_LACK",
+        changed_by_type: "SYSTEM",
+        changed_by_id: 0,
+        reason: "Transit failed",
+        source: "SYSTEM",
+        correlation_id: "req-6012-f",
+        metadata: JSON.stringify({ code: "UNABLE_TO_CONTACT" }),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6012,
+        from_status: "TRANSIT_LACK",
+        to_status: "RE_TRANSIT",
+        changed_by_type: "MERCHANT",
+        changed_by_id: 2,
+        reason: "Reschedule delivery",
+        source: "DASHBOARD",
+        correlation_id: "req-6012-g",
+        metadata: JSON.stringify({ newDate: "T+2" }),
+        created_at: now,
+        updated_at: now,
+      },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6013: REFUND_REQUEST (from PAID)
+      {
+        order_id: 6013,
+        from_status: null,
+        to_status: "PENDING",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Order created",
+        source: "API",
+        correlation_id: "req-6013-a",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6013,
+        from_status: "PENDING",
+        to_status: "PAID",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Payment success",
+        source: "WEBHOOK",
+        correlation_id: "txn-6013",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        order_id: 6013,
+        from_status: "PAID",
+        to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Requested refund (pre-ship)",
+        source: "APP",
+        correlation_id: "req-6013-b",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6014: AWAITING_RETURN (from DELIVERED)
+      {
+        order_id: 6014,
+        from_status: null,
+        to_status: "PENDING",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1,
+        reason: "Order created",
+        source: "API",
+        correlation_id: "req-6014-a",
+        metadata: JSON.stringify({}),
+        created_at: now,
+        updated_at: now,
+      },
+      { order_id: 6014, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6014", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6014, from_status: "PAID", to_status: "PROCESSING",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Processing",
+        source: "DASHBOARD", correlation_id: "req-6014-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6014, from_status: "PROCESSING", to_status: "READY_TO_SHIP",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Ready",
+        source: "DASHBOARD", correlation_id: "req-6014-c", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6014, from_status: "READY_TO_SHIP", to_status: "HANDED_OVER",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Handed",
+        source: "DASHBOARD", correlation_id: "req-6014-d", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6014, from_status: "HANDED_OVER", to_status: "SHIPPED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Shipped",
+        source: "DASHBOARD", correlation_id: "req-6014-e", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6014, from_status: "SHIPPED", to_status: "DELIVERED",
+        changed_by_type: "SYSTEM", changed_by_id: 0, reason: "Delivered",
+        source: "SYSTEM", correlation_id: "req-6014-f", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6014, from_status: "DELIVERED", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund after delivery",
+        source: "APP", correlation_id: "req-6014-g", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6014, from_status: "REFUND_REQUEST", to_status: "AWAITING_RETURN",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Return required",
+        source: "DASHBOARD", correlation_id: "req-6014-h", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6015: RECEIVE_RETURN
+      {
+        order_id: 6015, from_status: null, to_status: "PENDING",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Order created",
+        source: "API", correlation_id: "req-6015-a", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now,
+      },
+      { order_id: 6015, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6015", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "PAID", to_status: "PROCESSING",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Processing",
+        source: "DASHBOARD", correlation_id: "req-6015-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "PROCESSING", to_status: "READY_TO_SHIP",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Ready",
+        source: "DASHBOARD", correlation_id: "req-6015-c", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "READY_TO_SHIP", to_status: "HANDED_OVER",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Handed",
+        source: "DASHBOARD", correlation_id: "req-6015-d", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "HANDED_OVER", to_status: "SHIPPED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Shipped",
+        source: "DASHBOARD", correlation_id: "req-6015-e", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "SHIPPED", to_status: "DELIVERED",
+        changed_by_type: "SYSTEM", changed_by_id: 0, reason: "Delivered",
+        source: "SYSTEM", correlation_id: "req-6015-f", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "DELIVERED", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund after delivery",
+        source: "APP", correlation_id: "req-6015-g", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "REFUND_REQUEST", to_status: "AWAITING_RETURN",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Return required",
+        source: "DASHBOARD", correlation_id: "req-6015-h", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6015, from_status: "AWAITING_RETURN", to_status: "RECEIVE_RETURN",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Returned parcel received",
+        source: "DASHBOARD", correlation_id: "req-6015-i", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6016: RETURN_VERIFIED
+      {
+        order_id: 6016, from_status: null, to_status: "PENDING",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Order created",
+        source: "API", correlation_id: "req-6016-a", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now,
+      },
+      { order_id: 6016, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6016", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "PAID", to_status: "PROCESSING",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Processing",
+        source: "DASHBOARD", correlation_id: "req-6016-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "PROCESSING", to_status: "READY_TO_SHIP",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Ready",
+        source: "DASHBOARD", correlation_id: "req-6016-c", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "READY_TO_SHIP", to_status: "HANDED_OVER",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Handed",
+        source: "DASHBOARD", correlation_id: "req-6016-d", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "HANDED_OVER", to_status: "SHIPPED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Shipped",
+        source: "DASHBOARD", correlation_id: "req-6016-e", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "SHIPPED", to_status: "DELIVERED",
+        changed_by_type: "SYSTEM", changed_by_id: 0, reason: "Delivered",
+        source: "SYSTEM", correlation_id: "req-6016-f", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "DELIVERED", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund",
+        source: "APP", correlation_id: "req-6016-g", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "REFUND_REQUEST", to_status: "AWAITING_RETURN",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Return required",
+        source: "DASHBOARD", correlation_id: "req-6016-h", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "AWAITING_RETURN", to_status: "RECEIVE_RETURN",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Returned parcel received",
+        source: "DASHBOARD", correlation_id: "req-6016-i", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6016, from_status: "RECEIVE_RETURN", to_status: "RETURN_VERIFIED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Return inspected OK",
+        source: "DASHBOARD", correlation_id: "req-6016-j", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6017: RETURN_FAIL (จาก AWAITING_RETURN → RETURN_FAIL)
+      {
+        order_id: 6017, from_status: null, to_status: "PENDING",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Order created",
+        source: "API", correlation_id: "req-6017-a", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now,
+      },
+      { order_id: 6017, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6017", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "PAID", to_status: "PROCESSING",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Processing",
+        source: "DASHBOARD", correlation_id: "req-6017-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "PROCESSING", to_status: "READY_TO_SHIP",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Ready",
+        source: "DASHBOARD", correlation_id: "req-6017-c", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "READY_TO_SHIP", to_status: "HANDED_OVER",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Handed",
+        source: "DASHBOARD", correlation_id: "req-6017-d", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "HANDED_OVER", to_status: "SHIPPED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Shipped",
+        source: "DASHBOARD", correlation_id: "req-6017-e", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "SHIPPED", to_status: "DELIVERED",
+        changed_by_type: "SYSTEM", changed_by_id: 0, reason: "Delivered",
+        source: "SYSTEM", correlation_id: "req-6017-f", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "DELIVERED", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund",
+        source: "APP", correlation_id: "req-6017-g", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "REFUND_REQUEST", to_status: "AWAITING_RETURN",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Return required",
+        source: "DASHBOARD", correlation_id: "req-6017-h", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6017, from_status: "AWAITING_RETURN", to_status: "RETURN_FAIL",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Return failed / not eligible",
+        source: "DASHBOARD", correlation_id: "req-6017-i", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6018: REFUND_REJECTED (จาก PAID)
+      {
+        order_id: 6018, from_status: null, to_status: "PENDING",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Order created",
+        source: "API", correlation_id: "req-6018-a", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now,
+      },
+      { order_id: 6018, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6018", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6018, from_status: "PAID", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund (pre-ship)",
+        source: "APP", correlation_id: "req-6018-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6018, from_status: "REFUND_REQUEST", to_status: "REFUND_REJECTED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Merchant rejected refund (policy)",
+        source: "DASHBOARD", correlation_id: "req-6018-c", metadata: JSON.stringify({ policy: "No refund after customization" }),
+        created_at: now, updated_at: now },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6019: REFUND_APPROVED (จาก PAID)
+      {
+        order_id: 6019,
+        from_status: null,
+        to_status: "PENDING",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 1, 
+        reason: "Order created",
+        source: "API", correlation_id: "req-6019-a", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now,
+      },
+      { order_id: 6019, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6019", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6019, from_status: "PAID", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund",
+        source: "APP", correlation_id: "req-6019-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6019, from_status: "REFUND_REQUEST", to_status: "REFUND_APPROVED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Refund approved",
+        source: "DASHBOARD", correlation_id: "req-6019-c", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6020: REFUND_SUCCESS (จาก PAID)
+      {
+        order_id: 6020, from_status: null, to_status: "PENDING",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Order created",
+        source: "API", correlation_id: "req-6020-a", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now,
+      },
+      { order_id: 6020, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6020", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6020, from_status: "PAID", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund",
+        source: "APP", correlation_id: "req-6020-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6020, from_status: "REFUND_REQUEST", to_status: "REFUND_APPROVED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Refund approved",
+        source: "DASHBOARD", correlation_id: "req-6020-c", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6020, from_status: "REFUND_APPROVED", to_status: "REFUND_SUCCESS",
+        changed_by_type: "SYSTEM", changed_by_id: 0, reason: "Refund completed",
+        source: "PAYMENT_GATEWAY", correlation_id: "txn-6020-refund", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+
+      // ─────────────────────────────────────────────────────────────
+      // 6021: REFUND_FAIL (จาก PAID)
+      {
+        order_id: 6021, from_status: null, to_status: "PENDING",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Order created",
+        source: "API", correlation_id: "req-6021-a", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now,
+      },
+      { order_id: 6021, from_status: "PENDING", to_status: "PAID",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Payment success",
+        source: "WEBHOOK", correlation_id: "txn-6021", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6021, from_status: "PAID", to_status: "REFUND_REQUEST",
+        changed_by_type: "CUSTOMER", changed_by_id: 1, reason: "Requested refund",
+        source: "APP", correlation_id: "req-6021-b", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6021, from_status: "REFUND_REQUEST", to_status: "REFUND_APPROVED",
+        changed_by_type: "MERCHANT", changed_by_id: 2, reason: "Refund approved",
+        source: "DASHBOARD", correlation_id: "req-6021-c", metadata: JSON.stringify({}),
+        created_at: now, updated_at: now },
+      { order_id: 6021, from_status: "REFUND_APPROVED", to_status: "REFUND_FAIL",
+        changed_by_type: "SYSTEM", changed_by_id: 0, reason: "Refund API failed",
+        source: "PAYMENT_GATEWAY", correlation_id: "txn-6021-refund", metadata: JSON.stringify({ code: "PGW_ERR_TIMEOUT" }),
+        created_at: now, updated_at: now },
     ])
   },
 
   down: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkDelete("ORDER_STATUS_HISTORY", {
-      order_id: [6001,6002,6003,6004,6005,6006,6007,6008,6009,6010]
+      order_id: [
+        6001,6002,6003,6004,6005,6006,6007,6008,6009,6010,
+        6011,6012,6013,6014,6015,6016,6017,6018,6019,6020,6021
+      ]
     })
   },
 }

@@ -7,6 +7,7 @@ export interface OrderAttributes {
   customerId: number;
   storeId: number;
   reference: string;
+  orderNote?: string;
   totalPrice: string; // DECIMAL
   status: OrderStatus;
   createdAt?: Date;
@@ -22,6 +23,7 @@ export class Order extends Model<OrderAttributes, OrderCreationAttributes> imple
   public customerId!: number;
   public storeId!: number;
   public reference!: string;
+  public orderNote?: string;
   public totalPrice!: string;
   public status!: OrderStatus;
   public readonly createdAt!: Date;
@@ -54,6 +56,11 @@ export class Order extends Model<OrderAttributes, OrderCreationAttributes> imple
           type: DataTypes.STRING(255),
           allowNull: false,
           field: 'reference',
+        },
+        orderNote: {
+          type: DataTypes.STRING(500),
+          allowNull: true,
+          field: 'order_note',
         },
         totalPrice: {
           type: DataTypes.DECIMAL(12, 2),
