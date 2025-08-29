@@ -1,9 +1,10 @@
+// src/seeders/2025xxxx-seed-refund-status-history.ts
 import { QueryInterface } from "sequelize";
 
 export default {
   async up(queryInterface: QueryInterface) {
     await queryInterface.bulkInsert("REFUND_STATUS_HISTORY", [
-      // refund_order_id: 1 -> order 6013 (REQUESTED)
+      // 1) refund_order_id: 1 -> order 6013 (REQUESTED)
       {
         refund_order_id: 1,
         from_status: null,
@@ -16,9 +17,10 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-20T09:00:00Z"),
         updated_at: new Date("2025-08-20T09:00:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 2 -> order 6014 (REQUESTED)
+      // 2) refund_order_id: 2 -> order 6014
       {
         refund_order_id: 2,
         from_status: null,
@@ -31,9 +33,10 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-19T10:30:00Z"),
         updated_at: new Date("2025-08-19T10:30:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 3 -> order 6015 (REQUESTED)
+      // 3) refund_order_id: 3 -> order 6015
       {
         refund_order_id: 3,
         from_status: null,
@@ -46,9 +49,10 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-18T11:00:00Z"),
         updated_at: new Date("2025-08-18T11:00:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 4 -> order 6016 (REQUESTED)
+      // 4) refund_order_id: 4 -> order 6016
       {
         refund_order_id: 4,
         from_status: null,
@@ -61,9 +65,10 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-18T12:00:00Z"),
         updated_at: new Date("2025-08-18T12:00:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 5 -> order 6017 (REQUESTED -> FAIL)
+      // 5) refund_order_id: 5 -> order 6017 (REQUESTED -> FAIL)
       {
         refund_order_id: 5,
         from_status: null,
@@ -76,6 +81,7 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-17T09:30:00Z"),
         updated_at: new Date("2025-08-17T09:30:00Z"),
+        deleted_at: null,
       },
       {
         refund_order_id: 5,
@@ -89,9 +95,10 @@ export default {
         metadata: JSON.stringify({ stage: "RETURN_FAIL" }),
         created_at: new Date("2025-08-18T10:00:00Z"),
         updated_at: new Date("2025-08-18T10:00:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 6 -> order 6018 (REQUESTED -> FAIL by merchant policy)
+      // 6) refund_order_id: 6 -> order 6018 (REQUESTED -> FAIL)
       {
         refund_order_id: 6,
         from_status: null,
@@ -104,6 +111,7 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-17T10:00:00Z"),
         updated_at: new Date("2025-08-17T10:00:00Z"),
+        deleted_at: null,
       },
       {
         refund_order_id: 6,
@@ -117,9 +125,10 @@ export default {
         metadata: JSON.stringify({ policy: "No refund after use" }),
         created_at: new Date("2025-08-17T12:00:00Z"),
         updated_at: new Date("2025-08-17T12:00:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 7 -> order 6019 (REQUESTED -> APPROVED)
+      // 7) refund_order_id: 7 -> order 6019 (REQUESTED -> APPROVED)
       {
         refund_order_id: 7,
         from_status: null,
@@ -132,6 +141,7 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-16T08:45:00Z"),
         updated_at: new Date("2025-08-16T08:45:00Z"),
+        deleted_at: null,
       },
       {
         refund_order_id: 7,
@@ -145,9 +155,10 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-17T14:00:00Z"),
         updated_at: new Date("2025-08-17T14:00:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 8 -> order 6020 (REQUESTED -> APPROVED -> SUCCESS)
+      // 8) refund_order_id: 8 -> order 6020 (REQUESTED -> APPROVED -> SUCCESS)
       {
         refund_order_id: 8,
         from_status: null,
@@ -160,6 +171,7 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-15T09:15:00Z"),
         updated_at: new Date("2025-08-15T09:15:00Z"),
+        deleted_at: null,
       },
       {
         refund_order_id: 8,
@@ -173,6 +185,7 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-16T10:00:00Z"),
         updated_at: new Date("2025-08-16T10:00:00Z"),
+        deleted_at: null,
       },
       {
         refund_order_id: 8,
@@ -186,9 +199,10 @@ export default {
         metadata: JSON.stringify({ pgw: "KBank" }),
         created_at: new Date("2025-08-16T12:30:00Z"),
         updated_at: new Date("2025-08-16T12:30:00Z"),
+        deleted_at: null,
       },
 
-      // refund_order_id: 9 -> order 6021 (REQUESTED -> APPROVED -> FAIL by PGW)
+      // 9) refund_order_id: 9 -> order 6021 (REQUESTED -> APPROVED -> FAIL)
       {
         refund_order_id: 9,
         from_status: null,
@@ -201,6 +215,7 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-15T10:00:00Z"),
         updated_at: new Date("2025-08-15T10:00:00Z"),
+        deleted_at: null,
       },
       {
         refund_order_id: 9,
@@ -214,6 +229,7 @@ export default {
         metadata: JSON.stringify({}),
         created_at: new Date("2025-08-16T09:30:00Z"),
         updated_at: new Date("2025-08-16T09:30:00Z"),
+        deleted_at: null,
       },
       {
         refund_order_id: 9,
@@ -227,25 +243,28 @@ export default {
         metadata: JSON.stringify({ pgwError: "TIMEOUT" }),
         created_at: new Date("2025-08-16T10:10:00Z"),
         updated_at: new Date("2025-08-16T10:10:00Z"),
+        deleted_at: null,
       },
+
+      // 10) refund_order_id: 10 -> order 6022 (REQUESTED)
       {
         refund_order_id: 10,
         from_status: null,
         to_status: "REQUESTED",
-        reason: "PG คืนเงินล้มเหลว (TIMEOUT)",
-        changed_by_type: "SYSTEM",
-        changed_by_id: 0,
-        source: "PAYMENT_GATEWAY",
+        reason: "ลูกค้าส่งคำขอ (หลังจัดส่ง)",
+        changed_by_type: "CUSTOMER",
+        changed_by_id: 110,
+        source: "APP",
         correlation_id: "refund-6022-req",
-        metadata: JSON.stringify({ pgwError: "" }),
-        created_at: new Date("2025-08-16T10:10:00Z"),
-        updated_at: new Date("2025-08-16T10:10:00Z"),
+        metadata: JSON.stringify({}),
+        created_at: new Date("2025-08-20T09:00:00Z"),
+        updated_at: new Date("2025-08-20T09:00:00Z"),
+        deleted_at: null,
       },
     ]);
   },
 
   async down(queryInterface: QueryInterface) {
-    // เคลียร์เฉพาะ batch นี้ (อิงตามสมมติฐาน refund_order_id 1–9)
     await queryInterface.bulkDelete("REFUND_STATUS_HISTORY", {
       refund_order_id: [1,2,3,4,5,6,7,8,9,10],
     });
