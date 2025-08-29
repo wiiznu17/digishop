@@ -9,7 +9,7 @@ export interface OrderStatusHistoryAttrs {
   toStatus: OrderStatus;
   changedByType: ActorType;
   changedById?: number | null;
-  reason?: string | null;
+  reason?: string | null;          // explanation for the status change
   source?: string | null;         // API | WEBHOOK | SCHEDULE | DASHBOARD | PAYMENT_GATEWAY | SYSTEM | APP
   correlationId?: string | null;  // requestId/eventId
   metadata?: object | null;       // JSON payload

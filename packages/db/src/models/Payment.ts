@@ -9,22 +9,22 @@ export interface PaymentAttributes {
   urlRedirect?: string | null;
 
   // business fields
-  paymentMethod: string;        // CREDIT_CARD / PROMPTPAY / QR / COD ฯลฯ
+  paymentMethod: string;        // CREDIT_CARD / PROMPTPAY / QR / COD etc.
   status: PaymentStatus;        // PENDING / SUCCESS / FAILED
   paidAt?: Date | null;
 
   // gateway snapshot fields
-  provider: string;             // ชื่อผู้ให้บริการ PGW เช่น "Stripe", "Omise", "DGS_PGW"
-  providerRef?: string | null;  // ไอดีอ้างอิงฝั่ง PGW
-  channel: string;              // ช่องทาง เช่น "CARD", "PROMPTPAY", "QR", "COD"
-  currencyCode: string;         // เช่น "THB"
+  provider: string;             // PGW provider --> "DigiPay"
+  providerRef?: string | null;  // refference from PGW
+  channel: string;              // e.g. "CARD", "BANK_TRANSFER", "WALLET"
+  currencyCode: string;         // ISO 4217, e.g. 'THB', 'USD'
 
-  amountAuthorizedMinor: number; // หน่วยย่อย (สตางค์) ที่ auth แล้ว
-  amountCapturedMinor: number;   // หน่วยย่อยที่ capture แล้ว
-  amountRefundedMinor: number;   // หน่วยย่อยที่คืนแล้ว
+  amountAuthorizedMinor: number; // amount verified by PGW when response url redirect
+  amountCapturedMinor: number;
+  amountRefundedMinor: number;
 
   pgwStatus?: string | null;    // สถานะฝั่ง PGW เช่น Approved/Pre settled/Settled
-  pgwPayload: object;           // เก็บ raw payload ล่าสุดจาก PGW
+  pgwPayload: object;           // เก็บ raw payload ล่าสุดจาก PGW(response)
 
   createdAt?: Date;
   updatedAt?: Date;

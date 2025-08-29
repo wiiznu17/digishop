@@ -6,15 +6,15 @@ export interface OrderItemAttributes {
   productId: number;
   quantity: number;
 
-  // 💰 เงินเป็นหน่วยย่อย (สตางค์)
-  unitPriceMinor: number;      // ORDER_ITEMS.unit_price_minor
-  discountMinor: number;       // ORDER_ITEMS.discount_minor
+  // unit price in minor units
+  unitPriceMinor: number;
+  discountMinor: number;
   taxRate: string;             // DECIMAL as string in Sequelize (e.g. "0.0700")
 
-  // 🧊 snapshots
-  productNameSnapshot: string; // ORDER_ITEMS.product_name_snapshot
-  productSkuSnapshot: string;  // ORDER_ITEMS.product_sku_snapshot
-  productSnapshot?: object | null; // ORDER_ITEMS.product_snapshot
+  // snapshots
+  productNameSnapshot: string;
+  productSkuSnapshot: string;
+  productSnapshot?: object | null; // JSON snapshot of the product at the time of order
 
   createdAt?: Date;
   updatedAt?: Date;

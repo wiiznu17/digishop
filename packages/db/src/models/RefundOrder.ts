@@ -8,7 +8,7 @@ export interface RefundOrderAttributes {
   paymentId?: number | null;
 
   // amounts & currency (snapshot spec)
-  amountMinor: number;              // int (minor units, e.g. satang)
+  amountMinor: number;
   currencyCode: string;             // e.g. 'THB'
 
   // business fields

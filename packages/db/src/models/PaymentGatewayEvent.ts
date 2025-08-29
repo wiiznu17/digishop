@@ -10,7 +10,7 @@ export interface PaymentGatewayEventAttributes {
   type: string;            // e.g. PAYMENT.AUTHORIZE | PAYMENT.CAPTURE | REFUND.REQUEST | REFUND.SUCCESS | REFUND.FAIL
   amountMinor: number;     // amount in minor units (e.g. THB*100)
   provider: string;        // PGW name, e.g. "KBankGateway", "PromptPayGateway"
-  providerRef?: string | null; // transaction id from provider
+  providerRef?: string | null; // reference
   status: string;          // SUCCESS | FAILED | PENDING
   requestId?: string | null;    // our request/correlation id
 
