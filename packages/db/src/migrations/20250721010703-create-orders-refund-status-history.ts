@@ -1,11 +1,12 @@
-// src/migrations/20250828091000-create-refund-status-history.ts
-import { QueryInterface, DataTypes } from "sequelize";
-import { ActorType } from "../types/enum";
+// src/migrations/2025xxxx-create-refund-status-history.ts
+import { QueryInterface, DataTypes, Sequelize } from "sequelize";
+import { ActorType, RefundStatus } from "../types/enum";
 
 export default {
   async up(queryInterface: QueryInterface) {
     await queryInterface.createTable("REFUND_STATUS_HISTORY", {
       id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true, allowNull: false },
+
       refund_order_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
@@ -13,8 +14,10 @@ export default {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      from_status: { type: DataTypes.ENUM("REQUESTED", "APPROVED", "SUCCESS", "FAIL", "CANCELED"), allowNull: true },
-      to_status: { type: DataTypes.ENUM("REQUESTED", "APPROVED", "SUCCESS", "FAIL", "CANCELED"), allowNull: false },
+
+      from_status: { type: DataTypes.ENUM(...Object.values(RefundStatus)), allowNull: true },
+      to_status: { type: DataTypes.ENUM(...Object.values(RefundStatus)), allowNull: false },
+
       reason: { type: DataTypes.TEXT, allowNull: true },
 
       changed_by_type: { type: DataTypes.ENUM(...Object.values(ActorType)), allowNull: true },
@@ -24,15 +27,36 @@ export default {
       correlation_id: { type: DataTypes.STRING(100), allowNull: true },
       metadata: { type: DataTypes.JSON, allowNull: true },
 
-      created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
-      updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+      created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.literal("CURRENT_TIMESTAMP") },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
+      },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
     });
 
-    await queryInterface.addIndex("REFUND_STATUS_HISTORY", ["refund_order_id"], { name: "idx_rsh_refund_order_id" });
-    await queryInterface.addIndex("REFUND_STATUS_HISTORY", ["to_status"], { name: "idx_rsh_to_status" });
+    await queryInterface.addIndex("REFUND_STATUS_HISTORY", {
+      name: "idx_rsh_refund_order_created",
+      fields: ["refund_order_id", "created_at"],
+      using: "BTREE",
+    });
+    await queryInterface.addIndex("REFUND_STATUS_HISTORY", {
+      name: "idx_rsh_to_status_created",
+      fields: ["to_status", "created_at"],
+      using: "BTREE",
+    });
+    await queryInterface.addIndex("REFUND_STATUS_HISTORY", {
+      name: "idx_rsh_changed_by",
+      fields: ["changed_by_type", "changed_by_id"],
+      using: "BTREE",
+    });
   },
 
   async down(queryInterface: QueryInterface) {
+    try { await queryInterface.removeIndex("REFUND_STATUS_HISTORY", "idx_rsh_refund_order_created"); } catch {}
+    try { await queryInterface.removeIndex("REFUND_STATUS_HISTORY", "idx_rsh_to_status_created"); } catch {}
+    try { await queryInterface.removeIndex("REFUND_STATUS_HISTORY", "idx_rsh_changed_by"); } catch {}
     await queryInterface.dropTable("REFUND_STATUS_HISTORY");
   },
 };
