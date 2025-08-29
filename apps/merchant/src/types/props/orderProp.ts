@@ -20,6 +20,7 @@ export type OrderStatus =
   | "RETURN_VERIFIED" // ร้านตรวจสอบสินค้าคืนแล้ว
   | "RETURN_FAIL" // คืนสินค้าไม่สำเร็จ
   | "REFUND_APPROVED" // ร้านอนุมัติคืนเงิน
+  | "REFUND_PROCESSING" // กำลังคืนเงิน
   | "REFUND_SUCCESS" // คืนเงินสำเร็จ
   | "REFUND_FAIL" // คืนเงินล้มเหลว
 

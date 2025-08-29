@@ -24,9 +24,9 @@ export const useOrderStatus = () => {
     return [
       "COMPLETE",
       "CUSTOMER_CANCELED",
-      "MERCHANT_CANCELED",
+      // "MERCHANT_CANCELED",     // ⬅️ ไม่ใช่ terminal แล้ว
       "REFUND_SUCCESS",
-      "REFUND_FAIL",
+      // "REFUND_FAIL",           // ⬅️ ไม่ใช่ terminal (retry ได้)
       "RETURN_FAIL"
     ].includes(status)
   }
@@ -43,20 +43,22 @@ export const useOrderStatus = () => {
     "COMPLETE"
   ]
 
-  /** เส้นทางคืนเงิน: กรณีขอคืนตั้งแต่ยังไม่ส่งถึงมือ */
+  /** เส้นทางคืนเงิน: ขอคืนตั้งแต่ยังไม่ส่งถึงมือ (จาก PAID) */
   const REFUND_FLOW_FROM_PAID: OrderStatus[] = [
     "REFUND_REQUEST",
     "REFUND_APPROVED",
+    "REFUND_PROCESSING",
     "REFUND_SUCCESS"
   ]
 
-  /** เส้นทางคืนเงิน: กรณีขอคืนหลังได้รับของ */
+  /** เส้นทางคืนเงิน: ขอคืนหลังได้รับของ (จาก DELIVERED) */
   const REFUND_FLOW_FROM_DELIVERED: OrderStatus[] = [
     "REFUND_REQUEST",
     "AWAITING_RETURN",
     "RECEIVE_RETURN",
     "RETURN_VERIFIED",
     "REFUND_APPROVED",
+    "REFUND_PROCESSING",
     "REFUND_SUCCESS"
   ]
 
@@ -67,7 +69,9 @@ export const useOrderStatus = () => {
     "RECEIVE_RETURN",
     "RETURN_VERIFIED",
     "RETURN_FAIL",
+    "REFUND_REJECTED",
     "REFUND_APPROVED",
+    "REFUND_PROCESSING",
     "REFUND_SUCCESS",
     "REFUND_FAIL"
   ])
@@ -94,7 +98,7 @@ export const useOrderStatus = () => {
   }
 
   /**
-   * รวม timeline จาก history + ideal path
+   * รวม timeline จาก history + ideal path (ฉลาดขึ้น รองรับ reject/branch)
    */
   const getMergedTimeline = (
     currentStatus: OrderStatus,
@@ -137,10 +141,13 @@ export const useOrderStatus = () => {
       hist.some((s) => REFUND_FAMILY.has(s)) || REFUND_FAMILY.has(currentStatus)
 
     if (isRefundCase) {
+      // หา index ของสถานะ refund ตัวแรก
+      const firstRefundIdx = hist.findIndex((s) => REFUND_FAMILY.has(s))
       const wentDeliveredBeforeRefund =
         hist.includes("DELIVERED") ||
         RETURN_SIDE_HINT.has(currentStatus) ||
-        hist.some((s) => RETURN_SIDE_HINT.has(s))
+        (firstRefundIdx > -1 &&
+          hist.slice(0, firstRefundIdx).includes("DELIVERED"))
 
       const refundSegment = wentDeliveredBeforeRefund
         ? REFUND_FLOW_FROM_DELIVERED
@@ -152,6 +159,28 @@ export const useOrderStatus = () => {
         pivotIdx >= 0 ? composite.slice(0, pivotIdx + 1) : [...composite]
 
       composite = [...baseUpToPivot, ...refundSegment]
+
+      // branch: ถ้าเคยถูก REJECT แล้วต้องไปต่อ
+      if (hist.includes("REFUND_REJECTED")) {
+        if (wentDeliveredBeforeRefund) {
+          // ปิดคำสั่งซื้อ
+          composite = uniqInOrder([
+            ...baseUpToPivot,
+            "REFUND_REQUEST",
+            "REFUND_REJECTED",
+            "COMPLETE"
+          ])
+        } else {
+          // กลับเข้า fulfillment
+          const afterPaid = NORMAL_FLOW.slice(NORMAL_FLOW.indexOf("PAID") + 1)
+          composite = uniqInOrder([
+            ...baseUpToPivot,
+            "REFUND_REQUEST",
+            "REFUND_REJECTED",
+            ...afterPaid
+          ])
+        }
+      }
     }
 
     // 4) ต่อจากสถานะล่าสุดใน history ไปยังอนาคตที่เหลือ
@@ -164,7 +193,7 @@ export const useOrderStatus = () => {
     return uniqInOrder([...hist, ...remaining])
   }
 
-  /** Ideal timeline ตามสถานะปัจจุบัน (ใช้วาดเส้น) */
+  /** Ideal timeline ตามสถานะปัจจุบัน (ใช้วาด skeleton เส้น) */
   const getStatusTimeline = (currentStatus: OrderStatus): OrderStatus[] => {
     if (
       [
@@ -177,9 +206,8 @@ export const useOrderStatus = () => {
         "DELIVERED",
         "COMPLETE"
       ].includes(currentStatus)
-    ) {
+    )
       return NORMAL_FLOW
-    }
 
     if (
       [
@@ -188,11 +216,11 @@ export const useOrderStatus = () => {
         "RECEIVE_RETURN",
         "RETURN_VERIFIED",
         "REFUND_APPROVED",
+        "REFUND_PROCESSING",
         "REFUND_SUCCESS"
       ].includes(currentStatus)
-    ) {
+    )
       return REFUND_FLOW_FROM_DELIVERED
-    }
 
     if (["RETURN_FAIL", "REFUND_FAIL"].includes(currentStatus)) {
       return [
@@ -224,7 +252,19 @@ export const useOrderStatus = () => {
     }
 
     if (currentStatus === "MERCHANT_CANCELED") {
-      return ["PENDING", "PAID", "MERCHANT_CANCELED"]
+      // ทำหน้าที่ trigger PGW → REFUND_PROCESSING
+      return [
+        "PENDING",
+        "PAID",
+        "MERCHANT_CANCELED",
+        "REFUND_PROCESSING",
+        "REFUND_SUCCESS"
+      ]
+    }
+
+    if (currentStatus === "REFUND_REJECTED") {
+      // ไม่รู้ origin แน่ชัด ให้สั้น ๆ ไว้ก่อน (ตัวจริงใช้ getMergedTimeline ตัดสิน)
+      return ["PENDING", "PAID", "REFUND_REQUEST", "REFUND_REJECTED"]
     }
 
     return NORMAL_FLOW
@@ -236,19 +276,20 @@ export const useOrderStatus = () => {
   ): OrderStatus[] => {
     switch (currentStatus) {
       case "PAID":
-        return ["PROCESSING", "MERCHANT_CANCELED"]
+        return ["PROCESSING", "MERCHANT_CANCELED", "REFUND_REQUEST"] // ⬅️ เพิ่ม REFUND_REQUEST
       case "PROCESSING":
         return ["READY_TO_SHIP"]
       case "READY_TO_SHIP":
         return ["HANDED_OVER"]
       case "REFUND_REQUEST":
-        return ["REFUND_APPROVED", "REFUND_REJECTED"]
+        return ["REFUND_APPROVED", "AWAITING_RETURN", "REFUND_REJECTED"] // ⬅️ ตามไดอะแกรม
       case "AWAITING_RETURN":
-        return ["RETURN_FAIL"]
+        return ["RECEIVE_RETURN", "RETURN_FAIL"]
       case "RECEIVE_RETURN":
         return ["RETURN_VERIFIED", "RETURN_FAIL"]
       case "RETURN_VERIFIED":
         return ["REFUND_APPROVED"]
+      // MERCHANT_CANCELED/REFUND_APPROVED → ยิง PGW อัตโนมัติ ไม่ให้เลือกต่อเอง
       default:
         return []
     }
@@ -266,7 +307,6 @@ export const useOrderStatus = () => {
       case "READY_TO_SHIP":
         return <PackageCheck className="h-4 w-4" />
       case "HANDED_OVER":
-        return <Truck className="h-4 w-4" />
       case "SHIPPED":
         return <Truck className="h-4 w-4" />
       case "DELIVERED":
@@ -291,6 +331,8 @@ export const useOrderStatus = () => {
         return <XCircle className="h-4 w-4" />
       case "REFUND_APPROVED":
         return <CheckCircle className="h-4 w-4" />
+      case "REFUND_PROCESSING":
+        return <Repeat2 className="h-4 w-4" />
       case "REFUND_SUCCESS":
         return <CheckCircle className="h-4 w-4" />
       case "REFUND_FAIL":
@@ -302,7 +344,7 @@ export const useOrderStatus = () => {
     }
   }
 
-  /** Map: status -> label */
+  /** Map: status -> label (UI) */
   const getStatusText = (status: OrderStatus) => {
     const statusMap: Record<OrderStatus, string> = {
       PENDING: "Awaiting payment",
@@ -322,6 +364,7 @@ export const useOrderStatus = () => {
       RETURN_VERIFIED: "Return verified",
       RETURN_FAIL: "Return failed",
       REFUND_APPROVED: "Refund approved",
+      REFUND_PROCESSING: "Refund processing",
       REFUND_SUCCESS: "Refund successful",
       REFUND_FAIL: "Refund failed",
       TRANSIT_LACK: "Shipping issue",
@@ -330,6 +373,7 @@ export const useOrderStatus = () => {
     return statusMap[status]
   }
 
+  /** Map: status -> label (table/compact) */
   const getStatusTextForReal = (status: OrderStatus) => {
     const statusMap: Record<OrderStatus, string> = {
       PENDING: "Awaiting payment",
@@ -349,6 +393,7 @@ export const useOrderStatus = () => {
       RETURN_VERIFIED: "Return verified",
       RETURN_FAIL: "Return failed",
       REFUND_APPROVED: "Refund approved",
+      REFUND_PROCESSING: "Refund processing",
       REFUND_SUCCESS: "Refund successful",
       REFUND_FAIL: "Refund failed",
       TRANSIT_LACK: "Shipping issue",
@@ -386,6 +431,7 @@ export const useOrderStatus = () => {
         case "REFUND_REQUEST":
         case "AWAITING_RETURN":
         case "RECEIVE_RETURN":
+        case "REFUND_PROCESSING": // ⬅️ เพิ่ม
           return "bg-orange-500 border-orange-500 text-white"
         case "REFUND_REJECTED":
         case "TRANSIT_LACK":
@@ -436,9 +482,10 @@ export const useOrderStatus = () => {
       case "REFUND_APPROVED":
       case "REFUND_SUCCESS":
         return "bg-green-100 text-green-800 border-green-300"
+      case "REFUND_PROCESSING": // ⬅️ เพิ่ม
+        return "bg-blue-100 text-blue-800 border-blue-300"
       case "REFUND_FAIL":
       case "REFUND_REJECTED":
-        return "bg-red-100 text-red-800 border-red-300"
       case "TRANSIT_LACK":
         return "bg-red-100 text-red-800 border-red-300"
       case "RE_TRANSIT":
