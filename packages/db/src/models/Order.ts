@@ -3,30 +3,31 @@ import { OrderStatus } from "../types/enum";
 
 export interface OrderAttributes {
   id: number;
-  orderCode: string;           // ORDERS.order_code
-  customerId: number;          // ORDERS.customer_id
-  storeId: number;             // ORDERS.store_id
-  reference: string;           // ORDERS.reference
+  orderCode: string;           // formatted as 'DSG20230915xxxxxx'
+  customerId: number;
+  storeId: number;
+  reference: string;           // from Payment API
 
-  // 💰 amounts in minor units (e.g. satang)
-  subtotalMinor: number;       // ORDERS.subtotal_minor
-  shippingFeeMinor: number;    // ORDERS.shipping_fee_minor
-  taxTotalMinor: number;       // ORDERS.tax_total_minor
-  discountTotalMinor: number;  // ORDERS.discount_total_minor
-  grandTotalMinor: number;     // ORDERS.grand_total_minor
-  currencyCode: string;        // ORDERS.currency_code (e.g. 'THB')
+  // amounts in minor units
+  // grandTotalMinor = subtotalMinor + shippingFeeMinor + taxTotalMinor - discountTotalMinor
+  subtotalMinor: number;
+  shippingFeeMinor: number;
+  taxTotalMinor: number;
+  discountTotalMinor: number;
+  grandTotalMinor: number;
+  currencyCode: string;        // ISO 4217, e.g. 'THB', 'USD'
 
-  status: OrderStatus;         // ORDERS.status
-  orderNote?: string | null;   // ORDERS.order_note
+  status: OrderStatus;
+  orderNote?: string | null;
 
-  // 🧊 snapshots
-  customerNameSnapshot: string;   // ORDERS.customer_name_snapshot
-  customerEmailSnapshot: string;  // ORDERS.customer_email_snapshot
-  storeNameSnapshot: string;      // ORDERS.store_name_snapshot
+  // snapshots
+  customerNameSnapshot: string;
+  customerEmailSnapshot: string;
+  storeNameSnapshot: string;
 
   // idempotency/correlation (nullable)
-  idempotencyKey?: string | null; // ORDERS.idempotency_key
-  correlationId?: string | null;  // ORDERS.correlation_id
+  idempotencyKey?: string | null; // request idempotency key
+  correlationId?: string | null;  // request correlation ID
 
   createdAt?: Date;
   updatedAt?: Date;

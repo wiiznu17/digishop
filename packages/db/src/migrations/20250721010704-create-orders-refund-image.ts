@@ -28,7 +28,7 @@ export default {
     });
 
     await queryInterface.addIndex("REFUND_IMAGES", { name: "idx_refund_images_refund_order_id", fields: ["refund_order_id"] });
-    await queryInterface.addIndex("REFUND_IMAGES", { name: "idx_refund_images_refund_order_sort", fields: ["refund_order_id", "sort_order"] });
+    await queryInterface.addIndex("REFUND_IMAGES", { name: "idx_refund_images_refund_order_sort", fields: ["refund_order_id", "order"] });
   },
 
   async down(queryInterface: QueryInterface) {

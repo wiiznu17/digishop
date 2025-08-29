@@ -100,7 +100,7 @@ export class RefundImage
         deletedAt: "deleted_at",
         indexes: [
           { name: "idx_refund_images_refund_order_id", fields: ["refund_order_id"] },
-          { name: "idx_refund_images_refund_order_sort", fields: ["refund_order_id", "sort_order"] },
+          { name: "idx_refund_images_refund_order_sort", fields: ["refund_order_id", "order"] },
         ],
       }
     );
