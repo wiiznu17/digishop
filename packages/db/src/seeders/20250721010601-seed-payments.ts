@@ -216,6 +216,16 @@ export default {
         updated_at: now,
         deleted_at: null,
       },
+      // 6022
+      {
+        order_id: 6022,
+        payment_method: "QR",
+        status: "SUCCESS",
+        paid_at: now,
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+      },
     ]);
   },
 
@@ -223,7 +233,7 @@ export default {
     await queryInterface.bulkDelete("PAYMENTS", {
       order_id: [
         6001,6002,6003,6004,6005,6006,6007,6008,6009,6010,
-        6011,6012,6013,6014,6015,6016,6017,6018,6019,6020,6021
+        6011,6012,6013,6014,6015,6016,6017,6018,6019,6020,6021,2022
       ],
     });
   },

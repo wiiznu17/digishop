@@ -260,6 +260,17 @@ export default {
         created_at: now,
         updated_at: now,
       },
+      {
+        id: 6022,
+        order_code: "DGS2125082813",
+        customer_id: 1,
+        store_id: 1,
+        reference: "REF212508280013",
+        total_price: 4100,
+        status: "REFUND_REQUEST",
+        created_at: now,
+        updated_at: now,
+      },
     ])
   },
 
@@ -267,7 +278,7 @@ export default {
     await queryInterface.bulkDelete("ORDERS", {
       id: [
         6001,6002,6003,6004,6005,6006,6007,6008,6009,6010,
-        6011,6012,6013,6014,6015,6016,6017,6018,6019,6020,6021
+        6011,6012,6013,6014,6015,6016,6017,6018,6019,6020,6021,6022
       ],
     })
   },

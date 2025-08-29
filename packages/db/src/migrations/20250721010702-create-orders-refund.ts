@@ -12,6 +12,13 @@ export default {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
+      payment_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: true,
+        references: { model: "PAYMENTS", key: "id" },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL",
+      },
       reason: { type: DataTypes.TEXT, allowNull: true },
       merchant_reject_reason: { type: DataTypes.TEXT, allowNull: true },
       amount: { type: DataTypes.DECIMAL(12, 2), allowNull: true },

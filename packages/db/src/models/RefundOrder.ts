@@ -5,6 +5,7 @@ import { RefundStatus } from "../types/enum";
 export interface RefundOrderAttributes {
   id: number;
   orderId: number;
+  paymentId?: number | null;
   reason?: string | null;                 // เหตุผลจากฝั่งลูกค้า (เดิม)
   merchantRejectReason?: string | null;   // เหตุผลจากฝั่งร้านค้า (กรณีปฏิเสธ)
   amount?: string | null;                 // DECIMAL -> string ใน TS
@@ -50,6 +51,7 @@ export class RefundOrder
 {
   public id!: number;
   public orderId!: number;
+  public paymentId!: number | null;
   public reason!: string | null;
   public merchantRejectReason!: string | null;
   public amount!: string | null;
@@ -80,6 +82,11 @@ export class RefundOrder
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           field: "order_id",
+        },
+        paymentId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: true,
+          field: "payment_id",
         },
         reason: {
           type: DataTypes.TEXT,

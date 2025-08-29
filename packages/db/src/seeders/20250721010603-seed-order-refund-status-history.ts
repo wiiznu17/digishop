@@ -228,13 +228,26 @@ export default {
         created_at: new Date("2025-08-16T10:10:00Z"),
         updated_at: new Date("2025-08-16T10:10:00Z"),
       },
+      {
+        refund_order_id: 10,
+        from_status: null,
+        to_status: "REQUESTED",
+        reason: "PG คืนเงินล้มเหลว (TIMEOUT)",
+        changed_by_type: "SYSTEM",
+        changed_by_id: 0,
+        source: "PAYMENT_GATEWAY",
+        correlation_id: "refund-6022-req",
+        metadata: JSON.stringify({ pgwError: "" }),
+        created_at: new Date("2025-08-16T10:10:00Z"),
+        updated_at: new Date("2025-08-16T10:10:00Z"),
+      },
     ]);
   },
 
   async down(queryInterface: QueryInterface) {
     // เคลียร์เฉพาะ batch นี้ (อิงตามสมมติฐาน refund_order_id 1–9)
     await queryInterface.bulkDelete("REFUND_STATUS_HISTORY", {
-      refund_order_id: [1,2,3,4,5,6,7,8,9],
+      refund_order_id: [1,2,3,4,5,6,7,8,9,10],
     });
   },
 };
