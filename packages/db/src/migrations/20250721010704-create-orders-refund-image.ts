@@ -1,10 +1,10 @@
-// src/migrations/20250828091500-create-refund-images.ts
-import { QueryInterface, DataTypes } from "sequelize";
+// src/migrations/2025xxxx-create-refund-images.ts
+import { QueryInterface, DataTypes, Sequelize } from "sequelize";
 
 export default {
   async up(queryInterface: QueryInterface) {
     await queryInterface.createTable("REFUND_IMAGES", {
-      id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, allowNull: false },
+      id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true, allowNull: false },
       refund_order_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
@@ -13,19 +13,27 @@ export default {
         onDelete: "CASCADE",
       },
       url: { type: DataTypes.TEXT, allowNull: false },
-      blob_name: { type: DataTypes.STRING, allowNull: false },
-      file_name: { type: DataTypes.STRING, allowNull: false },
-      is_main: { type: DataTypes.BOOLEAN, defaultValue: false },
-      order: { type: DataTypes.INTEGER, defaultValue: 0 },
+      blob_name: { type: DataTypes.STRING(255), allowNull: false },
+      file_name: { type: DataTypes.STRING(255), allowNull: false },
+      is_main: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+      order: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
 
-      created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
-      updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+      created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.literal("CURRENT_TIMESTAMP") },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
+      },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
     });
 
-    await queryInterface.addIndex("REFUND_IMAGES", ["refund_order_id"], { name: "idx_refund_images_refund_order_id" });
+    await queryInterface.addIndex("REFUND_IMAGES", { name: "idx_refund_images_refund_order_id", fields: ["refund_order_id"] });
+    await queryInterface.addIndex("REFUND_IMAGES", { name: "idx_refund_images_refund_order_sort", fields: ["refund_order_id", "sort_order"] });
   },
 
   async down(queryInterface: QueryInterface) {
+    try { await queryInterface.removeIndex("REFUND_IMAGES", "idx_refund_images_refund_order_sort"); } catch {}
+    try { await queryInterface.removeIndex("REFUND_IMAGES", "idx_refund_images_refund_order_id"); } catch {}
     await queryInterface.dropTable("REFUND_IMAGES");
   },
 };
