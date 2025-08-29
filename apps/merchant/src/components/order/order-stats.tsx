@@ -91,7 +91,7 @@ export function OrderStats({ orders }: OrderStatsProps) {
           !o.statusHistory?.includes("REFUND_SUCCESS") &&
           !o.statusHistory?.includes("MERCHANT_CANCELED")
       )
-      .reduce((sum, order) => sum + order.totalPrice, 0)
+      .reduce((sum, order) => sum + order.grandTotal, 0)
   }
 
   const completedOrdersToday = orders.filter((order) => {

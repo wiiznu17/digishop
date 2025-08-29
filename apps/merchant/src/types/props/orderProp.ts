@@ -1,41 +1,58 @@
+// ───────── Enums ─────────
 export type ShippingType = "STANDARD" | "EXPRESS"
 
 export type OrderStatus =
-  | "PENDING" // รอการชำระเงิน
-  | "PAID" // จ่ายเงินแล้ว (prepaid)
-  | "PROCESSING" // ร้านกำลังเตรียมสินค้า
-  | "READY_TO_SHIP" // เตรียมเสร็จ พร้อมส่ง
-  | "HANDED_OVER" // ส่งมอบให้ขนส่งแล้ว
-  | "SHIPPED" // บริษัทขนส่งรับของ/สแกนครั้งแรก
-  | "DELIVERED" // ลูกค้าได้รับสินค้า
-  | "COMPLETE" // ออเดอร์เสร็จสมบูรณ์
-  | "CUSTOMER_CANCELED" // ลูกค้ายกเลิก
-  | "MERCHANT_CANCELED" // ร้านค้าปฏิเสธ/ยกเลิกหลังลูกค้าจ่าย
-  | "TRANSIT_LACK" // ปัญหาระหว่างขนส่ง
-  | "RE_TRANSIT" // ส่งใหม่
-  | "REFUND_REQUEST" // ลูกค้าขอคืนเงิน
-  | "REFUND_REJECTED" // ร้านปฏิเสธการคืนเงิน
-  | "AWAITING_RETURN" // รอสินค้าคืน
-  | "RECEIVE_RETURN" // ร้านค้าได้รับสินค้าคืน
-  | "RETURN_VERIFIED" // ร้านตรวจสอบสินค้าคืนแล้ว
-  | "RETURN_FAIL" // คืนสินค้าไม่สำเร็จ
-  | "REFUND_APPROVED" // ร้านอนุมัติคืนเงิน
-  | "REFUND_PROCESSING" // กำลังคืนเงิน
-  | "REFUND_SUCCESS" // คืนเงินสำเร็จ
-  | "REFUND_FAIL" // คืนเงินล้มเหลว
+  | "PENDING"
+  | "PAID"
+  | "PROCESSING"
+  | "READY_TO_SHIP"
+  | "HANDED_OVER"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "COMPLETE"
+  | "CUSTOMER_CANCELED"
+  | "MERCHANT_CANCELED"
+  | "TRANSIT_LACK"
+  | "RE_TRANSIT"
+  | "REFUND_REQUEST"
+  | "REFUND_REJECTED"
+  | "AWAITING_RETURN"
+  | "RECEIVE_RETURN"
+  | "RETURN_VERIFIED"
+  | "RETURN_FAIL"
+  | "REFUND_APPROVED"
+  | "REFUND_PROCESSING"
+  | "REFUND_SUCCESS"
+  | "REFUND_FAIL"
 
+// จาก back-end (mapping enum เดิมของระบบขนส่ง)
+export type ShippingStatus =
+  | "PENDING"
+  | "RECIEVE_PARCEL"
+  | "IN_TRANSIT"
+  | "DELIVERED"
+  | "TRANSIT_ISSUE"
+  | "RE_TRANSIT"
+
+// ───────── Entities ─────────
 export interface OrderItem {
   id: string
   name: string
   sku: string
   quantity: number
+  /** unit price (major units) */
   price: number
+  /** per-line discount (major units) */
+  discount?: number
+  /** tax rate (e.g. 7 = 7%) */
+  taxRate?: number
 }
 
 export interface ShippingAddress {
   recipientName?: string
   phone?: string
-  address_number?: string
+  /** เปลี่ยนเป็น camelCase ให้ตรง snapshot */
+  addressNumber?: string
   building?: string
   subStreet?: string
   street?: string
@@ -46,24 +63,60 @@ export interface ShippingAddress {
   country?: string
 }
 
+export interface PaymentSummary {
+  provider?: string
+  providerRef?: string
+  channel?: string
+  pgwStatus?: string
+  paidAt?: string
+  /** major units */
+  authorized?: number
+  /** major units */
+  captured?: number
+  /** major units */
+  refunded?: number
+}
+
 export interface Order {
   id: string
+
+  // customer snapshot-first
   customerName?: string
   customerEmail?: string
   customerPhone?: string
+
   shippingAddress?: ShippingAddress | null
+
   createdAt: string
   updatedAt?: string
-  totalPrice: number
+
+  // amounts (major units) — มาจาก *_minor ใน DB
+  currency?: string
+  subtotal?: number
   shippingCost?: number
   tax?: number
+  discount?: number
+  grandTotal: number
+
+  /** @deprecated ใช้ grandTotal แทน; คงไว้กันโค้ดเก่าพัง */
+  // totalPrice?: number
+
   status: OrderStatus
   statusHistory?: OrderStatus[]
+
   paymentMethod?: string
+  payment?: PaymentSummary
+
   shippingType?: ShippingType
   trackingNumber?: string | null
+  carrier?: string
+  shippedAt?: string | null
+  shippingStatus?: ShippingStatus
+
   orderItems?: OrderItem[] // optional → ป้องกัน undefined
+
   notes?: string | null
   refundReason?: string | null
+  /** major units */
   refundAmount?: number | null
 }
