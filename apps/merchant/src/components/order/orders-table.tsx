@@ -289,7 +289,7 @@ export function OrdersTable({
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           <div className="text-sm">
-                            {fmtTHB(order.totalPrice)}
+                            {fmtTHB(order.grandTotal)}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -336,7 +336,7 @@ export function OrdersTable({
             itemsPerPage={pageSize}
             onItemsPerPageChange={onPageSizeChange}
             showItemsPerPageSelector
-            itemsPerPageOptions={[10, 20, 50, 100]}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
           />
         )}
       </CardContent>
