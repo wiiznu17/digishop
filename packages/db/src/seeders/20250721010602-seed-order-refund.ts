@@ -9,6 +9,7 @@ export default {
       // 6013: ORDERS.status = REFUND_REQUEST  -> Refund = REQUESTED
       {
         order_id: 6013,
+        payment_id: 13,
         reason: "เปลี่ยนใจ",
         merchant_reject_reason: null,
         amount: "4100.00",
@@ -28,6 +29,7 @@ export default {
       // 6014: ORDERS.status = AWAITING_RETURN -> Refund = REQUESTED (รอส่งคืน)
       {
         order_id: 6014,
+        payment_id: 14,
         reason: "สีไม่ตรง",
         merchant_reject_reason: null,
         amount: "2500.00",
@@ -47,6 +49,7 @@ export default {
       // 6015: ORDERS.status = RECEIVE_RETURN -> Refund = REQUESTED (ร้านค้ารับพัสดุคืนแล้ว)
       {
         order_id: 6015,
+        payment_id: 15,
         reason: "สินค้ามีตำหนิ",
         merchant_reject_reason: null,
         amount: "2550.00",
@@ -66,6 +69,7 @@ export default {
       // 6016: ORDERS.status = RETURN_VERIFIED -> Refund = REQUESTED (ตรวจสอบแล้ว เตรียมอนุมัติ)
       {
         order_id: 6016,
+        payment_id: 16,
         reason: "ไม่ตรงสเปค",
         merchant_reject_reason: null,
         amount: "2600.00",
@@ -85,6 +89,7 @@ export default {
       // 6017: ORDERS.status = RETURN_FAIL -> Refund = FAIL (ส่งคืน/ตรวจไม่ผ่าน)
       {
         order_id: 6017,
+        payment_id: 17,
         reason: "ส่งคืนไม่ทันกำหนด",
         merchant_reject_reason: "ส่งคืนเกินเวลา/อุปกรณ์ไม่ครบ",
         amount: "2650.00",
@@ -104,6 +109,7 @@ export default {
       // 6018: ORDERS.status = REFUND_REJECTED -> Refund = FAIL (ร้านค้าปฏิเสธ)
       {
         order_id: 6018,
+        payment_id: 18,
         reason: "ไม่พอใจสินค้า",
         merchant_reject_reason: "ไม่เข้าเงื่อนไขตามนโยบายร้าน",
         amount: "4200.00",
@@ -123,6 +129,7 @@ export default {
       // 6019: ORDERS.status = REFUND_APPROVED -> Refund = APPROVED
       {
         order_id: 6019,
+        payment_id: 19,
         reason: "ของมีตำหนิ",
         merchant_reject_reason: null,
         amount: "4300.00",
@@ -142,6 +149,7 @@ export default {
       // 6020: ORDERS.status = REFUND_SUCCESS -> Refund = SUCCESS
       {
         order_id: 6020,
+        payment_id: 20,
         reason: "กล่องบุบ/แพ็กไม่ดี",
         merchant_reject_reason: null,
         amount: "5100.00",
@@ -161,6 +169,7 @@ export default {
       // 6021: ORDERS.status = REFUND_FAIL -> Refund = FAIL (PG คืนเงินล้มเหลว)
       {
         order_id: 6021,
+        payment_id: 21,
         reason: "สินค้าไม่ทำงาน",
         merchant_reject_reason: null,            // เคสนี้คืออนุมัติแล้วแต่โอนเงินคืนล้มเหลว
         amount: "4400.00",
@@ -176,12 +185,30 @@ export default {
         updated_at: now,
         deleted_at: null,
       },
+      {
+        order_id: 6022,
+        payment_id: 22,
+        reason: "เปลี่ยนใจ",
+        merchant_reject_reason: null,
+        amount: "4100.00",
+        status: "REQUESTED",
+        description: "ขอคืนเงินหลังจัดส่ง",
+        contact_email: "customer6013@example.com",
+        requested_by: "CUSTOMER",
+        requested_at: new Date("2025-08-20T09:00:00Z"),
+        approved_at: null,
+        refunded_at: null,
+        metadata: JSON.stringify({ stage: "REFUND_REQUEST" }),
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+      },
     ]);
   },
 
   async down(queryInterface: QueryInterface) {
     await queryInterface.bulkDelete("REFUND_ORDERS", {
-      order_id: [6013,6014,6015,6016,6017,6018,6019,6020,6021],
+      order_id: [6013,6014,6015,6016,6017,6018,6019,6020,6021,6022],
     });
   },
 };

@@ -255,12 +255,26 @@ export default {
         updated_at: new Date(),
         deleted_at: null,
       },
+      {
+        order_id: 6022,
+        tracking_number: "TRK6010",
+        carrier: "DHL",
+        shipping_type_id: 2,
+        shipping_status: "DELIVERED",
+        shipping_address: 1,
+        shipped_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+        deleted_at: null,
+      },
     ]);
   },
 
   down: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkDelete("SHIPPING_INFO", {
-      order_id: [6001,6002,6003,6004,6005,6006,6007,6008,6009,6010],
+      order_id: [6001,6002,6003,6004,6005,6006,6007,6008,6009,6010,
+        6011,6012,6013,6014,6015,6016,6017,6018,6019,6020,6021,6022
+      ],
     });
   },
 };

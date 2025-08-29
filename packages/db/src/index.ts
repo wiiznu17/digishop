@@ -74,6 +74,10 @@ ProductView.belongsTo(User, { foreignKey: 'user_id', as: 'viewer' });
 User.hasMany(StoreView, { foreignKey: 'user_id', as: 'storeViews' });
 StoreView.belongsTo(User, { foreignKey: 'user_id', as: 'viewer' });
 
+User.hasMany(Dispute, { foreignKey: 'customer_id', as: 'disputes' })
+Dispute.belongsTo(User, { foreignKey: 'customer_id', as: 'customer' })
+
+
 // Store
 Store.hasMany(Product, { foreignKey: 'store_id', as: 'products' });
 Product.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
@@ -160,6 +164,10 @@ BankAccount.belongsTo(Store, { foreignKey: 'storeId', as: 'store' });
 // Admin
 AdminUser.hasMany(AdminSystemLog, { foreignKey: 'admin_id', as: 'logs' });
 AdminSystemLog.belongsTo(AdminUser, { foreignKey: 'admin_id', as: 'admin' });
+
+// Payment
+Payment.hasMany(RefundOrder, { foreignKey: 'payment_id', as: 'refunds' })
+RefundOrder.belongsTo(Payment, { foreignKey: 'payment_id', as: 'payment' })
 
   return {
     User,
