@@ -10,15 +10,37 @@ export interface ShippingInfoAttributes {
   shippingAddress: number;
   shippingStatus: ShippingStatus;
   shippedAt?: Date | null;
+
+  // ⬇️ Snapshot fields (ตาม ER)
+  shippingTypeNameSnapshot: string;
+  shippingPriceMinorSnapshot: number;
+  addressSnapshot: object;
+
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date | null;
 }
 
 export interface ShippingInfoCreationAttributes
-  extends Optional<ShippingInfoAttributes, 'id' | 'trackingNumber' | 'carrier' | 'shippingStatus' | 'shippedAt' | 'createdAt' | 'updatedAt'> {}
+  extends Optional<
+    ShippingInfoAttributes,
+    | 'id'
+    | 'trackingNumber'
+    | 'carrier'
+    | 'shippingStatus'
+    | 'shippedAt'
+    | 'shippingTypeNameSnapshot'
+    | 'shippingPriceMinorSnapshot'
+    | 'addressSnapshot'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'deletedAt'
+  > {}
 
-export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCreationAttributes>
-  implements ShippingInfoAttributes {
+export class ShippingInfo
+  extends Model<ShippingInfoAttributes, ShippingInfoCreationAttributes>
+  implements ShippingInfoAttributes
+{
   public id!: number;
   public orderId!: number;
   public trackingNumber!: string | null;
@@ -27,8 +49,14 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
   public shippingAddress!: number;
   public shippingStatus!: ShippingStatus;
   public shippedAt!: Date | null;
+
+  public shippingTypeNameSnapshot!: string;
+  public shippingPriceMinorSnapshot!: number;
+  public addressSnapshot!: object;
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+  public readonly deletedAt!: Date | null;
 
   static initModel(sequelize: Sequelize): typeof ShippingInfo {
     ShippingInfo.init(
@@ -56,24 +84,18 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           field: 'shipping_type_id',
-          references: {
-            model: 'SHIPPING_TYPES',
-            key: 'id',
-          },
+          references: { model: 'SHIPPING_TYPES', key: 'id' },
         },
         shippingAddress: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           field: 'shipping_address',
-          references: {
-            model: 'ADDRESSES',
-            key: 'id',
-          },
+          references: { model: 'ADDRESSES', key: 'id' },
         },
         shippingStatus: {
           type: DataTypes.ENUM(...Object.values(ShippingStatus)),
           allowNull: false,
-          defaultValue: ShippingStatus.IN_TRANSIT,
+          defaultValue: ShippingStatus.PENDING, // 🔁 ให้ตรงกับ seeder/flow
           field: 'shipping_status',
         },
         shippedAt: {
@@ -81,6 +103,27 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
           allowNull: true,
           field: 'shipped_at',
         },
+
+        // ⬇️ Snapshot columns
+        shippingTypeNameSnapshot: {
+          type: DataTypes.STRING(80),
+          allowNull: false,
+          defaultValue: '',
+          field: 'shipping_type_name_snapshot',
+        },
+        shippingPriceMinorSnapshot: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          defaultValue: 0,
+          field: 'shipping_price_minor_snapshot',
+        },
+        addressSnapshot: {
+          type: DataTypes.JSON,
+          allowNull: false,
+          defaultValue: {},
+          field: 'address_snapshot',
+        },
+
         createdAt: {
           type: DataTypes.DATE,
           allowNull: false,
@@ -93,6 +136,11 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
           field: 'updated_at',
           defaultValue: DataTypes.NOW,
         },
+        deletedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: 'deleted_at',
+        },
       },
       {
         sequelize,
@@ -102,6 +150,14 @@ export class ShippingInfo extends Model<ShippingInfoAttributes, ShippingInfoCrea
         modelName: 'ShippingInfo',
         paranoid: true,
         deletedAt: 'deleted_at',
+        indexes: [
+          { fields: ['order_id'] },
+          { fields: ['shipping_type_id'] },
+          { fields: ['shipping_address'] },
+          { fields: ['shipping_status'] },
+          { fields: ['tracking_number'] },
+          { fields: ['created_at'] },
+        ],
       }
     );
     return ShippingInfo;
