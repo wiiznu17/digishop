@@ -16,7 +16,7 @@ export default {
       blob_name: { type: DataTypes.STRING(255), allowNull: false },
       file_name: { type: DataTypes.STRING(255), allowNull: false },
       is_main: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-      order: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
+      sort_order: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
 
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.literal("CURRENT_TIMESTAMP") },
       updated_at: {
