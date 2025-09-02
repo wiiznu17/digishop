@@ -1,0 +1,31 @@
+import { QueryInterface, DataTypes } from "sequelize";
+
+export default {
+  async up(q: QueryInterface): Promise<void> {
+    await q.createTable("PRODUCT_ITEMS", {
+      id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true, allowNull: false },
+      product_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
+        references: { model: "PRODUCTS", key: "id" },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
+      sku: { type: DataTypes.STRING(64), allowNull: false, unique: true },
+      stock_quantity: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
+      price_minor: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+      image_url: { type: DataTypes.STRING(512), allowNull: true },
+
+      created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+      updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
+    });
+
+    await q.addIndex("PRODUCT_ITEMS", ["product_id"]);
+    await q.addIndex("PRODUCT_ITEMS", ["sku"], { unique: true });
+  },
+
+  async down(q: QueryInterface): Promise<void> {
+    await q.dropTable("PRODUCT_ITEMS");
+  },
+};

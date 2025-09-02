@@ -4,17 +4,21 @@ export interface OrderItemAttributes {
   id: number;
   orderId: number;
   productId: number;
+  productItemId?: number | null;          // NEW: SKU (nullable)
   quantity: number;
 
-  // unit price in minor units
+  // money in minor units
   unitPriceMinor: number;
   discountMinor: number;
-  taxRate: string;             // DECIMAL as string in Sequelize (e.g. "0.0700")
+  taxRate: string;                         // DECIMAL as string ("0.0700")
+  lineTotalMinor: number;                  // NEW: computed/stored
 
   // snapshots
   productNameSnapshot: string;
-  productSkuSnapshot: string;
-  productSnapshot?: object | null; // JSON snapshot of the product at the time of order
+  productSkuSnapshot?: string | null;      // allow null ifสินค้าบางตัวไม่มี sku
+  productImageSnapshot?: string | null;    // NEW: main image at purchase-time
+  optionsText?: string | null;             // NEW: human-readable options
+  productSnapshot?: object | null;         // JSON at the time of order
 
   createdAt?: Date;
   updatedAt?: Date;
@@ -25,8 +29,13 @@ export interface OrderItemCreationAttributes
   extends Optional<
     OrderItemAttributes,
     | "id"
+    | "productItemId"
     | "discountMinor"
     | "taxRate"
+    | "lineTotalMinor"
+    | "productSkuSnapshot"
+    | "productImageSnapshot"
+    | "optionsText"
     | "productSnapshot"
     | "createdAt"
     | "updatedAt"
@@ -40,14 +49,18 @@ export class OrderItem
   public id!: number;
   public orderId!: number;
   public productId!: number;
+  public productItemId?: number | null;
   public quantity!: number;
 
   public unitPriceMinor!: number;
   public discountMinor!: number;
   public taxRate!: string;
+  public lineTotalMinor!: number;
 
   public productNameSnapshot!: string;
-  public productSkuSnapshot!: string;
+  public productSkuSnapshot?: string | null;
+  public productImageSnapshot?: string | null;
+  public optionsText?: string | null;
   public productSnapshot?: object | null;
 
   public readonly createdAt!: Date;
@@ -72,6 +85,11 @@ export class OrderItem
           allowNull: false,
           field: "product_id",
         },
+        productItemId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: true,
+          field: "product_item_id",
+        },
         quantity: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
@@ -90,11 +108,21 @@ export class OrderItem
           field: "discount_minor",
         },
         taxRate: {
-          // เก็บเป็น DECIMAL (เช่น 0.0700 = 7%)
           type: DataTypes.DECIMAL(5, 4),
           allowNull: false,
           defaultValue: "0.0000",
           field: "tax_rate",
+          // ให้ Sequelize คืนค่าเป็น string เสมอ
+          get(this: OrderItem) {
+            const v = this.getDataValue("taxRate") as unknown;
+            return v === null || v === undefined ? "0.0000" : String(v);
+          },
+        },
+        lineTotalMinor: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          defaultValue: 0,
+          field: "line_total_minor",
         },
 
         // snapshots
@@ -105,8 +133,18 @@ export class OrderItem
         },
         productSkuSnapshot: {
           type: DataTypes.STRING(64),
-          allowNull: false,
+          allowNull: true,
           field: "product_sku_snapshot",
+        },
+        productImageSnapshot: {
+          type: DataTypes.STRING(512),
+          allowNull: true,
+          field: "product_image_snapshot",
+        },
+        optionsText: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+          field: "options_text",
         },
         productSnapshot: {
           type: DataTypes.JSON,
@@ -141,7 +179,17 @@ export class OrderItem
         indexes: [
           { fields: ["order_id"] },
           { fields: ["product_id"] },
+          { fields: ["product_item_id"] }, // NEW
         ],
+        hooks: {
+          beforeValidate(instance: OrderItem) {
+            const unit = instance.unitPriceMinor ?? 0;
+            const disc = instance.discountMinor ?? 0;
+            const qty = instance.quantity ?? 0;
+            const line = Math.max(0, (unit - disc) * qty);
+            instance.lineTotalMinor = Number.isFinite(line) ? line : 0;
+          },
+        },
       }
     );
     return OrderItem;
