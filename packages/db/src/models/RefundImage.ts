@@ -8,7 +8,7 @@ export interface RefundImageAttributes {
   blobName: string;
   fileName: string;
   isMain: boolean;
-  order: number;
+  sortOrder: number;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
@@ -27,7 +27,7 @@ export class RefundImage
   public blobName!: string;
   public fileName!: string;
   public isMain!: boolean;
-  public order!: number;
+  public sortOrder!: number;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
   public readonly deletedAt!: Date | null;
@@ -66,11 +66,11 @@ export class RefundImage
           defaultValue: false,
           field: "is_main",
         },
-        order: {
+        sortOrder: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           defaultValue: 0,
-          field: "order",
+          field: "sort_order",
         },
         createdAt: {
           type: DataTypes.DATE,
