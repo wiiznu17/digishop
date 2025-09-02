@@ -276,13 +276,13 @@ export const useOrderStatus = () => {
   ): OrderStatus[] => {
     switch (currentStatus) {
       case "PAID":
-        return ["PROCESSING", "MERCHANT_CANCELED", "REFUND_REQUEST"] // ⬅️ เพิ่ม REFUND_REQUEST
+        return ["PROCESSING", "MERCHANT_CANCELED"]
       case "PROCESSING":
         return ["READY_TO_SHIP"]
       case "READY_TO_SHIP":
         return ["HANDED_OVER"]
       case "REFUND_REQUEST":
-        return ["REFUND_APPROVED", "AWAITING_RETURN", "REFUND_REJECTED"] // ⬅️ ตามไดอะแกรม
+        return ["REFUND_APPROVED", "REFUND_REJECTED"]
       case "AWAITING_RETURN":
         return ["RECEIVE_RETURN", "RETURN_FAIL"]
       case "RECEIVE_RETURN":

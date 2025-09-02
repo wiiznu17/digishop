@@ -38,7 +38,7 @@ import { Button } from "./ui/button"
 
 const items = [
   {
-    title: "Dashboard",
+    title: "Dashboard*",
     url: "/",
     icon: Home
   },
@@ -53,12 +53,12 @@ const items = [
     icon: Package
   },
   {
-    title: "Customers",
+    title: "Customers*",
     url: "/customers",
     icon: Users
   },
   {
-    title: "Analytics",
+    title: "Analytics*",
     url: "/analytics",
     icon: BarChart3
   },
@@ -73,7 +73,7 @@ const items = [
     icon: User
   },
   {
-    title: "Settings",
+    title: "Settings*",
     url: "/settings",
     icon: Settings
   }
