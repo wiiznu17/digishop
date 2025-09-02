@@ -166,7 +166,7 @@ const ORDER_INCLUDES: Includeable[] = [
   },
   {
     model: RefundOrder,
-    as: "refundOrder",
+    as: "refundOrders",
     attributes: [
       "id",
       "reason",
