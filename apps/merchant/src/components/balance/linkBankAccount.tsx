@@ -19,7 +19,7 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Building2, Lock, User, AlertCircle, Plus } from "lucide-react"
+import { Building2, Lock, User, AlertCircle, Plus, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 
 interface BankAccountFormData {
@@ -34,13 +34,15 @@ interface BankAccountDialogProps {
   onOpenChange?: (open: boolean) => void
   trigger?: React.ReactNode
   onSave?: (data: BankAccountFormData) => void
+  saving?: boolean
 }
 
 export function BankAccountDialog({
   open,
   onOpenChange,
   trigger,
-  onSave
+  onSave,
+  saving = false
 }: BankAccountDialogProps) {
   const [formData, setFormData] = useState({
     bankName: "",
@@ -305,9 +307,17 @@ export function BankAccountDialog({
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type="submit" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Link Account
+            <Button
+              type="submit"
+              className="flex items-center gap-2"
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              {saving ? "Linking..." : "Link Account"}
             </Button>
           </div>
         </form>
