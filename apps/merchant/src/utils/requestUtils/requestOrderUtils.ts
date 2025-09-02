@@ -60,8 +60,6 @@ export async function listOrdersRequester(
   }
 }
 
-/** ========== UPDATE STATUS ========== */
-
 export interface UpdateOrderPayload {
   status?: OrderStatus
   trackingNumber?: string
@@ -72,11 +70,6 @@ export interface UpdateOrderResponse {
   data: Order
 }
 
-/**
- * อัปเดตสถานะ/เลขพัสดุของออเดอร์
- * - ส่งเฉพาะฟิลด์ที่อยากอัปเดต: { status } หรือ { trackingNumber, carrier } หรือทั้งคู่
- * - backend จะ validate transition ให้เอง
- */
 export async function updateOrderRequester(
   orderId: string,
   payload: UpdateOrderPayload,
@@ -99,7 +92,7 @@ export async function updateOrderRequester(
   }
 }
 
-/** Helper เฉพาะเคสเปลี่ยนเป็น HANDED_OVER และแนบเลขพัสดุ */
+/** Helper case HANDED_OVER และแนบเลขพัสดุ */
 export async function handOverOrderRequester(
   orderId: string,
   trackingNumber: string,
@@ -120,4 +113,35 @@ export async function handOverOrderRequester(
     console.error(`❌ handOverOrderRequester failed (orderId=${orderId}):`, err)
     throw err
   }
+}
+
+export type OrderSummary = {
+  totalOrders: number
+  pendingPayment: number
+  paidOrders: number
+  processing: number
+  handedOver: number
+  refundRequests: number
+  totalRevenue: number // หน่วยบาท (major)
+  totalRevenueMinor: number // หน่วยสตางค์ (minor) เผื่อใช้ภายหลัง
+  completedToday?: number
+}
+
+export async function fetchOrderSummary(
+  params: {
+    storeId?: number | string
+    startDate?: string
+    endDate?: string
+    signal?: AbortSignal
+  } = {}
+): Promise<OrderSummary> {
+  const { storeId, startDate, endDate, signal } = params
+  const res = await axios.get<{ data: OrderSummary }>(
+    "/api/merchant/orders/summary",
+    {
+      params: { storeId, startDate, endDate },
+      signal
+    }
+  )
+  return res.data.data
 }
