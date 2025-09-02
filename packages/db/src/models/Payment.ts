@@ -63,7 +63,7 @@ export class Payment
   public paidAt!: Date | null;
 
   public provider!: string;
-  public providerRef!: string | null;
+  public providerRef!: string | null; // reference from PGW
   public channel!: string;
   public currencyCode!: string;
 
