@@ -57,12 +57,14 @@ export default function AccountLinking() {
   const [defaultingAccountId, setDefaultingAccountId] = useState<number | null>(
     null
   )
+  const [savingAccount, setSavingAccount] = useState<boolean>(false)
 
   useEffect(() => {
     loadBankAccounts()
   }, [])
 
   const handleSaveBankAccount = async (accountData: BankAccountFormData) => {
+    setSavingAccount(true)
     try {
       const requestData: CreateBankAccountRequest = {
         bankName: accountData.bankName,
@@ -79,6 +81,7 @@ export default function AccountLinking() {
           title: "Success",
           description: "Bank account added successfully"
         })
+        setShowBankDialog(false)
         await loadBankAccounts() // refresh data
       } else {
         toast({
@@ -417,6 +420,7 @@ export default function AccountLinking() {
         open={showBankDialog}
         onOpenChange={setShowBankDialog}
         onSave={handleSaveBankAccount}
+        saving={savingAccount}
       />
     </div>
   )
