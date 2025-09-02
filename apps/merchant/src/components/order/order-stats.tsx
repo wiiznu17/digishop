@@ -1,3 +1,4 @@
+// components/order/order-stats.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Package,
@@ -7,18 +8,11 @@ import {
   RotateCcw,
   Truck
 } from "lucide-react"
-import { Order } from "@/types/props/orderProp"
+import type { OrderSummary } from "@/utils/requestUtils/requestOrderUtils"
 
 interface OrderStatsProps {
-  orders: Order[]
-}
-
-interface StatCardProps {
-  title: string
-  value: string | number
-  icon: React.ReactNode
-  colorClass: string
-  description?: string
+  summary: OrderSummary | null
+  loading?: boolean
 }
 
 function StatCard({
@@ -27,7 +21,13 @@ function StatCard({
   icon,
   colorClass,
   description
-}: StatCardProps) {
+}: {
+  title: string
+  value: string | number
+  icon: React.ReactNode
+  colorClass: string
+  description?: string
+}) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -35,13 +35,7 @@ function StatCard({
         <div className={colorClass}>{icon}</div>
       </CardHeader>
       <CardContent>
-        <div
-          className={`text-2xl font-bold ${
-            colorClass.includes("text-") ? colorClass.split(" ")[1] : ""
-          }`}
-        >
-          {value}
-        </div>
+        <div className="text-2xl font-bold">{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}
@@ -50,114 +44,64 @@ function StatCard({
   )
 }
 
-export function OrderStats({ orders }: OrderStatsProps) {
-  const stats = {
-    total: orders.length,
-
-    // Pending = current status only
-    pending: orders.filter((o) => o.status === "PENDING").length,
-
-    // Paid Orders = any order that ever reached PAID
-    paid: orders.filter(
-      (o) =>
-        o.statusHistory?.includes("PAID") &&
-        !o.statusHistory?.includes("CUSTOMER_CANCELED")
-    ).length,
-
-    // Processing = ever reached PROCESSING or READY_TO_SHIP
-    processing: orders.filter((o) =>
-      o.statusHistory?.some((s) => ["PROCESSING", "READY_TO_SHIP"].includes(s))
-    ).length,
-
-    // Handed over = ever reached HANDED_OVER
-    handedOver: orders.filter((o) => o.statusHistory?.includes("HANDED_OVER"))
-      .length,
-
-    // Shipped = ever reached SHIPPED or DELIVERED
-    shipped: orders.filter((o) =>
-      o.statusHistory?.some((s) => ["SHIPPED", "DELIVERED"].includes(s))
-    ).length,
-
-    // Refunds = ever entered refund flow
-    refunds: orders.filter((o) =>
-      o.statusHistory?.some((s) => s.includes("REFUND"))
-    ).length,
-
-    // Revenue = exclude canceled & refund-success
-    revenue: orders
-      .filter(
-        (o) =>
-          !o.statusHistory?.includes("CUSTOMER_CANCELED") &&
-          !o.statusHistory?.includes("REFUND_SUCCESS") &&
-          !o.statusHistory?.includes("MERCHANT_CANCELED")
-      )
-      .reduce((sum, order) => sum + order.grandTotal, 0)
-  }
-
-  const completedOrdersToday = orders.filter((order) => {
-    const today = new Date().toDateString()
-    const orderDate = new Date(order.createdAt).toDateString()
-    return (
-      orderDate === today && ["DELIVERED", "COMPLETE"].includes(order.status)
-    )
-  }).length
+export function OrderStats({ summary, loading }: OrderStatsProps) {
+  const s = summary
+  const val = (n?: number) => (loading ? "…" : (n ?? 0))
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
       <StatCard
         title="Total Orders"
-        value={stats.total}
+        value={val(s?.totalOrders)}
         icon={<Package className="h-4 w-4" />}
         colorClass="text-muted-foreground"
         description="All orders in the system"
       />
-
       <StatCard
         title="Pending Payment"
-        value={stats.pending}
+        value={val(s?.pendingPayment)}
         icon={<Clock className="h-4 w-4" />}
         colorClass="text-yellow-600"
         description="Waiting for customer payment"
       />
-
       <StatCard
         title="Paid Orders"
-        value={stats.paid}
+        value={val(s?.paidOrders)}
         icon={<CreditCard className="h-4 w-4" />}
         colorClass="text-green-600"
         description="Successfully paid orders"
       />
-
       <StatCard
         title="Processing"
-        value={stats.processing}
+        value={val(s?.processing)}
         icon={<Package className="h-4 w-4" />}
         colorClass="text-blue-600"
         description="Preparing and shipping orders"
       />
-
       <StatCard
         title="Handed Over"
-        value={stats.handedOver}
+        value={val(s?.handedOver)}
         icon={<Truck className="h-4 w-4" />}
         colorClass="text-indigo-600"
         description="Orders handed over to courier"
       />
-
       <StatCard
         title="Refund Requests"
-        value={stats.refunds}
+        value={val(s?.refundRequests)}
         icon={<RotateCcw className="h-4 w-4" />}
         colorClass="text-orange-600"
         description="All refund requests"
       />
-
       <StatCard
         title="Total Revenue"
-        value={`฿${stats.revenue.toLocaleString()}`}
+        value={loading ? "…" : `฿${(s?.totalRevenue ?? 0).toLocaleString()}`}
         icon={<DollarSign className="h-4 w-4" />}
         colorClass="text-green-600"
-        description={`Completed today: ${completedOrdersToday} orders`}
+        description={
+          s?.completedToday != null
+            ? `Completed today: ${s.completedToday} orders`
+            : undefined
+        }
       />
     </div>
   )

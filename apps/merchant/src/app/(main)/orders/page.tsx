@@ -12,7 +12,9 @@ import {
   updateOrderRequester,
   handOverOrderRequester,
   type ListOrdersParams as _ListOrdersParams,
-  type ListOrdersResponse as _ListOrdersResponse
+  type ListOrdersResponse as _ListOrdersResponse,
+  OrderSummary,
+  fetchOrderSummary
 } from "@/utils/requestUtils/requestOrderUtils"
 
 /** --- Strongly typed API response from listOrders --- */
@@ -34,6 +36,10 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
+
+  // summary state
+  const [summary, setSummary] = useState<OrderSummary | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState<boolean>(false)
 
   // detail dialog state
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -88,6 +94,23 @@ export default function OrdersPage() {
     return () => ac.abort()
   }, [page, pageSize, statusFilter, debouncedQ])
 
+  useEffect(() => {
+    const ac = new AbortController()
+    const run = async () => {
+      setSummaryLoading(true)
+      try {
+        const s = await fetchOrderSummary({ signal: ac.signal })
+        setSummary(s)
+      } catch (e) {
+        if (!isAbortError(e)) console.error("Failed to load summary", e)
+        setSummary(null)
+      } finally {
+        setSummaryLoading(false)
+      }
+    }
+    run()
+    return () => ac.abort()
+  }, []) // <- ตอนนี้ดึงแบบ global; ถ้าอยากให้เปลี่ยนตาม filter ก็เพิ่ม deps แล้วส่งพารามิเตอร์ใน fetchOrderSummary
   // ===== Backed-by-API updates =====
 
   // Update status (optimistic -> call API -> rollback if failed)
@@ -220,7 +243,7 @@ export default function OrdersPage() {
           </div>
         )}
 
-        <OrderStats orders={orders} />
+        <OrderStats summary={summary} loading={summaryLoading} />
 
         <OrdersTable
           orders={orders}

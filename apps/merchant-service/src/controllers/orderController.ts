@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import axios from "axios"
 import {
   Includeable,
+  literal,
   Op,
   WhereOptions,
 } from "sequelize"
@@ -457,6 +458,119 @@ function serializeOrder(order: any) {
         : undefined,
   }
 }
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /orders/summary — ใช้ทำการ์ดสรุปด้านบน
+
+export async function getOrdersSummary(req: Request, res: Response) {
+  try {
+    const { storeId, startDate, endDate } = req.query as Record<string, string>
+
+    const orderWhere: any = {}
+    if (storeId) orderWhere.storeId = storeId
+    if (startDate || endDate) {
+      orderWhere.createdAt = {
+        ...(startDate ? { [Op.gte]: new Date(startDate) } : {}),
+        ...(endDate ? { [Op.lte]: new Date(endDate) } : {}),
+      }
+    }
+
+    // 1) Total Orders
+    const totalOrders = await Order.count({ where: orderWhere })
+
+    // 2) Pending Payment (current status = PENDING เท่านั้น)
+    const pendingPayment = await Order.count({
+      where: { ...orderWhere, status: "PENDING" },
+    })
+
+    // 3) Paid Orders (เคยผ่าน PAID)
+    const paidOrders = await OrderStatusHistory.count({
+      distinct: true,
+      col: "orderId",
+      where: {
+        toStatus: "PAID",
+        ...(storeId ? { orderId: literal(`EXISTS (SELECT 1 FROM ORDERS o WHERE o.id = "OrderStatusHistory"."orderId" AND o.store_id = ${storeId})`) } : {}),
+        ...(startDate || endDate
+          ? {
+              createdAt: {
+                ...(startDate ? { [Op.gte]: new Date(startDate) } : {}),
+                ...(endDate ? { [Op.lte]: new Date(endDate) } : {}),
+              },
+            }
+          : {}),
+      },
+    })
+
+    // 4) Processing (เคยผ่าน PROCESSING หรือ READY_TO_SHIP)
+    const processing = await OrderStatusHistory.count({
+      distinct: true,
+      col: "orderId",
+      where: {
+        toStatus: { [Op.in]: ["PROCESSING", "READY_TO_SHIP"] },
+      },
+    })
+
+    // 5) Handed Over (เคยผ่าน HANDED_OVER)
+    const handedOver = await OrderStatusHistory.count({
+      distinct: true,
+      col: "orderId",
+      where: { toStatus: "HANDED_OVER" },
+    })
+
+    // 6) Refund Requests (เคยเข้าสู่ REFUND_*)
+    const refunds = await OrderStatusHistory.count({
+      distinct: true,
+      col: "orderId",
+      where: { toStatus: { [Op.like]: "REFUND%" } },
+    })
+
+    // 7) Total Revenue (exclude canceled & refund-success)
+    const revenueOrders = await Order.findAll({
+      attributes: ["grandTotalMinor"],
+      where: {
+        ...orderWhere,
+        status: { [Op.notIn]: ["CUSTOMER_CANCELED", "MERCHANT_CANCELED", "REFUND_SUCCESS"] },
+      },
+      raw: true,
+    })
+    const totalRevenueMinor = revenueOrders.reduce(
+      (sum, o: any) => sum + (o.grandTotalMinor || 0),
+      0
+    )
+
+    // 8) Completed Today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const completedToday = await Order.count({
+      where: {
+        ...orderWhere,
+        status: { [Op.in]: ["DELIVERED", "COMPLETE"] },
+        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+      },
+    })
+    console.log("completedToday:", { totalOrders, completedToday })
+    return res.json({
+      data: {
+        totalOrders,
+        pendingPayment,
+        paidOrders,
+        processing,
+        handedOver,
+        refundRequests: refunds,
+        totalRevenueMinor,
+        totalRevenue: minorTo(totalRevenueMinor, 2),
+        completedToday,
+      },
+    })
+  } catch (err) {
+    console.error("❌ getOrdersSummary error:", err)
+    return res.status(500).json({ error: "Failed to fetch order summary" })
+  }
+}
+
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /orders
