@@ -5,7 +5,7 @@ export interface ShippingInfoAttributes {
   id: number;
   orderId: number;
   trackingNumber?: string | null;
-  carrier?: string | null;
+  carrier?: string | null; // update by merchant
   shippingTypeId: number; // reference to ShippingType.id
   shippingAddress: number; // reference to Address.id
   shippingStatus: ShippingStatus;
