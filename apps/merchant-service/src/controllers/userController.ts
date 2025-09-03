@@ -188,12 +188,12 @@ export const updateMerchantProfile = async (req: AuthenticatedRequest, res: Resp
               addressType: addr.addressType,
               isDefault: addr.isDefault
             },
-            { where: { id: addr.id, userId: storeRecord.userId }, transaction }
+            { where: { id: addr.id, storeId: storeRecord.id }, transaction }
           );
         } else {
           // create new address
           await MerchantAddress.create({
-            userId: storeRecord.userId,
+            storeId: storeRecord.id,
             ownerName: addr.ownerName,
             phone: profileData.store.phone,
             address_number: addr.address_number,
@@ -261,7 +261,7 @@ export const createStoreForUser = async (req: Request, res: Response) => {
       status: StoreStatus.PENDING
     })
     await MerchantAddress.create({
-      userId: store.userId,
+      storeId: store.id,
       ownerName,
       phone,
       address_number: addressNumber,

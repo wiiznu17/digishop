@@ -8,7 +8,7 @@ export interface ProductImageAttributes {
   blobName: string
   fileName: string
   isMain: boolean
-  order: number
+  sortOrder: number
   createdAt?: Date
   updatedAt?: Date
 }
@@ -23,7 +23,7 @@ export class ProductImage extends Model<ProductImageAttributes, ProductImageCrea
   public blobName!: string
   public fileName!: string
   public isMain!: boolean
-  public order!: number
+  public sortOrder!: number
   public readonly createdAt!: Date
   public readonly updatedAt!: Date
 }
@@ -60,9 +60,10 @@ ProductImage.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
-    order: {
+    sortOrder: {
       type: DataTypes.INTEGER,
-      defaultValue: 0
+      defaultValue: 0,
+      field: 'sort_order'
     }
   },
   {

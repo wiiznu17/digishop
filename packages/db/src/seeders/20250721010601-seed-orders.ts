@@ -1,127 +1,89 @@
-import { QueryInterface } from "sequelize"
+// src/seeders/20250828094000-seed-orders-all-statuses.ts
+import { QueryInterface } from "sequelize";
+
+const SNAP = {
+  customerName: "Alice Customer",
+  customerEmail: "alice@example.com",
+  storeName: "Demo Store",
+};
+const CCY = "THB";
+
+// helper: from legacy total_price (baht) -> minor fields
+const minor = (baht: number) => Math.round(baht * 100);
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    const now = new Date()
+    const now = new Date();
 
-    // Orders (10 records manual)
-    await queryInterface.bulkInsert("ORDERS", [
-      {
-        id: 6001,
-        order_code: 'DGS2025270811',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289271',
-        total_price: 1200,
-        status: "PENDING",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6002,
-        order_code: 'DGS2025270812',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289272',
-        total_price: 2000,
-        status: "CUSTOMER_CANCELED",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6003,
-        order_code: 'DGS2025270813',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289273',
-        total_price: 3500,
-        status: "PAID",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6004,
-        order_code: 'DGS2025270813',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289274',
-        total_price: 4500,
-        status: "PROCESSING",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6005,
-        order_code: 'DGS2025270814',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289275',
-        total_price: 5600,
-        status: "READY_TO_SHIP",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6006,
-        order_code: 'DGS2025270815',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289276',
-        total_price: 2200,
-        status: "SHIPPED",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6007,
-        order_code: 'DGS2025270816',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289277',
-        total_price: 3200,
-        status: "DELIVERED",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6008,
-        order_code: 'DGS2025270817',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289278',
-        total_price: 2800,
-        status: "COMPLETE",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6009,
-        order_code: 'DGS2025270818',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289279',
-        total_price: 4100,
-        status: "REFUND_REQUEST",
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: 6010,
-        order_code: 'DGS2025270819',
-        customer_id: 1,
-        store_id: 1,
-        reference: '20210316182209289270',
-        total_price: 5100,
-        status: "REFUND_SUCCESS",
-        created_at: now,
-        updated_at: now,
-      },
-    ])
+    const rows = [
+      // id, code, price, status, note?
+      [6001, "DGS2025082801", 1200, "PENDING", "Please deliver between 9 AM to 5 PM."],
+      [6002, "DGS2025082802", 2000, "CUSTOMER_CANCELED"],
+      [6003, "DGS2025082803", 3500, "PAID"],
+      [6004, "DGS2025082804", 4500, "PROCESSING", "Gift wrap this item, please."],
+      [6005, "DGS2025082805", 5600, "READY_TO_SHIP"],
+      [6006, "DGS2025082806", 2300, "HANDED_OVER"],
+      [6007, "DGS2025082807", 2200, "SHIPPED"],
+      [6008, "DGS2025082808", 3200, "DELIVERED"],
+      [6009, "DGS2025082809", 2800, "COMPLETE"],
+      [6010, "DGS2025082810", 3100, "MERCHANT_CANCELED"],
+      [6011, "DGS2025082811", 1900, "TRANSIT_LACK"],
+      [6012, "DGS2025082812", 1950, "RE_TRANSIT"],
+      [6013, "DGS2025082813", 4100, "REFUND_REQUEST"],
+      [6014, "DGS2025082814", 2500, "AWAITING_RETURN"],
+      [6015, "DGS2025082815", 2550, "RECEIVE_RETURN"],
+      [6016, "DGS2025082816", 2600, "RETURN_VERIFIED"],
+      [6017, "DGS2025082817", 2650, "RETURN_FAIL"],
+      [6018, "DGS2025082818", 4200, "REFUND_REJECTED"],
+      [6019, "DGS2025082819", 4300, "REFUND_APPROVED"],
+      [6020, "DGS2025082820", 5100, "REFUND_SUCCESS"],
+      [6021, "DGS2025082821", 4400, "REFUND_FAIL"],
+      [6022, "DGS2125082813", 4100, "REFUND_REQUEST"],
+    ] as const;
+
+    await queryInterface.bulkInsert(
+      "ORDERS",
+      rows.map(([id, code, price, status, note]) => {
+        const grand = minor(price);
+        return {
+          id,
+          order_code: code,
+          customer_id: 1,
+          store_id: 1,
+          reference: `REF${code.slice(-9)}`, // สร้างอิงง่าย ๆ ให้ไม่ชน
+          // amounts (set component = 0 ทั้งหมด เพื่อให้รวม = grand)
+          subtotal_minor: grand,
+          shipping_fee_minor: 0,
+          tax_total_minor: 0,
+          discount_total_minor: 0,
+          grand_total_minor: grand,
+          currency_code: CCY,
+
+          status,
+          order_note: note ?? null,
+
+          // snapshots
+          customer_name_snapshot: SNAP.customerName,
+          customer_email_snapshot: SNAP.customerEmail,
+          store_name_snapshot: SNAP.storeName,
+
+          idempotency_key: null,
+          correlation_id: null,
+
+          created_at: now,
+          updated_at: now,
+          deleted_at: null,
+        };
+      })
+    );
   },
 
   down: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkDelete("ORDERS", {
-      id: [6001,6002,6003,6004,6005,6006,6007,6008,6009,6010]
-    })
+      id: [
+        6001, 6002, 6003, 6004, 6005, 6006, 6007, 6008, 6009, 6010,
+        6011, 6012, 6013, 6014, 6015, 6016, 6017, 6018, 6019, 6020, 6021, 6022,
+      ],
+    });
   },
-}
+};
