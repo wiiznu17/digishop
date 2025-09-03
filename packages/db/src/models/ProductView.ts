@@ -4,7 +4,7 @@ export interface ProductViewAttributes {
   id: number;
   productId: number;
   userId?: number | null; // nullable for guest
-  sessionId?: string | null;
+  sessionId?: string | null; // frontend generated session ID and set in cookie for guest or logged-in user. and then send to backend
   viewedAt?: Date;
   ipAddress?: string | null;
   userAgent?: string | null;

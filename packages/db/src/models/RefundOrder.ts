@@ -15,8 +15,8 @@ export interface RefundOrderAttributes {
   reason?: string | null;
   merchantRejectReason?: string | null;
   status: RefundStatus;
-  refundChannel?: string | null;    // e.g. 'CARD','PROMPTPAY'
-  refundRef?: string | null;        // provider refund reference
+  refundChannel?: string | null;    // e.g. 'CARD'
+  refundRef?: string | null;        // reference same as transactionId from PGW
 
   description?: string | null;
   contactEmail?: string | null;

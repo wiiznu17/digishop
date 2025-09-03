@@ -1,7 +1,7 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
 import { ShippingType } from '../types/enum';
 
-export interface ShippingConfigAttributes {
+export interface ShippingConfigAttributes { // for a store
   id: number;
   storeId: number;
   carrier: string;

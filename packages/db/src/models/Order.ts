@@ -10,24 +10,24 @@ export interface OrderAttributes {
 
   // amounts in minor units
   // grandTotalMinor = subtotalMinor + shippingFeeMinor + taxTotalMinor - discountTotalMinor
-  subtotalMinor: number;
-  shippingFeeMinor: number;
-  taxTotalMinor: number;
-  discountTotalMinor: number;
-  grandTotalMinor: number;
+  subtotalMinor: number;  // รวมราคาสินค้า (ไม่รวมค่าจัดส่ง, ภาษี, ส่วนลด)
+  shippingFeeMinor: number; // ค่าจัดส่ง
+  taxTotalMinor: number;  // รวมภาษีทั้งหมด
+  discountTotalMinor: number; // รวมส่วนลดทั้งหมด
+  grandTotalMinor: number;  // ยอดรวมสุทธิ (รวมทุกอย่างแล้ว)
   currencyCode: string;        // ISO 4217, e.g. 'THB', 'USD'
 
   status: OrderStatus;
-  orderNote?: string | null;
+  orderNote?: string | null;  // note from customer ตอนสร้าง order
 
-  // snapshots
-  customerNameSnapshot: string;
-  customerEmailSnapshot: string;
-  storeNameSnapshot: string;
+  // snapshots เพื่อเก็บข้อมูล ณ ตอนสร้าง order
+  customerNameSnapshot: string; // full name
+  customerEmailSnapshot: string; // email
+  storeNameSnapshot: string;  // ชื่อร้าน
 
   // idempotency/correlation (nullable)
-  idempotencyKey?: string | null; // request idempotency key
-  correlationId?: string | null;  // request correlation ID
+  idempotencyKey?: string | null; // (optional) ส่งมาจากหน้าบ้าน ใช้กัน request ซ้ำ สมมติ order ที่มี idempotencyKey ยิง POST /orders ซ้ำ ระบบจะไม่สร้าง order ใหม่
+  correlationId?: string | null;  // (optional) request correlation ID เผื่อใช้ในการ debug
 
   createdAt?: Date;
   updatedAt?: Date;
