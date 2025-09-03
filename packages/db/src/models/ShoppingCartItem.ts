@@ -7,9 +7,11 @@ export interface ShoppingCartItemAttributes {
   quantity: number;
 
   // money in minor units
-  unitPriceMinor: number;     // snapshot ณ ตอนใส่ตะกร้า (กันราคาขึ้น/ลงตอนจัดโปร)
+  // มีไว้เพื่อ compare กับราคาปัจจุบันของสินค้า
+  // จะอัพเดตเมื่อกดเข้ามาในตะกร้า อีกครั้งหากราคาสินค้าเปลี่ยนแปลง ให้แจ้ง user ว่าราคาสินค้าเปลี่ยนแปลง และอัพเดตใหม่
+  unitPriceMinor: number;     // ราคาต่อหน่วย (minor) at the time of adding to cart
   discountMinor: number;      // ส่วนลด/หน่วย ณ ตอนใส่ตะกร้า
-  lineTotalMinor: number;     // (unit - discount) * qty (คำนวณอัตโนมัติ)
+  lineTotalMinor: number;     // (unit - discount) * qty ()
 
   createdAt?: Date;
   updatedAt?: Date;

@@ -4,21 +4,21 @@ export interface OrderItemAttributes {
   id: number;
   orderId: number;
   productId: number;
-  productItemId?: number | null;          // NEW: SKU (nullable)
+  productItemId?: number | null;          // SKU รหัสสินค้าย่อย เช่น size/color --> T-SH-001-RED-L
   quantity: number;
 
-  // money in minor units
-  unitPriceMinor: number;
-  discountMinor: number;
-  taxRate: string;                         // DECIMAL as string ("0.0700")
-  lineTotalMinor: number;                  // NEW: computed/stored
+  // money in minor units snapshot
+  unitPriceMinor: number;                // ราคาต่อชิ้น (minor)
+  discountMinor: number;                  // ส่วนลดต่อ (minor)
+  taxRate: string;                         // DECIMAL as string ("0.0700") เอาไว้คูณกับ lineTotalMinor เพื่อคำนวณภาษี
+  lineTotalMinor: number;                  // ยอดรวมของสินค้า = (unitPrice - discount) * quantity
 
   // snapshots
   productNameSnapshot: string;
-  productSkuSnapshot?: string | null;      // allow null ifสินค้าบางตัวไม่มี sku
-  productImageSnapshot?: string | null;    // NEW: main image at purchase-time
-  optionsText?: string | null;             // NEW: human-readable options
-  productSnapshot?: object | null;         // JSON at the time of order
+  productSkuSnapshot?: string | null;      // allow null if สินค้าบางตัวไม่มี sku
+  productImageSnapshot?: string | null;    // main image url at order create time
+  optionsText?: string | null;             // e.g. "Size: L, Color: Red"
+  productSnapshot?: object | null;         // JSON at the time of order (maybe only this field is enough for snapshot?)
 
   createdAt?: Date;
   updatedAt?: Date;

@@ -2,11 +2,11 @@ import { Model, DataTypes, Optional, Sequelize } from "sequelize";
 
 export interface ProductItemAttributes {
   id: number;
-  productId: number;
-  sku: string;
+  productId: number; // reference to Product
+  sku: string;         // รหัสสินค้าย่อย เช่น size/color --> T-SH-001-RED-L
   stockQuantity: number;
   priceMinor: number;
-  imageUrl?: string | null;
+  imageUrl?: string | null; // (optional) now we only store image for main product, but maybe in future we want to have image for each SKU
 
   createdAt?: Date;
   updatedAt?: Date;

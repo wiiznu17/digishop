@@ -283,6 +283,8 @@ export const useOrderStatus = () => {
         return ["HANDED_OVER"]
       case "REFUND_REQUEST":
         return ["REFUND_APPROVED", "REFUND_REJECTED"]
+      case "REFUND_FAIL":
+        return ["REFUND_PROCESSING"]
       case "AWAITING_RETURN":
         return ["RECEIVE_RETURN", "RETURN_FAIL"]
       case "RECEIVE_RETURN":
