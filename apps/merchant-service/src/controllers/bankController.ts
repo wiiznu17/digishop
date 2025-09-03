@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from '../middlewares/middleware';
 import { Store } from '@digishop/db/src/models/Store';
 import { BankAccount } from '@digishop/db/src/models/bank/BankAccount';
 import { setDefaultAccountForStore } from '../helpers/bankAccountService';
+import { scheduleBankAccountApproval } from '../helpers/mocks api/bankAccountVerify';
 
 export const getBankAccountList = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -73,6 +74,8 @@ export const addBankAccountToStore = async (req: AuthenticatedRequest, res: Resp
     }
 
     await transaction.commit();
+    await scheduleBankAccountApproval(newBankAccount.id);
+    
     res.status(201).json(newBankAccount);
 
   } catch (err: any) {

@@ -3,7 +3,7 @@ import { AddressType } from '../types/enum';
 
 export interface MerchantAddressAttributes {
   id: number;
-  userId: number;
+  storeId: number;
   ownerName: string;
   phone: string;
   address_number: string;
@@ -26,7 +26,7 @@ export interface AddressCreationAttributes
 
 export class MerchantAddress extends Model<MerchantAddressAttributes, AddressCreationAttributes> implements MerchantAddressAttributes {
   public id!: number;
-  public userId!: number;
+  public storeId!: number;
   public ownerName!: string;
   public phone!: string;
   public address_number!: string;
@@ -51,10 +51,10 @@ export class MerchantAddress extends Model<MerchantAddressAttributes, AddressCre
           autoIncrement: true,
           primaryKey: true,
         },
-        userId: {
+        storeId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
-          field: 'user_id',
+          field: 'store_id',
         },
         ownerName: {
           type: DataTypes.STRING(191),

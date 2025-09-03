@@ -97,7 +97,7 @@ export function OrderDetailDialog({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">
-                ฿{order.totalPrice?.toLocaleString() ?? "0"}
+                ฿{order.grandTotal?.toLocaleString() ?? "0"}
               </div>
               <div className="text-sm text-muted-foreground">
                 {order.paymentMethod ?? "-"}
@@ -246,7 +246,7 @@ export function OrderDetailDialog({
                   <span>
                     ฿
                     {(
-                      order.totalPrice -
+                      order.grandTotal -
                       (order.shippingCost ?? 0) -
                       (order.tax ?? 0)
                     ).toLocaleString()}
@@ -262,7 +262,7 @@ export function OrderDetailDialog({
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Total:</span>
-                  <span>฿{order.totalPrice?.toLocaleString() ?? "0"}</span>
+                  <span>฿{order.grandTotal?.toLocaleString() ?? "0"}</span>
                 </div>
               </div>
             </CardContent>

@@ -39,7 +39,7 @@ export default {
           allowNull: false,
           defaultValue: false,
         },
-        order: {
+        sort_order: {
           type: DataTypes.INTEGER,
           allowNull: false,
           defaultValue: 0,

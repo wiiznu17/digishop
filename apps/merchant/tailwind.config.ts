@@ -9,7 +9,7 @@ export default {
   	],
 		safelist: [
   		{
-    		pattern: /^(bg|text|border)-(yellow|gray|green|blue|indigo|purple|emerald|orange|red)-(100|200|300|500|800)$/,
+    		pattern: /^(bg|text|border)-(yellow|gray|green|blue|indigo|purple|emerald|orange|red|sky)-(100|200|300|500|800)$/,
   		},
 		],
   theme: {
