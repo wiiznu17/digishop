@@ -8,8 +8,9 @@ export interface ProductAttributes {
   categoryId: number;
   name: string;
   description?: string | null;
-  price: string; // DECIMAL comes back as string
-  stockQuantity: number;
+  // not use
+  price: string; // now we use product item for price/stock
+  stockQuantity: number; // now we use product item for price/stock
   status: ProductStatus;
   createdAt?: Date;
   updatedAt?: Date;
