@@ -126,7 +126,7 @@ export async function deleteProductImageRequester(
 export async function updateProductImageRequester(
   productId: string,
   imageId: string,
-  updateData: { isMain?: boolean; order?: number }
+  updateData: { isMain?: boolean; sortOrder?: number }
 ): Promise<void> {
   try {
     await axios.patch(
