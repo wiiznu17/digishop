@@ -33,8 +33,10 @@ export default function ProductDetailPage() {
         <div>
           <h2>Product detail</h2>
           <h2 className='my-3'>{product.description}</h2>
-          <h4 className='flex justify-center items-center h-[400px] text-8xl font-extrabold'>{product.price}</h4>
-          <button className='rounded-2xl w-[200px] cursor-pointer bg-green-500 p-3 text-2xl' onClick={handleBuy}>Buy</button>
+          <h4 className='flex justify-center items-center h-[400px] text-8xl font-extrabold'>{product.price/100}</h4>
+          <div className='flex justify-end'>
+            <button className='rounded-2xl w-[200px] cursor-pointer bg-green-500 p-3 text-2xl' onClick={handleBuy}>Buy</button>
+          </div>
         </div>
       </div>
       <div className='flex p-6 rounded-2xl w-2xl bg-gray-200'>

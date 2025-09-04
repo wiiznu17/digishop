@@ -46,7 +46,7 @@ export default function OrderDetailPage({ order }: orderDetailInterface) {
                       quantity: {String(items.quantity)}
                     </div>
                     <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
-                      price: {String(items.unit_price)}
+                      price: {String(items.unit_price_minor/100)}
                     </div>
                   </div>
                 </div>

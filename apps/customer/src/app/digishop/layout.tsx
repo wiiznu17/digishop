@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Logo from "./../logo.png";
 import Image from "next/image";
-import { CircleUser, ShoppingCart } from "lucide-react";
+import { CircleUser, ClipboardList, ShoppingCart } from "lucide-react";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 export default function MainLayout({
   children,
@@ -18,12 +18,12 @@ export default function MainLayout({
               <Image src={Logo} alt="icon" height={70} />
             </Link>
             <nav className="hidden md:flex space-x-6 ">
-              <a
-                href="/digishop/status"
+              <Link
+                href="/digishop/order/status"
                 className="text-black hover:text-gray-500 text-2xl px-10"
               >
-                <ShoppingCart size={40} />
-              </a>
+                <ClipboardList size={40} />
+              </Link>
               <a
                 href="/digishop/setting/profile"
                 className="text-black hover:text-gray-500 text-2xl"
