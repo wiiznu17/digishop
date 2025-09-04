@@ -26,8 +26,8 @@ export const getAllProducts = async (req: AuthenticatedRequest, res: Response) =
             {
               model: ProductImage,
               as: 'images',
-              attributes: ['id', 'url', 'fileName', 'isMain', 'order'],
-              order: [['order', 'ASC'], ['createdAt', 'ASC']]
+              attributes: ['id', 'url', 'fileName', 'isMain', 'sortOrder'],
+              order: [['sortOrder', 'ASC'], ['createdAt', 'ASC']]
             }
           ]
         }
@@ -87,12 +87,12 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
           const { url, blobName } = await azureBlobService.uploadImage(file, `products/${newProduct.id}`)
           
           return ProductImage.create({
-            productId: newProduct.id.toString(),
+            productId: newProduct.id,
             url,
             blobName,
             fileName: file.originalname,
             isMain: index === 0, // First image is main
-            order: index
+            sortOrder: index
           }, { transaction })
         } catch (error) {
           console.error(`Error uploading image ${file.originalname}:`, error)
@@ -170,12 +170,12 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
           const { url, blobName } = await azureBlobService.uploadImage(file, `products/${productId}`)
           
           return ProductImage.create({
-            productId: productId,
+            productId: Number(productId),
             url,
             blobName,
             fileName: file.originalname,
             isMain: existingImagesCount === 0 && index === 0, // First image is main if no existing images
-            order: existingImagesCount + index
+            sortOrder: existingImagesCount + index
           }, { transaction })
         } catch (error) {
           console.error(`Error uploading image ${file.originalname}:`, error)
@@ -305,7 +305,7 @@ export const updateProductImage = async (req: AuthenticatedRequest, res: Respons
   
   try {
     const { id: productId, imageId } = req.params
-    const { isMain, order } = req.body
+    const { isMain, sortOrder } = req.body
     
     const productImage = await ProductImage.findOne({
       where: {
@@ -333,7 +333,7 @@ export const updateProductImage = async (req: AuthenticatedRequest, res: Respons
       )
       // inscrement other
       await ProductImage.increment(
-        { order: 1 },
+        { sortOrder: 1 },
         {
           where: {
             productId: productId,
@@ -345,7 +345,7 @@ export const updateProductImage = async (req: AuthenticatedRequest, res: Respons
     }
     
     // Update the image
-    await productImage.update({ isMain, order }, { transaction })
+    await productImage.update({ isMain, sortOrder }, { transaction })
     
     await transaction.commit()
     
