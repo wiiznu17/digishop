@@ -4,8 +4,21 @@ import { Order } from "@/types/props/orderProp"
 import { ParamValue } from "next/dist/server/request/params"
 import { resolve } from "path"
 const endpoint = 'http://localhost:4003'
+export const getShippingType = async() => {
+    return await new Promise((resolve, reject) => {
+        axios
+            .get(`${endpoint}/api/order/shiptype`)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+}
 
 export const createOrder = async(data:Order) => {
+    console.log(data)
     return await new Promise((resolve, reject) => {
         axios   
             .post(`${endpoint}/api/order/create`,data)
@@ -18,7 +31,7 @@ export const createOrder = async(data:Order) => {
     }) 
     
 }
-export const fetchOrders = async(id:ParamValue) => {
+export const fetchOrders = async(id:number) => {
     return await new Promise((resolve,reject) => {
         axios
             .get(`${endpoint}/api/order/${id}`)
@@ -42,10 +55,10 @@ export const fetchUserOrders = async(id:number) => {
             })
     })
 }
-export const getShippingType = async() => {
-    return await new Promise((resolve, reject) => {
+export const updateOrderStatus = async(ref: string , status: boolean) => {
+    return await new Promise((resolve,reject) => {
         axios
-            .get(`${endpoint}/api/order/shiptype`)
+            .patch('/api/payment/callback', {ref,status})
             .then((res) => {
                 resolve(res.data)
             })

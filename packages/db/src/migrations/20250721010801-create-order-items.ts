@@ -62,7 +62,7 @@ export default {
       },
       product_sku_snapshot: {
         type: DataTypes.STRING(64),
-        allowNull: false,
+        allowNull: true,
       },
       product_image_snapshot: {
         type: DataTypes.STRING(512),

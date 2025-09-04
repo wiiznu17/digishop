@@ -60,7 +60,7 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
           allowNull: true,
         },
         price: {
-          type: DataTypes.DECIMAL(7, 2),
+          type: DataTypes.INTEGER,
           allowNull: false,
         },
         stockQuantity: {

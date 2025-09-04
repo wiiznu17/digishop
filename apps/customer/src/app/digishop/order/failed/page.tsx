@@ -2,12 +2,12 @@
 
 import Link from "next/link"
 
-export default function Success() {
+export default function Failed() {
     return (
         <div className="flex justify-center items-center p-4">
             <div>
                 <div className="text-4xl m-3 p-3">
-                    Order is successful
+                    Order failed
                 </div>
                 <div className="flex">
                     <Link href='/digishop/order/status' className="p-3 bg-blue-500 cursor-pointer text-white">see order status</Link>

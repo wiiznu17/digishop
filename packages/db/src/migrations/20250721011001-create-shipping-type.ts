@@ -22,7 +22,7 @@ export default {
         defaultValue: 3, // ค่า default เช่น 3 วัน
       },
       price: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0.0,
       },

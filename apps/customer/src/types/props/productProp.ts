@@ -24,7 +24,6 @@ export interface Product {
     storeName: string
     logoUrl: string
     description: string
-
   }
   category: {
     id: number
