@@ -3,7 +3,7 @@ import { sequelize } from '../db'
 
 export interface ProductImageAttributes {
   id: string
-  productId: string
+  productId: number
   url: string
   blobName: string
   fileName: string
@@ -11,14 +11,18 @@ export interface ProductImageAttributes {
   sortOrder: number
   createdAt?: Date
   updatedAt?: Date
+  deletedAt?: Date | null
 }
 
 export interface ProductImageCreationAttributes
-  extends Optional<ProductImageAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+  extends Optional<ProductImageAttributes, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'> {}
 
-export class ProductImage extends Model<ProductImageAttributes, ProductImageCreationAttributes> implements ProductImageAttributes {
+export class ProductImage
+  extends Model<ProductImageAttributes, ProductImageCreationAttributes>
+  implements ProductImageAttributes
+{
   public id!: string
-  public productId!: string
+  public productId!: number
   public url!: string
   public blobName!: string
   public fileName!: string
@@ -26,6 +30,7 @@ export class ProductImage extends Model<ProductImageAttributes, ProductImageCrea
   public sortOrder!: number
   public readonly createdAt!: Date
   public readonly updatedAt!: Date
+  public readonly deletedAt!: Date | null
 }
 
 ProductImage.init(
@@ -33,42 +38,59 @@ ProductImage.init(
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
-      primaryKey: true
+      primaryKey: true,
     },
     productId: {
-      // type: DataTypes.UUID,
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
+      field: 'product_id',
       references: {
         model: 'products',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     url: {
       type: DataTypes.TEXT,
-      allowNull: false
+      allowNull: false,
     },
     blobName: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      field: 'blob_name',
     },
     fileName: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      field: 'file_name',
     },
     isMain: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      allowNull: false,
+      defaultValue: false,
+      field: 'is_main',
     },
     sortOrder: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       defaultValue: 0,
-      field: 'sort_order'
-    }
+      field: 'sort_order',
+    },
   },
   {
     sequelize,
     tableName: 'PRODUCT_IMAGES',
-    timestamps: true
+    underscored: true,
+    timestamps: true,
+    paranoid: true,
+    defaultScope: {
+      order: [
+        ['sortOrder', 'ASC'],
+        ['createdAt', 'ASC'],
+      ],
+    },
+    indexes: [
+      { fields: ['product_id', 'sort_order'] },
+      { fields: ['product_id', 'is_main'] },
+    ],
   }
 )
