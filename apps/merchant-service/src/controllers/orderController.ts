@@ -64,16 +64,16 @@ const SORT_WHITELIST = new Set<
 // PGW (Payment Gateway)
 
 const PGW_BASE =
-  process.env.PGW_BASE ?? "https://pgw.example.com"
+  process.env.PGW_BASE ?? "http://localhost:4002"
 
 const PGW_API_ID =
-  process.env.PGW_API_ID ?? ""
+  process.env.MERCHANRT_API_ID ?? ""
 
 const PGW_API_KEY =
-  process.env.PGW_API_KEY ?? ""
+  process.env.MERCHANRT_API_KEY ?? ""
 
 const PGW_PARTNER_ID =
-  process.env.PGW_PARTNER_ID ?? ""
+  process.env.MERCHANRT_PARTNER_ID ?? ""
 
 const PGW_LANG =
   (process.env.PGW_LANG ?? "en") as "en" | "th"
@@ -132,7 +132,7 @@ function sanitizeReason(input?: string | null): string {
 
 async function pgwGetDetail(reference: string, correlationId?: string) {
   const url = `${PGW_BASE}${pathTxnDetail(reference)}`
-
+  console.log(`[detail] URL:`, url)
   const { data } = await axios.get<PgwDetailResp>(
     url,
     {
@@ -146,7 +146,7 @@ async function pgwGetDetail(reference: string, correlationId?: string) {
 
 async function pgwVoid(reference: string, reason: string, correlationId?: string) {
   const url = `${PGW_BASE}${pathVoid(reference)}`
-
+  console.log(`[void] URL:`, url)
   const { data } = await axios.post<PgwVoidRefundResp>(
     url,
     {
@@ -163,7 +163,7 @@ async function pgwVoid(reference: string, reason: string, correlationId?: string
 
 async function pgwRefund(reference: string, reason: string, correlationId?: string) {
   const url = `${PGW_BASE}${pathRefund(reference)}`
-
+  console.log(`[refund] URL:`, url)
   const { data } = await axios.post<PgwVoidRefundResp>(
     url,
     {
@@ -1087,6 +1087,7 @@ export async function updateOrder(req: Request, res: Response) {
 
           const action =
             decidePgwAction(detail?.status ?? "")
+          console.log(`[refund] order ${orderId} PGW detail status:`, detail?.status, "=> action:", action)
 
           if (action === "NONE") {
             await Order.update(

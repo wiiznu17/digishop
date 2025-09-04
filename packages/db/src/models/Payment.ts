@@ -20,11 +20,11 @@ export interface PaymentAttributes {
   currencyCode: string;         // ISO 4217, e.g. 'THB', 'USD'
 
   amountAuthorizedMinor: number; // amount verified by PGW when response url redirect
-  amountCapturedMinor: number;
-  amountRefundedMinor: number;
+  amountCapturedMinor: number; // amount หลังจาก Approved ที่ PGW
+  amountRefundedMinor: number; // amount ที่ refund
 
   pgwStatus?: string | null;    // สถานะฝั่ง PGW เช่น Approved/Pre settled/Settled
-  pgwPayload: object;           // เก็บ raw payload ล่าสุดจาก PGW(response)
+  pgwPayload: object;           // เก็บ raw payload ล่าสุดจาก PGW(response) --> payment, notify API
 
   createdAt?: Date;
   updatedAt?: Date;

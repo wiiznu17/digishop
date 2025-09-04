@@ -7,12 +7,12 @@ export interface OrderStatusHistoryAttrs {
   orderId: number;
   fromStatus?: OrderStatus | null;
   toStatus: OrderStatus;
-  changedByType: ActorType;
-  changedById?: number | null;
+  changedByType: ActorType; // ADMIN | CUSTOMER | SYSTEM
+  changedById?: number | null; // userId, customerId, null if SYSTEM
   reason?: string | null;          // explanation for the status change
   source?: string | null;         // API | WEBHOOK | SCHEDULE | DASHBOARD | PAYMENT_GATEWAY | SYSTEM | APP
-  correlationId?: string | null;  // requestId/eventId
-  metadata?: object | null;       // JSON payload
+  correlationId?: string | null;  // requestId/eventId for tracing
+  metadata?: object | null;       // JSON payload with extra info
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
