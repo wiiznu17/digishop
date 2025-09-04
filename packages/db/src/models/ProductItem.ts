@@ -1,12 +1,14 @@
+// @digishop/db/src/models/ProductItem.ts
 import { Model, DataTypes, Optional, Sequelize } from "sequelize";
+import type { ProductConfiguration } from "./ProductConfiguration";
 
 export interface ProductItemAttributes {
   id: number;
-  productId: number; // reference to Product
-  sku: string;         // รหัสสินค้าย่อย เช่น size/color --> T-SH-001-RED-L
+  productId: number;
+  sku: string;                 // ⬅️ NOT NULL
   stockQuantity: number;
   priceMinor: number;
-  imageUrl?: string | null; // (optional) now we only store image for main product, but maybe in future we want to have image for each SKU
+  imageUrl?: string | null;
 
   createdAt?: Date;
   updatedAt?: Date;
@@ -28,11 +30,13 @@ export class ProductItem
   public sku!: string;
   public stockQuantity!: number;
   public priceMinor!: number;
-  public imageUrl?: string | null;
+  public imageUrl!: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
   public readonly deletedAt!: Date | null;
+
+  declare configurations?: ProductConfiguration[];
 
   static initModel(sequelize: Sequelize): typeof ProductItem {
     ProductItem.init(
@@ -48,9 +52,23 @@ export class ProductItem
           field: "product_id",
         },
         sku: {
-          type: DataTypes.STRING(64),
+          type: DataTypes.STRING(191),       // utf8mb4 + index
           allowNull: false,
-          unique: true,
+          validate: {
+            notEmpty: { msg: "sku cannot be empty" },
+            len: { args: [1, 191], msg: "sku length invalid" },
+          },
+          set(value: unknown) {
+            // Trim ช่องว่าง; ปล่อยให้ controller/hook เป็นคน gen ถ้าไม่มีค่า
+            if (typeof value === "string") {
+              const v = value.trim();
+              // @ts-ignore
+              this.setDataValue("sku", v);
+            } else if (value == null) {
+              // @ts-ignore
+              this.setDataValue("sku", "");
+            }
+          },
         },
         stockQuantity: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -68,7 +86,6 @@ export class ProductItem
           allowNull: true,
           field: "image_url",
         },
-
         createdAt: {
           type: DataTypes.DATE,
           allowNull: false,
@@ -94,9 +111,18 @@ export class ProductItem
         paranoid: true,
         deletedAt: "deleted_at",
         indexes: [
-          { unique: true, fields: ["sku"] },
           { fields: ["product_id"] },
+          // unique ต่อสินค้า
+          { unique: true, fields: ["product_id", "sku"], name: "uniq_items_product_sku" },
         ],
+        hooks: {
+          // Safety net: ถ้าใครลืม gen ที่ controller จะเติม AUTO ให้ก่อน validate
+          beforeValidate: (item) => {
+            if (!item.sku || !item.sku.trim()) {
+              item.sku = `SKU-${item.productId}-AUTO-${Date.now().toString(36)}`;
+            }
+          },
+        },
       }
     );
     return ProductItem;

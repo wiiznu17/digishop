@@ -11,7 +11,7 @@ export default {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      sku: { type: DataTypes.STRING(64), allowNull: false, unique: true },
+      sku: { type: DataTypes.STRING(191), allowNull: false },       // NOT NULL
       stock_quantity: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
       price_minor: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
       image_url: { type: DataTypes.STRING(512), allowNull: true },
@@ -22,7 +22,10 @@ export default {
     });
 
     await q.addIndex("PRODUCT_ITEMS", ["product_id"]);
-    await q.addIndex("PRODUCT_ITEMS", ["sku"], { unique: true });
+    await q.addIndex("PRODUCT_ITEMS", ["product_id", "sku"], {
+      name: "uniq_items_product_sku",
+      unique: true,
+    });
   },
 
   async down(q: QueryInterface): Promise<void> {
