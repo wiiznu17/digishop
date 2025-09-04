@@ -82,6 +82,12 @@ export enum RefundStatus {
   CANCELED  = "CANCELED",
 }
 
+export enum PaymentType {
+  FULL = 'FULL',
+  INSTALLMENT = 'INSTALLMENT',
+  QR_PP_TAG30 = 'QR_PP_TAG30',
+  QR_CS = 'QR_CS'
+}
 
 export enum ShippingStatus {
   PENDING = 'PENDING',
@@ -103,7 +109,7 @@ export enum DisputeStatus {
   RESOLVED = 'RESOLVED',
   REJECTED = 'REJECTED',
 }
-export enum paymentMethod {
+export enum PaymentMethod {
   CREDIT_CARD = 'CREDIT_CARD',
   QR = 'QR',
   PROMPTPAY = 'PROMPTPAY',
