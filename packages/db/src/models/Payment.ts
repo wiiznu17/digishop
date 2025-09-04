@@ -1,5 +1,5 @@
 import { Model, DataTypes, Optional, Sequelize } from "sequelize";
-import { PaymentStatus } from "../types/enum";
+import { PaymentStatus, PaymentType } from "../types/enum";
 
 export interface PaymentAttributes {
   id: number;
@@ -60,6 +60,9 @@ export class Payment
 
   public paymentMethod!: string;
   public status!: PaymentStatus;
+  public timestamp!: Date;
+  public approvalCode!: string;
+  public bankReference!: string;
   public paidAt!: Date | null;
 
   public provider!: string;
@@ -103,7 +106,8 @@ export class Payment
           field: "payment_method",
         },
         status: {
-          type: DataTypes.ENUM(...Object.values(PaymentStatus)),
+          // type: DataTypes.ENUM(...Object.values(PaymentStatus)),
+          type: DataTypes.STRING(255),
           allowNull: false,
           defaultValue: PaymentStatus.PENDING,
         },

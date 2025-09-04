@@ -19,7 +19,7 @@ export default function ShippingCardDetail({item,selected}:ShippingCard) {
                     <div>estimatedDays: {item.estimatedDays}</div>
                 </div>
                 <div className="flex justify-center items-center text-3xl font-extrabold">
-                    {item.price}
+                    {item.price/100}
                 </div>
             </div>
         </div>

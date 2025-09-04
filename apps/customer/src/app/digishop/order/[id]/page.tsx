@@ -3,16 +3,22 @@ import { useAuth } from "@/contexts/auth-context";
 import { Address } from "@/types/props/addressProp";
 import { Order, Shipping } from "@/types/props/orderProp";
 import { Product } from "@/types/props/productProp";
-import { createOrder, getShippingType, payment } from "@/utils/requestUtils/requestOrderUtils";
+import { createOrder, getShippingType } from "@/utils/requestUtils/requestOrderUtils";
 import { getProduct } from "@/utils/requestUtils/requestProduct";
 import { getAddress } from "@/utils/requestUtils/requestUserUtils";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { redirect, RedirectType, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AddressCard from "@/components/addressCard";
 import ShippingCardDetail from "@/components/shippingCard";
 import { DialogSelectAddress } from "@/components/dialogSelectAddress";
+import { PaymentMethod, PaymentType } from "../../../../../../../packages/db/src/types/enum";
+import InputField from "@/components/inputField";
 
+interface PaymentDetail {
+  label: string,
+  value: PaymentMethod
+}
 export default function OrderPage() {
   const { id } = useParams();
   const productName = String(id);
@@ -20,17 +26,26 @@ export default function OrderPage() {
   const [amount, setAmount] = useState(1);
   const [price, setPrice] = useState(0);
   const [order, setOrder] = useState<Order>();
+  const [note, setNote] = useState<string>("");
   const [product, setProduct] = useState<Product>();
   const [addresses, setAddresses] = useState<Address[]>();
   const [selectAddress, setSelectAddress] = useState<Address>();
   const [shipping, setShipping] = useState<Shipping[]>();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentDetail>();
   const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1)
   const [isShowSelectAddress, setIsShowSelectAddress] = useState(false);  
-  const [linkPayment, setLinkPayment] = useState('/digishop');
+  const payments = {
+    CERDIT_CARD : {
+      label: 'CERDIT_CARD',
+      value: PaymentMethod.CREDIT_CARD
+    },
+    QR : {
+      label: 'QR',
+      value: PaymentMethod.QR
+    }
+  }
+  // const [linkPayment, setLinkPayment] = useState('/digishop');
   const { user } = useAuth();
-  useEffect(() => {
-    // const orderData = await getOrder()
-  },[processStatus])
   useEffect(() => {
     const fetchData = async () => {
       const resProduct = await getProduct(productName);
@@ -54,25 +69,30 @@ export default function OrderPage() {
     setPrice(sumprice);
   }, [amount, product?.price,selectShippingTypeId,shipping]);
   useEffect(() => {
-    if (!user || !product || !selectAddress || !selectAddress.id ) return;
+    if (!user || !product || !selectAddress || !selectAddress.id || !paymentMethod ) return;
     setOrder({
       productName: product.name,
       customerId: user.id,
       storeId: product.store.id,
-      totalPrice: price,
+      grandTotalMinor: price,
       productId: product.id,
       quantity: amount,
       unitPrice: product.price,
       shippingTypeId: selectShippingTypeId,
-      shippingAddress: selectAddress.id
+      shippingAddress: selectAddress.id,
+      paymentMethod: paymentMethod.value,
+      orderNote: note
     });
-  },[amount,user,product,selectAddress,price,selectShippingTypeId])
+  },[amount,user,product,selectAddress,price,selectShippingTypeId,note,paymentMethod])
 
   const handleOrder = async () => {
     if (!order) return
     const res = await createOrder(order);
-    setLinkPayment(res.data.redirect_url)
-    setProcessStatus(2)
+    console.log('res re',res.data)
+    if(res.data.redirect_url){
+      redirect(res.data.redirect_url,RedirectType.replace)
+    }
+    console.log(order)
   };
 
   if (user == null || user.id <= 0) return;
@@ -82,7 +102,12 @@ export default function OrderPage() {
   const handleOnCancelSelectAddress = ():void => {
     setIsShowSelectAddress(false)
   };
-
+  const handleChange = (e:React.ChangeEvent<HTMLInputElement> ) => {
+      setNote(e.target.value);
+    };
+  const handlePayment = (e: PaymentDetail) => {
+    setPaymentMethod(e)
+  }
   return (
     <>
       <div className="min-h-screen p-3">
@@ -124,7 +149,7 @@ export default function OrderPage() {
                         +{" "}
                       </button>
                     </div>
-                    <div className="text-5xl mx-9">{product?.price}</div>
+                    <div className="text-5xl mx-9">{product?.price/100}</div>
                   </div>
                 </div>
                 {/* price product */}
@@ -136,7 +161,6 @@ export default function OrderPage() {
                 <AddressCard item={selectAddress} />
               </button>
             )}
-      
             {
               shipping?.map((item: Shipping, index: number) => (
                  <div key={index} className="m-3" onClick={() => setSelectShippingTypeId(item.id)}>
@@ -144,11 +168,25 @@ export default function OrderPage() {
                  </div>
               ))
             }
-            {/* total price */}
+            <div className="w-1/2 mb-3">
+              <InputField 
+                label="Order Note"
+                name="note"
+                value={note} 
+                onChange={handleChange} 
+              />
+            </div>
             <div className="flex">
               <div className="mb-6 text-4xl">total price</div>
-              <div className="mx-10 text-6xl">{price}</div>
+              <div className="mx-10 text-6xl">{price/100}</div>
             </div>
+              {
+                Object.entries(payments).map(([payment,config]) => (
+                  <button key={payment} className={` m-4  flex p-4 rounded-xl border ${payment == paymentMethod?.label? 'border-amber-400': 'border-black'}`} onClick={()=> handlePayment(config)}>
+                    {config.label}
+                  </button>
+                ))
+              }
             {/* buttonb  */}
             <button
               onClick={handleOrder}
@@ -158,25 +196,6 @@ export default function OrderPage() {
               confirm
             </button>
           </>
-        )}
-        {processStatus === 2 && linkPayment && <div>
-          <h1>redirect payment</h1>
-          <Link href={linkPayment}>
-            <button className="m-4 p-4 bg-green-300">go to pay</button>
-          </Link>
-          </div>}
-        {processStatus === 3 && (
-          <div className="flex justify-center items-center text-black">
-            <div>Process finished</div>
-            <div className="grid grid-cols-1">
-              <Link href={"/digishop"} className="p-3 m-3 bg-amber-200">
-                back to home page
-              </Link>
-              <Link href={"/status"} className="p-3 m-3 bg-amber-100">
-                see status
-              </Link>
-            </div>
-          </div>
         )}
         <DialogSelectAddress 
           isShown={isShowSelectAddress}

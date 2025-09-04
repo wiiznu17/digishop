@@ -36,6 +36,7 @@ export const searchProduct = async(req: Request , res: Response , next: NextFunc
     return res.status(500).json({ error: error });
   }  
 }
+
 export const getProduct = async(req: Request , res: Response,  next: NextFunction) => {
   const id  = req.params.id
   try {
@@ -43,8 +44,8 @@ export const getProduct = async(req: Request , res: Response,  next: NextFunctio
       where: {
         [Op.and]: [
         { name: id},
-        // { stockQuantity: { [Op.gt]: 0}},
-        // { status: ProductStatus.ACTIVE}
+        { stockQuantity: { [Op.gt]: 0}},
+        { status: ProductStatus.ACTIVE}
         ]
       },
       include: [

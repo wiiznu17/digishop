@@ -4,6 +4,7 @@ import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
+import { Payment } from '@digishop/db/src/models/Payment';
 const cookieParser = require("cookie-parser")
 
 const PORT = Number(process.env.PORT);
@@ -22,6 +23,7 @@ async function main() {
     }))
     initModels(sequelize); 
     app.use('/api', router);
+    app.use('/digishop',router)
     app.use((req, res, next) => {
       console.log('[MERCHANT] Incoming', req.method, req.url)
       next()

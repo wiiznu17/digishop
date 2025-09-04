@@ -1,7 +1,8 @@
 import { Router } from 'express'
-import { getNotify } from '../controllers/paymentControllers'
+import { getCallBack, getNotify,  } from '../controllers/paymentControllers'
 const router = Router()
 
-router.get('/notify',getNotify)
+router.post('/callback',getCallBack)
+router.post('/notify',getNotify)
 
 export default router
