@@ -1,4 +1,4 @@
-import { QueryInterface, DataTypes } from 'sequelize';
+import { QueryInterface, DataTypes } from 'sequelize'
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
@@ -11,8 +11,7 @@ export default {
           primaryKey: true,
           defaultValue: DataTypes.UUIDV4,
         },
-        productId: {
-          // type: DataTypes.UUID,
+        product_id: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           references: {
@@ -26,15 +25,15 @@ export default {
           type: DataTypes.TEXT,
           allowNull: false,
         },
-        blobName: {
+        blob_name: {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        fileName: {
+        file_name: {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        isMain: {
+        is_main: {
           type: DataTypes.BOOLEAN,
           allowNull: false,
           defaultValue: false,
@@ -44,15 +43,17 @@ export default {
           allowNull: false,
           defaultValue: 0,
         },
-        createdAt: {
+        created_at: {
           type: DataTypes.DATE,
           allowNull: false,
-          defaultValue: DataTypes.NOW,
         },
-        updatedAt: {
+        updated_at: {
           type: DataTypes.DATE,
           allowNull: false,
-          defaultValue: DataTypes.NOW,
+        },
+        deleted_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
         },
       },
       {
@@ -60,14 +61,14 @@ export default {
         charset: 'utf8mb4',
         collate: 'utf8mb4_unicode_ci',
       }
-    );
+    )
 
-    // Index เพื่อประสิทธิภาพในการค้นหา
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['productId']);
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['isMain']);
+    // Indexes
+    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'sort_order'])
+    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'is_main'])
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
-    await queryInterface.dropTable('PRODUCT_IMAGES');
+    await queryInterface.dropTable('PRODUCT_IMAGES')
   },
-};
+}
