@@ -5,16 +5,16 @@ export interface ShippingInfoAttributes {
   id: number;
   orderId: number;
   trackingNumber?: string | null;
-  carrier?: string | null;
-  shippingTypeId: number;
-  shippingAddress: number;
+  carrier?: string | null; // update by merchant
+  shippingTypeId: number; // reference to ShippingType.id
+  shippingAddress: number; // reference to Address.id
   shippingStatus: ShippingStatus;
   shippedAt?: Date | null;
 
-  // ⬇️ Snapshot fields (ตาม ER)
-  shippingTypeNameSnapshot: string;
-  shippingPriceMinorSnapshot: number;
-  addressSnapshot: object;
+  // Snapshot fields
+  shippingTypeNameSnapshot: string; // e.g. "Standard Shipping", "Express Delivery"
+  shippingPriceMinorSnapshot: number;  // price in minor units at the time of order
+  addressSnapshot: object; // JSON snapshot of the address at the time of order
 
   createdAt?: Date;
   updatedAt?: Date;

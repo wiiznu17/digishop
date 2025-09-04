@@ -7,12 +7,12 @@ export interface PaymentGatewayEventAttributes {
   paymentId: number;
   refundOrderId?: number | null;
 
-  type: string;            // e.g. PAYMENT.AUTHORIZE | PAYMENT.CAPTURE | REFUND.REQUEST | REFUND.SUCCESS | REFUND.FAIL
+  type: string;            // เก็บว่า event นี้คืออะไร เช่น "REFUND", "VOID"
   amountMinor: number;     // amount in minor units (e.g. THB*100)
-  provider: string;        // PGW name, e.g. "KBankGateway", "PromptPayGateway"
-  providerRef?: string | null; // reference
+  provider: string;        // PGW name, e.g. "DigiPay", "PromptPayGateway"
+  providerRef?: string | null; // reference from PGW, e.g. transactionId
   status: string;          // SUCCESS | FAILED | PENDING
-  requestId?: string | null;    // our request/correlation id
+  requestId?: string | null;    // สร้างขึ้นเองเพื่อ track request/response กับ PGW
 
   reqJson?: any | null;    // raw request body
   resJson?: any | null;    // raw response body

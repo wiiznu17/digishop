@@ -8,7 +8,7 @@ export interface StoreAttributes {
   email: string;
   phone: string;
   businessType: string;
-  website?: string;
+  website?: string; // ถ้าไม่มี website ให้ใส่ "-"
   logoUrl?: string | null;
   description?: string | null;
   status: StoreStatus;
