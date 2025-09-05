@@ -1064,7 +1064,7 @@ export async function updateOrder(req: Request, res: Response) {
         read<string>(order, "reference", "reference")
         
       const reference =
-        providerRef || orderRef
+        orderRef || providerRef
 
       const refundOrderRow =
         await RefundOrder.findOne({
