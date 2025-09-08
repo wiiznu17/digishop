@@ -24,7 +24,7 @@ export default {
       description: { type: DataTypes.TEXT, allowNull: true },
 
       // ใช้หน่วยสตางค์
-      price: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+      price_minor: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
 
       stock_quantity: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, defaultValue: null },
       status: { type: DataTypes.ENUM(...Object.values(ProductStatus)), allowNull: false, defaultValue: ProductStatus.ACTIVE },
