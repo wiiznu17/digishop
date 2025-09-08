@@ -11,7 +11,7 @@ export interface ProductAttributes {
   description?: string | null;
   // base/list price (ไม่บังคับ เพราะใช้ที่ SKU)
   // NOTE: Sequelize DECIMAL -> TypeScript ใช้ string เพื่อลด floating error
-  price?: string | null;
+  price_minor?: string | null;
   // ใช้ที่ SKU เป็นหลัก จึงปล่อยให้ nullable ได้
   stockQuantity?: number | null;
   status: ProductStatus;
@@ -23,7 +23,7 @@ export interface ProductAttributes {
 export interface ProductCreationAttributes
   extends Optional<
     ProductAttributes,
-    'id' | 'uuid' | 'description' | 'price' | 'stockQuantity' | 'status' | 'createdAt' | 'updatedAt' | 'deletedAt'
+    'id' | 'uuid' | 'description' | 'price_minor' | 'stockQuantity' | 'status' | 'createdAt' | 'updatedAt' | 'deletedAt'
   > {}
 
 export class Product
@@ -36,7 +36,7 @@ export class Product
   public categoryId!: number;
   public name!: string;
   public description!: string | null;
-  public price!: string | null;
+  public price_minor!: string | null;
   public stockQuantity!: number | null;
   public status!: ProductStatus;
   public readonly createdAt!: Date;
@@ -80,9 +80,8 @@ export class Product
           type: DataTypes.TEXT,
           allowNull: true,
         },
-        // ใช้ DECIMAL เพื่อเป็น list/base price (ทาง TS ใช้ string)
-        price: {
-          type: DataTypes.DECIMAL(12, 2),
+        price_minor: {
+          type: DataTypes.INTEGER.UNSIGNED,
           allowNull: true,
         },
         stockQuantity: {
