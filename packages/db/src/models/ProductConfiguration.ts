@@ -2,6 +2,7 @@ import { Model, DataTypes, Optional, Sequelize } from "sequelize";
 
 export interface ProductConfigurationAttributes {
   id: number;
+  uuid: string;
   productItemId: number;        // FK -> PRODUCT_ITEMS.id
   variationOptionId: number;    // FK -> VARIATION_OPTIONS.id
   createdAt?: Date;
@@ -10,13 +11,14 @@ export interface ProductConfigurationAttributes {
 }
 
 export interface ProductConfigurationCreationAttributes
-  extends Optional<ProductConfigurationAttributes, "id" | "createdAt" | "updatedAt" | "deletedAt"> {}
+  extends Optional<ProductConfigurationAttributes, "id" | "uuid" | "createdAt" | "updatedAt" | "deletedAt"> {}
 
 export class ProductConfiguration
   extends Model<ProductConfigurationAttributes, ProductConfigurationCreationAttributes>
   implements ProductConfigurationAttributes
 {
   public id!: number;
+  public uuid!: string;
   public productItemId!: number;
   public variationOptionId!: number;
 
@@ -31,6 +33,12 @@ export class ProductConfiguration
           type: DataTypes.INTEGER.UNSIGNED,
           autoIncrement: true,
           primaryKey: true,
+        },
+        uuid: {
+          type: DataTypes.UUID,
+          allowNull: false,
+          unique: true,
+          defaultValue: DataTypes.UUIDV4,
         },
         productItemId: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -67,6 +75,7 @@ export class ProductConfiguration
         paranoid: true,
         deletedAt: "deleted_at",
         indexes: [
+          { name: "uq_product_configurations_uuid", fields: ["uuid"], unique: true },
           { fields: ["product_item_id"] },
           { fields: ["variation_option_id"] },
           { unique: true, fields: ["product_item_id", "variation_option_id"] },
