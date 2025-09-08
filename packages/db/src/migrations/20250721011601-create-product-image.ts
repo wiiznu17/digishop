@@ -6,10 +6,16 @@ export default {
       'PRODUCT_IMAGES',
       {
         id: {
-          type: DataTypes.UUID,
+          type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
+          autoIncrement: true,
           primaryKey: true,
-          defaultValue: DataTypes.UUIDV4,
+        },
+        uuid: {
+          // เก็บเป็น CHAR(36); default uuid v4 ให้ที่ Model/Seeder (MySQL ไม่มี uuidv4() ใน DB)
+          type: DataTypes.STRING(36),
+          allowNull: false,
+          unique: true,
         },
         product_id: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -26,11 +32,11 @@ export default {
           allowNull: false,
         },
         blob_name: {
-          type: DataTypes.STRING,
+          type: DataTypes.STRING(255),
           allowNull: false,
         },
         file_name: {
-          type: DataTypes.STRING,
+          type: DataTypes.STRING(255),
           allowNull: false,
         },
         is_main: {
@@ -64,8 +70,9 @@ export default {
     )
 
     // Indexes
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'sort_order'])
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'is_main'])
+    await queryInterface.addIndex('PRODUCT_IMAGES', ['uuid'], { unique: true, name: 'uq_product_images_uuid' })
+    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'sort_order'], { name: 'ix_product_images_product_sort' })
+    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'is_main'], { name: 'ix_product_images_product_main' })
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
