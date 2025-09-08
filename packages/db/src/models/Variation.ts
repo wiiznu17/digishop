@@ -2,21 +2,23 @@ import { Model, DataTypes, Optional, Sequelize } from "sequelize";
 
 export interface VariationAttributes {
   id: number;
+  uuid: string;
   productId: number;
-  name: string;             // e.g. "Color", "Size"
+  name: string; // color, size
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
 }
 
 export interface VariationCreationAttributes
-  extends Optional<VariationAttributes, "id" | "createdAt" | "updatedAt" | "deletedAt"> {}
+  extends Optional<VariationAttributes, "id" | "uuid" | "createdAt" | "updatedAt" | "deletedAt"> {}
 
 export class Variation
   extends Model<VariationAttributes, VariationCreationAttributes>
   implements VariationAttributes
 {
   public id!: number;
+  public uuid!: string;
   public productId!: number;
   public name!: string;
 
@@ -31,6 +33,12 @@ export class Variation
           type: DataTypes.INTEGER.UNSIGNED,
           autoIncrement: true,
           primaryKey: true,
+        },
+        uuid: {
+          type: DataTypes.UUID,
+          allowNull: false,
+          unique: true,
+          defaultValue: DataTypes.UUIDV4,
         },
         productId: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -66,8 +74,9 @@ export class Variation
         paranoid: true,
         deletedAt: "deleted_at",
         indexes: [
-          { fields: ["product_id"] },
-          { unique: false, fields: ["product_id", "name"] },
+          { name: "uq_variations_uuid", fields: ["uuid"], unique: true },
+          { name: "ix_variations_product", fields: ["product_id"] },
+          { name: "ix_variations_product_name", fields: ["product_id", "name"] },
         ],
       }
     );
