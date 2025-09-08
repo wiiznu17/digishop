@@ -99,6 +99,7 @@ type PgwDetailResp = {
 }
 
 function pgwHeaders(correlationId?: string) {
+  console.log(`[pgwHeaders] correlationId:`, correlationId)
   return {
     "X-API-ID":      PGW_API_ID,
     "X-API-Key":     PGW_API_KEY,
@@ -131,6 +132,7 @@ function sanitizeReason(input?: string | null): string {
 }
 
 async function pgwGetDetail(reference: string, correlationId?: string) {
+  console.log(`[detail] reference:`, reference)
   const url = `${PGW_BASE}${pathTxnDetail(reference)}`
   console.log(`[detail] URL:`, url)
   const { data } = await axios.get<PgwDetailResp>(
@@ -174,7 +176,7 @@ async function pgwRefund(reference: string, reason: string, correlationId?: stri
       timeout: 15000,
     },
   )
-
+  console.log(`[refund] response:`, data)
   return data
 }
 
@@ -1060,9 +1062,9 @@ export async function updateOrder(req: Request, res: Response) {
 
       const orderRef  =
         read<string>(order, "reference", "reference")
-
+        
       const reference =
-        providerRef || orderRef
+        orderRef || providerRef
 
       const refundOrderRow =
         await RefundOrder.findOne({
@@ -1084,7 +1086,7 @@ export async function updateOrder(req: Request, res: Response) {
         try {
           const detail =
             await pgwGetDetail(reference, correlationId ?? undefined)
-
+            console.log(`[refund] order ${orderId} PGW detail:`, detail)
           const action =
             decidePgwAction(detail?.status ?? "")
           console.log(`[refund] order ${orderId} PGW detail status:`, detail?.status, "=> action:", action)
