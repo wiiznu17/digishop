@@ -1,10 +1,12 @@
 import { QueryInterface } from "sequelize"
+import { v4 as uuidv4 } from "uuid"
 
 export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkInsert("PRODUCTS", [
       {
         id: 1001,
+        uuid: uuidv4(),
         store_id: 1,
         category_id: 1,
         name: "Smartphone X",
@@ -18,6 +20,7 @@ export default {
       },
       {
         id: 1002,
+        uuid: uuidv4(),
         store_id: 1,
         category_id: 2,
         name: "Smartphone Y",
@@ -31,6 +34,7 @@ export default {
       },
       {
         id: 1003,
+        uuid: uuidv4(),
         store_id: 1,
         category_id: 1,
         name: "Laptop Pro 15",
@@ -44,6 +48,7 @@ export default {
       },
       {
         id: 1004,
+        uuid: uuidv4(),
         store_id: 1,
         category_id: 3,
         name: "Wireless Earbuds",
@@ -57,6 +62,7 @@ export default {
       },
       {
         id: 1005,
+        uuid: uuidv4(),
         store_id: 1,
         category_id: 4,
         name: "Smartwatch Z",

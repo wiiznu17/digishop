@@ -35,7 +35,7 @@ export default  function SearchResult({
         {result.map((item, index: number) => (
           <div
             key={index}
-            onClick={() => router.push(`/digishop/product/${String(item.name)}`)} 
+            onClick={() => router.push(`/digishop/product/${String(item.uuid)}`)} 
           >
             <Card data={item} />
           </div>
