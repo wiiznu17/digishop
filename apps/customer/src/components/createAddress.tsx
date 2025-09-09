@@ -1,22 +1,23 @@
 "use client";
 
 import { JSX, SetStateAction, useState } from "react";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-} from "@headlessui/react";
-import InputField from '@/components/inputField';
-import {  Home} from 'lucide-react';
+import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
+import InputField from "@/components/inputField";
+import { Home } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
-
+import { Rubik } from "next/font/google";
+import Button from "./button";
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "300"
+})
 interface CreateAddress {
-  isShowAddress: boolean
-  setIsShowAddress:React.Dispatch<SetStateAction<boolean>>
-  handleOnCancel: () => void
-  handleOnConfirm: (e: React.FormEvent) => Promise<void>
-  address: Address
-  setAddress: React.Dispatch<SetStateAction<Address>>
+  isShowAddress: boolean;
+  setIsShowAddress: React.Dispatch<SetStateAction<boolean>>;
+  handleOnCancel: () => void;
+  handleOnConfirm: (e: React.FormEvent) => Promise<void>;
+  address: Address;
+  setAddress: React.Dispatch<SetStateAction<Address>>;
 }
 export const DialogAddress = ({
   isShowAddress,
@@ -24,49 +25,53 @@ export const DialogAddress = ({
   handleOnCancel,
   handleOnConfirm,
   address,
-    setAddress
+  setAddress,
 }: CreateAddress): JSX.Element => {
-        const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-            setAddress({
-                ...address,
-                [e.target.name]: e.target.value
-            });
-        };
-        const validateForm = ():boolean => {
-           const newErrors: {[key: string]: string} = {};
-          
-          if (!address.recipientName) {
-            newErrors.recipientName = 'recipientName is required';
-          } 
-          if (!address.phone) {
-            newErrors.phone = 'phone is required';
-          } 
-          if (!address.province) {
-            newErrors.province = 'province is required';
-          }
-          if (!address.postalCode) {
-            newErrors.postalCode = 'postalCode is required';
-          }
-        
-          return Object.keys(newErrors).length === 0; // true = valid form
-        }
-        const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            setAddress({
-                ...address,
-              [e.target.name]: e.target.value
-            });
-          };
-        
-    if (!isShowAddress) return <></>
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setAddress({
+      ...address,
+      [e.target.name]: e.target.value,
+    });
+  };
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!address.recipientName) {
+      newErrors.recipientName = "recipientName is required";
+    }
+    if (!address.phone) {
+      newErrors.phone = "phone is required";
+    }
+    if (!address.province) {
+      newErrors.province = "province is required";
+    }
+    if (!address.postalCode) {
+      newErrors.postalCode = "postalCode is required";
+    }
+
+    return Object.keys(newErrors).length === 0; // true = valid form
+  };
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddress({
+      ...address,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  if (!isShowAddress) return <></>;
   return (
     <div>
-      <Dialog open={isShowAddress} onClose={() => setIsShowAddress(false)} className="relative z-100">
+      <Dialog
+        open={isShowAddress}
+        onClose={() => setIsShowAddress(false)}
+        className="relative z-100"
+      >
         <DialogBackdrop
           transition
           className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
 
-        <div className="fixed inset-0 z-100 w-screen overflow-y-auto">
+        <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${rubik.className}`}>
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <DialogPanel
               transition
@@ -77,9 +82,8 @@ export const DialogAddress = ({
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                     <form onSubmit={handleOnConfirm}>
                       <div className="space-y-6">
-                        <div className="flex items-center gap-2">
-                          <Home className="w-5 h-5 text-blue-600" />
-                          <h2 className="text-xl font-semibold text-gray-900">
+                        <div className="flex items-center gap-2 border-b border-black">
+                          <h2 className="text-xl font-semibold text-gray-900 ">
                             Home Address
                           </h2>
                         </div>
@@ -150,74 +154,76 @@ export const DialogAddress = ({
                             onChange={handleInputChange}
                             placeholder="sub district"
                           />
-                            <InputField
-                              label="Province"
-                              name="province"
-                              value={address.province}
-                              onChange={handleInputChange}
-                              placeholder="Province"
-                              type="text"
-                              required
-                            />
-                            <InputField
-                              label="Postal Code"
-                              name="postalCode"
-                              type="num"
-                              value={address.postalCode}
-                              onChange={handleInputChange}
-                              placeholder="Postal code"
-                              maxLength={5}
-                              minLength={5}
-                              required
-                            />
-                            <InputField
-                              label="Country"
-                              name="country"
-                              value={address.country}
-                              onChange={handleInputChange}
-                              placeholder="Country"
-                              type="text"
-                              required
-                            />
+                          <InputField
+                            label="Province"
+                            name="province"
+                            value={address.province}
+                            onChange={handleInputChange}
+                            placeholder="Province"
+                            type="text"
+                            required
+                          />
+                          <InputField
+                            label="Postal Code"
+                            name="postalCode"
+                            type="num"
+                            value={address.postalCode}
+                            onChange={handleInputChange}
+                            placeholder="Postal code"
+                            maxLength={5}
+                            minLength={5}
+                            required
+                          />
+                          <InputField
+                            label="Country"
+                            name="country"
+                            value={address.country}
+                            onChange={handleInputChange}
+                            placeholder="Country"
+                            type="text"
+                            required
+                          />
                         </div>
-                          <div>
-                            <h1 className="text-black">select address type</h1>
-                            <select
-                              name="addressType"
-                              value={address.addressType}
-                              onChange={handleChange}
-                              className="text-black"
+
+                        <div className="text-black">
+                          <h1>select address type</h1>
+                          <select
+                            name="addressType"
+                            value={address.addressType}
+                            onChange={handleChange}
+                            className="border border-gray-500 p-3 mt-2 rounded-2xl "
+                          >
+                            <option
+                              id="1"
+                              value="HOME"
+                              className="text-xl border border-gray-300"
                             >
-                              <option id="1" value="HOME" className="text-xl text-black">
-                                HOME
-                              </option>
-                              <option id="2" value="OFFICE" className="text-xl text-black">
-                                OFFICE
-                              </option>
-                            </select>
-                          </div>
+                              HOME
+                            </option>
+                            <option id="2" value="OFFICE" className="text-xl">
+                              OFFICE
+                            </option>
+                          </select>
+                        </div>
                       </div>
-                      </form>
+                    </form>
                   </div>
                 </div>
               </div>
               <div className="bg-gray-700/25 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="button"
+                <Button
                   onClick={handleOnConfirm}
                   disabled={!validateForm()}
-                  className={`${!validateForm() ? "bg-gray-300" : "bg-green-500 hover:bg-red-400"} inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-white sm:ml-3 sm:w-auto`}
+                  className={`${!validateForm() ? "bg-gray-300" : "bg-green-500 hover:bg-red-400"} text-sm  text-white sm:ml-3 sm:w-auto`}
                 >
                   Confirm
-                </button>
-                <button
-                  type="button"
-                  data-autofocus
+                </Button>
+                <Button
                   onClick={handleOnCancel}
-                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto"
+                  className=" bg-white/10 text-white"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </DialogPanel>
           </div>
@@ -225,4 +231,4 @@ export const DialogAddress = ({
       </Dialog>
     </div>
   );
-}
+};

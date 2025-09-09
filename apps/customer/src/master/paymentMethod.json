@@ -1,0 +1,10 @@
+{
+    "CERDIT_CARD": {
+      "label": "CERDIT CARD",
+      "value": "CREDIT_CARD"
+    },
+    "QR": {
+      "label": "QR",
+      "value": "QR"
+    }
+}

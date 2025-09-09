@@ -19,7 +19,7 @@ export const searchProduct = async(req: Request , res: Response , next: NextFunc
         { status: ProductStatus.ACTIVE}
         ]
       },
-      attributes: ['id', 'name','price'],
+      attributes: ['id','uuid','name','price'],
       include: [
         {
           model: Store,
@@ -43,7 +43,7 @@ export const getProduct = async(req: Request , res: Response,  next: NextFunctio
     const productDetail = await Product.findOne({
       where: {
         [Op.and]: [
-        { name: id},
+        { uuid: id},
         { stockQuantity: { [Op.gt]: 0}},
         { status: ProductStatus.ACTIVE}
         ]
@@ -52,14 +52,13 @@ export const getProduct = async(req: Request , res: Response,  next: NextFunctio
         {
           model: Store,
           as: 'store',
-          // where: {status: StoreStatus.APPROVED },
+          where: {status: StoreStatus.APPROVED },
           attributes: ['id','storeName','logoUrl','description'] 
 
         },{
           model: Category,
           as: 'category',
           attributes: ['id','name']
-
         }
       ],
       attributes: ['id', 'name', 'price', 'stockQuantity', 'description']

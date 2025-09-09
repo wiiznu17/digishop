@@ -41,11 +41,6 @@ const RegisterPage: React.FC = () => {
       if (res.data) {
         router.push("/login");
       }
-      // if(res.error){
-      //   alert('email is already use')
-      // }
-      // console.log('data',res.data)
-      // console.log('error',res.error)
     } catch (err) {
       console.log("error", err);
     }
@@ -91,25 +86,18 @@ const RegisterPage: React.FC = () => {
 
   const router = useRouter();
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-[#C2D1F4] to-white py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white py-8 px-4">
+      <div className="max-w-2xl mx-auto ">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-4">
-            <UserPlus className="w-8 h-8 text-white" />
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Create Account
           </h1>
-          <p className="text-gray-600">
-            Join us and start your shopping journey
-          </p>
         </div>
-
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-xl p-8 space-y-8"
+          className="bg-white rounded-2xl shadow-xl p-8 space-y-8 border border-black"
         >
           {/* Personal Information */}
           <div className="space-y-6">
@@ -166,33 +154,21 @@ const RegisterPage: React.FC = () => {
               error={errors.password}
               minLength={6}
             />
-            {/* <InputField
-            label="Phone"
-            type="num"
-            name="phone"
-            value={formData.phone}
-            onChange={handleInputChange}
-            placeholder="Enter your phone number"
-            error={errors.number}
-            maxLength={10}
-            minLength={10}
-            /> */}
+            
           </div>
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <Home className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">
-                Home Address
-              </h2>
             </div>
-
+              <h2 className="text-xl font-semibold text-gray-900 border-b pb-2">
+              Address Information
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField
                 label="Recipient Name"
                 name="recipientName"
                 value={formData.recipientName}
                 onChange={handleInputChange}
-                placeholder="Enter your last name"
+                placeholder="Enter your name"
                 type="text"
               />
               <InputField
@@ -276,17 +252,18 @@ const RegisterPage: React.FC = () => {
                 placeholder="country"
               />
             </div>
-            <div>
+            <div className="text-black">
               <h1>select address type</h1>
               <select
                 name="addressType"
                 value={formData.addressType}
                 onChange={handleChange}
+                className="border border-gray-500 p-3 mt-2 rounded-2xl "
               >
-                <option id="1" value="HOME" className="text-4xl">
+                <option id="1" value="HOME" className="text-xl border border-gray-300">
                   HOME
                 </option>
-                <option id="2" value="OFFICE" className="text-4xl">
+                <option id="2" value="OFFICE" className="text-xl">
                   OFFICE
                 </option>
               </select>
@@ -295,7 +272,6 @@ const RegisterPage: React.FC = () => {
 
           {/* Submit Button */}
           <Button
-            type="submit"
             size="lg"
             className="w-full group"
             disabled={isLoading}

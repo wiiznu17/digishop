@@ -1,0 +1,20 @@
+{
+    "CC01": {
+        "label": "I don't want this the order"
+    },
+    "CC02": {
+        "label": "I ordered the wrong item"
+    },
+    "CC03": {
+        "label": "I need to change the shipping address"
+    },
+    "CC04": {
+        "label": "I found a store with a better price"
+    },
+    "CC05": {
+        "label": "I found a better product"
+    },
+    "CC00": {
+        "lebel": "other"
+    }
+}
