@@ -6,27 +6,44 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { X, Upload, Image as ImageIcon, Star } from "lucide-react"
-import { ProductImage } from "@/types/props/productProp"
 import {
   deleteProductImageRequester,
-  updateProductImageRequester
+  updateProductImageRequester,
+  reorderProductImagesRequester
 } from "@/utils/requestUtils/requestProductUtils"
 
+// NOTE: ให้รองรับทั้งของเดิม (id) และของใหม่ (uuid)
+export type ImageLike = {
+  uuid?: string
+  id?: string // fallback เก่า
+  url: string
+  fileName: string
+  isMain?: boolean
+  sortOrder?: number
+}
+
 interface ImageUploadProps {
-  images: ProductImage[]
-  onImagesChange: (images: ProductImage[]) => void
+  images: ImageLike[]
+  onImagesChange: (images: ImageLike[]) => void
   maxImages?: number
-  productId?: string // เพื่อใช้ในการลบรูปจาก server
+
+  /** ใช้กับ API ใหม่: ทำงานแบบออฟไลน์ (local) หรือซิงก์ทันที (server) */
+  mode?: "local" | "server"
+  /** ใช้เฉพาะตอน mode="server" */
+  productUuid?: string
 }
 
 export function ImageUpload({
   images,
   onImagesChange,
   maxImages = 5,
-  productId // เพิ่ม productId ใน destructuring
+  mode = "local",
+  productUuid
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isBlob = (u: string) => u.startsWith("blob:")
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -34,114 +51,123 @@ export function ImageUpload({
     const files = event.target.files
     if (!files) return
 
-    // Check if adding these files would exceed the limit
     if (images.length + files.length > maxImages) {
       alert(`You can maximum upload ${maxImages} pictures`)
       return
     }
 
     setUploading(true)
-
     try {
-      const newImages: ProductImage[] = []
-
+      const newImages: ImageLike[] = []
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
 
-        // Validate file type
         if (!file.type.startsWith("image/")) {
           alert(`${file.name} Not image file`)
           continue
         }
-
-        // Validate file size (5MB limit)
         if (file.size > 5 * 1024 * 1024) {
           alert(`${file.name} File size is more than 5MB`)
           continue
         }
 
-        // Create preview URL
         const previewUrl = URL.createObjectURL(file)
-
-        const imageData: ProductImage = {
+        newImages.push({
           url: previewUrl,
           fileName: file.name,
-          isMain: images.length === 0 && newImages.length === 0 // First image is main
-        }
-
-        newImages.push(imageData)
+          isMain: images.length === 0 && newImages.length === 0, // first becomes main locally
+          sortOrder: images.length + newImages.length - 1
+        })
       }
 
-      onImagesChange([...images, ...newImages])
-    } catch (error) {
-      console.error("Error processing files:", error)
+      onImagesChange(
+        [...images, ...newImages].map((img, idx) => ({
+          ...img,
+          sortOrder: idx
+        }))
+      )
+    } catch (err) {
+      console.error("Error processing files:", err)
       alert("Error to processing files")
     } finally {
       setUploading(false)
-      // Reset input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
+      if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
   const removeImage = async (index: number) => {
-    const imageToRemove = images[index]
+    const img = images[index]
+    const imageUuid = img.uuid ?? img.id
 
-    // ถ้าเป็นรูปที่อยู่ใน server แล้ว (มี id และไม่ใช่ blob URL)
-    if (
-      productId &&
-      imageToRemove.id &&
-      !imageToRemove.url.startsWith("blob:")
-    ) {
+    // โหมด server: ถ้ามี uuid จริง และไม่ใช่ blob → ยิงลบที่เซิร์ฟเวอร์
+    if (mode === "server" && productUuid && imageUuid && !isBlob(img.url)) {
       try {
-        console.log("Removing image")
-        await deleteProductImageRequester(productId, imageToRemove.id)
-      } catch (error) {
-        console.error("Error deleting image from server:", error)
+        await deleteProductImageRequester(productUuid, imageUuid)
+      } catch (e) {
+        console.error("Error deleting image from server:", e)
         alert("Error deleting image")
         return
       }
     }
 
-    const updatedImages = images.filter((_, i) => i !== index)
+    // อัปเดต local state
+    const updated = images.filter((_, i) => i !== index)
+    if (img.isMain && updated.length > 0) updated[0].isMain = true
+    onImagesChange(updated.map((x, i) => ({ ...x, sortOrder: i })))
 
-    // If we removed the main image, set the first remaining image as main
-    if (images[index].isMain && updatedImages.length > 0) {
-      updatedImages[0].isMain = true
+    // โหมด server: sync reorder หลังลบ
+    if (mode === "server" && productUuid) {
+      const orders = updated
+        .filter((x) => x.uuid) // เฉพาะที่มีบนเซิร์ฟเวอร์
+        .map((x, i) => ({ imageUuid: x.uuid!, sortOrder: i }))
+      if (orders.length) {
+        try {
+          await reorderProductImagesRequester(productUuid, orders)
+        } catch (e) {
+          console.error("reorder after delete failed:", e)
+        }
+      }
     }
-
-    onImagesChange(updatedImages)
   }
 
   const setMainImage = async (index: number) => {
-    // const selectedImage = images[index]
-    // console.log("selected image in setMAin image", selectedImage)
-    const updatedImages = images.map((img, i) => ({
-      ...img,
-      isMain: i === index
-    }))
-    if (!updatedImages.some((img) => img.isMain) && updatedImages.length > 0) {
-      updatedImages[0].isMain = true
+    const updated = images.map((img, i) => ({ ...img, isMain: i === index }))
+    onImagesChange(updated)
+
+    if (mode === "server" && productUuid) {
+      const selected = updated[index]
+      const imageUuid = selected.uuid ?? selected.id
+      if (imageUuid && !isBlob(selected.url)) {
+        try {
+          await updateProductImageRequester(productUuid, imageUuid, {
+            isMain: true
+          })
+        } catch (e) {
+          console.error("Error setting main image on server:", e)
+          alert("Error setting main image")
+        }
+      }
     }
-    onImagesChange(updatedImages)
-    console.log("Is main updated", updatedImages)
-    const selectedImage = images[index]
-    console.log("Selected image = ", selectedImage)
-    if (
-      productId &&
-      selectedImage.id &&
-      !selectedImage.url.startsWith("blob:")
-    ) {
-      try {
-        await updateProductImageRequester(productId, selectedImage.id, {
-          isMain: true,
-          order: 0
-        })
-      } catch (error) {
-        console.error("Error setting main image on server:", error)
-        alert("Error setting main image")
-        return
+  }
+
+  const moveImage = async (from: number, to: number) => {
+    if (to < 0 || to >= images.length) return
+    const next = [...images]
+    const sp = next.splice(from, 1)[0]
+    next.splice(to, 0, sp)
+    const re = next.map((x, i) => ({ ...x, sortOrder: i }))
+    onImagesChange(re)
+
+    if (mode === "server" && productUuid) {
+      const orders = re
+        .filter((x) => x.uuid && !isBlob(x.url))
+        .map((x) => ({ imageUuid: x.uuid!, sortOrder: x.sortOrder ?? 0 }))
+      if (orders.length) {
+        try {
+          await reorderProductImagesRequester(productUuid, orders)
+        } catch (e) {
+          console.error("Error reordering on server:", e)
+        }
       }
     }
   }
@@ -192,7 +218,10 @@ export function ImageUpload({
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {images.map((image, index) => (
-            <Card key={index} className="relative group overflow-hidden">
+            <Card
+              key={(image.uuid || image.id || image.url) + index}
+              className="relative group overflow-hidden"
+            >
               <div className="aspect-square relative">
                 <img
                   src={image.url}
@@ -200,7 +229,6 @@ export function ImageUpload({
                   className="w-full h-full object-cover"
                 />
 
-                {/* Main image indicator */}
                 {image.isMain && (
                   <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs flex items-center">
                     <Star className="h-3 w-3 mr-1" />
@@ -208,7 +236,6 @@ export function ImageUpload({
                   </div>
                 )}
 
-                {/* Action buttons */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   {!image.isMain && (
                     <Button
@@ -231,10 +258,30 @@ export function ImageUpload({
                 </div>
               </div>
 
-              <div className="p-2">
+              <div className="p-2 flex items-center justify-between">
                 <p className="text-xs text-muted-foreground truncate">
                   {image.fileName}
                 </p>
+                <div className="space-x-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={index === 0}
+                    onClick={() => moveImage(index, index - 1)}
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={index === images.length - 1}
+                    onClick={() => moveImage(index, index + 1)}
+                  >
+                    ↓
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
