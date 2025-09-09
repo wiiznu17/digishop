@@ -6,6 +6,11 @@ import {
   DialogPanel,
 } from "@headlessui/react";
 import AddressCard from "./addressCard";
+import { Noto_Sans_Thai_Looped } from "next/font/google";
+import Button from "./button";
+const notoSanLoop = Noto_Sans_Thai_Looped({
+  weight:'400'
+})
 interface SelectAddress {
     isShown: boolean
     setIsShown: React.Dispatch<SetStateAction<boolean>>
@@ -35,7 +40,7 @@ export const DialogSelectAddress = ({
                   className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
                 />
         
-                <div className="fixed inset-0 z-100 w-screen overflow-y-auto">
+                <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${notoSanLoop.className} text-black`}>
                   <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <DialogPanel
                       transition
@@ -56,21 +61,20 @@ export const DialogSelectAddress = ({
                         </div>
                       </div>
                       <div className="bg-gray-700/25 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
                           onClick={handleOnConfirm}
-                          className="bg-green-500 hover:bg-red-400 inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-white sm:ml-3 sm:w-auto"
+                          className="bg-green-500 hover:bg-red-400 mx-2"
                         >
                           Confirm
-                        </button>
-                        <button
-                          type="button"
-                          data-autofocus
+                        </Button>
+                        <Button
+                          size="sm"
                           onClick={handleOnCancel}
-                          className="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto"
+                          className="justify-center bg-white/10 "
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </div>
                     </DialogPanel>
                   </div>

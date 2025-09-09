@@ -4,12 +4,13 @@ import { ProductImage } from './ProductImage';
 
 export interface ProductAttributes {
   id: number;
+  uuid: string;
   storeId: number;
   categoryId: number;
   name: string;
   description?: string | null;
   // not use
-  price: string; // now we use product item for price/stock
+  price: number; // now we use product item for price/stock (string) , simple (number)
   stockQuantity: number; // now we use product item for price/stock
   status: ProductStatus;
   createdAt?: Date;
@@ -21,11 +22,12 @@ export interface ProductCreationAttributes
 
 export class Product extends Model<ProductAttributes, ProductCreationAttributes> implements ProductAttributes {
   public id!: number;
+  public uuid!: string;
   public storeId!: number;
   public categoryId!: number;
   public name!: string;
   public description!: string | null;
-  public price!: string;
+  public price!: number;
   public stockQuantity!: number;
   public status!: ProductStatus;
   public images?: ProductImage[];
@@ -40,6 +42,11 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
           type: DataTypes.INTEGER.UNSIGNED,
           autoIncrement: true,
           primaryKey: true,
+        },
+        uuid: {
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
+          field: 'uuid'
         },
         storeId: {
           type: DataTypes.INTEGER.UNSIGNED,
