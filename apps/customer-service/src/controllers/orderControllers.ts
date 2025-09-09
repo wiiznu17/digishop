@@ -1,14 +1,18 @@
 import { Address } from "@digishop/db/src/models/Address";
 import { Order } from "@digishop/db/src/models/Order";
 import { OrderItem } from "@digishop/db/src/models/OrderItem";
+import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
 import { Payment } from "@digishop/db/src/models/Payment";
+import { PaymentGatewayEvent } from "@digishop/db/src/models/PaymentGatewayEvent";
 import { Product } from "@digishop/db/src/models/Product";
 import { ProductImage } from "@digishop/db/src/models/ProductImage";
+import { ProductItem } from "@digishop/db/src/models/ProductItem";
 import { ShippingInfo } from "@digishop/db/src/models/ShippingInfo";
 import { ShippingType } from "@digishop/db/src/models/ShippingType";
 import { Store } from "@digishop/db/src/models/Store";
 import { User } from "@digishop/db/src/models/User";
 import {
+  ActorType,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
@@ -18,6 +22,7 @@ import axios from "axios";
 import { count } from "console";
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
+import { Op } from "sequelize";
 const signKey =
   process.env.MERCHANRT_SIGN_KEY ??
   "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
@@ -30,19 +35,13 @@ const apiKey =
   "ApFbpLSXApOHFB2fTlqn0zWg3HjqucQVChYmxtpOarw";
 const partnerId = process.env.MERCHANRT_PARTNER_ID ?? "1754627921";
 
-const contentSignature = (
-  body: Object
-) => {
+const contentSignature = (body: Object) => {
   console.log("sign key", String(signKey));
   const hmac = crypto.createHmac(
     "sha256",
     Buffer.from(String(signKey), "base64")
   );
-  return hmac
-    .update(
-      JSON.stringify(body)
-    )
-    .digest("base64");
+  return hmac.update(JSON.stringify(body)).digest("base64");
 };
 
 export const findOrder = async (
@@ -50,10 +49,24 @@ export const findOrder = async (
   res: Response,
   next: NextFunction
 ) => {
-  const id = req.params.id;
+  const {id,userId} = req.params;
   try {
-    const getOrders = await Order.findByPk(id, {
-      attributes: ["id","order_code","reference", "status","created_at","grand_total_minor","currency_code","order_note"],
+    const getOrders = await Order.findOne({
+      where: {
+        [Op.and]: {
+          id: id , customerId: userId
+        }
+      },
+      attributes: [
+        "id",
+        "order_code",
+        "reference",
+        "status",
+        "created_at",
+        "grand_total_minor",
+        "currency_code",
+        "order_note",
+      ],
       include: [
         {
           model: ShippingInfo,
@@ -62,43 +75,43 @@ export const findOrder = async (
           include: [
             {
               model: Address,
-              as: "address"
+              as: "address",
             },
             {
               model: ShippingType,
               as: "shippingType",
-              attributes: ["name","description","estimatedDays","price"]
-            }
-          ]
+              attributes: ["name", "description", "estimatedDays", "price"],
+            },
+          ],
         },
         {
           model: OrderItem,
           as: "items",
-          attributes: ["quantity","unit_price_minor"],
+          attributes: ["quantity", "unit_price_minor"],
           include: [
             {
               model: Product,
               as: "product",
-              attributes: ["name"],
+              attributes: ["id","uuid","name","stockQuantity"],
               include: [
                 {
                   model: ProductImage,
-                  as: 'images',
-                  attributes: ['url','blobName','fileName']
-                }
-              ]
+                  as: "images",
+                  attributes: ["url", "blobName", "fileName"],
+                },
+              ],
             },
           ],
         },
         {
           model: Store,
           as: "store",
-          attributes: ["storeName"],
+          attributes: ["id","storeName"],
         },
         {
           model: Payment,
           as: "payment",
-          attributes: ["payment_method","updated_at"],
+          attributes: ["pgw_status","payment_method", "updated_at"],
         },
       ],
     });
@@ -116,12 +129,24 @@ export const findUserOrder = async (
   try {
     const getUserOrders = await Order.findAndCountAll({
       where: { customerId: id },
-      attributes: ["id", "reference", "status","currency_code","order_note","grand_total_minor"],
+      attributes: [
+        "id",
+        "reference",
+        "status",
+        "currency_code",
+        "order_note",
+        "grand_total_minor",
+      ],
       include: [
         {
           model: OrderItem,
           as: "items",
-          attributes: ["quantity","unit_price_minor","discount_minor","product_name_snapshot"],
+          attributes: [
+            "quantity",
+            "unit_price_minor",
+            "discount_minor",
+            "product_name_snapshot",
+          ],
           include: [
             {
               model: Product,
@@ -130,10 +155,10 @@ export const findUserOrder = async (
               include: [
                 {
                   model: ProductImage,
-                  as: 'images',
-                  attributes: ['url','blobName','fileName']
-                }
-              ]
+                  as: "images",
+                  attributes: ["url", "blobName", "fileName"],
+                },
+              ],
             },
           ],
         },
@@ -145,15 +170,70 @@ export const findUserOrder = async (
         {
           model: Payment,
           as: "payment",
-          attributes: ["payment_method","status","channel","currency_code","amount_authorized_minor","amount_captured_minor","amount_refunded_minor","pgw_status"],
+          attributes: [
+            "payment_method",
+            "status",
+            "channel",
+            "currency_code",
+            "amount_authorized_minor",
+            "amount_captured_minor",
+            "amount_refunded_minor",
+            "pgw_status",
+          ],
         },
       ],
     });
     return res
       .status(200)
-      .json({ body: getUserOrders.rows, count: getUserOrders.count });
+      .json({ body: getUserOrders.rows , count: getUserOrders.count});
   } catch (error) {
     console.log("error", error);
+  }
+};
+
+export const createOrderId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { customerId, storeId, productId, storeName } = req.body;
+  const user = await User.findByPk(customerId);
+  const orderCod = "DGS" + Date.now() + productId + customerId;
+  const product = await Product.findByPk(productId, { attributes: ["price"]});
+  try {
+    if (user && product) {
+      const orderData = await Order.create({
+        customerId,
+        storeId,
+        orderCode: orderCod,
+        reference: orderCod,
+        subtotalMinor: 0,
+        shippingFeeMinor: 0,
+        taxTotalMinor: 0,
+        discountTotalMinor: 0,
+        grandTotalMinor: 0,
+        currencyCode: "",
+        status: OrderStatus.PENDING,
+        customerNameSnapshot: user.firstName,
+        customerEmailSnapshot: user.email,
+        storeNameSnapshot: storeName,
+      })
+      await OrderItem.create({
+        orderId: orderData.id,
+        productId,
+        quantity: 0,
+        unitPriceMinor: product.price, //error pull price
+        discountMinor: 0,
+        taxRate: "0.0000",
+        lineTotalMinor: 0,
+        productNameSnapshot: '',
+        productImageSnapshot: '',
+      })
+      orderData.save()
+      res.json({ data: orderData.id });
+    }
+  } catch (error) {
+    res.json({error: error})
   }
 };
 
@@ -163,84 +243,89 @@ export const createOrder = async (
   next: NextFunction
 ) => {
   const {
+    orderId,
     customerId,
     productName,
+    quantity,
     storeId,
     grandTotalMinor,
     productId,
-    quantity,
     unitPrice,
     shippingTypeId,
     shippingAddress,
     orderNote,
-    paymentMethod
+    paymentMethod,
   } = req.body;
   const orderCod = "DGS" + Date.now() + productId + customerId;
 
   try {
-    const user = await User.findByPk(customerId)
-    const store = await Store.findByPk(storeId)
-    const product = await Product.findByPk(productId)
-    if(!user || !store || !product) return
-    const orderData = await Order.create({
-      orderCode: orderCod,
-      customerId,
-      storeId,
-      reference: orderCod,
-      subtotalMinor: grandTotalMinor,
-      shippingFeeMinor: 0,
-      taxTotalMinor: 0,
-      discountTotalMinor: 0,
-      grandTotalMinor,
-      currencyCode: 'THB',
-      status: OrderStatus.PENDING,
-      orderNote,
-      customerNameSnapshot: user.firstName,
-      customerEmailSnapshot: user.email,
-      storeNameSnapshot: store.storeName,
-    });
-    await OrderItem.create({
-      orderId: orderData.id,
-      productId,
-      quantity,
-      unitPriceMinor: unitPrice,
-      discountMinor: 0,
-      taxRate: '0.0000',
-      lineTotalMinor: 0,
-      productNameSnapshot: product.name,
-      productImageSnapshot: `{"id": ${product.id}, "sku": "", "name": "${product.name}", "priceMinor": ${unitPrice}}`
-    });
-    await ShippingInfo.create({
-      orderId: orderData.id,
-      shippingTypeId,
-      shippingAddress,
-      shippingStatus: ShippingStatus.PENDING,
-    });
-    await Payment.create({
-      orderId: orderData.id,
-      paymentMethod,
-      status: PaymentStatus.PENDING,
-      channel: "CARD",
-      currencyCode: "THB",
-      amountAuthorizedMinor: grandTotalMinor,
-      amountCapturedMinor: grandTotalMinor,
-      pgwStatus: 'PENDING',
-      pgwPayload: { orderId:  orderData.id, status: 'PENDING'},
-      provider: "DGS_PGW", // Add a suitable provider value here
-    });
-    orderData.save();
-    if(paymentMethod == PaymentMethod.CREDIT_CARD){
-      const contentSigCard = contentSignature(
+    const user = await User.findByPk(customerId);
+    const store = await Store.findByPk(storeId);
+    const product = await Product.findByPk(productId);
+    if (!user || !store || !product) return;
+    const updateOrder = await Order.update(
         {
-          mid: midCard,
-          order_id: orderCod,
-          description: productName,
-          amount: grandTotalMinor/100,
-          expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
-        }
-      );
+          subtotalMinor: grandTotalMinor,
+          shippingFeeMinor: 0,
+          taxTotalMinor: 0,
+          discountTotalMinor: 0,
+          grandTotalMinor,
+          currencyCode: "THB",
+          orderNote,
+        },
+        { where: { id: orderId } }
+    );
+      await OrderItem.update({
+        orderId,
+        productId,
+        quantity,
+        unitPriceMinor: unitPrice,
+        discountMinor: 0,
+        taxRate: "0.0000",
+        lineTotalMinor: 0,
+        productNameSnapshot: product.name,
+        productImageSnapshot: `{"id": ${product.id}, "sku": "", "name": "${product.name}", "priceMinor": ${unitPrice}}`,
+      },{where: {orderId: orderId}});
+    
+      const orderData = await ShippingInfo.create({
+        orderId,
+        shippingTypeId,
+        shippingAddress,
+        shippingStatus: ShippingStatus.PENDING,
+        //ไม่ได้ทำ snapshot
+      });
+      await OrderStatusHistory.create({
+        orderId,
+        toStatus: OrderStatus.PENDING,
+        changedByType: ActorType.CUSTOMER,
+        source: "API",
+        metadata: {},
+      });
+      const paymentData = await Payment.create({
+        orderId,
+        paymentMethod,
+        status: PaymentStatus.PENDING,
+        provider: "DGS_PGW", // Add a suitable provider value here
+        channel: "CARD",
+        currencyCode: "THB",
+        amountAuthorizedMinor: grandTotalMinor,
+        amountCapturedMinor: grandTotalMinor,
+        pgwStatus: "PENDING",
+        pgwPayload: { orderId: orderId, status: "PENDING" },
+      });
+      orderData.save();
+      paymentData.save();   
+
+    if (paymentMethod == PaymentMethod.CREDIT_CARD) {
+      const contentSigCard = contentSignature({
+        mid: midCard,
+        order_id: orderCod,
+        description: productName,
+        amount: grandTotalMinor / 100,
+        expiry: 15,
+        url_redirect: "http://localhost:4003/api/payment/callback",
+        url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+      });
       const responseCardPayment = await axios.request({
         method: "post",
         url: "http://localhost:4002/payment",
@@ -248,7 +333,7 @@ export const createOrder = async (
           mid: midCard,
           order_id: orderCod,
           description: productName,
-          amount: grandTotalMinor/100,
+          amount: grandTotalMinor / 100,
           expiry: 15,
           url_redirect: "http://localhost:4003/api/payment/callback",
           url_notify: "http://localhost:4003/api/payment/notify", //web เรา
@@ -260,26 +345,47 @@ export const createOrder = async (
           "X-Content-Signature": contentSigCard,
         },
       });
-      orderData.reference = responseCardPayment.data.reference;
-      orderData.save();
-      res.status(200).json({ data: responseCardPayment.data });
-    }
-    if(paymentMethod == PaymentMethod.QR){
-      const randomNum = Math.random() * (1000 - 1) + 1
-      const contentSigQr = contentSignature(
+      await Order.update(
         {
-          mid: midQR30,
+          reference: responseCardPayment.data.reference,
+        },
+        { where: { id: orderId } }
+      );
+      const paymentStatus = await PaymentGatewayEvent.create({
+        orderId,
+        paymentId: paymentData.id,
+        type: "PAYMENT",
+        amountMinor: grandTotalMinor,
+        provider: "DGS_PGW",
+        status: "PENDING",
+        reqJson: {
+          mid: midCard,
           order_id: orderCod,
           description: productName,
-          amount: grandTotalMinor/100,
+          amount: grandTotalMinor / 100,
           expiry: 15,
           url_redirect: "http://localhost:4003/api/payment/callback",
           url_notify: "http://localhost:4003/api/payment/notify", //web เรา
-          qrcode : {
-            biller_reference_1: `REF${orderData.id}`
-          }
-        }
-      );
+        },
+        resJson: responseCardPayment.data,
+      });
+      paymentStatus.save();
+      res.status(200).json({ data: responseCardPayment.data });
+    }
+    if (paymentMethod == PaymentMethod.QR) {
+      // const randomNum = Math.random() * (1000 - 1) + 1;
+      const contentSigQr = contentSignature({
+        mid: midQR30,
+        order_id: orderCod,
+        description: productName,
+        amount: grandTotalMinor / 100,
+        expiry: 15,
+        url_redirect: "http://localhost:4003/api/payment/callback",
+        url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+        qrcode: {
+          biller_reference_1: `REF${orderId}`,
+        },
+      });
       const responseQrPayment = await axios.request({
         method: "post",
         url: "http://localhost:4002/payment",
@@ -287,13 +393,13 @@ export const createOrder = async (
           mid: midQR30,
           order_id: orderCod,
           description: productName,
-          amount: grandTotalMinor/100,
+          amount: grandTotalMinor / 100,
           expiry: 15,
           url_redirect: "http://localhost:4003/api/payment/callback",
           url_notify: "http://localhost:4003/api/payment/notify", //web เรา
-          qrcode : {
-            biller_reference_1: `REF${orderData.id}`
-          }
+          qrcode: {
+            biller_reference_1: `REF${orderId}`,
+          },
         },
         headers: {
           "X-API-ID": apiId,
@@ -302,11 +408,36 @@ export const createOrder = async (
           "X-Content-Signature": contentSigQr,
         },
       });
-      orderData.reference = responseQrPayment.data.reference;
-      orderData.save();
+      await Order.update(
+        {
+          reference: responseQrPayment.data.reference,
+        },
+        { where: { id: orderId } }
+      );
+      const paymentStatus = await PaymentGatewayEvent.create({
+        orderId,
+        paymentId: paymentData.id,
+        type: "PAYMENT",
+        amountMinor: grandTotalMinor,
+        provider: "DGS_PGW",
+        status: "PENDING",
+        reqJson: {
+          mid: midQR30,
+          order_id: orderCod,
+          description: productName,
+          amount: grandTotalMinor / 100,
+          expiry: 15,
+          url_redirect: "http://localhost:4003/api/payment/callback",
+          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          qrcode: {
+            biller_reference_1: `REF${orderCod}`,
+          },
+        },
+        resJson: responseQrPayment.data,
+      });
+      paymentStatus.save();
       res.status(200).json({ data: responseQrPayment.data });
     }
-
   } catch (error) {
     res.status(404).json({ error: error });
   }
