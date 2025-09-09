@@ -1,5 +1,5 @@
-import { QueryInterface } from 'sequelize';
-import { v4 as uuidv4 } from 'uuid';
+import { QueryInterface } from "sequelize"
+import { v4 as uuidv4 } from "uuid"
 
 export default {
   up: async (queryInterface: QueryInterface) => {

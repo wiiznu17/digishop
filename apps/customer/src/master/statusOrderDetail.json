@@ -1,0 +1,74 @@
+{
+  "PENDING": {
+    "label": "wait to paid",
+    "color": "bg-amber-200",
+    "cancel": "cancel"
+  },
+  "CUSTOMER_CANCELED": {
+    "label": "your cancel this order",
+    "color": "bg-red-200"
+  },
+  "PAID": {
+    "label": "waiting merchant confirm",
+    "color": "bg-green-200",
+    "cancel": "cancel"
+  },
+  "MERCHANT_CANCELED": {
+    "label": "merchant cancel this order",
+    "color": "bg-red-200"
+  },
+  "PROCESSING": {
+    "label": "order is preparing",
+    "color": "bg-amber-200"
+  },
+  "READY_TO_SHIP": {
+    "label": "order ready to ship",
+    "color": "bg-green-200"
+  },
+  "HANDED_OVER": {
+    "label": "shipping company pickup",
+    "color": "bg-green-200"
+  },
+  "SHIPPED": {
+    "label": "order is in transit",
+    "color": "bg-amber-200"
+  },
+  "DELIVERED": {
+    "label": "order is delivered",
+    "color": "bg-amber-200",
+    "cancel": "refund"
+  },
+  "COMPLETE": {
+    "label": "order is complete"
+  },
+  "TRANSIT_LACK": {
+    "label": "transit lack"
+  },
+  "RE_TRANSIT": {
+    "label": "re-transport"
+  },
+  "REFUND_REQUEST": {
+    "label": "you refund this order"
+  },
+  "AWAITING_RETURN": {
+    "label": "waiting  "
+  },
+  "RECEIVE_RETURN": {
+    "label": "receive return"
+  },
+  "RETURN_VERIFIED": {
+    "label": "return comfirm"
+  },
+  "RETURN_FAIL": {
+    "label": "return fail"
+  },
+  "REFUND_APPROVED": {
+    "label": "merchant approve refund"
+  },
+  "REFUND_SUCCESS": {
+    "label": "refund success"
+  },
+  "REFUND_FAIL": {
+    "label": "refund failed"
+  }
+}

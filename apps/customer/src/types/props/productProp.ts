@@ -30,3 +30,22 @@ export interface Product {
     name: string
   }
 }
+
+export interface OrderProduct {
+  id: number
+  name: string
+  description: string
+  price: number
+  stockQuantity: number
+  store: {
+    id: number
+    storeName: string
+    logoUrl: string
+    description: string
+  }
+  category: {
+    id: number
+    name: string
+  }
+  
+}

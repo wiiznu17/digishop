@@ -8,7 +8,17 @@ import { FormRegister } from '@/types/props/userProp';
 import { useRouter } from 'next/navigation';
 import InputField from '@/components/inputField';
 import { useAuth } from '@/contexts/auth-context';
- 
+import { Rubik, Ubuntu } from 'next/font/google';
+import icon from "./shopping.png"
+import Image from 'next/image'
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "300"
+})
+const ubuntu = Ubuntu({
+  subsets: ["latin"],
+  weight: "300"
+})
 const AuthPage: React.FC = () => {
  
     const [formData, setFormData] = useState({
@@ -62,11 +72,11 @@ const AuthPage: React.FC = () => {
       };
     }
   return (
-    <div className='grid grid-cols-2 min-h-screen bg-white'>
-      <div className="flex justify-center items-center text-4xl ">Icon</div>
+    <div className={`grid grid-cols-2 min-h-screen bg-white ${rubik.className}`}>
+      <div className='flex justify-center items-center'><Image src={icon} width={100} height={100} alt="Shpping" /></div>
       <div className='flex justify-center items-center'>
-          <div>
-          <form onSubmit={handleSubmit} className="bg-white  p-8 space-y-6 ">
+          <div className='w-1/2'>
+          <form onSubmit={handleSubmit} className="bg-white p-4 space-y-6 ">
           {/* Email Field */}
           <InputField
             label="Email Address"
@@ -92,10 +102,10 @@ const AuthPage: React.FC = () => {
           />
           {/* Submit Button */}
           <Button
-            type="submit"
             size="lg"
             className="w-full group"
             disabled={isLoading}
+            color='bg-gray'
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -121,12 +131,15 @@ const AuthPage: React.FC = () => {
                </div>
              </div>
           <Link href='/register'>
+            <div className='px-4'>
               <Button
                 size="lg"
                 className="w-full"
+                color='bg-blue-200'
               >
                 Create Account
               </Button>
+            </div>
             </Link>
       </div>
       </div>

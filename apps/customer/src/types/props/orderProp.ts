@@ -24,11 +24,11 @@ export interface Order1 {
     userId: string
 }
 export interface Order {
-    id?:number
+    orderId?:number
     customerId: number,
     grandTotalMinor: number,
     orderNote?: string,
-    paymentMethod: PaymentMethod,
+    paymentMethod: PaymentMethod | string,
     storeId: number,
     productName:string,
     productId:number,
@@ -38,6 +38,12 @@ export interface Order {
     shippingAddress:number,
     createdAt?: Date
     updatedAt?: Date
+}
+export interface OrderIdProps {
+    customerId: number,
+    storeId: number,
+    productId: number,
+    storeName: string
 }
 
 export interface OrderDetail {
@@ -72,14 +78,17 @@ export interface OrderDetail {
             name: string,
             description?: string,
             estimatedDays: number,
-            price: string,
+            price: number,
         }
     },
     items:  [ {
         quantity: number,
         unit_price_minor: number,
         product : {
+            id:number,
+            uuid: string,
             name: string,
+            stockQuantity: number,
             images: [
                 {
                     url: string,
@@ -90,9 +99,11 @@ export interface OrderDetail {
         }
     }],
     store: {
+        id: number,
         storeName: string
     },
     payment: {
+        pgw_status: string,
         payment_method: string,
         updated_at: string
     }

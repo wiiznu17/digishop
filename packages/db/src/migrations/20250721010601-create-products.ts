@@ -5,7 +5,7 @@ export default {
   async up(queryInterface: QueryInterface): Promise<void> {
     await queryInterface.createTable('PRODUCTS', {
       id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true, allowNull: false },
-      uuid: { type: DataTypes.STRING(36), allowNull: false },
+      uuid: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, allowNull: false },
       store_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
