@@ -1,9 +1,13 @@
 "use client";
 import { useAuth } from "@/contexts/auth-context";
 import { Address } from "@/types/props/addressProp";
-import { Order, Shipping } from "@/types/props/orderProp";
+import { Order, OrderDetail, Shipping } from "@/types/props/orderProp";
 import { Product } from "@/types/props/productProp";
-import { createOrder, getShippingType } from "@/utils/requestUtils/requestOrderUtils";
+import {
+  createOrder,
+  fetchOrders,
+  getShippingType,
+} from "@/utils/requestUtils/requestOrderUtils";
 import { getProduct } from "@/utils/requestUtils/requestProduct";
 import { getAddress } from "@/utils/requestUtils/requestUserUtils";
 import Link from "next/link";
@@ -12,200 +16,376 @@ import { useEffect, useState } from "react";
 import AddressCard from "@/components/addressCard";
 import ShippingCardDetail from "@/components/shippingCard";
 import { DialogSelectAddress } from "@/components/dialogSelectAddress";
-import { PaymentMethod, PaymentType } from "../../../../../../../packages/db/src/types/enum";
+import {
+  PaymentMethod,
+  PaymentType,
+} from "../../../../../../../packages/db/src/types/enum";
 import InputField from "@/components/inputField";
-
-interface PaymentDetail {
-  label: string,
-  value: PaymentMethod
-}
+import Button from "@/components/button";
+import { ClipboardCheck, Minus, Plus } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import PaymentMethodMaster from "../../../../master/paymentMethod.json"
+// interface PaymentDetail {
+//   label: string;
+//   value: PaymentMethod;
+// }
 export default function OrderPage() {
   const { id } = useParams();
-  const productName = String(id);
+  const orderId = String(id);
   const [processStatus, setProcessStatus] = useState<number>(1);
   const [amount, setAmount] = useState(1);
   const [price, setPrice] = useState(0);
   const [order, setOrder] = useState<Order>();
   const [note, setNote] = useState<string>("");
-  const [product, setProduct] = useState<Product>();
   const [addresses, setAddresses] = useState<Address[]>();
   const [selectAddress, setSelectAddress] = useState<Address>();
   const [shipping, setShipping] = useState<Shipping[]>();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentDetail>();
-  const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1)
-  const [isShowSelectAddress, setIsShowSelectAddress] = useState(false);  
-  const payments = {
-    CERDIT_CARD : {
-      label: 'CERDIT_CARD',
-      value: PaymentMethod.CREDIT_CARD
-    },
-    QR : {
-      label: 'QR',
-      value: PaymentMethod.QR
-    }
-  }
-  // const [linkPayment, setLinkPayment] = useState('/digishop');
+  const [paymentMethod, setPaymentMethod] = useState<string>();
+  const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1);
+  const [isShowSelectAddress, setIsShowSelectAddress] = useState(false);
+  const [orderDetail, setOrderDetail] = useState<OrderDetail>();
+  const router = useRouter()
   const { user } = useAuth();
   useEffect(() => {
     const fetchData = async () => {
-      const resProduct = await getProduct(productName);
+      if(!user)return
+      const resProduct = await fetchOrders(Number(orderId),user.id);
       const resAddress = await getAddress(user?.id);
       const resShipping = await getShippingType();
-      setProduct(resProduct.data);
+      setOrderDetail(resProduct.body);
       setAddresses(resAddress.data);
       setShipping(resShipping.data);
     };
     fetchData();
-  }, [productName, user]);
+  }, [user,orderId]);
+  
   useEffect(() => {
     const isMain = addresses?.filter((item) => item.isDefault === true);
-    if(isMain) {
-      setSelectAddress(isMain[0])
+    if (isMain) {
+      setSelectAddress(isMain[0]);
     }
-  },[addresses])
+  }, [addresses]);
   useEffect(() => {
-    if(!shipping) return
-    const sumprice = Number(shipping[selectShippingTypeId - 1].price) + Number(product?.price) * amount;    
+    if (!shipping) return;
+    const sumprice =
+      Number(shipping[selectShippingTypeId - 1].price) +
+      Number(orderDetail?.items[0].unit_price_minor) * amount;
     setPrice(sumprice);
-  }, [amount, product?.price,selectShippingTypeId,shipping]);
+  }, [amount, selectShippingTypeId, shipping,orderDetail?.items]);
   useEffect(() => {
-    if (!user || !product || !selectAddress || !selectAddress.id || !paymentMethod ) return;
+    if (
+      !user ||
+      !orderDetail ||
+      !selectAddress ||
+      !selectAddress.id ||
+      !paymentMethod
+    )
+      return;
     setOrder({
-      productName: product.name,
+      orderId: Number(orderId),
+      productName: orderDetail.items[0].product.name,
       customerId: user.id,
-      storeId: product.store.id,
+      storeId: orderDetail.store.id,
       grandTotalMinor: price,
-      productId: product.id,
+      productId: orderDetail.items[0].product.id,
       quantity: amount,
-      unitPrice: product.price,
+      unitPrice: orderDetail.items[0].unit_price_minor,
       shippingTypeId: selectShippingTypeId,
       shippingAddress: selectAddress.id,
-      paymentMethod: paymentMethod.value,
-      orderNote: note
+      paymentMethod: paymentMethod,
+      orderNote: note,
     });
-  },[amount,user,product,selectAddress,price,selectShippingTypeId,note,paymentMethod])
-
+  }, [
+    orderId,
+    amount,
+    user,
+    orderDetail,
+    selectAddress,
+    price,
+    selectShippingTypeId,
+    note,
+    paymentMethod,
+  ]);
+  const formatAddress = (items: Address): string => {
+    return [
+      items.address_number,
+      items.building,
+      items.street,
+      items.subStreet,
+      items.district,
+      items.subdistrict,
+      items.province,
+      items.postalCode,
+      items.country,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  };
   const handleOrder = async () => {
-    if (!order) return
+    if (!order) return;
     const res = await createOrder(order);
-    console.log('res re',res.data)
-    if(res.data.redirect_url){
-      redirect(res.data.redirect_url,RedirectType.replace)
+    console.log("res", res.data);
+    if (res.data.redirect_url) {
+      redirect(res.data.redirect_url, RedirectType.replace);
     }
-    console.log(order)
+    console.log(order);
   };
 
   if (user == null || user.id <= 0) return;
-  const handleOnClickSelectAddress = ():void => {
-    setIsShowSelectAddress(true)
+  const handleOnClickSelectAddress = (): void => {
+    setIsShowSelectAddress(true);
   };
-  const handleOnCancelSelectAddress = ():void => {
-    setIsShowSelectAddress(false)
+  const handleOnCancelSelectAddress = (): void => {
+    setIsShowSelectAddress(false);
   };
-  const handleChange = (e:React.ChangeEvent<HTMLInputElement> ) => {
-      setNote(e.target.value);
-    };
-  const handlePayment = (e: PaymentDetail) => {
-    setPaymentMethod(e)
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNote(e.target.value);
+  };
+  const handlePayment = (e: string) => {
+    setPaymentMethod(e);
+  };
+  if (!orderDetail || !shipping) return;
   return (
-    <>
-      <div className="min-h-screen p-3">
-        {processStatus === 1 && product && (
+    <div>
+    {
+      orderDetail.payment.pgw_status == 'APPROVED' && 
+      <div>
+        <div className="flex justify-center items-center p-4 ">
+              <div>
+                <div className="flex mb-3">
+                  <ClipboardCheck size={100} color="green"/>
+                  <div className="text-4xl m-3 p-3">
+                      Order is successful
+                  </div>
+                </div>
+                <div className="flex justify-center">
+                  <div className="flex">
+                      <Button onClick={()=> router.replace('/digishop/order/status') } className="p-3  cursor-pointer text-black">see order status</Button>
+                      <Button onClick={()=> router.replace('/digishop') } className="ml-6 p-4 bg-blue-300 cursor-pointer">back first page</Button>
+                  </div>
+                </div>
+              </div>
+            
+        </div>
+      </div>
+    }
+    {
+      orderDetail.payment.pgw_status == 'CANCELED' && 
+      <div>
+        <div className="flex justify-center items-center p-4 ">
+              <div>
+                <div className="flex mb-3">                  
+                  <div className="text-4xl m-3 p-3">
+                      Order is failed
+                  </div>                  
+                  <p>you are cancel this order</p>                  
+                </div>
+                <div className="flex justify-center">
+                  <div className="flex">
+                      <Button onClick={()=> router.replace('/digishop/order/status') } className="p-3  cursor-pointer text-black">see order status</Button>
+                      <Button onClick={()=> router.replace('/digishop') } className="ml-6 p-4 bg-blue-300 cursor-pointer">back first page</Button>
+                  </div>
+                </div>
+              </div>
+        </div>
+      </div>
+    }
+    {
+      orderDetail.payment.pgw_status == 'FAILED' && 
+      <div>
+        <div className="flex justify-center items-center p-4 ">
+              <div>
+                <div className="flex mb-3">                  
+                  <div className="text-4xl m-3 p-3">
+                      Order is failed
+                  </div>                  
+                  <p>bank authorized failed</p>                  
+                </div>
+                <div className="flex justify-center">
+                  <div className="flex">
+                      <Button onClick={()=> router.replace(`/digishop/product/${orderDetail.items[0].product.uuid}`) } className="p-3  cursor-pointer text-black">buy product again</Button>
+                      <Button onClick={()=> router.replace('/digishop') } className="ml-6 p-4 bg-blue-300 cursor-pointer">back first page</Button>
+                  </div>
+                </div>
+              </div>
+        </div>
+      </div>
+    }
+    {
+      orderDetail.status == 'PENDING' && 
+      <div className="flex justify-center p-2 ">
+        <div className="min-h-screen p-3 ">
           <>
             {/* store info */}
-            <div className="flex mb-3">
-              <div className="h-[70px] w-[70px] rounded-[35px] bg-amber-800 "></div>
-              <h1 className="text-2xl font-extrabold px-4">
-                {product.store.storeName}
-              </h1>
-            </div>
-            {/* product info */}
-            <div className="mb-3">
-              <div className=" h-[350px] flex">
-                <div className="w-[500px] h-[350px] bg-amber-400">picture</div>
+            <div className="p-4">
+              <div className="border-b text-4xl mb-2 py-4 font-extrabold">
+                Product
+              </div>
+              <div className="rounded-lg shadow-md py-4 px-2">
+                <div className="flex mb-3 items-center">
+                  <div className=" h-[50px] w-[50px] rounded-[35px] bg-amber-800 "></div>
+                  <h1 className="text-2xl  px-4">{orderDetail.store.storeName}</h1>
+                </div>
+                {/* product info */}
                 <div className="">
-                  <div className="font-extrabold text-6xl mb-5">
-                    {product.name}
-                  </div>
-                  {/* add product */}
                   <div className="flex">
-                    <div className="flex m-6">
-                      <button
-                        disabled ={amount == 1}
-                        className={`px-3 rounded-xs  bg-red-400 ${amount == 1 ? "opacity-0" : "opacity-100"}`}
-                        onClick={() => setAmount(amount - 1)}
-                      >
-                        {" "}
-                        -{" "}
-                      </button>
-                      <div className="mx-8 ">{amount}</div>
-                      <button
-                        disabled ={amount == product?.stockQuantity}
-                        className={`px-3 rounded-xs bg-green-300 ${amount == product?.stockQuantity ? "opacity-0" : "opacity-100"}`}
-                        onClick={() => setAmount(amount + 1)}
-                      >
-                        {" "}
-                        +{" "}
-                      </button>
+                    <div className="w-[200px] h-[150px] bg-amber-400">
+                      picture
                     </div>
-                    <div className="text-5xl mx-9">{product?.price/100}</div>
+                    <div className="mx-4 flex-1">
+                      <div className="text-3xl mb-5">{orderDetail.items[0].product.name}</div>
+                      <div className="flex items-center justify-between">
+                        {/* Quantity Controls */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            disabled={amount == 1}
+                            onClick={() => setAmount(amount - 1)}
+                            className={`p-2 rounded-xs  bg-red-400 ${amount == 1 ? "opacity-0" : "opacity-100"}`}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+  
+                          <span className="w-8 text-center font-medium text-gray-900">
+                            {amount}
+                          </span>
+  
+                          <button
+                            disabled={amount == orderDetail.items[0].product.stockQuantity}
+                            className={`p-2 rounded-xs bg-green-300 ${amount == orderDetail.items[0].product.stockQuantity ? "opacity-0" : "opacity-100"}`}
+                            onClick={() => setAmount(amount + 1)}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+  
+                        {/* Price */}
+                        <div className="text-right">
+                          <div className="text-xl font-semibold text-gray-900">
+                            {orderDetail.items[0].unit_price_minor / 100}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Total: {(orderDetail.items[0].unit_price_minor * amount) / 100}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 {/* price product */}
               </div>
             </div>
-            {/* address info*/}
-            {selectAddress && (
-              <button onClick={handleOnClickSelectAddress}>
-                <AddressCard item={selectAddress} />
-              </button>
-            )}
-            {
-              shipping?.map((item: Shipping, index: number) => (
-                 <div key={index} className="m-3" onClick={() => setSelectShippingTypeId(item.id)}>
-                   <ShippingCardDetail item={item} selected={selectShippingTypeId}/>
-                 </div>
-              ))
-            }
-            <div className="w-1/2 mb-3">
-              <InputField 
-                label="Order Note"
-                name="note"
-                value={note} 
-                onChange={handleChange} 
-              />
+            <div className=" p-4">
+              {/* address info*/}
+              <div className="border-b text-4xl mb-2 py-4 font-extrabold">
+                Address
+              </div>
+              <div className="rounded-lg shadow-md py-4 px-2">
+  
+              {selectAddress && (
+                <div >
+                  <div className="bg-gray-200 p-3 rounded-2xl max-w-xl ">
+                    <div className="font-bold">{selectAddress.recipientName}</div>
+                    <div className="mx-4">
+                      <p>{formatAddress(selectAddress)}</p>
+                      <p>{selectAddress.phone}</p>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button size="sm" onClick={handleOnClickSelectAddress}>
+                        change address
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="">select your shipping type</div>
+              {shipping?.map((item: Shipping, index: number) => (
+                <div
+                key={index}
+                className=""
+                onClick={() => setSelectShippingTypeId(item.id)}
+                >
+                  <ShippingCardDetail
+                    item={item}
+                    selected={selectShippingTypeId}
+                    />
+                </div>
+              ))}
+              <div className="mb-3 w-full">
+                <InputField
+                  label="Order Note"
+                  name="note"
+                  placeholder="message for merchant or shipping"
+                  value={note}
+                  onChange={handleChange}
+                  />
+              </div>
+                  </div>
             </div>
-            <div className="flex">
-              <div className="mb-6 text-4xl">total price</div>
-              <div className="mx-10 text-6xl">{price/100}</div>
+  
+            <div className="p-2">
+              <div className="border-b text-4xl mb-2 py-4 font-extrabold">
+                Total
+              </div>
+              <div className="bg-white rounded-lg shadow-sm p-4  mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Product</span>
+                  <span className="font-medium">
+                    {(orderDetail.items[0].unit_price_minor * amount)/100}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Shipping</span>
+                  <span className="font-medium">{shipping[selectShippingTypeId - 1].price/100}</span>
+                </div>
+                <div className="border-t border-gray-400 pt-2 flex justify-end items-center">
+                  <span className="text-lg font-semibold">{price/100}</span>
+                </div>
+              </div>
             </div>
-              {
-                Object.entries(payments).map(([payment,config]) => (
-                  <button key={payment} className={` m-4  flex p-4 rounded-xl border ${payment == paymentMethod?.label? 'border-amber-400': 'border-black'}`} onClick={()=> handlePayment(config)}>
-                    {config.label}
-                  </button>
-                ))
-              }
+  
+            <div className="p-2">
+              <div className="border-b text-4xl mb-2 py-4 font-extrabold">
+                Payment
+              </div>
+              <div className="rounded-lg shadow-md py-4 px-2">
+              <div>select your payment method</div>
+              {Object.entries(PaymentMethodMaster).map(([payment, config]) => (
+                <button
+                  key={payment}
+                  className={` m-3  flex p-4 rounded-xl border ${payment == paymentMethod?.label ? "border-black" : "border-gray-300 text-gray-300"}`}
+                  onClick={() => handlePayment(config.value)}
+                >
+                  {config.label}
+                </button>
+              ))}</div>
+            </div>
             {/* buttonb  */}
-            <button
-              onClick={handleOrder}
-              hidden={(!user || !product || !selectAddress || !selectAddress.id )}
-              className="bg-green-400 hover:bg-green-600 cursor-pointer p-4 rounded-2xl text-2xl"
-            >
-              confirm
-            </button>
+            <div className="flex justify-end">
+              <Button
+                onClick={handleOrder}
+                color={`${!paymentMethod ? "bg-gray-300 hover:bg-gray-300" : "bg-green-400 hover:bg-green-600"}`}
+                disabled={!paymentMethod}
+              >
+                confirm
+              </Button>
+            </div>
           </>
-        )}
-        <DialogSelectAddress 
-          isShown={isShowSelectAddress}
-          setIsShown={setIsShowSelectAddress}
-          handleOnCancel={handleOnCancelSelectAddress}
-          addresses={addresses}
-          selectAddress={selectAddress}
-          setSelectAddress={setSelectAddress}
-        />
-      </div>
-    </>
+  
+          <DialogSelectAddress
+            isShown={isShowSelectAddress}
+            setIsShown={setIsShowSelectAddress}
+            handleOnCancel={handleOnCancelSelectAddress}
+            addresses={addresses}
+            selectAddress={selectAddress}
+            setSelectAddress={setSelectAddress}
+          />
+        </div>
+      </div> 
+    }
+    {
+      
+    }
+    </div>
   );
 }
+

@@ -1,8 +1,13 @@
 import Link from "next/link";
 import Logo from "./../logo.png";
 import Image from "next/image";
-import { CircleUser, ClipboardList, ShoppingCart } from "lucide-react";
-import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import { CircleUser, ClipboardList } from "lucide-react";
+import { AuthProvider  } from "@/contexts/auth-context";
+import { Noto_Sans_Thai_Looped } from "next/font/google";
+
+const notoSanLoop = Noto_Sans_Thai_Looped({
+  weight:'400'
+})
 export default function MainLayout({
   children,
 }: Readonly<{
@@ -34,7 +39,7 @@ export default function MainLayout({
           </div>
         </div>
       </header>
-      <div className="min-h-screen bg-white text-black">{children}</div>
+      <div className={`min-h-screen bg-white text-black ${notoSanLoop.className}`}>{children}</div>
     </AuthProvider>
   );
 }

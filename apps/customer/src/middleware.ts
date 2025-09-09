@@ -25,15 +25,12 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next()
       }
     } else {
-      if (pathname === "/register") {
-        return NextResponse.redirect(new URL("/", req.url))
-      } else {
         return NextResponse.next()
-      }
     }
   }
 
   if (!token) {
+    console.log('no token')
     return NextResponse.redirect(new URL("/", req.url))
   }
 

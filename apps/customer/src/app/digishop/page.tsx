@@ -1,10 +1,14 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Filter, X, Clock, TrendingUp, Key } from 'lucide-react';
 import NotFound from '@/components/notFound';
 import {useRouter} from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-
+import { Rubik } from 'next/font/google';
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "500"
+})
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,14 +31,14 @@ const SearchPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-[#C2D1F4]">
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="">
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-4">
-            {/* Logo/Title */}
-            <div className="text-center mb-12">
-              <h1 className='text-black'>
+              {/* <h1 className='absolute right-1/3 top-1/3 text-black'>
                 Hello {user?.id}
-              </h1>
-              <h2 className="text-5xl md:text-6xl font-bold text-gray-800 mb-4">
+              </h1> */}
+            {/* Logo/Title */}
+            <div className=" text-center mb-12">
+              <h2 className={`relative text-5xl md:text-6xl font-bold text-gray-800 mb-4 ${rubik.className}`}>
                 Find Anything
               </h2>
               <p className="text-xl text-gray-600">
