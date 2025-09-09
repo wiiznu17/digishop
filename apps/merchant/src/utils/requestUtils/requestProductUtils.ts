@@ -21,15 +21,6 @@ export type ProductListResponse = {
   meta: { page: number; pageSize: number; total: number; totalPages: number }
 }
 
-// export type CreateProductRequest = {
-//   categoryId: number
-//   name: string
-//   description?: string | null
-//   price?: number | null // base price (minor unit) ถ้าไม่ใช้/ใช้ผ่าน items ให้เป็น null/ไม่ส่ง
-//   stockQuantity?: number | null
-//   status?: string
-// }
-
 // เพิ่มช่องให้ backend อ่าน categoryUuid ได้โดยตรง
 export type CreateProductRequest = {
   name: string
