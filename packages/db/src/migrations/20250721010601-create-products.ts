@@ -22,8 +22,6 @@ export default {
       },
       name: { type: DataTypes.STRING(191), allowNull: false },
       description: { type: DataTypes.TEXT, allowNull: true },
-      price: { type: DataTypes.INTEGER, allowNull: false },
-      stock_quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       status: { type: DataTypes.ENUM(...Object.values(ProductStatus)), allowNull: false, defaultValue: ProductStatus.ACTIVE },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
