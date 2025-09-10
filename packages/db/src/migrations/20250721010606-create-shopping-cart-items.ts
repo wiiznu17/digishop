@@ -16,13 +16,6 @@ export default {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      store_id: {
-        type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
-        references: { model: "STORES", key: "id" },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
-      },
       product_item_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
@@ -70,7 +63,6 @@ export default {
 
     // Indexes
     await q.addIndex("SHOPPING_CART_ITEMS", ["cart_id"]);
-    await q.addIndex("SHOPPING_CART_ITEMS", ["store_id"]);
     await q.addIndex("SHOPPING_CART_ITEMS", ["product_item_id"]);
 
     // ป้องกันการเพิ่ม SKU เดียวซ้ำในตะกร้าเดียวกัน

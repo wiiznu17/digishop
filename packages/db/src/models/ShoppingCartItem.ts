@@ -4,7 +4,6 @@ export interface ShoppingCartItemAttributes {
   id: number;
   cartId: number;
   productItemId: number;      // FK -> PRODUCT_ITEMS.id (SKU)
-  storeId: number;
   quantity: number;
 
   // money in minor units
@@ -32,7 +31,6 @@ export class ShoppingCartItem
   public id!: number;
   public cartId!: number;
   public productItemId!: number;
-  public storeId!: number;
   public quantity!: number;
 
   public unitPriceMinor!: number;
@@ -55,11 +53,6 @@ export class ShoppingCartItem
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           field: "cart_id",
-        },
-        storeId: {
-          type: DataTypes.INTEGER.UNSIGNED,
-          allowNull: false,
-          field: "store_id",
         },
         productItemId: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -117,7 +110,6 @@ export class ShoppingCartItem
         indexes: [
           { fields: ["cart_id"] },
           { fields: ["product_item_id"] },
-          { fields: ["store_id"]},
           // กันซ้ำ SKU เดียวกันในตะกร้าเดียวกัน
           { unique: true, fields: ["cart_id", "product_item_id"] },
         ],
