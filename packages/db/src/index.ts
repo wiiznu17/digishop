@@ -60,7 +60,7 @@ export function initModels(conn: Sequelize) {
 
   Category.initModel(conn);
   Product.initModel(conn);
-  // ProductImage.initModel(conn); // FIX: เปิดใช้งาน
+  ProductImage.initModel(conn);
 
   Variation.initModel(conn);
   VariationOption.initModel(conn);

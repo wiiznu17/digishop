@@ -22,23 +22,37 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Plus } from "lucide-react"
-import {
-  Product,
-  ProductImage,
-  ProductStatus,
-  defaultProduct
-} from "@/types/props/productProp"
-import { ImageUpload } from "./imageUpload"
-import CATEGORYMASTER from "@/constants/master/categoryMaster.json"
+import { ImageUpload, ImageLike } from "./imageUpload"
 import PRODUCT_STATUS_MASTER from "@/constants/master/productStatusMaster.json"
-import {
-  CreateProductRequest,
-  UpdateProductRequest
-} from "@/types/requests/productRequest"
+
+type EditingProduct = {
+  uuid?: string
+  name: string
+  description?: string | null
+  status: string
+  category?: { uuid: string; name: string } | null
+  images?: Array<{
+    uuid: string
+    url: string
+    fileName: string
+    isMain: boolean
+    sortOrder: number
+  }>
+}
+
+export type CreateProductRequest = {
+  name: string
+  categoryUuid?: string
+  description?: string
+  status?: string
+}
+
+export type UpdateProductRequest = CreateProductRequest
+
 interface ProductDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  editingProduct: Product | null
+  editingProduct: EditingProduct | null
   onSubmit: (
     productData: CreateProductRequest | UpdateProductRequest,
     images: File[]
@@ -53,75 +67,75 @@ export function ProductDialog({
   onSubmit,
   onReset
 }: ProductDialogProps) {
-  const [formData, setFormData] = useState<Product>(defaultProduct)
+  const [name, setName] = useState("")
+  const [categoryUuid, setCategoryUuid] = useState<string>("")
+  const [status, setStatus] = useState<string>("DRAFT")
+  const [description, setDescription] = useState<string>("")
+  const [uiImages, setUiImages] = useState<ImageLike[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  // โหลดค่าเดิม
+  useEffect(() => {
+    if (editingProduct) {
+      setName(editingProduct.name || "")
+      setCategoryUuid(editingProduct.category?.uuid || "")
+      setStatus(editingProduct.status || "DRAFT")
+      setDescription(editingProduct.description || "")
+      setUiImages(
+        (editingProduct.images || [])
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((it) => ({
+            uuid: it.uuid,
+            url: it.url,
+            fileName: it.fileName,
+            isMain: it.isMain,
+            sortOrder: it.sortOrder
+          }))
+      )
+    } else {
+      resetForm()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingProduct])
+
+  const resetForm = () => {
+    setName("")
+    setCategoryUuid("")
+    setStatus("DRAFT")
+    setDescription("")
+    setUiImages([])
   }
 
-  const handleImagesChange = (images: ProductImage[]) => {
-    setFormData((prev) => ({ ...prev, images }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setIsSubmitting(true)
-
     try {
-      const productData: CreateProductRequest = {
-        name: formData.name,
-        categoryId: Number(formData.categoryId),
-        price: parseFloat(formData.price).toFixed(2),
-        stockQuantity: parseInt(formData.stockQuantity.toString(), 10),
-        status: formData.status,
-        description: formData.description
+      const payload: CreateProductRequest = {
+        name,
+        categoryUuid: categoryUuid || undefined,
+        description: description || undefined,
+        status
       }
 
-      // Convert blob URLs to actual files for new images
-      const imageFiles: File[] = []
-
-      if (formData.images) {
-        for (const image of formData.images) {
-          // Only process new images (blob URLs)
-          if (image.url.startsWith("blob:")) {
-            try {
-              const response = await fetch(image.url)
-              const blob = await response.blob()
-              const file = new File([blob], image.fileName, { type: blob.type })
-              imageFiles.push(file)
-            } catch (error) {
-              console.error("Error converting blob to file:", error)
-            }
-          }
+      // แปลง blob preview → File เฉพาะรูปใหม่
+      const files: File[] = []
+      for (const img of uiImages) {
+        if (img.url.startsWith("blob:")) {
+          const resp = await fetch(img.url)
+          const blob = await resp.blob()
+          files.push(new File([blob], img.fileName, { type: blob.type }))
         }
       }
 
-      await onSubmit(productData, imageFiles)
+      await onSubmit(payload, files)
       resetForm()
-    } catch (error) {
-      console.error("Error saving product:", error)
+    } catch (err) {
+      console.error("Error saving product:", err)
       alert("Error to saving product")
     } finally {
       setIsSubmitting(false)
     }
   }
-
-  const resetForm = () => {
-    setFormData({ ...defaultProduct })
-  }
-
-  // Update form when editing product changes
-  useEffect(() => {
-    if (editingProduct) {
-      setFormData({
-        ...editingProduct,
-        images: editingProduct.images || []
-      })
-    } else {
-      resetForm()
-    }
-  }, [editingProduct])
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -131,6 +145,7 @@ export function ProductDialog({
           Add product
         </Button>
       </DialogTrigger>
+
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>
@@ -145,41 +160,51 @@ export function ProductDialog({
 
         <ScrollArea className="max-h-[60vh] pr-4">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* รูปภาพสินค้า */}
+            {/* รูปภาพ: local mode (ยังไม่ยิง API จนกว่าจะ submit) */}
             <ImageUpload
-              images={formData.images || []}
-              onImagesChange={handleImagesChange}
-              maxImages={5}
-              productId={formData.id}
+              mode="local"
+              images={uiImages}
+              onImagesChange={setUiImages}
+              maxImages={10}
             />
 
-            {/* ข้อมูลพื้นฐาน */}
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Product name *</Label>
                 <Input
                   id="name"
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                  placeholder="Product name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category">Category</Label>
+                {/* NOTE: ของจริงควรโหลด categories จาก API แล้ว map เป็น <SelectItem /> */}
                 <Select
-                  onValueChange={(value) =>
-                    handleChange("categoryId", Number(value))
-                  }
-                  value={formData.categoryId.toString()}
+                  value={categoryUuid}
+                  onValueChange={(v) => setCategoryUuid(v)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
+                    {/* ตัวอย่างเปล่า ๆ ไว้รอเชื่อม requester categories */}
+                    <SelectItem value="">(None)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
                     {(
-                      Object.values(CATEGORYMASTER) as {
+                      Object.values(PRODUCT_STATUS_MASTER) as {
                         value: string
                         label: string
                       }[]
@@ -192,66 +217,12 @@ export function ProductDialog({
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => handleChange("price", e.target.value)}
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="stock">Stock *</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    value={formData.stockQuantity}
-                    onChange={(e) =>
-                      handleChange("stockQuantity", e.target.value)
-                    }
-                    placeholder="0"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  onValueChange={(value) => handleChange("status", value)}
-                  value={formData.status}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(
-                      Object.entries(PRODUCT_STATUS_MASTER) as [
-                        string,
-                        { value: string; label: string }
-                      ][]
-                    ).map(([key, { value, label }]) => (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={formData.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                  placeholder="Description..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                 />
               </div>
