@@ -10,8 +10,8 @@ export interface ProductAttributes {
   name: string;
   description?: string | null;
   // not use
-  price: number; // now we use product item for price/stock (string) , simple (number)
-  stockQuantity: number; // now we use product item for price/stock
+  //price: number;  now we use product item for price/stock (string) , simple (number)
+  //stockQuantity: number;  now we use product item for price/stock
   status: ProductStatus;
   createdAt?: Date;
   updatedAt?: Date;
@@ -27,8 +27,6 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
   public categoryId!: number;
   public name!: string;
   public description!: string | null;
-  public price!: number;
-  public stockQuantity!: number;
   public status!: ProductStatus;
   public images?: ProductImage[];
 
@@ -65,16 +63,6 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
         description: {
           type: DataTypes.TEXT,
           allowNull: true,
-        },
-        price: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-        },
-        stockQuantity: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-          field: 'stock_quantity',
-          defaultValue: 0,
         },
         status: {
           type: DataTypes.ENUM(...Object.values(ProductStatus)),
