@@ -64,6 +64,7 @@ export default {
     // Indexes
     await q.addIndex("SHOPPING_CART_ITEMS", ["cart_id"]);
     await q.addIndex("SHOPPING_CART_ITEMS", ["product_item_id"]);
+
     // ป้องกันการเพิ่ม SKU เดียวซ้ำในตะกร้าเดียวกัน
     await q.addIndex("SHOPPING_CART_ITEMS", ["cart_id", "product_item_id"], { unique: true });
   },
