@@ -180,6 +180,10 @@ export function initModels(conn: Sequelize) {
   ProductItem.hasMany(ShoppingCartItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "cartItems", onDelete: "RESTRICT", onUpdate: "CASCADE" });
   ShoppingCartItem.belongsTo(ProductItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "productItem", onDelete: "RESTRICT", onUpdate: "CASCADE" });
 
+  Store.hasMany(ShoppingCartItem, { foreignKey: { name: "storeId", field: "store_id" }, as: "cart", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  ShoppingCartItem.belongsTo(Store, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "store", onDelete: "RESTRICT", onUpdate: "CASCADE" });
+
+
   // Order <-> Items / Payment / Shipping / Status / Refund / Events / Disputes / Reviews
   Order.hasMany(OrderItem, { foreignKey: { name: "orderId", field: "order_id" }, as: "items", onDelete: "CASCADE", onUpdate: "CASCADE" });
   OrderItem.belongsTo(Order, { foreignKey: { name: "orderId", field: "order_id" }, as: "order", onDelete: "CASCADE", onUpdate: "CASCADE" });
