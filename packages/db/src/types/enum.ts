@@ -33,11 +33,9 @@ export enum ShippingType {
   EXPRESS = 'EXPRESS',
 }
 
-export enum ProductStatus {
+export enum ProductStatus { // สำหรับให้ร้านค้าเลือกว่าสินค้านี้ยังขายอยู่ไหม ส่วน status ที่เกี่ยวกับการขอลงขายสินค้ายังไม่มี
   ACTIVE = 'ACTIVE',
-  SUSPENDED = 'SUSPENDED',
-  OUT_OF_STOCK = 'OUT_OF_STOCK',
-  DRAFT = 'DRAFT'
+  SUSPENDED = 'SUSPENDED'
 }
 
 export enum OrderStatus {
