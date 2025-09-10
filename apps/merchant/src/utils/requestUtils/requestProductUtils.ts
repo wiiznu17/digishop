@@ -31,6 +31,7 @@ export type CreateProductRequest = {
   categoryUuid?: string
   price?: number | null
   stockQuantity?: number | null
+  expectedSkuCount?: number
 }
 
 export type UpdateProductRequest = Partial<CreateProductRequest>
