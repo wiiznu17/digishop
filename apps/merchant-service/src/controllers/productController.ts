@@ -435,7 +435,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
     const statusSafe =
       Object.values(ProductStatus).includes((raw.status as ProductStatus) ?? ("" as ProductStatus))
         ? (raw.status as ProductStatus)
-        : ProductStatus.DRAFT;
+        : ProductStatus.SUSPENDED;
 
     // รองรับ input ได้ทั้ง priceMinor และ price (ถือว่าเป็น minor unit เหมือนกัน) ---
     const priceMinor =
@@ -896,8 +896,8 @@ export const duplicateProduct = async (req: AuthenticatedRequest, res: Response)
         categoryId: src.categoryId,
         name: `${src.name} (Copy)`,
         description: src.description ?? null,
-        priceMinor: (src as any).priceMinor ?? null,   // base price ถ้ามี (ไม่ยุ่งกับ price_minor)
-        stockQuantity: src.stockQuantity ?? null,
+        // priceMinor: (src as any).priceMinor ?? null,   // base price ถ้ามี (ไม่ยุ่งกับ price_minor)
+        // stockQuantity: src.stockQuantity ?? null,
         status: src.status,
       },
       { transaction: t }
