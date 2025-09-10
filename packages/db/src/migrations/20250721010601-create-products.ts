@@ -25,14 +25,15 @@ export default {
       status: { type: DataTypes.ENUM(...Object.values(ProductStatus)), allowNull: false, defaultValue: ProductStatus.ACTIVE },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
-      deleted_at: {
-        type: DataTypes.DATE,
-        allowNull: true
-      }
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
     }, { engine: 'InnoDB', charset: 'utf8mb4', collate: 'utf8mb4_unicode_ci' });
-    await queryInterface.addIndex('PRODUCTS', ['store_id']);
-    await queryInterface.addIndex('PRODUCTS', ['category_id']);
-    await queryInterface.addIndex('PRODUCTS', ['status']);
+
+    await queryInterface.addIndex('PRODUCTS', ['uuid'], { unique: true, name: 'uq_products_uuid' });
+    await queryInterface.addIndex('PRODUCTS', ['store_id'], { name: 'ix_products_store' });
+    await queryInterface.addIndex('PRODUCTS', ['category_id'], { name: 'ix_products_category' });
+    await queryInterface.addIndex('PRODUCTS', ['status'], { name: 'ix_products_status' });
+    await queryInterface.addIndex('PRODUCTS', ['created_at'], { name: 'ix_products_created_at' });
+    await queryInterface.addIndex('PRODUCTS', ['price_minor'], { name: 'ix_products_price_minor' });
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {

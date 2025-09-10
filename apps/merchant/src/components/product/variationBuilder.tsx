@@ -1,0 +1,330 @@
+"use client"
+
+import { useEffect, useMemo, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card } from "@/components/ui/card"
+import { Plus, Trash2 } from "lucide-react"
+
+// ===== Types for Draft on client =====
+export type OptionDraft = {
+  cid: string
+  value: string
+  sortOrder: number
+}
+
+export type VariationDraft = {
+  cid: string
+  name: string
+  options: OptionDraft[]
+}
+
+export type ItemDraft = {
+  // ผลลัพธ์จาก cartesian product
+  key: string // unique from optionCids join
+  optionCids: string[] // อ้าง cid ของแต่ละ option
+  label: string // เช่น "Red / L"
+  enabled: boolean
+  sku: string
+  price: string // THB string → แปลงเป็น minor ตอน submit
+  stock: string // string → int ตอน submit
+}
+
+type Props = {
+  variations: VariationDraft[]
+  onVariationsChange: (v: VariationDraft[]) => void
+  items: ItemDraft[]
+  onItemsChange: (rows: ItemDraft[]) => void
+}
+
+// ===== Helpers =====
+const cuid = () => Math.random().toString(36).slice(2) + Date.now().toString(36)
+
+function cartesian<T>(arr: T[][]): T[][] {
+  if (arr.length === 0) return []
+  return arr.reduce<T[][]>(
+    (acc, curr) =>
+      acc
+        .map((a) => curr.map((c) => [...a, c]))
+        .reduce((x, y) => x.concat(y), []),
+    [[]]
+  )
+}
+
+function buildRows(variations: VariationDraft[]): ItemDraft[] {
+  const optionMatrix = variations.map((v) => v.options)
+  if (optionMatrix.length === 0 || optionMatrix.some((o) => o.length === 0)) {
+    return []
+  }
+  const combos = cartesian(optionMatrix)
+  return combos.map((opts) => {
+    const optionCids = opts.map((o) => o.cid)
+    const label = opts.map((o) => o.value).join(" / ")
+    const key = optionCids.join("|")
+    return {
+      key,
+      optionCids,
+      label,
+      enabled: true,
+      sku: "",
+      price: "",
+      stock: ""
+    }
+  })
+}
+
+// ===== UI =====
+export default function VariationBuilder({
+  variations,
+  onVariationsChange,
+  items,
+  onItemsChange
+}: Props) {
+  // เมื่อ variations เปลี่ยน ให้ regenerate rows โดย “merge” ค่าเดิม (sku/price/stock/enabled) ที่ key ตรงกัน
+  useEffect(() => {
+    const next = buildRows(variations)
+    if (next.length === 0) {
+      onItemsChange([])
+      return
+    }
+    const prevMap = new Map(items.map((r) => [r.key, r]))
+    const merged = next.map((r) => {
+      const prev = prevMap.get(r.key)
+      return prev
+        ? {
+            ...r,
+            enabled: prev.enabled,
+            sku: prev.sku,
+            price: prev.price,
+            stock: prev.stock
+          }
+        : r
+    })
+    onItemsChange(merged)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(variations)])
+
+  // เพิ่ม/ลบ/แก้ชื่อ variation
+  const addVariation = () => {
+    const nv: VariationDraft = {
+      cid: cuid(),
+      name: `Variation ${variations.length + 1}`,
+      options: [
+        { cid: cuid(), value: "Option A", sortOrder: 0 },
+        { cid: cuid(), value: "Option B", sortOrder: 1 }
+      ]
+    }
+    onVariationsChange([...variations, nv])
+  }
+
+  const removeVariation = (cid: string) => {
+    onVariationsChange(variations.filter((v) => v.cid !== cid))
+  }
+
+  const renameVariation = (cid: string, name: string) => {
+    onVariationsChange(
+      variations.map((v) => (v.cid === cid ? { ...v, name } : v))
+    )
+  }
+
+  // เพิ่ม/ลบ/แก้ option
+  const addOption = (varCid: string) => {
+    onVariationsChange(
+      variations.map((v) =>
+        v.cid === varCid
+          ? {
+              ...v,
+              options: [
+                ...v.options,
+                {
+                  cid: cuid(),
+                  value: `Option ${v.options.length + 1}`,
+                  sortOrder: v.options.length
+                }
+              ]
+            }
+          : v
+      )
+    )
+  }
+
+  const removeOption = (varCid: string, optCid: string) => {
+    onVariationsChange(
+      variations.map((v) =>
+        v.cid === varCid
+          ? {
+              ...v,
+              options: v.options
+                .filter((o) => o.cid !== optCid)
+                .map((o, i) => ({ ...o, sortOrder: i }))
+            }
+          : v
+      )
+    )
+  }
+
+  const renameOption = (varCid: string, optCid: string, value: string) => {
+    onVariationsChange(
+      variations.map((v) =>
+        v.cid === varCid
+          ? {
+              ...v,
+              options: v.options.map((o) =>
+                o.cid === optCid ? { ...o, value } : o
+              )
+            }
+          : v
+      )
+    )
+  }
+
+  // แก้ rows (sku / price / stock / enabled)
+  const patchRow = (key: string, patch: Partial<ItemDraft>) => {
+    onItemsChange(items.map((r) => (r.key === key ? { ...r, ...patch } : r)))
+  }
+
+  const hasVariations = variations.length > 0
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-medium">Variations</div>
+        <Button type="button" size="sm" onClick={addVariation}>
+          <Plus className="h-4 w-4 mr-1" />
+          Add variation
+        </Button>
+      </div>
+
+      {/* Variations editor */}
+      <div className="grid gap-3 md:grid-cols-2">
+        {variations.map((v) => (
+          <Card key={v.cid} className="p-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={v.name}
+                onChange={(e) => renameVariation(v.cid, e.target.value)}
+                placeholder="Variation name (e.g. Color, Size)"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => removeVariation(v.cid)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              {v.options.map((o) => (
+                <div key={o.cid} className="flex items-center gap-2">
+                  <Input
+                    value={o.value}
+                    onChange={(e) => renameOption(v.cid, o.cid, e.target.value)}
+                    placeholder="Option value (e.g. Red, Large)"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeOption(v.cid, o.cid)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => addOption(v.cid)}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add option
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Generated items */}
+      <div className="space-y-2">
+        <div className="text-sm font-medium">Generated Items (SKUs)</div>
+        {!hasVariations && (
+          <div className="text-sm text-muted-foreground">
+            Add at least one variation with options to generate items.
+          </div>
+        )}
+
+        {hasVariations && items.length === 0 && (
+          <div className="text-sm text-muted-foreground">No combinations</div>
+        )}
+
+        {items.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="min-w-[720px] w-full text-sm border rounded">
+              <thead className="bg-muted/40">
+                <tr>
+                  <th className="text-left p-2">Enable</th>
+                  <th className="text-left p-2">Combination</th>
+                  <th className="text-left p-2">SKU</th>
+                  <th className="text-left p-2">Price (THB)</th>
+                  <th className="text-left p-2">Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((r) => (
+                  <tr key={r.key} className="border-t">
+                    <td className="p-2">
+                      <input
+                        type="checkbox"
+                        checked={r.enabled}
+                        onChange={(e) =>
+                          patchRow(r.key, { enabled: e.target.checked })
+                        }
+                      />
+                    </td>
+                    <td className="p-2">{r.label}</td>
+                    <td className="p-2">
+                      <Input
+                        value={r.sku}
+                        onChange={(e) =>
+                          patchRow(r.key, { sku: e.target.value })
+                        }
+                        placeholder="SKU"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={r.price}
+                        onChange={(e) =>
+                          patchRow(r.key, { price: e.target.value })
+                        }
+                        placeholder="0.00"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        value={r.stock}
+                        onChange={(e) =>
+                          patchRow(r.key, { stock: e.target.value })
+                        }
+                        placeholder="0"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

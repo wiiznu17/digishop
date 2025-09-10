@@ -1,121 +1,190 @@
+// apps/merchant/src/app/(main)/products/page.tsx
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { MerchantHeader } from "@/components/dashboard-header"
-import { ProductDialog } from "@/components/product/productDialog"
 import { ProductList } from "@/components/product/productList"
+import { Pagination } from "@/components/order/pagination"
 import {
-  createProductRequester,
-  deleteProductRequester,
   fetchProductsRequester,
-  updateProductRequester
+  deleteProductRequester,
+  type FetchProductsParams,
+  type ProductListResponse,
+  fetchCategoriesRequester,
+  CategoryDto
 } from "@/utils/requestUtils/requestProductUtils"
-import { Product, ProductImage } from "@/types/props/productProp"
-import {
-  CreateProductRequest,
-  UpdateProductRequest
-} from "@/types/requests/productRequest"
+// ดึงเฉพาะ type เพื่อไม่ให้ component ถูก import มาด้วย
+import type { ProductFilterState } from "@/components/product/productFilters"
+
+type ProductRow = ProductListResponse["data"][number]
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // อ่านค่าจาก URL
+  const page = Number(searchParams.get("page") ?? 1)
+  const pageSize = Number(searchParams.get("pageSize") ?? 20)
+  const q = searchParams.get("q") ?? ""
+  const categoryUuid = searchParams.get("categoryUuid") ?? undefined
+  const status = searchParams.get("status") ?? undefined
+  const inStockParam = searchParams.get("inStock")
+  const inStock = inStockParam == null ? undefined : inStockParam === "true"
+  const sortBy =
+    (searchParams.get("sortBy") as FetchProductsParams["sortBy"]) ?? "createdAt"
+  const sortDir =
+    (searchParams.get("sortDir") as FetchProductsParams["sortDir"]) ?? "desc"
+
+  // draft filters (แก้ค่าได้โดยไม่ reload / ไม่เปลี่ยน URL จนกด Search)
+  const [filters, setFilters] = useState<ProductFilterState>({
+    q,
+    categoryUuid,
+    status,
+    stock: inStock === undefined ? "all" : inStock ? "in" : "out",
+    sortBy,
+    sortDir
+  })
+
+  // sync filters เมื่อ URL เปลี่ยน (หลังจากกด Search)
+  useEffect(() => {
+    setFilters({
+      q,
+      categoryUuid,
+      status,
+      stock: inStock === undefined ? "all" : inStock ? "in" : "out",
+      sortBy,
+      sortDir
+    })
+  }, [q, categoryUuid, status, inStock, sortBy, sortDir])
+
+  const [products, setProducts] = useState<ProductRow[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [totalPages, setTotalPages] = useState<number>(1)
+  const [totalItems, setTotalItems] = useState<number>(0)
+  const [categories, setCategories] = useState<CategoryDto[]>([])
 
   useEffect(() => {
-    handleFetchProducts()
+    ;(async () => {
+      const cats = await fetchCategoriesRequester()
+      setCategories(cats)
+    })()
   }, [])
 
-  const handleFetchProducts = async () => {
-    try {
-      const response = await fetchProductsRequester()
-      if (response) {
-        console.log("response in product page: ", response)
-        setProducts(response)
-      } else {
-        console.error("Failed to fetch products")
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error)
-    }
+  const fetchList = useCallback(async () => {
+    setLoading(true)
+    const res = await fetchProductsRequester({
+      q,
+      categoryUuid,
+      status,
+      inStock,
+      sortBy,
+      sortDir,
+      page,
+      pageSize
+    })
+    setLoading(false)
+    if (!res) return
+    setProducts(res.data)
+    setTotalItems(res.meta.total)
+    setTotalPages(res.meta.totalPages || 1)
+  }, [q, categoryUuid, status, inStock, sortBy, sortDir, page, pageSize])
+
+  useEffect(() => {
+    void fetchList()
+  }, [fetchList])
+
+  const pushQuery = (kv: Record<string, string | number | undefined>) => {
+    const sp = new URLSearchParams(searchParams.toString())
+    Object.entries(kv).forEach(([k, v]) => {
+      if (v === undefined || v === "") sp.delete(k)
+      else sp.set(k, String(v))
+    })
+    router.push(`/products?${sp.toString()}`)
   }
 
-  const handleSubmit = async (
-    productData: CreateProductRequest | UpdateProductRequest,
-    images: File[]
-  ) => {
-    try {
-      let result
-
-      if (editingProduct && editingProduct.id) {
-        console.log("Updating product:", productData)
-        console.log("Updating product:", images)
-        console.log("New images:", images.length)
-        result = await updateProductRequester(
-          editingProduct.id,
-          productData as UpdateProductRequest,
-          images
-        )
-      } else {
-        console.log("Creating product:", productData)
-        console.log("Images:", images.length)
-        result = await createProductRequester(
-          productData as CreateProductRequest,
-          images
-        )
-      }
-
-      if (result) {
-        await handleFetchProducts()
-        resetForm()
-        setIsDialogOpen(false)
-      } else {
-        throw new Error("Failed to save product")
-      }
-    } catch (error) {
-      console.error("Error saving product:", error)
-      alert("Error to save product")
-    }
+  const handleApplyFilters = () => {
+    // กด Search ค่อยอัปเดต URL -> fetch ใหม่
+    pushQuery({
+      q: filters.q,
+      categoryUuid: filters.categoryUuid,
+      status: filters.status,
+      inStock:
+        filters.stock === "all" ? undefined : String(filters.stock === "in"),
+      sortBy: filters.sortBy,
+      sortDir: filters.sortDir,
+      page: 1
+    })
   }
 
-  const resetForm = () => {
-    setEditingProduct(null)
+  const handleResetFilters = () => {
+    setFilters({
+      q: "",
+      categoryUuid: undefined,
+      status: undefined,
+      stock: "all",
+      sortBy: "createdAt",
+      sortDir: "desc"
+    })
+    pushQuery({
+      q: undefined,
+      categoryUuid: undefined,
+      status: undefined,
+      inStock: undefined,
+      sortBy: "createdAt",
+      sortDir: "desc",
+      page: 1,
+      pageSize
+    })
   }
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product)
-    setIsDialogOpen(true)
+  const handlePageChange = (next: number) => {
+    pushQuery({ page: next })
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure to delete this product?")) {
-      try {
-        await deleteProductRequester(id)
-        console.log("Product deleted successfully")
-        await handleFetchProducts()
-      } catch (error) {
-        console.error("Error deleting product:", error)
-        alert("Error to delete product")
-      }
-    }
+  const handleItemsPerPageChange = (v: number) => {
+    pushQuery({ pageSize: v, page: 1 })
+  }
+
+  const onEdit = (p: ProductRow) => router.push(`/products/${p.uuid}/edit`)
+
+  const onDelete = async (uuid: string) => {
+    if (!confirm("Delete this product?")) return
+    const ok = await deleteProductRequester(uuid)
+    if (ok) await fetchList()
   }
 
   return (
     <div>
-      <MerchantHeader title="Products" description="Manage your product">
-        <ProductDialog
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          editingProduct={editingProduct}
-          onSubmit={handleSubmit}
-          onReset={resetForm}
-        />
-      </MerchantHeader>
+      <MerchantHeader title="Products" description="Manage your product" />
 
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <ProductList
-          products={products}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+        {/* ให้ ProductList เป็นคน render ProductFilters เพียงที่เดียว */}
+        {loading ? (
+          <div className="text-sm text-muted-foreground">Loading...</div>
+        ) : (
+          <ProductList
+            products={products}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            filters={filters}
+            onFiltersChange={(patch) =>
+              setFilters((prev) => ({ ...prev, ...patch }))
+            }
+            onApplyFilters={handleApplyFilters}
+            onResetFilters={handleResetFilters}
+            categories={categories}
+          />
+        )}
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={pageSize}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+          showItemsPerPageSelector
         />
       </div>
     </div>

@@ -4,6 +4,7 @@ export default {
   async up(q: QueryInterface): Promise<void> {
     await q.createTable("PRODUCT_CONFIGURATIONS", {
       id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true, allowNull: false },
+      uuid: { type: DataTypes.STRING(36), allowNull: false },
 
       product_item_id: {
         type: DataTypes.INTEGER.UNSIGNED,
@@ -25,9 +26,13 @@ export default {
       deleted_at: { type: DataTypes.DATE, allowNull: true },
     });
 
+    await q.addIndex("PRODUCT_CONFIGURATIONS", ["uuid"], { unique: true, name: "uq_product_configurations_uuid" });
     await q.addIndex("PRODUCT_CONFIGURATIONS", ["product_item_id"]);
     await q.addIndex("PRODUCT_CONFIGURATIONS", ["variation_option_id"]);
-    await q.addIndex("PRODUCT_CONFIGURATIONS", ["product_item_id", "variation_option_id"], { unique: true, name: "uq_prodconf_item_option", });
+    await q.addIndex("PRODUCT_CONFIGURATIONS", ["product_item_id", "variation_option_id"], {
+      unique: true,
+      name: "uq_prodconf_item_option",
+    });
   },
 
   async down(q: QueryInterface): Promise<void> {
