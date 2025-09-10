@@ -9,11 +9,9 @@ export interface ProductAttributes {
   categoryId: number;
   name: string;
   description?: string | null;
-  // base/list price (ไม่บังคับ เพราะใช้ที่ SKU)
-  // NOTE: Sequelize DECIMAL -> TypeScript ใช้ string เพื่อลด floating error
-  priceMinor?: string | null;
-  // ใช้ที่ SKU
-  stockQuantity?: number | null;
+  // not use
+  // price: number;  now we use product item for price/stock (string) , simple (number)
+  // stockQuantity: number;  now we use product item for price/stock
   status: ProductStatus;
   createdAt?: Date;
   updatedAt?: Date;
@@ -23,7 +21,7 @@ export interface ProductAttributes {
 export interface ProductCreationAttributes
   extends Optional<
     ProductAttributes,
-    'id' | 'uuid' | 'description' | 'priceMinor' | 'stockQuantity' | 'status' | 'createdAt' | 'updatedAt' | 'deletedAt'
+    'id' | 'uuid' | 'description' | 'status' | 'createdAt' | 'updatedAt' | 'deletedAt'
   > {}
 
 export class Product
@@ -36,8 +34,6 @@ export class Product
   public categoryId!: number;
   public name!: string;
   public description!: string | null;
-  public priceMinor!: string | null;
-  public stockQuantity!: number | null;
   public status!: ProductStatus;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -79,17 +75,6 @@ export class Product
         description: {
           type: DataTypes.TEXT,
           allowNull: true,
-        },
-        priceMinor: {
-          type: DataTypes.INTEGER.UNSIGNED,
-          allowNull: true,
-          field: 'price_minor'
-        },
-        stockQuantity: {
-          type: DataTypes.INTEGER,
-          allowNull: true,
-          field: 'stock_quantity',
-          defaultValue: null,
         },
         status: {
           type: DataTypes.ENUM(...Object.values(ProductStatus)),
