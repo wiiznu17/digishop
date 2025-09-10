@@ -399,16 +399,25 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
       status?: string;
       categoryId?: number | null;
       categoryUuid?: string;
-      /** รองรับได้ทั้ง priceMinor และ price (minor unit ทั้งคู่) */
       priceMinor?: number | null;
-      price?: number | null;
+      // price?: number | null;
       stockQuantity?: number | null;
+      expectedSkuCount?: number; // validate sku
     };
+
 
     const store = await ensureStore(req);
     if (!store) {
       await t.rollback();
       return res.status(404).json({ error: "Store not found for this merchant" });
+    }
+    // --- SKU validation: ต้องมีอย่างน้อย 1 SKU ---
+    const expectedSkuCount = Number(raw.expectedSkuCount ?? 0);
+    if (!Number.isFinite(expectedSkuCount) || expectedSkuCount < 1) {
+      await t.rollback();
+      return res.status(400).json({
+        error: "At least one SKU is required. Please add at least 1 variation and 1 option to generate a SKU.",
+      });
     }
 
     // --- map categoryUuid -> categoryId (ถ้ามี) ---
@@ -422,18 +431,18 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
       resolvedCategoryId = cat.id;
     }
 
-    // --- ตรวจค่า status ให้อยู่ใน enum (fallback เป็น DRAFT) ---
+    // ตรวจค่า status ให้อยู่ใน enum (fallback เป็น DRAFT) ---
     const statusSafe =
       Object.values(ProductStatus).includes((raw.status as ProductStatus) ?? ("" as ProductStatus))
         ? (raw.status as ProductStatus)
         : ProductStatus.DRAFT;
 
-    // --- รองรับ input ได้ทั้ง priceMinor และ price (ถือว่าเป็น minor unit เหมือนกัน) ---
+    // รองรับ input ได้ทั้ง priceMinor และ price (ถือว่าเป็น minor unit เหมือนกัน) ---
     const priceMinor =
       typeof raw.priceMinor === "number"
         ? raw.priceMinor
-        : typeof raw.price === "number"
-        ? raw.price
+        // : typeof raw.price === "number"
+        // ? raw.price
         : null;
 
     // --- สร้าง payload โดยไม่ใส่ categoryId ถ้ายังเป็น null (แก้ TS error) ---
@@ -486,7 +495,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
         "uuid",
         "name",
         "description",
-        "priceMinor",          // ← เปลี่ยนจาก "price" มาเป็น "priceMinor"
+        "priceMinor",          // "price" มาเป็น "priceMinor"
         "categoryId",
         "stockQuantity",
         "status",

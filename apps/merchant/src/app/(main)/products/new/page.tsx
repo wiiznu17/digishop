@@ -90,9 +90,17 @@ export default function AddProductPage() {
       return
     }
 
+    // ต้องมีอย่างน้อย 1 SKU ที่ generate ขึ้นมาได้ (มี variation+option แล้ว)
+    const enabledRows = rows.filter((r) => r.enabled)
+    if (enabledRows.length < 1) {
+      alert(
+        "Please add at least 1 SKU (add a variation and an option, then enable a row)."
+      )
+      return
+    }
+
     setCreating(true)
     try {
-      // 1) create product (ส่ง categoryUuid ตรง ๆ)
       const payload: CreateProductRequest = {
         name,
         description: description || null,
@@ -100,11 +108,13 @@ export default function AddProductPage() {
         categoryUuid: categoryUuid,
         categoryId: null,
         price: null,
-        stockQuantity: null
+        stockQuantity: null,
+        expectedSkuCount: enabledRows.length // ⬅️ ส่งจำนวน SKU ไปให้ BE ตรวจ
       }
 
       const files = await convertBlobsToFiles(uiImages)
       const created = await createProductRequester(payload, files)
+
       if (!created?.uuid) {
         alert("Create failed")
         setCreating(false)
