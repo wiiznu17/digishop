@@ -7,7 +7,8 @@ import { MerchantHeader } from "@/components/dashboard-header"
 import {
   fetchProductDetailRequester,
   deleteProductRequester,
-  duplicateProductRequester
+  duplicateProductRequester,
+  updateProductItemRequester // ⬅️ ใช้ toggle enable
 } from "@/utils/requestUtils/requestProductUtils"
 
 import {
@@ -18,8 +19,21 @@ import {
   CardDescription
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 
 type ProductDetail = Awaited<ReturnType<typeof fetchProductDetailRequester>>
+
+// ช่วย format วันที่ โดยไม่ต้อง cast any
+const formatDate = (v: unknown) => {
+  if (v instanceof Date) {
+    return v.toLocaleString()
+  }
+  if (typeof v === "string" || typeof v === "number") {
+    const d = new Date(v)
+    return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString()
+  }
+  return "-"
+}
 
 export default function ProductDetailPage() {
   const params = useParams<{ productUuid: string }>()
@@ -50,6 +64,50 @@ export default function ProductDetailPage() {
   const handleDuplicate = async () => {
     const res = await duplicateProductRequester(productUuid)
     if (res?.uuid) router.push(`/products/${res.uuid}/edit`)
+  }
+
+  // toggle isEnable แบบ optimistic update
+  const handleToggleEnable = async (
+    itemUuid: string,
+    next: boolean,
+    prev: boolean
+  ) => {
+    console.log("Switch to -> ", next)
+    // optimistic
+    setData((prevData) =>
+      prevData
+        ? ({
+            ...prevData,
+            items: (prevData.items ?? []).map((it) =>
+              it.uuid === itemUuid ? { ...it, isEnable: next } : it
+            )
+          } as ProductDetail)
+        : prevData
+    )
+
+    try {
+      const res = await updateProductItemRequester(productUuid, itemUuid, {
+        isEnable: next
+      })
+      // ถ้า BE ส่ง null/throw ให้ revert
+      if (!res) {
+        throw new Error("Update failed")
+      }
+      console.log("Switch to -> ", next, "successfully")
+    } catch {
+      // revert
+      setData((prevData) =>
+        prevData
+          ? ({
+              ...prevData,
+              items: (prevData.items ?? []).map((it) =>
+                it.uuid === itemUuid ? { ...it, isEnable: prev } : it
+              )
+            } as ProductDetail)
+          : prevData
+      )
+      alert("Failed to update enable status")
+    }
   }
 
   // ====== Derived UI values ======
@@ -139,12 +197,10 @@ export default function ProductDetailPage() {
                         Status: {data.status}
                       </div>
                       <div className="px-2 py-1 rounded border bg-muted/40">
-                        Created:{" "}
-                        {new Date(data.createdAt as any).toLocaleString()}
+                        Created: {formatDate(data.createdAt)}
                       </div>
                       <div className="px-2 py-1 rounded border bg-muted/40">
-                        Updated:{" "}
-                        {new Date(data.updatedAt as any).toLocaleString()}
+                        Updated: {formatDate(data.updatedAt)}
                       </div>
                     </div>
                   </div>
@@ -153,18 +209,18 @@ export default function ProductDetailPage() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => router.push(`/products/${data.uuid}/edit`)}
-                  >
-                    Edit
-                  </Button>
-                  <Button variant="secondary" onClick={handleDuplicate}>
-                    Duplicate
-                  </Button>
-                  <Button
                     variant="outline"
                     onClick={() => router.push("/products")}
                   >
                     Back
+                  </Button>
+                  <Button variant="outline" onClick={handleDuplicate}>
+                    Duplicate
+                  </Button>
+                  <Button
+                    onClick={() => router.push(`/products/${data.uuid}/edit`)}
+                  >
+                    Edit
                   </Button>
                   <Button variant="destructive" onClick={handleDelete}>
                     Delete
@@ -174,11 +230,24 @@ export default function ProductDetailPage() {
 
               <CardContent>
                 {/* Quick stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <div className="rounded-lg border p-3">
                     <div className="text-xs text-muted-foreground">SKUs</div>
                     <div className="text-lg font-semibold">
                       {(data.items ?? []).length}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Enabled SKUs
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {
+                        (data.items ?? []).filter(
+                          (i) =>
+                            (i as { isEnable?: boolean }).isEnable !== false
+                        ).length
+                      }
                     </div>
                   </div>
                   <div className="rounded-lg border p-3">
@@ -252,8 +321,8 @@ export default function ProductDetailPage() {
                   <div key={v.uuid} className="rounded border p-3">
                     <div className="font-medium">{v.name}</div>
                     <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-2">
-                      {(v.options ?? []).length > 0
-                        ? v.options.map((o) => (
+                      {(v.options?.length ?? 0) > 0
+                        ? v.options?.map((o) => (
                             <span
                               key={o.uuid}
                               className="px-2 py-1 rounded bg-muted/40 border"
@@ -280,7 +349,7 @@ export default function ProductDetailPage() {
                 )}
                 {(data.items ?? []).length > 0 && (
                   <div className="overflow-x-auto">
-                    <table className="min-w-[760px] w-full text-sm border rounded">
+                    <table className="min-w-[900px] w-full text-sm border rounded">
                       <thead className="bg-muted/40">
                         <tr>
                           <th className="text-left p-2">Image</th>
@@ -288,39 +357,62 @@ export default function ProductDetailPage() {
                           <th className="text-left p-2">Configurations</th>
                           <th className="text-right p-2">Price</th>
                           <th className="text-right p-2">Stock</th>
+                          <th className="text-center p-2">Enable</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(data.items ?? []).map((it) => (
-                          <tr key={it.uuid} className="border-t">
-                            <td className="p-2">
-                              {it.imageUrl ? (
-                                <img
-                                  src={it.imageUrl}
-                                  alt={it.sku}
-                                  className="h-10 w-10 rounded object-cover border"
-                                />
-                              ) : (
-                                <div className="h-10 w-10 rounded border flex items-center justify-center text-[10px] text-muted-foreground">
-                                  No Image
+                        {(data.items ?? []).map((it) => {
+                          const enabled =
+                            (it as { isEnable?: boolean }).isEnable !== false
+                          return (
+                            <tr key={it.uuid} className="border-t">
+                              <td className="p-2">
+                                {it.imageUrl ? (
+                                  <img
+                                    src={it.imageUrl}
+                                    alt={it.sku}
+                                    className="h-10 w-10 rounded object-cover border"
+                                  />
+                                ) : (
+                                  <div className="h-10 w-10 rounded border flex items-center justify-center text-[10px] text-muted-foreground">
+                                    No Image
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-2">{it.sku || "-"}</td>
+                              <td className="p-2 text-xs text-muted-foreground">
+                                {(it.configurations ?? [])
+                                  .map((c) => c.variationOption?.value)
+                                  .filter(Boolean)
+                                  .join(" · ") || "—"}
+                              </td>
+                              <td className="p-2 text-right">
+                                {formatTHB(it.priceMinor ?? null)}
+                              </td>
+                              <td className="p-2 text-right">
+                                {it.stockQuantity ?? 0}
+                              </td>
+                              <td className="p-2 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <Switch
+                                    checked={enabled}
+                                    onCheckedChange={(checked: boolean) =>
+                                      handleToggleEnable(
+                                        it.uuid,
+                                        checked,
+                                        enabled
+                                      )
+                                    }
+                                    aria-label={`Toggle enable for ${it.sku}`}
+                                  />
+                                  <span className="text-xs text-muted-foreground">
+                                    {enabled ? "Enabled" : "Disabled"}
+                                  </span>
                                 </div>
-                              )}
-                            </td>
-                            <td className="p-2">{it.sku || "-"}</td>
-                            <td className="p-2 text-xs text-muted-foreground">
-                              {(it.configurations ?? [])
-                                .map((c) => c.variationOption?.value)
-                                .filter(Boolean)
-                                .join(" · ") || "—"}
-                            </td>
-                            <td className="p-2 text-right">
-                              {formatTHB(it.priceMinor ?? null)}
-                            </td>
-                            <td className="p-2 text-right">
-                              {it.stockQuantity ?? 0}
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
