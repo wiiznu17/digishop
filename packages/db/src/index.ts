@@ -246,7 +246,7 @@ export function initModels(conn: Sequelize) {
     User, Address, Store, MerchantAddress, ProfileMerchantImage, BankAccount, ShippingConfig,
     // Catalog
     Category, Product, ProductImage,
-    Variation, VariationOption, ProductItem, ProductConfiguration,
+    Variation, VariationOption, ProductItem, ProductConfiguration, ProductItemImage,
     // Cart
     ShoppingCart, ShoppingCartItem,
     // Order
