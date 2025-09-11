@@ -33,7 +33,7 @@ export default {
     await queryInterface.addIndex('PRODUCTS', ['category_id'], { name: 'ix_products_category' });
     await queryInterface.addIndex('PRODUCTS', ['status'], { name: 'ix_products_status' });
     await queryInterface.addIndex('PRODUCTS', ['created_at'], { name: 'ix_products_created_at' });
-    await queryInterface.addIndex('PRODUCTS', ['price_minor'], { name: 'ix_products_price_minor' });
+    // await queryInterface.addIndex('PRODUCTS', ['price_minor'], { name: 'ix_products_price_minor' });
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
