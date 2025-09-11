@@ -35,6 +35,7 @@ type Props = {
   onVariationsChange: (v: VariationDraft[]) => void
   items: ItemDraft[]
   onItemsChange: (rows: ItemDraft[]) => void
+  skuPrefix?: string
 }
 
 // ===== Helpers =====
@@ -73,12 +74,34 @@ function buildRows(variations: VariationDraft[]): ItemDraft[] {
   })
 }
 
+const hashString = (s: string) => {
+  let h = 0
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i)
+    h |= 0
+  }
+  return h
+}
+
+const toCode = (s: string, max = 4) => {
+  // แปลงเป็น A-Z0-9; ถ้าเป็นอักษรอื่นจนว่าง ให้ fallback เป็น hash base36
+  const t = s
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "")
+    .slice(0, max)
+  if (t) return t
+  return Math.abs(hashString(s)).toString(36).toUpperCase().slice(0, max) || "X"
+}
+
 // ===== UI =====
 export default function VariationBuilder({
   variations,
   onVariationsChange,
   items,
-  onItemsChange
+  onItemsChange,
+  skuPrefix
 }: Props) {
   // เมื่อ variations เปลี่ยน ให้ regenerate rows โดย “merge” ค่าเดิม (sku/price/stock/enabled) ที่ key ตรงกัน
   useEffect(() => {
@@ -103,6 +126,53 @@ export default function VariationBuilder({
     onItemsChange(merged)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(variations)])
+
+  // map cid -> option value
+  const optionLabelByCid = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const v of variations) {
+      for (const o of v.options) m.set(o.cid, o.value)
+    }
+    return m
+  }, [JSON.stringify(variations)])
+
+  const autoGenerateSkus = (overwriteExisting = false) => {
+    // รวบรวมค่าที่มีอยู่แล้วเพื่อกันซ้ำ
+    const seen = new Set(
+      items
+        .map((r) => (r.sku || "").trim())
+        .filter(Boolean)
+        .map((s) => s.toUpperCase())
+    )
+
+    const prefix = toCode((skuPrefix ?? "").trim(), 6) || "PRD"
+
+    const next = items.map((r) => {
+      if (!overwriteExisting && (r.sku || "").trim()) return r // ข้ามที่ผู้ใช้ใส่ไว้แล้ว
+
+      // แปลงค่าของแต่ละ option ให้เป็นโค้ดสั้น ๆ เช่น RED, L ฯลฯ
+      const optCodes = r.optionCids.map((cid) =>
+        toCode(optionLabelByCid.get(cid) ?? "OPT", 3)
+      )
+
+      // base เช่น TSHIRT-RED-L
+      let base = [prefix, ...optCodes].join("-").replace(/-+/g, "-")
+      // กันยาวเกิน — เผื่อท้ายไว้ใส่เลขวิ่ง
+      base = base.slice(0, 28)
+
+      // กันซ้ำด้วยเลขวิ่ง -1, -2, ...
+      let candidate = base
+      let i = 1
+      while (seen.has(candidate.toUpperCase())) {
+        candidate = `${base}-${i++}`
+      }
+      seen.add(candidate.toUpperCase())
+
+      return { ...r, sku: candidate }
+    })
+
+    onItemsChange(next)
+  }
 
   // เพิ่ม/ลบ/แก้ชื่อ variation
   const addVariation = () => {
@@ -250,7 +320,29 @@ export default function VariationBuilder({
 
       {/* Generated items */}
       <div className="space-y-2">
-        <div className="text-sm font-medium">Generated Items (SKUs)</div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-medium">Generated Items (SKUs)</div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => autoGenerateSkus(false)} // เติมเฉพาะช่องที่ยังว่าง
+            >
+              Auto-generate SKUs
+            </Button>
+            {/* replace all
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => autoGenerateSkus(true)}
+              >
+                Overwrite all
+              </Button>
+            */}
+          </div>
+        </div>
         {!hasVariations && (
           <div className="text-sm text-muted-foreground">
             Add at least one variation with options to generate items.

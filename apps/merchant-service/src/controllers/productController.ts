@@ -287,7 +287,7 @@ export const getProductDetail = async (req: AuthenticatedRequest, res: Response)
 
     const product = await Product.findOne({
       where: { uuid: productUuid, storeId: store.id },
-      attributes: ["uuid", "name", "description", "priceMinor", "stockQuantity", "status", "createdAt", "updatedAt"],
+      attributes: ["uuid", "name", "description", "status", "createdAt", "updatedAt"],
       include: [
         { model: Store, as: "store", attributes: ["uuid", "storeName", "email", "status"], required: false },
         { model: Category, as: "category", attributes: ["uuid", "name"], required: false },
@@ -388,6 +388,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
   const t = await sequelize.transaction();
   try {
     const productDataString = req.body.productData;
+    console.log("Product data: ", productDataString)
     const files = req.files as Express.Multer.File[];
     if (!productDataString) {
       return res.status(400).json({ error: "Product data is required" });
@@ -399,13 +400,13 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
       status?: string;
       categoryId?: number | null;
       categoryUuid?: string;
-      priceMinor?: number | null;
+      // priceMinor?: number | null;
       // price?: number | null;
-      stockQuantity?: number | null;
+      // stockQuantity?: number | null;
       expectedSkuCount?: number; // validate sku
     };
 
-
+    console.group("raw data: ", raw)
     const store = await ensureStore(req);
     if (!store) {
       await t.rollback();
@@ -431,29 +432,30 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
       resolvedCategoryId = cat.id;
     }
 
-    // ตรวจค่า status ให้อยู่ใน enum (fallback เป็น DRAFT) ---
+    // ตรวจค่า status ให้อยู่ใน enum (fallback เป็น Suspended) ---
     const statusSafe =
       Object.values(ProductStatus).includes((raw.status as ProductStatus) ?? ("" as ProductStatus))
         ? (raw.status as ProductStatus)
         : ProductStatus.SUSPENDED;
 
     // รองรับ input ได้ทั้ง priceMinor และ price (ถือว่าเป็น minor unit เหมือนกัน) ---
-    const priceMinor =
-      typeof raw.priceMinor === "number"
-        ? raw.priceMinor
-        // : typeof raw.price === "number"
-        // ? raw.price
-        : null;
+    // const priceMinor =
+    //   typeof raw.priceMinor === "number"
+    //     ? raw.priceMinor
+    //     // : typeof raw.price === "number"
+    //     // ? raw.price
+    //     : null;
 
     // --- สร้าง payload โดยไม่ใส่ categoryId ถ้ายังเป็น null (แก้ TS error) ---
     const createPayload: any = {
       storeId: store.id,
       name: raw.name,
       description: raw.description ?? null,
-      priceMinor,                     // เก็บไว้ตามที่ต้องการ
-      stockQuantity: raw.stockQuantity ?? null,
+      // priceMinor,                     // เก็บไว้ตามที่ต้องการ
+      // stockQuantity: raw.stockQuantity ?? null,
       status: statusSafe,
     };
+    console.log("created Payload: ", createPayload)
     if (resolvedCategoryId != null) {
       createPayload.categoryId = resolvedCategoryId; // ใส่เฉพาะตอนที่เป็น number
     }
@@ -495,9 +497,9 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
         "uuid",
         "name",
         "description",
-        "priceMinor",          // "price" มาเป็น "priceMinor"
+        // "priceMinor",          // "price" มาเป็น "priceMinor"
         "categoryId",
-        "stockQuantity",
+        // "stockQuantity",
         "status",
         "createdAt",
         "updatedAt",
