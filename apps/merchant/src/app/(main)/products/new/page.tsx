@@ -185,6 +185,7 @@ export default function AddProductPage() {
             images={uiImages}
             onImagesChange={setUiImages}
             maxImages={10}
+            cropAspect={1}
           />
         </section>
 

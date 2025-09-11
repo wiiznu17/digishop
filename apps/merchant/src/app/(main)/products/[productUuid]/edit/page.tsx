@@ -343,6 +343,7 @@ export default function EditProductPage() {
                 images={uiImages}
                 onImagesChange={setUiImages}
                 maxImages={10}
+                cropAspect={1}
               />
               <p className="text-xs text-muted-foreground">
                 * delete/re-order/set main image will apply when click
