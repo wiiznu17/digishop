@@ -55,6 +55,7 @@ export type CreateItemPayload = {
   stockQuantity?: number
   priceMinor: number
   imageUrl?: string | null
+  isEnable?: boolean
 }
 export type UpdateItemPayload = Partial<CreateItemPayload>
 export type SetItemConfigurationsPayload = { optionUuids: string[] }

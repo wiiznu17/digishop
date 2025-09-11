@@ -208,6 +208,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       as: "items",
       attributes: [],   // ไม่ดึงคอลัมน์ดิบ ลดซ้ำ
       required: false,  // left join
+      where: { isEnable: true }, // นับเฉพาะที่เปิดขาย
     });
 
     // 5) ฟิลด์คำนวณจาก ProductItems (ไม่ใช้ของ Product)
@@ -276,7 +277,6 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
   }
 };
 
-
 /** GET /merchant/products/:productUuid */
 export const getProductDetail = async (req: AuthenticatedRequest, res: Response) => {
   console.log("Welcome to product detail")
@@ -311,7 +311,7 @@ export const getProductDetail = async (req: AuthenticatedRequest, res: Response)
         {
           model: ProductItem,
           as: "items",
-          attributes: ["id", "uuid", "sku", "stockQuantity", "priceMinor", "imageUrl", "createdAt", "updatedAt"],
+          attributes: ["id", "uuid", "sku", "stockQuantity", "priceMinor", "isEnable", "imageUrl", "createdAt", "updatedAt"],
           include: [
             {
               model: ProductConfiguration,
@@ -954,8 +954,9 @@ export const duplicateProduct = async (req: AuthenticatedRequest, res: Response)
             productId: dest.id,
             sku: it.sku ? `${it.sku}-COPY` : `SKU-${dest.id}-${Date.now().toString(36)}`,
             stockQuantity: it.stockQuantity,
-            priceMinor: it.priceMinor, // ✅ ใช้ price_minor ถูกที่คือใน SKU
+            priceMinor: it.priceMinor,
             imageUrl: it.imageUrl ?? null,
+            isEnable: (it as any).isEnable ?? true,
           },
           { transaction: t }
         );
@@ -1167,11 +1168,18 @@ export const reorderVariationOptions = async (req: AuthenticatedRequest, res: Re
 export const createProductItem = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { productUuid } = req.params as { productUuid: string };
-    const { sku, stockQuantity = 0, priceMinor, imageUrl } = req.body as {
+    const {
+      sku,
+      stockQuantity = 0,
+      priceMinor,
+      imageUrl,
+      isEnable = true
+    } = req.body as {
       sku?: string;
       stockQuantity?: number;
       priceMinor: number;
       imageUrl?: string | null;
+      isEnable?: boolean;
     };
 
     const store = await ensureStore(req);
@@ -1179,13 +1187,21 @@ export const createProductItem = async (req: AuthenticatedRequest, res: Response
     const product = await findProductByUuidForStore(productUuid, store.id);
     if (!product) return res.status(404).json({ error: "Product not found" });
 
-    const item = await ProductItem.create({ productId: product.id, sku: sku || "", stockQuantity, priceMinor, imageUrl: imageUrl ?? null });
+    const item = await ProductItem.create({
+      productId: product.id,
+      sku: sku || "",
+      stockQuantity,
+      priceMinor,
+      imageUrl: imageUrl ?? null,
+      isEnable
+    });
     return res.status(201).json({
       uuid: item.uuid,
       sku: item.sku,
       stockQuantity: item.stockQuantity,
       priceMinor: item.priceMinor,
       imageUrl: item.imageUrl,
+      isEnable
     });
   } catch (e) {
     console.error("createProductItem error", e);
@@ -1205,20 +1221,23 @@ export const updateProductItem = async (req: AuthenticatedRequest, res: Response
     const item = await findItemByUuidForProduct(itemUuid, product.id);
     if (!item) return res.status(404).json({ error: "Item not found" });
 
-    const { sku, stockQuantity, priceMinor, imageUrl } = req.body as {
+    const { sku, stockQuantity, priceMinor, imageUrl, isEnable } = req.body as {
       sku?: string;
       stockQuantity?: number;
       priceMinor?: number;
       imageUrl?: string | null;
+      isEnable?: boolean;
     };
 
-    await item.update({ sku, stockQuantity, priceMinor, imageUrl });
+    await item.update({ sku, stockQuantity, priceMinor, imageUrl, isEnable });
+
     return res.json({
       uuid: item.uuid,
       sku: item.sku,
       stockQuantity: item.stockQuantity,
       priceMinor: item.priceMinor,
       imageUrl: item.imageUrl,
+      isEnable: item.isEnable,
     });
   } catch (e) {
     console.error("updateProductItem error", e);
