@@ -159,7 +159,7 @@ export default function ProductsPage() {
       <MerchantHeader title="Products" description="Manage your product" />
 
       <div className="flex flex-1 flex-col gap-4 p-4">
-        {/* ให้ ProductList เป็นคน render ProductFilters เพียงที่เดียว */}
+        {/* ProductList render ProductFilters ที่เดียว */}
         {loading ? (
           <div className="text-sm text-muted-foreground">Loading...</div>
         ) : (
