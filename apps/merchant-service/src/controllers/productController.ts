@@ -356,7 +356,7 @@ export const listCategories = async (req: AuthenticatedRequest, res: Response) =
         name: r.name,
         parentUuid: (r as any).parent?.uuid ?? null,
       }));
-      console.log("Flat data: ", data)
+      // console.log("Flat data: ", data)
       return res.json(data);
     }
 
@@ -580,7 +580,7 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
 
     const updated = await Product.findOne({
       where: { uuid: productUuid },
-      attributes: ["uuid", "name", "description", "price", "categoryId", "stockQuantity", "status", "createdAt", "updatedAt"],
+      attributes: ["uuid", "name", "description", "categoryId", "status", "createdAt", "updatedAt"],
       include: [
         {
           model: ProductImage,
@@ -732,6 +732,7 @@ export const deleteProductImage = async (req: AuthenticatedRequest, res: Respons
 
 /** PATCH /merchant/products/:productUuid/images/:imageUuid */
 export const updateProductImage = async (req: AuthenticatedRequest, res: Response) => {
+  console.log("Hello from update product image")
   const t = await sequelize.transaction();
   try {
     const { productUuid, imageUuid } = req.params as { productUuid: string; imageUuid: string };
@@ -779,9 +780,10 @@ export const updateProductImage = async (req: AuthenticatedRequest, res: Respons
 export const reorderProductImages = async (req: AuthenticatedRequest, res: Response) => {
   const t = await sequelize.transaction();
   try {
+    console.log("welcoe to reorder image")
     const { productUuid } = req.params as { productUuid: string };
     const { orders } = req.body as { orders: Array<{ imageUuid: string; sortOrder: number }> };
-
+    console.log("orders: ", orders)
     const store = await ensureStore(req);
     if (!store) {
       await t.rollback();
@@ -866,6 +868,7 @@ export const duplicateProduct = async (req: AuthenticatedRequest, res: Response)
   const t = await sequelize.transaction();
   try {
     const { productUuid } = req.params as { productUuid: string };
+    console.log("duplicate product: ", productUuid)
 
     const store = await ensureStore(req);
     if (!store) {

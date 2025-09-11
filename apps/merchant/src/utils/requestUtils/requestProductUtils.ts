@@ -89,7 +89,7 @@ export async function fetchCategoriesRequester(): Promise<CategoryDto[]> {
       withCredentials: true,
       params: { flat: "true" }
     })
-    console.log("categories: ", res.data)
+    // console.log("categories: ", res.data)
     return (res.data ?? []) as CategoryDto[]
   } catch (error) {
     console.error("Error fetching categories:", error)
@@ -213,6 +213,7 @@ export async function duplicateProductRequester(
   productUuid: string
 ): Promise<{ uuid: string; name: string } | null> {
   try {
+    console.log("duplicate product: ", productUuid)
     const res = await axios.post(
       `/api/merchant/products/${productUuid}/duplicate`,
       null,
@@ -255,7 +256,7 @@ export async function deleteProductImageRequester(
 ): Promise<boolean> {
   try {
     await axios.delete(
-      `/api/merchant/products/${productUuid}/images/${imageUuid}`,
+      `/api/merchant/products/${productUuid}/images-delete/${imageUuid}`,
       { withCredentials: true }
     )
     return true
@@ -272,7 +273,7 @@ export async function updateProductImageRequester(
 ): Promise<boolean> {
   try {
     await axios.patch(
-      `/api/merchant/products/${productUuid}/images/${imageUuid}`,
+      `/api/merchant/products/${productUuid}/images-update/${imageUuid}`,
       payload,
       { withCredentials: true }
     )
@@ -288,6 +289,8 @@ export async function reorderProductImagesRequester(
   orders: ReorderImagePayload["orders"]
 ): Promise<boolean> {
   try {
+    console.log("product uuid: ", productUuid)
+    console.log("orders for reoder: ", orders)
     await axios.patch(
       `/api/merchant/products/${productUuid}/images/reorder`,
       { orders },
