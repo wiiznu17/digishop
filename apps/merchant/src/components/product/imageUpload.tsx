@@ -1,3 +1,4 @@
+// apps/merchant/src/components/product/imageUpload.tsx
 "use client"
 
 import { useState, useRef } from "react"
@@ -5,12 +6,27 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import { X, Upload, Image as ImageIcon, Star } from "lucide-react"
+import {
+  X,
+  Upload,
+  Image as ImageIcon,
+  Star,
+  Crop as CropIcon
+} from "lucide-react"
 import {
   deleteProductImageRequester,
   updateProductImageRequester,
   reorderProductImagesRequester
 } from "@/utils/requestUtils/requestProductUtils"
+import Cropper from "react-easy-crop"
+import type { Area } from "react-easy-crop"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog"
 
 // NOTE: ให้รองรับทั้งของเดิม (id) และของใหม่ (uuid)
 export type ImageLike = {
@@ -31,6 +47,9 @@ interface ImageUploadProps {
   mode?: "local" | "server"
   /** ใช้เฉพาะตอน mode="server" */
   productUuid?: string
+
+  /** อัตราส่วนการครอป (เช่น 1 สำหรับ 1:1, 4/3, 3/2) */
+  cropAspect?: number
 }
 
 export function ImageUpload({
@@ -38,13 +57,132 @@ export function ImageUpload({
   onImagesChange,
   maxImages = 5,
   mode = "local",
-  productUuid
+  productUuid,
+  cropAspect = 1
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isBlob = (u: string) => u.startsWith("blob:")
 
+  // ===== Crop states =====
+  const [cropOpen, setCropOpen] = useState(false)
+  const [cropIndex, setCropIndex] = useState<number | null>(null)
+  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState<number>(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+
+  const openCrop = (index: number) => {
+    setCropIndex(index)
+    setCropOpen(true)
+    setZoom(1)
+    setCrop({ x: 0, y: 0 })
+    setCroppedAreaPixels(null)
+  }
+
+  const onCropComplete = (_: Area, areaPixels: Area) => {
+    setCroppedAreaPixels(areaPixels)
+  }
+
+  async function handleCropConfirm() {
+    if (cropIndex == null || !croppedAreaPixels) {
+      setCropOpen(false)
+      return
+    }
+    const img = images[cropIndex]
+    try {
+      const { blob, mime } = await getCroppedBlob(img.url, croppedAreaPixels)
+      const newUrl = URL.createObjectURL(blob)
+
+      // ตั้งชื่อใหม่พ่วง -cropped
+      const ext = mime.includes("png")
+        ? "png"
+        : mime.includes("webp")
+          ? "webp"
+          : "jpg"
+      const base = img.fileName.replace(/\.[^.]+$/, "")
+      const newName = `${base}-cropped-${Date.now()}.${ext}`
+
+      const next = images.map((it, i) =>
+        i === cropIndex
+          ? {
+              ...it,
+              url: newUrl,
+              fileName: newName,
+              uuid: undefined,
+              id: undefined
+            }
+          : it
+      )
+      // คงลำดับด้วยการ map index -> sortOrder
+      onImagesChange(next.map((x, i) => ({ ...x, sortOrder: i })))
+    } catch (e) {
+      console.error("crop failed", e)
+      alert("Crop failed")
+    } finally {
+      setCropOpen(false)
+      setCropIndex(null)
+    }
+  }
+
+  // helper: โหลดรูป + ครอปลง canvas แล้วคืน blob
+  async function getCroppedBlob(
+    src: string,
+    area: Area
+  ): Promise<{ blob: Blob; mime: string }> {
+    const imgEl = await loadImage(src)
+    const canvas = document.createElement("canvas")
+    canvas.width = Math.max(1, Math.floor(area.width))
+    canvas.height = Math.max(1, Math.floor(area.height))
+    const ctx = canvas.getContext("2d")
+    if (!ctx) throw new Error("Canvas not supported")
+
+    // ป้องกัน CORS
+    // (img.crossOrigin ถูกตั้งไว้ใน loadImage แล้ว ถ้าเป็น blob: จะไม่กระทบ)
+    ctx.drawImage(
+      imgEl,
+      area.x,
+      area.y,
+      area.width,
+      area.height,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    )
+
+    // พยายามเดา mime เดิม
+    let mime = "image/jpeg"
+    try {
+      const resp = await fetch(src)
+      const b = await resp.blob()
+      if (b.type) mime = b.type
+    } catch {
+      // ignore, fallback jpeg
+    }
+
+    const blob: Blob = await new Promise((resolve, reject) =>
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("toBlob error"))),
+        mime,
+        0.92
+      )
+    )
+    return { blob, mime }
+  }
+
+  function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      // รองรับ CORS (กรณีเป็น https)
+      img.crossOrigin = "anonymous"
+      img.onload = () => resolve(img)
+      img.onerror = (e) => reject(e)
+      img.src = src
+    })
+  }
+
+  // ===== Upload/select handlers =====
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -53,6 +191,8 @@ export function ImageUpload({
 
     if (images.length + files.length > maxImages) {
       alert(`You can maximum upload ${maxImages} pictures`)
+      // ล้างค่าช่องไฟล์เพื่อเลือกใหม่ได้
+      if (fileInputRef.current) fileInputRef.current.value = ""
       return
     }
 
@@ -172,6 +312,7 @@ export function ImageUpload({
     }
   }
 
+  // ===== UI =====
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -237,12 +378,22 @@ export function ImageUpload({
                 )}
 
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => openCrop(index)}
+                    title="Crop"
+                  >
+                    <CropIcon className="h-4 w-4" />
+                  </Button>
                   {!image.isMain && (
                     <Button
                       type="button"
                       size="sm"
                       variant="secondary"
                       onClick={() => setMainImage(index)}
+                      title="Set as main"
                     >
                       <Star className="h-4 w-4" />
                     </Button>
@@ -252,6 +403,7 @@ export function ImageUpload({
                     size="sm"
                     variant="destructive"
                     onClick={() => removeImage(index)}
+                    title="Remove"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -291,6 +443,49 @@ export function ImageUpload({
       <p className="text-xs text-muted-foreground">
         Include file: JPG, PNG, GIF (max 5MB per picture)
       </p>
+
+      {/* ===== Crop Dialog ===== */}
+      <Dialog open={cropOpen} onOpenChange={setCropOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Crop image</DialogTitle>
+          </DialogHeader>
+
+          <div className="relative w-full h-[380px] rounded-md overflow-hidden bg-black/5">
+            {cropIndex != null && images[cropIndex] && (
+              <Cropper
+                image={images[cropIndex].url}
+                crop={crop}
+                zoom={zoom}
+                aspect={cropAspect}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            )}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <label className="text-xs text-muted-foreground">Zoom</label>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={zoom}
+              onChange={(e) => setZoom(parseFloat(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setCropOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCropConfirm}>Apply</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

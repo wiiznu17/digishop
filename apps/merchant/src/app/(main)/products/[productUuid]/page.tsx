@@ -165,7 +165,7 @@ export default function ProductDetailPage() {
             <Card>
               <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-4">
-                  <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted border">
+                  <div className="h-60 w-60 rounded-lg overflow-hidden bg-muted border">
                     {mainImage ? (
                       <img
                         src={mainImage.url}
@@ -340,7 +340,7 @@ export default function ProductDetailPage() {
             {/* ===== Items (SKUs) ===== */}
             <Card>
               <CardHeader>
-                <CardTitle>Items (SKUs)</CardTitle>
+                <CardTitle>Product Items (SKUs)</CardTitle>
                 <CardDescription>Each sellable combination</CardDescription>
               </CardHeader>
               <CardContent>
