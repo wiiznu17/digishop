@@ -60,7 +60,7 @@ export default {
     )
 
     // Indexes
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['uuid'], { unique: true, name: 'uq_product_item_images_uuid' })
+    await queryInterface.addIndex('PRODUCT_ITEM_IMAGES', ['uuid'], { unique: true, name: 'uq_product_item_images_uuid' })
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
