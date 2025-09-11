@@ -52,8 +52,8 @@ router.post("/:productUuid/duplicate", authenticate, duplicateProduct);
 
 // Image ops
 router.post("/:productUuid/images", authenticate, upload.array("images", 10) as any, addProductImages);
-router.delete("/:productUuid/images/:imageUuid", authenticate, deleteProductImage);
-router.patch("/:productUuid/images/:imageUuid", authenticate, updateProductImage);
+router.delete("/:productUuid/images-delete/:imageUuid", authenticate, deleteProductImage);
+router.patch("/:productUuid/images-update/:imageUuid", authenticate, updateProductImage);
 router.patch("/:productUuid/images/reorder", authenticate, reorderProductImages);
 
 // Bulk

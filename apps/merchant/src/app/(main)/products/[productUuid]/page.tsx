@@ -209,18 +209,18 @@ export default function ProductDetailPage() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => router.push(`/products/${data.uuid}/edit`)}
-                  >
-                    Edit
-                  </Button>
-                  <Button variant="secondary" onClick={handleDuplicate}>
-                    Duplicate
-                  </Button>
-                  <Button
                     variant="outline"
                     onClick={() => router.push("/products")}
                   >
                     Back
+                  </Button>
+                  <Button variant="outline" onClick={handleDuplicate}>
+                    Duplicate
+                  </Button>
+                  <Button
+                    onClick={() => router.push(`/products/${data.uuid}/edit`)}
+                  >
+                    Edit
                   </Button>
                   <Button variant="destructive" onClick={handleDelete}>
                     Delete
@@ -357,8 +357,7 @@ export default function ProductDetailPage() {
                           <th className="text-left p-2">Configurations</th>
                           <th className="text-right p-2">Price</th>
                           <th className="text-right p-2">Stock</th>
-                          <th className="text-center p-2">Enable</th>{" "}
-                          {/* ⬅️ ใหม่ */}
+                          <th className="text-center p-2">Enable</th>
                         </tr>
                       </thead>
                       <tbody>
