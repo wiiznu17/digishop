@@ -29,8 +29,8 @@ export type CreateProductRequest = {
   // อนุญาตทั้ง id และ uuid (uuid จะให้ BE map -> categoryId)
   categoryId?: number | null
   categoryUuid?: string
-  price?: number | null
-  stockQuantity?: number | null
+  // price?: number | null
+  // stockQuantity?: number | null
   expectedSkuCount?: number
 }
 
