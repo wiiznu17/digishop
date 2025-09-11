@@ -107,8 +107,8 @@ export default function AddProductPage() {
         status,
         categoryUuid: categoryUuid,
         categoryId: null,
-        price: null,
-        stockQuantity: null,
+        // price: null,
+        // stockQuantity: null,
         expectedSkuCount: enabledRows.length // ⬅️ ส่งจำนวน SKU ไปให้ BE ตรวจ
       }
 
@@ -263,6 +263,7 @@ export default function AddProductPage() {
             onVariationsChange={setVariations}
             items={rows}
             onItemsChange={setRows}
+            skuPrefix={name}
           />
         </section>
 

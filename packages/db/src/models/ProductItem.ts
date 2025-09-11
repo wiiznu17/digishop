@@ -8,6 +8,7 @@ export interface ProductItemAttributes {
   productId: number;
   sku: string;                 // ⬅️ NOT NULL
   stockQuantity: number;
+  isEnable: boolean;
   priceMinor: number;
   imageUrl?: string | null;
 
@@ -19,7 +20,7 @@ export interface ProductItemAttributes {
 export interface ProductItemCreationAttributes
   extends Optional<
     ProductItemAttributes,
-    "id" | "uuid" | "imageUrl" | "createdAt" | "updatedAt" | "deletedAt"
+    "id" | "uuid" | "imageUrl" | "createdAt" | "updatedAt" | "deletedAt" | "isEnable"
   > {}
 
 export class ProductItem
@@ -31,6 +32,7 @@ export class ProductItem
   public productId!: number;
   public sku!: string;
   public stockQuantity!: number;
+  public isEnable!: boolean;
   public priceMinor!: number;
   public imageUrl!: string | null;
 
@@ -82,6 +84,12 @@ export class ProductItem
           allowNull: false,
           defaultValue: 0,
           field: "stock_quantity",
+        },
+        isEnable: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue: true,
+          field: "is_enable",
         },
         priceMinor: {
           type: DataTypes.INTEGER.UNSIGNED,

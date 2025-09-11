@@ -9,7 +9,8 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { Edit, Trash2, Package, Image as ImageIcon } from "lucide-react"
+import { Edit, Trash2, Package, Image as ImageIcon, Eye } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { ProductListItem } from "../../types/props/productProp"
 
 function formatTHBFromMinor(minor?: number | null) {
@@ -31,6 +32,13 @@ export function ProductTable({
   onEdit,
   onDelete
 }: ProductTableProps) {
+  const router = useRouter()
+
+  const handleViewDetail = (product: ProductListItem) => {
+    // ใช้ route ที่ถูกต้องตามโครงสร้างของคุณ
+    router.push(`/products/${product.uuid}`)
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -56,15 +64,24 @@ export function ProductTable({
                     <img
                       src={mainImg.url}
                       alt={product.name}
-                      className="h-12 w-12 rounded-lg object-cover border"
+                      className="h-12 w-12 rounded-lg object-cover border cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleViewDetail(product)}
                     />
                   ) : (
-                    <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
+                    <div
+                      className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors"
+                      onClick={() => handleViewDetail(product)}
+                    >
                       <Package className="h-6 w-6 text-muted-foreground" />
                     </div>
                   )}
                   <div>
-                    <div className="font-medium">{product.name}</div>
+                    <div
+                      className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                      onClick={() => handleViewDetail(product)}
+                    >
+                      {product.name}
+                    </div>
                     <div className="text-xs text-muted-foreground truncate max-w-xs">
                       {product.description || "-"}
                     </div>
@@ -102,6 +119,14 @@ export function ProductTable({
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewDetail(product)}
+                    title="View Details"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
