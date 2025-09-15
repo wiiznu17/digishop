@@ -1,8 +1,8 @@
 import { Model, DataTypes, Optional, Sequelize } from "sequelize";
 export interface CheckOutAttributes {
-    id: number
-    customerId:number
-    orderCode: string
+    id: number;
+    customerId:number;
+    orderCode: string;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date | null;
@@ -10,7 +10,7 @@ export interface CheckOutAttributes {
 
 export interface CheckOutCreationAttributes 
     extends Optional< CheckOutAttributes,
-        | "id" 
+        "id" 
         | "customerId"
         | "orderCode"
         | "createdAt"
@@ -67,7 +67,9 @@ export class CheckOut
                 },{
                     sequelize,
                     tableName: "CHECKOUT",
-                    modelName: "Checkout"
+                    modelName: "CheckOut",
+                    paranoid: true,
+                    deletedAt: "deleted_at",
                 }
             );
             return CheckOut
