@@ -1,10 +1,11 @@
 import { QueryInterface } from "sequelize";
+import { v4 as uuidv4 } from 'uuid'
 
 export = {
   async up(queryInterface: QueryInterface) {
     await queryInterface.bulkInsert("profile_images", [
       {
-        id: "11111111-1111-1111-1111-111111111111",
+        uuid: uuidv4(),
         store_id: 1,
         url: "https://example.com/images/store1-main.jpg",
         blobName: "store1-main-blob",
@@ -13,7 +14,7 @@ export = {
         updated_at: new Date(),
       },
       {
-        id: "22222222-2222-2222-2222-222222222222",
+        uuid: uuidv4(),
         store_id: 1,
         url: "https://example.com/images/store1-secondary.jpg",
         blobName: "store1-secondary-blob",
