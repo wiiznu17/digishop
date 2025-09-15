@@ -12,9 +12,9 @@ import {
   type FetchProductsParams,
   type ProductListResponse,
   fetchCategoriesRequester,
-  CategoryDto
+  type CategoryDto
 } from "@/utils/requestUtils/requestProductUtils"
-// ดึงเฉพาะ type เพื่อไม่ให้ component ถูก import มาด้วย
+import ProductDialog from "@/components/product/productDialog"
 import type { ProductFilterState } from "@/components/product/productFilters"
 
 type ProductRow = ProductListResponse["data"][number]
@@ -23,7 +23,6 @@ export default function ProductsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // อ่านค่าจาก URL
   const page = Number(searchParams.get("page") ?? 1)
   const pageSize = Number(searchParams.get("pageSize") ?? 20)
   const q = searchParams.get("q") ?? ""
@@ -36,7 +35,6 @@ export default function ProductsPage() {
   const sortDir =
     (searchParams.get("sortDir") as FetchProductsParams["sortDir"]) ?? "desc"
 
-  // draft filters (แก้ค่าได้โดยไม่ reload / ไม่เปลี่ยน URL จนกด Search)
   const [filters, setFilters] = useState<ProductFilterState>({
     q,
     categoryUuid,
@@ -46,7 +44,6 @@ export default function ProductsPage() {
     sortDir
   })
 
-  // sync filters เมื่อ URL เปลี่ยน (หลังจากกด Search)
   useEffect(() => {
     setFilters({
       q,
@@ -63,6 +60,11 @@ export default function ProductsPage() {
   const [totalPages, setTotalPages] = useState<number>(1)
   const [totalItems, setTotalItems] = useState<number>(0)
   const [categories, setCategories] = useState<CategoryDto[]>([])
+
+  const [quickViewOpen, setQuickViewOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<ProductRow | null>(
+    null
+  )
 
   useEffect(() => {
     ;(async () => {
@@ -104,7 +106,6 @@ export default function ProductsPage() {
   }
 
   const handleApplyFilters = () => {
-    // กด Search ค่อยอัปเดต URL -> fetch ใหม่
     pushQuery({
       q: filters.q,
       categoryUuid: filters.categoryUuid,
@@ -154,12 +155,16 @@ export default function ProductsPage() {
     if (ok) await fetchList()
   }
 
+  const onQuickView = (p: ProductRow) => {
+    setSelectedProduct(p)
+    setQuickViewOpen(true)
+  }
+
   return (
     <div>
       <MerchantHeader title="Products" description="Manage your product" />
 
       <div className="flex flex-1 flex-col gap-4 p-4">
-        {/* ProductList render ProductFilters ที่เดียว */}
         {loading ? (
           <div className="text-sm text-muted-foreground">Loading...</div>
         ) : (
@@ -167,6 +172,7 @@ export default function ProductsPage() {
             products={products}
             onEdit={onEdit}
             onDelete={onDelete}
+            onQuickView={onQuickView}
             filters={filters}
             onFiltersChange={(patch) =>
               setFilters((prev) => ({ ...prev, ...patch }))
@@ -174,6 +180,7 @@ export default function ProductsPage() {
             onApplyFilters={handleApplyFilters}
             onResetFilters={handleResetFilters}
             categories={categories}
+            onBulkCompleted={fetchList} // ← refresh หลัง bulk
           />
         )}
 
@@ -187,6 +194,12 @@ export default function ProductsPage() {
           showItemsPerPageSelector
         />
       </div>
+
+      <ProductDialog
+        isOpen={quickViewOpen}
+        onOpenChange={setQuickViewOpen}
+        product={selectedProduct}
+      />
     </div>
   )
 }

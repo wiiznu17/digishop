@@ -1,7 +1,7 @@
 import axios from "@/lib/axios"
 import type { Product, ProductListItem } from "@/types/props/productProp"
 
-// ====== Types (บางตัวทำเป็น light-weight เพื่อลด coupling) ======
+//  light-weight เพื่อลด coupling
 export type SortBy = "createdAt" | "updatedAt" | "name" | "price"
 export type SortDir = "asc" | "desc"
 
@@ -142,6 +142,7 @@ export async function fetchProductDetailRequester(
     const res = await axios.get(`/api/merchant/products/${productUuid}`, {
       withCredentials: true
     })
+    console.log("Product detail in Req: ", res.data)
     return res.data as Product
   } catch (error) {
     console.error("Error fetching product detail:", error)
@@ -325,7 +326,7 @@ export async function bulkDeleteProductsRequester(
   productUuids: string[]
 ): Promise<boolean> {
   try {
-    await axios.delete("/api/merchant/products/bulk", {
+    await axios.delete("/api/merchant/products/bulk/delete", {
       withCredentials: true,
       data: { productUuids }
     })
@@ -528,5 +529,48 @@ export async function setItemConfigurationsRequester(
   } catch (error) {
     console.error("Error setting item configurations:", error)
     return null
+  }
+}
+
+// apps/merchant/src/utils/requestUtils/requestProductUtils.ts
+export async function uploadProductItemImageRequester(
+  productUuid: string,
+  itemUuid: string,
+  file: File
+): Promise<{ uuid: string; url: string; fileName: string } | null> {
+  try {
+    console.log("Product uuid", productUuid)
+    console.log("Product item uuid", itemUuid)
+    console.log("File image", file)
+    const form = new FormData()
+    form.append("image", file)
+    const res = await axios.post(
+      `/api/merchant/products/${productUuid}/items/${itemUuid}/image`,
+      form,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" }
+      }
+    )
+    return res.data as { uuid: string; url: string; fileName: string }
+  } catch (e) {
+    console.error("Error uploading product item image:", e)
+    return null
+  }
+}
+
+export async function deleteProductItemImageRequester(
+  productUuid: string,
+  itemUuid: string
+): Promise<boolean> {
+  try {
+    await axios.delete(
+      `/api/merchant/products/${productUuid}/items/${itemUuid}/image`,
+      { withCredentials: true }
+    )
+    return true
+  } catch (e) {
+    console.error("Error deleting product item image:", e)
+    return false
   }
 }
