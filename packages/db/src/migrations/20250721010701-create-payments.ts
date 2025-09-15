@@ -12,10 +12,10 @@ export default {
           primaryKey: true,
           allowNull: false,
         },
-        order_id: {
+        checkout_id: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
-          references: { model: "ORDERS", key: "id" },
+          references: { model: "CHECKOUT", key: "id" },
           onDelete: "CASCADE",
           onUpdate: "CASCADE",
         },
@@ -50,7 +50,7 @@ export default {
       { engine: "InnoDB", charset: "utf8mb4", collate: "utf8mb4_unicode_ci" }
     );
 
-    await queryInterface.addIndex("PAYMENTS", ["order_id"]);
+    await queryInterface.addIndex("PAYMENTS", ["checkout_id"]);
     await queryInterface.addIndex("PAYMENTS", ["status"]);
     await queryInterface.addIndex("PAYMENTS", ["provider_ref"]);
     await queryInterface.addIndex("PAYMENTS", ["created_at"]);

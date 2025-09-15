@@ -19,7 +19,7 @@ export default {
       {
         id: 1002,
         uuid: uuidv4(),
-        store_id: 1,
+        store_id: 2,
         category_id: 2,
         name: "Smartphone Y",
         description: "Budget-friendly smartphone",  
@@ -55,7 +55,7 @@ export default {
       {
         id: 1005,
         uuid: uuidv4(),
-        store_id: 1,
+        store_id: 2,
         category_id: 4,
         name: "Smartwatch Z",
         description: "Fitness-focused smartwatch",
