@@ -27,7 +27,7 @@ export default {
         website: null,
         logo_url: null,
         description: 'Second store linked to same bank account',
-        status: StoreStatus.PENDING,
+        status: StoreStatus.APPROVED,
         created_at: new Date(),
         updated_at: new Date(),
         deleted_at: null,

@@ -3,8 +3,8 @@ import { OrderStatus } from "../types/enum";
 
 export interface OrderAttributes {
   id: number;
-  orderCode: string;           // formatted as 'DSG20230915xxxxxx'
-  customerId: number;
+  // orderCode: string;           // formatted as 'DSG20230915xxxxxx'
+  checkoutId: number;
   storeId: number;
   reference: string;           // from Payment API
 
@@ -52,8 +52,8 @@ export class Order
   implements OrderAttributes
 {
   public id!: number;
-  public orderCode!: string;
-  public customerId!: number;
+  // public orderCode!: string;
+  public checkoutId!: number;
   public storeId!: number;
   public reference!: string;
 
@@ -86,15 +86,10 @@ export class Order
           autoIncrement: true,
           primaryKey: true,
         },
-        orderCode: {
-          type: DataTypes.STRING(64),
-          allowNull: false,
-          field: "order_code",
-        },
-        customerId: {
+        checkoutId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
-          field: "customer_id",
+          field: "checkout_id",
         },
         storeId: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -144,7 +139,6 @@ export class Order
           field: "currency_code",
           defaultValue: "THB",
         },
-
         status: {
           type: DataTypes.ENUM(...Object.values(OrderStatus)),
           allowNull: false,
@@ -210,11 +204,11 @@ export class Order
         paranoid: true,
         deletedAt: "deleted_at",
         indexes: [
-          { fields: ["customer_id"] },
+          { fields: ["checkout_id"] },
           { fields: ["store_id"] },
           { fields: ["status"] },
-          { unique: true, fields: ["order_code"] },
-          { unique: true, fields: ["reference"] },
+          // { unique: true, fields: ["order_code"] },
+          // { unique: true, fields: ["reference"] },
         ],
       }
     );
