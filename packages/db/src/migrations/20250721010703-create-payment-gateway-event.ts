@@ -1,4 +1,3 @@
-// src/migrations/2025xxxx-create-payment-gateway-events.ts
 import { QueryInterface, DataTypes, Sequelize } from "sequelize";
 
 export default {
@@ -8,7 +7,7 @@ export default {
 
       order_id: {
         type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
+        allowNull: true,
         references: { model: "ORDERS", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
