@@ -195,7 +195,6 @@ export class Payment
         paranoid: true,
         deletedAt: "deleted_at",
         indexes: [
-          // { fields: ["order_id"] },
           { fields: ["status"] },
           { fields: ["provider_ref"] },
           { fields: ["created_at"] },

@@ -207,8 +207,6 @@ export class Order
           { fields: ["checkout_id"] },
           { fields: ["store_id"] },
           { fields: ["status"] },
-          // { unique: true, fields: ["order_code"] },
-          // { unique: true, fields: ["reference"] },
         ],
       }
     );

@@ -39,7 +39,7 @@ import { RefundImage } from "../src/models/RefundImage";
 import { RefundStatusHistory } from "../src/models/RefundStatusHistory";
 import { Review } from "../src/models/Review";
 import { Dispute } from "../src/models/Dispute";
-import { CheckOut } from "@models/CheckOut";
+import { CheckOut } from "../src/models/CheckOut";
 
 // ── Analytics
 import { ProductView } from "../src/models/ProductView";
