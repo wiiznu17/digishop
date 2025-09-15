@@ -1,3 +1,4 @@
+// apps/merchant/src/app/(main)/products/new/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -10,9 +11,10 @@ import {
   createVariationOptionRequester,
   createProductItemRequester,
   setItemConfigurationsRequester,
-  fetchCategoriesRequester, // ← เพิ่ม
+  fetchCategoriesRequester,
   type CreateProductRequest,
-  type CategoryDto // ← เพิ่ม
+  type CategoryDto,
+  uploadProductItemImageRequester
 } from "@/utils/requestUtils/requestProductUtils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,11 +45,11 @@ export default function AddProductPage() {
   const [uiImages, setUiImages] = useState<ImageLike[]>([])
   const [creating, setCreating] = useState(false)
 
-  // categories จาก DB
+  // categories
   const [categories, setCategories] = useState<CategoryDto[]>([])
   const [catLoading, setCatLoading] = useState(false)
 
-  // variations & generated items (rows)
+  // variations & generated items
   const [variations, setVariations] = useState<VariationDraft[]>([])
   const [rows, setRows] = useState<ItemDraft[]>([])
 
@@ -62,6 +64,12 @@ export default function AddProductPage() {
     }
     void run()
   }, [])
+
+  const toFileFromBlobUrl = async (img: ImageLike) => {
+    const resp = await fetch(img.url)
+    const blob = await resp.blob()
+    return new File([blob], img.fileName, { type: blob.type || undefined })
+  }
 
   const convertBlobsToFiles = async (images: ImageLike[]): Promise<File[]> => {
     const files: File[] = []
@@ -89,7 +97,6 @@ export default function AddProductPage() {
       alert("Please fill product name")
       return
     }
-
     if (rows.length < 1) {
       alert("Please add at least 1 SKU (add a variation and an option).")
       return
@@ -103,11 +110,12 @@ export default function AddProductPage() {
       categoryId: null,
       expectedSkuCount: rows.length
     }
+
     setCreating(true)
     try {
+      // 1) create product + upload main images
       const files = await convertBlobsToFiles(uiImages)
       const created = await createProductRequester(payload, files)
-
       if (!created?.uuid) {
         alert("Create failed")
         setCreating(false)
@@ -126,28 +134,29 @@ export default function AddProductPage() {
           const oRes = await createVariationOptionRequester(
             productUuid,
             vRes.uuid,
-            {
-              value: opt.value,
-              sortOrder: opt.sortOrder
-            }
+            { value: opt.value, sortOrder: opt.sortOrder }
           )
           if (oRes?.uuid) optCidToServerUuid.set(opt.cid, oRes.uuid)
         }
       }
 
-      // 3) items + configurations
+      // 3) items + configurations + item image
       for (const r of rows) {
-        // สร้างทุกแถว
         const itemRes = await createProductItemRequester(productUuid, {
           sku: r.sku || undefined,
           stockQuantity: toInt(r.stock),
           priceMinor: toMinor(r.price),
           imageUrl: null,
-          isEnable: !!r.enabled // ส่งสถานะ enable
+          isEnable: !!r.enabled
         })
         const itemUuid =
           (itemRes as any)?.uuid ??
           (typeof itemRes === "string" ? itemRes : undefined)
+
+        if (itemUuid && r.image && r.image.url.startsWith("blob:")) {
+          const f = await toFileFromBlobUrl(r.image)
+          await uploadProductItemImageRequester(productUuid, itemUuid, f)
+        }
 
         if (itemUuid) {
           const optionUuids = r.optionCids
@@ -185,6 +194,7 @@ export default function AddProductPage() {
             images={uiImages}
             onImagesChange={setUiImages}
             maxImages={10}
+            cropAspect={1}
           />
         </section>
 

@@ -1,10 +1,12 @@
+// apps/merchant/src/components/product/variationBuilder.tsx
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Plus, Trash2 } from "lucide-react"
+import { ImageLike, ImageUpload } from "./imageUpload"
 
 // ===== Types for Draft on client =====
 export type OptionDraft = {
@@ -20,14 +22,14 @@ export type VariationDraft = {
 }
 
 export type ItemDraft = {
-  // ผลลัพธ์จาก cartesian product
-  key: string // unique from optionCids join
-  optionCids: string[] // อ้าง cid ของแต่ละ option
-  label: string // เช่น "Red / L"
+  key: string
+  optionCids: string[]
+  label: string
   enabled: boolean
   sku: string
-  price: string // THB string → แปลงเป็น minor ตอน submit
-  stock: string // string → int ตอน submit
+  price: string
+  stock: string
+  image?: ImageLike | null
 }
 
 type Props = {
@@ -49,6 +51,32 @@ function cartesian<T>(arr: T[][]): T[][] {
         .map((a) => curr.map((c) => [...a, c]))
         .reduce((x, y) => x.concat(y), []),
     [[]]
+  )
+}
+
+function ItemImageCell({
+  value,
+  onChange
+}: {
+  value: ImageLike | null
+  onChange: (v: ImageLike | null) => void
+}) {
+  const arr = value ? [value] : []
+  return (
+    <div
+      className="
+        w-20 h-20
+      "
+    >
+      <ImageUpload
+        variant="compact"
+        mode="local"
+        images={arr}
+        onImagesChange={(imgs) => onChange(imgs[0] ?? null)}
+        maxImages={1}
+        cropAspect={1}
+      />
+    </div>
   )
 }
 
@@ -84,7 +112,6 @@ const hashString = (s: string) => {
 }
 
 const toCode = (s: string, max = 4) => {
-  // แปลงเป็น A-Z0-9; ถ้าเป็นอักษรอื่นจนว่าง ให้ fallback เป็น hash base36
   const t = s
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -103,13 +130,14 @@ export default function VariationBuilder({
   onItemsChange,
   skuPrefix
 }: Props) {
-  // เมื่อ variations เปลี่ยน ให้ regenerate rows โดย “merge” ค่าเดิม (sku/price/stock/enabled) ที่ key ตรงกัน
+  // เมื่อ variations เปลี่ยน → regenerate rows โดย merge ค่าที่เคยกรอก
   useEffect(() => {
-    const next = buildRows(variations)
-    if (next.length === 0) {
+    const optionMatrix = variations.map((v) => v.options)
+    if (optionMatrix.length === 0 || optionMatrix.some((o) => o.length === 0)) {
       onItemsChange([])
       return
     }
+    const next = buildRows(variations)
     const prevMap = new Map(items.map((r) => [r.key, r]))
     const merged = next.map((r) => {
       const prev = prevMap.get(r.key)
@@ -119,7 +147,8 @@ export default function VariationBuilder({
             enabled: prev.enabled,
             sku: prev.sku,
             price: prev.price,
-            stock: prev.stock
+            stock: prev.stock,
+            image: prev.image ?? null
           }
         : r
     })
@@ -130,51 +159,38 @@ export default function VariationBuilder({
   // map cid -> option value
   const optionLabelByCid = useMemo(() => {
     const m = new Map<string, string>()
-    for (const v of variations) {
-      for (const o of v.options) m.set(o.cid, o.value)
-    }
+    for (const v of variations) for (const o of v.options) m.set(o.cid, o.value)
     return m
   }, [JSON.stringify(variations)])
 
   const autoGenerateSkus = (overwriteExisting = false) => {
-    // รวบรวมค่าที่มีอยู่แล้วเพื่อกันซ้ำ
     const seen = new Set(
       items
         .map((r) => (r.sku || "").trim())
         .filter(Boolean)
         .map((s) => s.toUpperCase())
     )
-
     const prefix = toCode((skuPrefix ?? "").trim(), 6) || "PRD"
 
     const next = items.map((r) => {
-      if (!overwriteExisting && (r.sku || "").trim()) return r // ข้ามที่ผู้ใช้ใส่ไว้แล้ว
-
-      // แปลงค่าของแต่ละ option ให้เป็นโค้ดสั้น ๆ เช่น RED, L ฯลฯ
+      if (!overwriteExisting && (r.sku || "").trim()) return r
       const optCodes = r.optionCids.map((cid) =>
         toCode(optionLabelByCid.get(cid) ?? "OPT", 3)
       )
-
-      // base เช่น TSHIRT-RED-L
       let base = [prefix, ...optCodes].join("-").replace(/-+/g, "-")
-      // กันยาวเกิน — เผื่อท้ายไว้ใส่เลขวิ่ง
       base = base.slice(0, 28)
-
-      // กันซ้ำด้วยเลขวิ่ง -1, -2, ...
       let candidate = base
       let i = 1
       while (seen.has(candidate.toUpperCase())) {
         candidate = `${base}-${i++}`
       }
       seen.add(candidate.toUpperCase())
-
       return { ...r, sku: candidate }
     })
 
     onItemsChange(next)
   }
 
-  // เพิ่ม/ลบ/แก้ชื่อ variation
   const addVariation = () => {
     const nv: VariationDraft = {
       cid: cuid(),
@@ -197,7 +213,6 @@ export default function VariationBuilder({
     )
   }
 
-  // เพิ่ม/ลบ/แก้ option
   const addOption = (varCid: string) => {
     onVariationsChange(
       variations.map((v) =>
@@ -248,7 +263,6 @@ export default function VariationBuilder({
     )
   }
 
-  // แก้ rows (sku / price / stock / enabled)
   const patchRow = (key: string, patch: Partial<ItemDraft>) => {
     onItemsChange(items.map((r) => (r.key === key ? { ...r, ...patch } : r)))
   }
@@ -327,22 +341,13 @@ export default function VariationBuilder({
               type="button"
               variant="secondary"
               size="sm"
-              onClick={() => autoGenerateSkus(false)} // เติมเฉพาะช่องที่ยังว่าง
+              onClick={() => autoGenerateSkus(false)}
             >
               Auto-generate SKUs
             </Button>
-            {/* replace all
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => autoGenerateSkus(true)}
-              >
-                Overwrite all
-              </Button>
-            */}
           </div>
         </div>
+
         {!hasVariations && (
           <div className="text-sm text-muted-foreground">
             Add at least one variation with options to generate items.
@@ -355,10 +360,11 @@ export default function VariationBuilder({
 
         {items.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="min-w-[720px] w-full text-sm border rounded">
+            <table className="min-w-[820px] w-full text-sm border rounded">
               <thead className="bg-muted/40">
                 <tr>
-                  <th className="text-left p-2">Enable</th>
+                  <th className="text-left p-2 w-[88px]">Enable</th>
+                  <th className="text-left p-2 w-[124px]">Image</th>
                   <th className="text-left p-2">Combination</th>
                   <th className="text-left p-2">SKU</th>
                   <th className="text-left p-2">Price (THB)</th>
@@ -367,14 +373,20 @@ export default function VariationBuilder({
               </thead>
               <tbody>
                 {items.map((r) => (
-                  <tr key={r.key} className="border-t">
-                    <td className="p-2">
+                  <tr key={r.key} className="border-t align-top">
+                    <td className="p-2 align-top">
                       <input
                         type="checkbox"
                         checked={r.enabled}
                         onChange={(e) =>
                           patchRow(r.key, { enabled: e.target.checked })
                         }
+                      />
+                    </td>
+                    <td className="p-2 align-top">
+                      <ItemImageCell
+                        value={r.image ?? null}
+                        onChange={(img) => patchRow(r.key, { image: img })}
                       />
                     </td>
                     <td className="p-2">{r.label}</td>

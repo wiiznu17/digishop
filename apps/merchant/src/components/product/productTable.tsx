@@ -1,3 +1,4 @@
+// apps/merchant/src/components/product/productTable.tsx
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -10,8 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Edit, Trash2, Package, Image as ImageIcon, Eye } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { ProductListItem } from "../../types/props/productProp"
+import type { ProductListItem } from "../../types/props/productProp"
 
 function formatTHBFromMinor(minor?: number | null) {
   const m = typeof minor === "number" ? minor : 0
@@ -25,24 +25,47 @@ interface ProductTableProps {
   products: ProductListItem[]
   onEdit: (product: ProductListItem) => void
   onDelete: (uuid: string) => void
+  onQuickView: (product: ProductListItem) => void
+
+  /** bulk selection */
+  selectedUuids: Set<string>
+  onToggleRow: (uuid: string, checked: boolean) => void
+  onToggleAllOnPage: (uuids: string[], checked: boolean) => void
+}
+
+// บาง BE จะส่ง field นับรูปมาใหม่ — กำหนด type เฉพาะเพื่อเลี่ยง any
+type ProductWithImageCount = ProductListItem & {
+  totalImageCount?: number
+  imageCount?: number
 }
 
 export function ProductTable({
   products,
   onEdit,
-  onDelete
+  onDelete,
+  onQuickView,
+  selectedUuids,
+  onToggleRow,
+  onToggleAllOnPage
 }: ProductTableProps) {
-  const router = useRouter()
-
-  const handleViewDetail = (product: ProductListItem) => {
-    // ใช้ route ที่ถูกต้องตามโครงสร้างของคุณ
-    router.push(`/products/${product.uuid}`)
-  }
+  const allUuidsOnPage = products.map((p) => p.uuid)
+  const allOnPageSelected =
+    products.length > 0 && products.every((p) => selectedUuids.has(p.uuid))
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead className="w-[44px]">
+            <input
+              type="checkbox"
+              aria-label="Select all"
+              checked={allOnPageSelected}
+              onChange={(e) =>
+                onToggleAllOnPage(allUuidsOnPage, e.currentTarget.checked)
+              }
+            />
+          </TableHead>
           <TableHead>Product</TableHead>
           <TableHead>Category</TableHead>
           <TableHead>Price</TableHead>
@@ -52,12 +75,34 @@ export function ProductTable({
           <TableHead>Action</TableHead>
         </TableRow>
       </TableHeader>
+
       <TableBody>
         {products.map((product) => {
           const mainImg =
             product.images?.find((i) => i.isMain) || product.images?.[0]
+
+          const withCount: ProductWithImageCount = product
+          const imageCount =
+            withCount.totalImageCount ??
+            withCount.imageCount ??
+            product.images?.length ??
+            0
+
+          const rowChecked = selectedUuids.has(product.uuid)
+
           return (
             <TableRow key={product.uuid}>
+              <TableCell>
+                <input
+                  type="checkbox"
+                  aria-label={`Select ${product.name}`}
+                  checked={rowChecked}
+                  onChange={(e) =>
+                    onToggleRow(product.uuid, e.currentTarget.checked)
+                  }
+                />
+              </TableCell>
+
               <TableCell>
                 <div className="flex items-center gap-3">
                   {mainImg?.url ? (
@@ -65,12 +110,12 @@ export function ProductTable({
                       src={mainImg.url}
                       alt={product.name}
                       className="h-12 w-12 rounded-lg object-cover border cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => handleViewDetail(product)}
+                      onClick={() => onQuickView(product)}
                     />
                   ) : (
                     <div
                       className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors"
-                      onClick={() => handleViewDetail(product)}
+                      onClick={() => onQuickView(product)}
                     >
                       <Package className="h-6 w-6 text-muted-foreground" />
                     </div>
@@ -78,7 +123,7 @@ export function ProductTable({
                   <div>
                     <div
                       className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                      onClick={() => handleViewDetail(product)}
+                      onClick={() => onQuickView(product)}
                     >
                       {product.name}
                     </div>
@@ -91,13 +136,17 @@ export function ProductTable({
                   </div>
                 </div>
               </TableCell>
+
               <TableCell>{product.category?.name || "-"}</TableCell>
+
               <TableCell>{formatTHBFromMinor(product.minPriceMinor)}</TableCell>
+
               <TableCell>
                 <span className={!product.totalStock ? "text-destructive" : ""}>
                   {product.totalStock ?? 0}
                 </span>
               </TableCell>
+
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
@@ -111,22 +160,25 @@ export function ProductTable({
                   {product.status}
                 </span>
               </TableCell>
+
               <TableCell>
                 <div className="flex items-center gap-1">
                   <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{product.images?.length || 0}</span>
+                  <span className="text-sm">{imageCount}</span>
                 </div>
               </TableCell>
+
               <TableCell>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleViewDetail(product)}
-                    title="View Details"
+                    onClick={() => onQuickView(product)}
+                    title="Quick View"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -134,6 +186,7 @@ export function ProductTable({
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
+
                   <Button
                     variant="outline"
                     size="sm"

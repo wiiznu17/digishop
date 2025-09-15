@@ -8,7 +8,7 @@ import {
   fetchProductDetailRequester,
   deleteProductRequester,
   duplicateProductRequester,
-  updateProductItemRequester // ⬅️ ใช้ toggle enable
+  updateProductItemRequester // toggle enable
 } from "@/utils/requestUtils/requestProductUtils"
 
 import {
@@ -20,14 +20,14 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type ProductDetail = Awaited<ReturnType<typeof fetchProductDetailRequester>>
 
 // ช่วย format วันที่ โดยไม่ต้อง cast any
 const formatDate = (v: unknown) => {
-  if (v instanceof Date) {
-    return v.toLocaleString()
-  }
+  if (v instanceof Date) return v.toLocaleString()
   if (typeof v === "string" || typeof v === "number") {
     const d = new Date(v)
     return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString()
@@ -42,6 +42,28 @@ export default function ProductDetailPage() {
 
   const [data, setData] = useState<ProductDetail>(null)
   const [loading, setLoading] = useState<boolean>(false)
+
+  // ===== Lightbox preview state =====
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewIndex, setPreviewIndex] = useState(0)
+  const [previewList, setPreviewList] = useState<
+    { url: string; label?: string }[]
+  >([])
+
+  const openPreview = (list: { url: string; label?: string }[], index = 0) => {
+    if (!list || list.length === 0) return
+    setPreviewList(list)
+    setPreviewIndex(Math.max(0, Math.min(index, list.length - 1)))
+    setPreviewOpen(true)
+  }
+  const nextPreview = () =>
+    setPreviewIndex((i) => (i + 1) % Math.max(1, previewList.length))
+  const prevPreview = () =>
+    setPreviewIndex(
+      (i) =>
+        (i - 1 + Math.max(1, previewList.length)) %
+        Math.max(1, previewList.length)
+    )
 
   const load = async () => {
     setLoading(true)
@@ -72,7 +94,6 @@ export default function ProductDetailPage() {
     next: boolean,
     prev: boolean
   ) => {
-    console.log("Switch to -> ", next)
     // optimistic
     setData((prevData) =>
       prevData
@@ -89,11 +110,7 @@ export default function ProductDetailPage() {
       const res = await updateProductItemRequester(productUuid, itemUuid, {
         isEnable: next
       })
-      // ถ้า BE ส่ง null/throw ให้ revert
-      if (!res) {
-        throw new Error("Update failed")
-      }
-      console.log("Switch to -> ", next, "successfully")
+      if (!res) throw new Error("Update failed")
     } catch {
       // revert
       setData((prevData) =>
@@ -116,21 +133,18 @@ export default function ProductDetailPage() {
     return imgs.find((i) => i.isMain) ?? imgs[0] ?? null
   }, [data])
 
-  const totalStock = useMemo(() => {
-    return (data?.items ?? []).reduce(
-      (sum, it) => sum + (it.stockQuantity ?? 0),
-      0
-    )
-  }, [data])
+  const totalStock = useMemo(
+    () =>
+      (data?.items ?? []).reduce((sum, it) => sum + (it.stockQuantity ?? 0), 0),
+    [data]
+  )
 
   const minPriceMinor = useMemo(() => {
     const items = data?.items ?? []
     if (items.length === 0) return null
     let min = Number.POSITIVE_INFINITY
     for (const it of items) {
-      if (typeof it.priceMinor === "number") {
-        min = Math.min(min, it.priceMinor)
-      }
+      if (typeof it.priceMinor === "number") min = Math.min(min, it.priceMinor)
     }
     return Number.isFinite(min) ? min : null
   }, [data])
@@ -142,6 +156,12 @@ export default function ProductDetailPage() {
           style: "currency",
           currency: "THB"
         })
+
+  // แกลเลอรีทั้งหมดของ product
+  const galleryList = useMemo(
+    () => (data?.images ?? []).map((g) => ({ url: g.url, label: g.fileName })),
+    [data]
+  )
 
   return (
     <div>
@@ -165,7 +185,21 @@ export default function ProductDetailPage() {
             <Card>
               <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-4">
-                  <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted border">
+                  <button
+                    type="button"
+                    className="h-60 w-60 rounded-lg overflow-hidden bg-muted border cursor-zoom-in"
+                    onClick={() =>
+                      mainImage &&
+                      openPreview(
+                        galleryList,
+                        Math.max(
+                          0,
+                          galleryList.findIndex((g) => g.url === mainImage.url)
+                        )
+                      )
+                    }
+                    title={mainImage ? "Click to preview" : undefined}
+                  >
                     {mainImage ? (
                       <img
                         src={mainImage.url}
@@ -177,7 +211,7 @@ export default function ProductDetailPage() {
                         No image
                       </div>
                     )}
-                  </div>
+                  </button>
 
                   <div>
                     <CardTitle className="text-xl">{data.name}</CardTitle>
@@ -280,10 +314,13 @@ export default function ProductDetailPage() {
                 )}
                 {data.images && data.images.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {data.images.map((img) => (
-                      <div
+                    {data.images.map((img, idx) => (
+                      <button
                         key={img.uuid}
-                        className="border rounded overflow-hidden"
+                        type="button"
+                        className="border rounded overflow-hidden cursor-zoom-in"
+                        onClick={() => openPreview(galleryList, idx)}
+                        title="Click to preview"
                       >
                         <img
                           src={img.url}
@@ -298,7 +335,7 @@ export default function ProductDetailPage() {
                             </span>
                           )}
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -340,7 +377,7 @@ export default function ProductDetailPage() {
             {/* ===== Items (SKUs) ===== */}
             <Card>
               <CardHeader>
-                <CardTitle>Items (SKUs)</CardTitle>
+                <CardTitle>Product Items (SKUs)</CardTitle>
                 <CardDescription>Each sellable combination</CardDescription>
               </CardHeader>
               <CardContent>
@@ -364,17 +401,38 @@ export default function ProductDetailPage() {
                         {(data.items ?? []).map((it) => {
                           const enabled =
                             (it as { isEnable?: boolean }).isEnable !== false
+                          // รองรับทั้ง field เดิมและใหม่
+                          const itemImgUrl =
+                            (it as any).productItemImage?.url ??
+                            it.imageUrl ??
+                            null
+                          const itemLabel =
+                            it.sku ||
+                            (it as any).productItemImage?.fileName ||
+                            "Item image"
                           return (
                             <tr key={it.uuid} className="border-t">
                               <td className="p-2">
-                                {it.imageUrl ? (
-                                  <img
-                                    src={it.imageUrl}
-                                    alt={it.sku}
-                                    className="h-10 w-10 rounded object-cover border"
-                                  />
+                                {itemImgUrl ? (
+                                  <button
+                                    type="button"
+                                    className="h-20 w-20 rounded object-cover border overflow-hidden cursor-zoom-in"
+                                    onClick={() =>
+                                      openPreview(
+                                        [{ url: itemImgUrl, label: itemLabel }],
+                                        0
+                                      )
+                                    }
+                                    title="Click to preview"
+                                  >
+                                    <img
+                                      src={itemImgUrl}
+                                      alt={itemLabel}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </button>
                                 ) : (
-                                  <div className="h-10 w-10 rounded border flex items-center justify-center text-[10px] text-muted-foreground">
+                                  <div className="h-20 w-20 rounded border flex items-center justify-center text-[10px] text-muted-foreground">
                                     No Image
                                   </div>
                                 )}
@@ -422,6 +480,45 @@ export default function ProductDetailPage() {
           </>
         )}
       </div>
+
+      {/* ===== Lightbox Preview ===== */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] p-0 overflow-hidden">
+          <div className="relative bg-black">
+            {previewList[previewIndex] && (
+              <img
+                src={previewList[previewIndex].url}
+                alt={previewList[previewIndex].label ?? "preview"}
+                className="max-h-[80vh] w-full object-contain"
+              />
+            )}
+
+            {previewList.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                  onClick={prevPreview}
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                  onClick={nextPreview}
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
+          </div>
+          <div className="px-4 py-2 text-sm text-muted-foreground truncate">
+            {previewList[previewIndex]?.label}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
