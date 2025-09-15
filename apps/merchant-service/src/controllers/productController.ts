@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/middleware";
 import { Op, sequelize } from "@digishop/db/src/db";
-import { col, fn, Op as SQ, where as sqWhere, type Order, type OrderItem } from "sequelize";
+import { col, fn, literal, Op as SQ, where as sqWhere, type Order, type OrderItem } from "sequelize";
 import { azureBlobService } from "../helpers/azureBlobService";
 
 import { Product } from "@digishop/db/src/models/Product";
@@ -13,6 +13,7 @@ import { VariationOption } from "@digishop/db/src/models/VariationOption";
 import { ProductItem } from "@digishop/db/src/models/ProductItem";
 import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
 import { ProductStatus } from "@digishop/db/src/types/enum";
+import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
 
 /** Helpers */
 const ensureStore = async (req: AuthenticatedRequest) => {
@@ -137,7 +138,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
     const store = await Store.findOne({ where: { userId: req.user?.sub } });
     if (!store) return res.status(404).json({ error: "No store found for this merchant" });
 
-    // 2) รับพารามิเตอร์ (ไม่ตั้ง default เป็น true เพื่อให้ 'All' เป็นค่าเริ่มต้น)
+    // 2) พารามิเตอร์
     const {
       q,
       categoryUuid,
@@ -145,7 +146,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       sortBy = "createdAt",
       sortDir = "desc",
     } = req.query as Record<string, string | undefined>;
-    const inStockParam = req.query.inStock as string | undefined; // "true" | "false" | undefined
+    const inStockParam = req.query.inStock as string | undefined;
 
     const page = Math.max(parseInt(String(req.query.page ?? "1"), 10) || 1, 1);
     const pageSizeRaw = Math.max(parseInt(String(req.query.pageSize ?? "20"), 10) || 20, 1);
@@ -160,7 +161,6 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       const like = `%${q.trim()}%`;
       orConds.push({ name: { [Op.like]: like } });
       orConds.push({ description: { [Op.like]: like } });
-      // ให้ค้น SKU ด้วย (ผ่าน include: items)
       orConds.push(sqWhere(col("items.sku"), { [Op.like]: like }));
     }
     if (orConds.length) whereProduct[Op.or] = orConds;
@@ -169,7 +169,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
     // 4) include
     const include: any[] = [];
 
-    // 4.1 category (optional filter)
+    // 4.1 category
     if (categoryUuid) {
       include.push({
         model: Category,
@@ -187,7 +187,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
-    // 4.2 main image (1 รูปหลัก)
+    // 4.2 main image เท่านั้น (สำหรับแสดง thumbnail)
     include.push({
       model: ProductImage,
       as: "images",
@@ -202,20 +202,39 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       ],
     });
 
-    // 4.3 items (เพื่อ aggregate และค้น SKU)
+    // 4.3 items (ไว้สรุป stock/price และค้น SKU)
     include.push({
       model: ProductItem,
       as: "items",
       attributes: [],   // ไม่ดึงคอลัมน์ดิบ ลดซ้ำ
-      required: false,  // left join
-      where: { isEnable: true }, // นับเฉพาะที่เปิดขาย
+      required: false,
+      where: { isEnable: true },
     });
 
-    // 5) ฟิลด์คำนวณจาก ProductItems (ไม่ใช้ของ Product)
+    // 5) fields จาก items
     const sumStockExpr = fn("COALESCE", fn("SUM", col("items.stock_quantity")), 0);
     const minPriceExpr = fn("MIN", col("items.price_minor"));
 
-    // 6) HAVING filter เมื่อส่ง inStock มาเท่านั้น
+    // 5.1 นับจำนวนรูปทั้งหมด (product + item)
+    // NOTE: ใช้ subquery ตรง ๆ เพื่อลด join ซ้ำ
+    const productImageCountExpr = literal(
+      "(SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = `Product`.`id`)"
+    );
+    const itemImageCountExpr = literal(
+      "(SELECT COUNT(*) " +
+        "FROM product_item_images pii " +
+        "JOIN product_items pit ON pit.id = pii.product_item_id " +
+        "WHERE pit.product_id = `Product`.`id`)"
+    );
+    const totalImageCountExpr = literal(
+      "(" +
+        "(SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = `Product`.`id`)" +
+        " + " +
+        "(SELECT COUNT(*) FROM product_item_images pii JOIN product_items pit ON pit.id = pii.product_item_id WHERE pit.product_id = `Product`.`id`)" +
+      ")"
+    );
+
+    // 6) HAVING (inStock)
     let having: any | undefined;
     if (inStockParam === "true")  having = sqWhere(sumStockExpr, { [Op.gt]: 0 });
     if (inStockParam === "false") having = sqWhere(sumStockExpr, { [Op.eq]: 0 });
@@ -228,7 +247,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
     const priceOrder: OrderItem = [col("minPriceMinor"), orderDir];
     const order: Order = [orderCol === "price" ? priceOrder : defaultOrder];
 
-    // 8) GROUP BY (กัน ONLY_FULL_GROUP_BY)
+    // 8) GROUP BY
     const group = [
       col("Product.id"),
       col("category.id"),
@@ -236,7 +255,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       col("category.name"),
     ];
 
-    // 9) คิวรี
+    // 9) Query
     const { rows, count } = await Product.findAndCountAll({
       where: whereProduct,
       include,
@@ -248,9 +267,11 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
         "status",
         "createdAt",
         "updatedAt",
-        [minPriceExpr, "minPriceMinor"], // ราคาต่ำสุดจาก items
-        [sumStockExpr, "totalStock"],    // ยอดสต็อกรวมจาก items
-        
+        [minPriceExpr, "minPriceMinor"],
+        [sumStockExpr, "totalStock"],
+        [productImageCountExpr, "productImageCount"],
+        [itemImageCountExpr, "itemImageCount"],
+        [totalImageCountExpr, "totalImageCount"],
       ],
       group,
       having,
@@ -306,13 +327,19 @@ export const getProductDetail = async (req: AuthenticatedRequest, res: Response)
           model: Variation,
           as: "variations",
           attributes: ["id", "uuid", "name", "createdAt", "updatedAt"],
-          include: [{ model: VariationOption, as: "options", attributes: ["id", "uuid", "value", "createdAt", "updatedAt"] }],
+          include: [{ model: VariationOption, as: "options", attributes: ["id", "uuid", "sortOrder", "value", "createdAt", "updatedAt"] }],
         },
         {
           model: ProductItem,
           as: "items",
-          attributes: ["id", "uuid", "sku", "stockQuantity", "priceMinor", "isEnable", "imageUrl", "createdAt", "updatedAt"],
+          attributes: ["id","uuid","sku","stockQuantity","priceMinor","isEnable","createdAt","updatedAt"],
           include: [
+            {
+              model: ProductItemImage,
+              as: "productItemImage",
+              attributes: ["uuid","url","fileName"],
+              required: false,
+            },
             {
               model: ProductConfiguration,
               as: "configurations",
@@ -321,8 +348,12 @@ export const getProductDetail = async (req: AuthenticatedRequest, res: Response)
                 {
                   model: VariationOption,
                   as: "variationOption",
-                  attributes: ["id", "uuid", "value", "variationId"],
-                  include: [{ model: Variation, as: "variation", attributes: ["id", "uuid", "name"] }],
+                  attributes: ["id", "uuid", "value", "sortOrder", "variationId"],
+                  include: [
+                    {
+                      model: Variation,
+                      as: "variation",
+                      attributes: ["id", "uuid", "name"] }],
                 },
               ],
             },
@@ -330,7 +361,6 @@ export const getProductDetail = async (req: AuthenticatedRequest, res: Response)
         },
       ],
     });
-
     if (!product) return res.status(404).json({ error: "Product not found" });
     return res.json(product);
   } catch (err) {
@@ -1138,7 +1168,7 @@ export const reorderVariationOptions = async (req: AuthenticatedRequest, res: Re
   try {
     const { productUuid, variationUuid } = req.params as { productUuid: string; variationUuid: string };
     const { orders } = req.body as { orders: Array<{ optionUuid: string; sortOrder: number }> };
-
+    console.log("sort order: ", orders)
     const store = await ensureStore(req);
     if (!store) {
       await t.rollback();
@@ -1326,6 +1356,69 @@ export const setItemConfigurations = async (req: AuthenticatedRequest, res: Resp
   } catch (e) {
     await t.rollback();
     console.error("setItemConfigurations error", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// apps/merchant-service/src/controllers/productController.ts
+export const upsertProductItemImage = async (req: AuthenticatedRequest, res: Response) => {
+  const t = await sequelize.transaction();
+  try {
+    const { productUuid, itemUuid } = req.params as { productUuid: string; itemUuid: string };
+    const file = req.file as Express.Multer.File | undefined;
+    console.log("Product item image: ", productUuid, ", item: ", itemUuid, ", file: ", file)
+    if (!file) { await t.rollback(); return res.status(400).json({ error: "image file is required" }); }
+
+    const store = await ensureStore(req);
+    if (!store) { await t.rollback(); return res.status(404).json({ error: "No store found" }); }
+    const product = await findProductByUuidForStore(productUuid, store.id);
+    if (!product) { await t.rollback(); return res.status(404).json({ error: "Product not found" }); }
+    const item = await findItemByUuidForProduct(itemUuid, product.id);
+    if (!item) { await t.rollback(); return res.status(404).json({ error: "Item not found" }); }
+
+    // ถ้ามีอยู่แล้ว -> ลบทิ้งก่อน (เพราะ 1:1)
+    const existing = await ProductItemImage.findOne({ where: { productItemId: item.id } });
+    if (existing) {
+      await azureBlobService.deleteImage(existing.blobName);
+      await existing.destroy({ transaction: t });
+    }
+
+    const { url, blobName } = await azureBlobService.uploadImage(file, `products/${product.uuid}/items/${item.uuid}`);
+    const created = await ProductItemImage.create(
+      { productItemId: item.id, url, blobName, fileName: file.originalname },
+      { transaction: t }
+    );
+
+    await t.commit();
+    return res.status(201).json({ uuid: created.uuid, url: created.url, fileName: created.fileName });
+  } catch (e) {
+    await t.rollback();
+    console.error("upsertProductItemImage error", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteProductItemImage = async (req: AuthenticatedRequest, res: Response) => {
+  const t = await sequelize.transaction();
+  try {
+    const { productUuid, itemUuid } = req.params as { productUuid: string; itemUuid: string };
+    const store = await ensureStore(req);
+    if (!store) { await t.rollback(); return res.status(404).json({ error: "No store found" }); }
+    const product = await findProductByUuidForStore(productUuid, store.id);
+    if (!product) { await t.rollback(); return res.status(404).json({ error: "Product not found" }); }
+    const item = await findItemByUuidForProduct(itemUuid, product.id);
+    if (!item) { await t.rollback(); return res.status(404).json({ error: "Item not found" }); }
+
+    const existing = await ProductItemImage.findOne({ where: { productItemId: item.id } });
+    if (!existing) { await t.rollback(); return res.status(404).json({ error: "Item image not found" }); }
+
+    await azureBlobService.deleteImage(existing.blobName);
+    await existing.destroy({ transaction: t });
+    await t.commit();
+    return res.status(204).send();
+  } catch (e) {
+    await t.rollback();
+    console.error("deleteProductItemImage error", e);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -11,7 +11,10 @@ import {
   Upload,
   Image as ImageIcon,
   Star,
-  Crop as CropIcon
+  Crop as CropIcon,
+  Repeat as ChangeIcon,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import {
   deleteProductImageRequester,
@@ -28,10 +31,10 @@ import {
   DialogFooter
 } from "@/components/ui/dialog"
 
-// NOTE: ให้รองรับทั้งของเดิม (id) และของใหม่ (uuid)
+// รองรับทั้ง id/uuid
 export type ImageLike = {
   uuid?: string
-  id?: string // fallback เก่า
+  id?: string
   url: string
   fileName: string
   isMain?: boolean
@@ -43,13 +46,11 @@ interface ImageUploadProps {
   onImagesChange: (images: ImageLike[]) => void
   maxImages?: number
 
-  /** ใช้กับ API ใหม่: ทำงานแบบออฟไลน์ (local) หรือซิงก์ทันที (server) */
   mode?: "local" | "server"
-  /** ใช้เฉพาะตอน mode="server" */
   productUuid?: string
 
-  /** อัตราส่วนการครอป (เช่น 1 สำหรับ 1:1, 4/3, 3/2) */
   cropAspect?: number
+  variant?: "default" | "compact"
 }
 
 export function ImageUpload({
@@ -58,14 +59,18 @@ export function ImageUpload({
   maxImages = 5,
   mode = "local",
   productUuid,
-  cropAspect = 1
+  cropAspect = 1,
+  variant = "default"
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // สำหรับ compact: กำลังจะเปลี่ยนภาพ index ไหน
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null)
+
   const isBlob = (u: string) => u.startsWith("blob:")
 
-  // ===== Crop states =====
+  // ===== Crop =====
   const [cropOpen, setCropOpen] = useState(false)
   const [cropIndex, setCropIndex] = useState<number | null>(null)
   const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -79,10 +84,8 @@ export function ImageUpload({
     setCrop({ x: 0, y: 0 })
     setCroppedAreaPixels(null)
   }
-
-  const onCropComplete = (_: Area, areaPixels: Area) => {
+  const onCropComplete = (_: Area, areaPixels: Area) =>
     setCroppedAreaPixels(areaPixels)
-  }
 
   async function handleCropConfirm() {
     if (cropIndex == null || !croppedAreaPixels) {
@@ -93,8 +96,6 @@ export function ImageUpload({
     try {
       const { blob, mime } = await getCroppedBlob(img.url, croppedAreaPixels)
       const newUrl = URL.createObjectURL(blob)
-
-      // ตั้งชื่อใหม่พ่วง -cropped
       const ext = mime.includes("png")
         ? "png"
         : mime.includes("webp")
@@ -114,7 +115,6 @@ export function ImageUpload({
             }
           : it
       )
-      // คงลำดับด้วยการ map index -> sortOrder
       onImagesChange(next.map((x, i) => ({ ...x, sortOrder: i })))
     } catch (e) {
       console.error("crop failed", e)
@@ -125,7 +125,6 @@ export function ImageUpload({
     }
   }
 
-  // helper: โหลดรูป + ครอปลง canvas แล้วคืน blob
   async function getCroppedBlob(
     src: string,
     area: Area
@@ -137,8 +136,6 @@ export function ImageUpload({
     const ctx = canvas.getContext("2d")
     if (!ctx) throw new Error("Canvas not supported")
 
-    // ป้องกัน CORS
-    // (img.crossOrigin ถูกตั้งไว้ใน loadImage แล้ว ถ้าเป็น blob: จะไม่กระทบ)
     ctx.drawImage(
       imgEl,
       area.x,
@@ -151,14 +148,13 @@ export function ImageUpload({
       canvas.height
     )
 
-    // พยายามเดา mime เดิม
     let mime = "image/jpeg"
     try {
       const resp = await fetch(src)
       const b = await resp.blob()
       if (b.type) mime = b.type
     } catch {
-      // ignore, fallback jpeg
+      /* ignore */
     }
 
     const blob: Blob = await new Promise((resolve, reject) =>
@@ -174,7 +170,6 @@ export function ImageUpload({
   function loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image()
-      // รองรับ CORS (กรณีเป็น https)
       img.crossOrigin = "anonymous"
       img.onload = () => resolve(img)
       img.onerror = (e) => reject(e)
@@ -182,26 +177,31 @@ export function ImageUpload({
     })
   }
 
-  // ===== Upload/select handlers =====
+  // ===== File pick =====
+  const triggerPick = (opts?: { replaceAt?: number | null }) => {
+    setReplaceIndex(opts?.replaceAt ?? null)
+    fileInputRef.current?.click()
+  }
+
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = event.target.files
-    if (!files) return
+    if (!files || files.length === 0) return
 
-    if (images.length + files.length > maxImages) {
+    const chosen = variant === "compact" ? [files[0]] : Array.from(files)
+    const willHave =
+      replaceIndex != null ? images.length : images.length + chosen.length
+    if (willHave > maxImages) {
       alert(`You can maximum upload ${maxImages} pictures`)
-      // ล้างค่าช่องไฟล์เพื่อเลือกใหม่ได้
       if (fileInputRef.current) fileInputRef.current.value = ""
       return
     }
 
     setUploading(true)
     try {
-      const newImages: ImageLike[] = []
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-
+      const newThumbs: ImageLike[] = []
+      for (const file of chosen) {
         if (!file.type.startsWith("image/")) {
           alert(`${file.name} Not image file`)
           continue
@@ -210,36 +210,56 @@ export function ImageUpload({
           alert(`${file.name} File size is more than 5MB`)
           continue
         }
-
         const previewUrl = URL.createObjectURL(file)
-        newImages.push({
+        newThumbs.push({
           url: previewUrl,
           fileName: file.name,
-          isMain: images.length === 0 && newImages.length === 0, // first becomes main locally
-          sortOrder: images.length + newImages.length - 1
+          isMain: images.length === 0 && newThumbs.length === 0,
+          sortOrder: images.length + newThumbs.length - 1
         })
       }
 
-      onImagesChange(
-        [...images, ...newImages].map((img, idx) => ({
-          ...img,
-          sortOrder: idx
-        }))
-      )
+      if (variant === "compact") {
+        const idx = replaceIndex ?? (images.length ? 0 : null)
+        if (idx == null) {
+          onImagesChange(
+            [...images, ...newThumbs.slice(0, 1)].map((img, i) => ({
+              ...img,
+              sortOrder: i
+            }))
+          )
+        } else if (newThumbs[0]) {
+          const next = images.map((im, i) =>
+            i === idx ? { ...newThumbs[0], isMain: im.isMain } : im
+          )
+          onImagesChange(next.map((x, i) => ({ ...x, sortOrder: i })))
+        }
+      } else {
+        onImagesChange(
+          [...images, ...newThumbs].map((img, idx) => ({
+            ...img,
+            sortOrder: idx
+          }))
+        )
+      }
     } catch (err) {
       console.error("Error processing files:", err)
       alert("Error to processing files")
     } finally {
       setUploading(false)
+      setReplaceIndex(null)
       if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
-  const removeImage = async (index: number) => {
+  // ===== Mutations =====
+  const removeImage = async (index: number, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+
     const img = images[index]
     const imageUuid = img.uuid ?? img.id
 
-    // โหมด server: ถ้ามี uuid จริง และไม่ใช่ blob → ยิงลบที่เซิร์ฟเวอร์
     if (mode === "server" && productUuid && imageUuid && !isBlob(img.url)) {
       try {
         await deleteProductImageRequester(productUuid, imageUuid)
@@ -250,15 +270,13 @@ export function ImageUpload({
       }
     }
 
-    // อัปเดต local state
     const updated = images.filter((_, i) => i !== index)
     if (img.isMain && updated.length > 0) updated[0].isMain = true
     onImagesChange(updated.map((x, i) => ({ ...x, sortOrder: i })))
 
-    // โหมด server: sync reorder หลังลบ
     if (mode === "server" && productUuid) {
       const orders = updated
-        .filter((x) => x.uuid) // เฉพาะที่มีบนเซิร์ฟเวอร์
+        .filter((x) => x.uuid)
         .map((x, i) => ({ imageUuid: x.uuid!, sortOrder: i }))
       if (orders.length) {
         try {
@@ -270,7 +288,10 @@ export function ImageUpload({
     }
   }
 
-  const setMainImage = async (index: number) => {
+  const setMainImage = async (index: number, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+
     const updated = images.map((img, i) => ({ ...img, isMain: i === index }))
     onImagesChange(updated)
 
@@ -290,7 +311,10 @@ export function ImageUpload({
     }
   }
 
-  const moveImage = async (from: number, to: number) => {
+  const moveImage = async (from: number, to: number, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+
     if (to < 0 || to >= images.length) return
     const next = [...images]
     const sp = next.splice(from, 1)[0]
@@ -312,8 +336,117 @@ export function ImageUpload({
     }
   }
 
-  // ===== UI =====
-  return (
+  // ===== Preview (Lightbox) =====
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewIndex, setPreviewIndex] = useState<number>(0)
+
+  const openPreviewAt = (index: number) => {
+    setPreviewIndex(index)
+    setPreviewOpen(true)
+  }
+  const nextPreview = () =>
+    setPreviewIndex((i) => (i + 1) % Math.max(1, images.length))
+  const prevPreview = () =>
+    setPreviewIndex(
+      (i) => (i - 1 + Math.max(1, images.length)) % Math.max(1, images.length)
+    )
+
+  // ===== UI Helpers =====
+  const actionBtnClass =
+    "pointer-events-auto rounded-full transition-all duration-150 ease-out hover:scale-110 hover:shadow-lg hover:ring-2 hover:ring-white/80"
+
+  // ===== UI (Compact) =====
+  const CompactUI = () => {
+    const hasImage = images.length > 0
+    return (
+      <div
+        className="relative w-full h-full rounded-md border bg-muted/30 overflow-hidden group"
+        onClick={() => hasImage && openPreviewAt(0)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && hasImage) openPreviewAt(0)
+        }}
+      >
+        {/* input ไฟล์ — แยกออก ไม่ห่อด้วย label */}
+        <Input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple={false}
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        {!hasImage ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              triggerPick()
+            }}
+            className="absolute inset-0 w-full h-full grid place-content-center gap-1 text-muted-foreground"
+            title="Add"
+          >
+            <ImageIcon className="h-7 w-7 mx-auto" />
+            <span className="text-xs">Add</span>
+          </button>
+        ) : (
+          <div className="relative w-full h-full">
+            <img
+              src={images[0].url}
+              alt={images[0].fileName}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+            />
+            {/* overlay: background คลิกทะลุไป container เพื่อเปิด preview */}
+            <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                className={actionBtnClass}
+                title="Crop"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  openCrop(0)
+                }}
+              >
+                <CropIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                className={actionBtnClass}
+                title="Change image"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  triggerPick({ replaceAt: 0 })
+                }}
+              >
+                <ChangeIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="destructive"
+                className={actionBtnClass}
+                title="Remove"
+                onClick={(e) => removeImage(0, e)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ===== UI (Default) =====
+  const DefaultUI = () => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Label>
@@ -324,7 +457,7 @@ export function ImageUpload({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => triggerPick()}
             disabled={uploading}
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -349,7 +482,7 @@ export function ImageUpload({
           <Button
             type="button"
             variant="outline"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => triggerPick()}
             disabled={uploading}
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -363,11 +496,14 @@ export function ImageUpload({
               key={(image.uuid || image.id || image.url) + index}
               className="relative group overflow-hidden"
             >
-              <div className="aspect-square relative">
+              <div
+                className="aspect-square relative cursor-zoom-in"
+                onClick={() => openPreviewAt(index)}
+              >
                 <img
                   src={image.url}
                   alt={image.fileName}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
                 />
 
                 {image.isMain && (
@@ -377,13 +513,18 @@ export function ImageUpload({
                   </div>
                 )}
 
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
                   <Button
                     type="button"
                     size="sm"
                     variant="secondary"
-                    onClick={() => openCrop(index)}
                     title="Crop"
+                    className={actionBtnClass}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      openCrop(index)
+                    }}
                   >
                     <CropIcon className="h-4 w-4" />
                   </Button>
@@ -392,8 +533,9 @@ export function ImageUpload({
                       type="button"
                       size="sm"
                       variant="secondary"
-                      onClick={() => setMainImage(index)}
                       title="Set as main"
+                      className={actionBtnClass}
+                      onClick={(e) => setMainImage(index, e)}
                     >
                       <Star className="h-4 w-4" />
                     </Button>
@@ -402,8 +544,9 @@ export function ImageUpload({
                     type="button"
                     size="sm"
                     variant="destructive"
-                    onClick={() => removeImage(index)}
                     title="Remove"
+                    className={actionBtnClass}
+                    onClick={(e) => removeImage(index, e)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -420,7 +563,7 @@ export function ImageUpload({
                     size="icon"
                     className="h-6 w-6"
                     disabled={index === 0}
-                    onClick={() => moveImage(index, index - 1)}
+                    onClick={(e) => moveImage(index, index - 1, e)}
                   >
                     ↑
                   </Button>
@@ -429,7 +572,7 @@ export function ImageUpload({
                     size="icon"
                     className="h-6 w-6"
                     disabled={index === images.length - 1}
-                    onClick={() => moveImage(index, index + 1)}
+                    onClick={(e) => moveImage(index, index + 1, e)}
                   >
                     ↓
                   </Button>
@@ -443,6 +586,12 @@ export function ImageUpload({
       <p className="text-xs text-muted-foreground">
         Include file: JPG, PNG, GIF (max 5MB per picture)
       </p>
+    </div>
+  )
+
+  return (
+    <>
+      {variant === "compact" ? <CompactUI /> : <DefaultUI />}
 
       {/* ===== Crop Dialog ===== */}
       <Dialog open={cropOpen} onOpenChange={setCropOpen}>
@@ -486,6 +635,43 @@ export function ImageUpload({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* ===== Preview (Lightbox) ===== */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] p-0 overflow-hidden">
+          <div className="relative bg-black">
+            {images[previewIndex] && (
+              <img
+                src={images[previewIndex].url}
+                alt={images[previewIndex].fileName}
+                className="max-h-[80vh] w-full object-contain"
+              />
+            )}
+
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                  onClick={prevPreview}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                  onClick={nextPreview}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
+          </div>
+          <div className="px-4 py-2 text-sm text-muted-foreground truncate">
+            {images[previewIndex]?.fileName}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

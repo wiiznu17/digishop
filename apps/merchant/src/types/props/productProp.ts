@@ -7,7 +7,7 @@ export interface ProductListItem {
   minPriceMinor?: number | null // ราคาต่ำสุดของ SKU หน่วยสตางค์
   totalStock?: number | null // stock รวมจาก SKU
   category?: { uuid: string; name: string } | null
-  images?: ProductImage[] // ส่วนใหญ่จะได้รูป main 1 รูป
+  images?: ProductImage[]
   createdAt: string // list รับเป็น string ชัดเจน
   updatedAt: string
 }
@@ -35,11 +35,32 @@ export interface ProductImage {
   createdAt?: string // ISO
 }
 
+/** เพิ่ม type ของรูปที่ติดกับ Product Item */
+export interface ProductItemImageLite {
+  uuid: string
+  url: string
+  fileName: string
+}
+
 export interface VariationOptionLite {
-  id?: number // id ภายใน DB (ถ้า BE คืนมา)
+  sortOrder: number
+  createdAt: string // ← เดิมเป็น unknown
+  variationId: number
+  id?: number
   uuid: string
   value: string
-  sortOrder?: number
+}
+
+export interface ProductItemLite {
+  id?: number
+  uuid: string
+  sku: string
+  stockQuantity: number
+  priceMinor: number
+  imageUrl?: string | null
+  isEnable: boolean
+  productItemImage?: ProductItemImageLite | null // ← ใส่ให้อ้างถึงแบบ type-safe
+  configurations?: ProductConfigurationLite[]
 }
 
 export interface VariationLite {
@@ -56,16 +77,6 @@ export interface ProductConfigurationLite {
   variationOption?: VariationOptionLite // ใช้ตอนแสดงผล
 }
 
-export interface ProductItemLite {
-  id?: number
-  uuid: string
-  sku: string
-  stockQuantity: number
-  priceMinor: number // หน่วยสตางค์
-  imageUrl?: string | null
-  configurations?: ProductConfigurationLite[]
-}
-
 /** =============== Product (ใช้ร่วมทั้ง List/Detail) =============== */
 export interface Product {
   /** ใช้ uuid แทน id เพื่ออ้างอิงทุก endpoint */
@@ -74,22 +85,13 @@ export interface Product {
   name: string
   description?: string | null
 
-  /**
-   * base price ของสินค้า (ถ้าใช้ราคาจาก SKU ให้ปล่อยเป็น null/ไม่ใช้ฝั่ง FE)
-   * หมายเหตุ: หน้า List เราจะได้ field คำนวณ minPriceMinor จาก PRODUCT_ITEMS มาด้วย
-   */
-  price?: number | null
-
-  /** legacy จาก schema เดิมบางจุดยังอาจส่งมา */
-  price_minor?: number | null
-
   /** อิง category แบบ object (ฝั่ง Controller ใส่ {uuid,name}) */
   category?: CategoryLite | null
   /** เผื่อโค้ดเก่ายังใช้อยู่ */
   categoryId?: number
 
-  /** legacy รวม stock ที่ product เอง (ถ้ามี) */
-  stockQuantity?: number | null
+  // /** legacy รวม stock ที่ product เอง (ถ้ามี) */
+  // stockQuantity?: number | null
 
   /** สำหรับหน้า List: stock รวมจาก PRODUCT_ITEMS */
   totalStock?: number | null
@@ -114,11 +116,8 @@ export const defaultProduct: Product = {
   uuid: "",
   name: "",
   description: "",
-  price: null,
-  price_minor: null,
   category: null,
   categoryId: undefined,
-  stockQuantity: null,
   totalStock: null,
   status: ProductStatus.ACTIVE,
   images: [],

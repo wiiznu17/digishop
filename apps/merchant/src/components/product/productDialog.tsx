@@ -1,258 +1,178 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
+import { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Plus } from "lucide-react"
-import { ImageUpload, ImageLike } from "./imageUpload"
-import PRODUCT_STATUS_MASTER from "@/constants/master/productStatusMaster.json"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import type { ProductListResponse } from "@/utils/requestUtils/requestProductUtils"
 
-type EditingProduct = {
-  uuid?: string
-  name: string
-  description?: string | null
-  status: string
-  category?: { uuid: string; name: string } | null
-  images?: Array<{
-    uuid: string
-    url: string
-    fileName: string
-    isMain: boolean
-    sortOrder: number
-  }>
-}
-
-export type CreateProductRequest = {
-  name: string
-  categoryUuid?: string
-  description?: string
-  status?: string
-}
-
-export type UpdateProductRequest = CreateProductRequest
+type ProductRow = ProductListResponse["data"][number]
 
 interface ProductDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  editingProduct: EditingProduct | null
-  onSubmit: (
-    productData: CreateProductRequest | UpdateProductRequest,
-    images: File[]
-  ) => Promise<void>
-  onReset: () => void
+  product: ProductRow | null
 }
 
+/**
+ * View-only quick view dialog (ใช้กับปุ่ม eye ใน product list)
+ * แสดงข้อมูล + ปุ่ม "View detail" เท่านั้น
+ */
 export function ProductDialog({
   isOpen,
   onOpenChange,
-  editingProduct,
-  onSubmit,
-  onReset
+  product
 }: ProductDialogProps) {
-  const [name, setName] = useState("")
-  const [categoryUuid, setCategoryUuid] = useState<string>("")
-  const [status, setStatus] = useState<string>("DRAFT")
-  const [description, setDescription] = useState<string>("")
-  const [uiImages, setUiImages] = useState<ImageLike[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
 
-  // โหลดค่าเดิม
-  useEffect(() => {
-    if (editingProduct) {
-      setName(editingProduct.name || "")
-      setCategoryUuid(editingProduct.category?.uuid || "")
-      setStatus(editingProduct.status || "DRAFT")
-      setDescription(editingProduct.description || "")
-      setUiImages(
-        (editingProduct.images || [])
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((it) => ({
-            uuid: it.uuid,
-            url: it.url,
-            fileName: it.fileName,
-            isMain: it.isMain,
-            sortOrder: it.sortOrder
-          }))
-      )
-    } else {
-      resetForm()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editingProduct])
+  // lightbox states
+  const gallery = useMemo(
+    () =>
+      (product?.images ?? []).map((g) => ({ url: g.url, label: g.fileName })),
+    [product]
+  )
+  const [idx, setIdx] = useState(0)
+  const hasMulti = gallery.length > 1
+  const next = () => setIdx((i) => (i + 1) % Math.max(1, gallery.length))
+  const prev = () =>
+    setIdx(
+      (i) => (i - 1 + Math.max(1, gallery.length)) % Math.max(1, gallery.length)
+    )
 
-  const resetForm = () => {
-    setName("")
-    setCategoryUuid("")
-    setStatus("DRAFT")
-    setDescription("")
-    setUiImages([])
-  }
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      const payload: CreateProductRequest = {
-        name,
-        categoryUuid: categoryUuid || undefined,
-        description: description || undefined,
-        status
-      }
-
-      // แปลง blob preview → File เฉพาะรูปใหม่
-      const files: File[] = []
-      for (const img of uiImages) {
-        if (img.url.startsWith("blob:")) {
-          const resp = await fetch(img.url)
-          const blob = await resp.blob()
-          files.push(new File([blob], img.fileName, { type: blob.type }))
-        }
-      }
-
-      await onSubmit(payload, files)
-      resetForm()
-    } catch (err) {
-      console.error("Error saving product:", err)
-      alert("Error to saving product")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const main = product?.images?.[0] ?? null
+  const totalImages =
+    (product as any)?.totalImageCount ??
+    ((product as any)?.productImageCount ?? 0) +
+      ((product as any)?.itemImageCount ?? 0)
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button onClick={onReset}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add product
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>
-            {editingProduct ? "Edit product" : "Add new product"}
+          <DialogTitle className="flex items-center gap-2">
+            <span>{product?.name ?? "-"}</span>
+            {product?.status && (
+              <Badge variant="secondary">{product.status}</Badge>
+            )}
           </DialogTitle>
-          <DialogDescription>
-            {editingProduct
-              ? "Update product detail"
-              : "Fill data in form to add your product"}
-          </DialogDescription>
+          <DialogDescription>UUID: {product?.uuid}</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-4">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* รูปภาพ: local mode (ยังไม่ยิง API จนกว่าจะ submit) */}
-            <ImageUpload
-              mode="local"
-              images={uiImages}
-              onImagesChange={setUiImages}
-              maxImages={10}
-            />
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Product name *</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* left: image preview */}
+          <Card className="p-0 overflow-hidden">
+            <div className="relative bg-black">
+              {gallery[idx] ? (
+                <img
+                  src={gallery[idx].url}
+                  alt={gallery[idx].label ?? "preview"}
+                  className="w-full max-h-[380px] object-contain"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                {/* NOTE: ของจริงควรโหลด categories จาก API แล้ว map เป็น <SelectItem /> */}
-                <Select
-                  value={categoryUuid}
-                  onValueChange={(v) => setCategoryUuid(v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* ตัวอย่างเปล่า ๆ ไว้รอเชื่อม requester categories */}
-                    <SelectItem value="">(None)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(
-                      Object.values(PRODUCT_STATUS_MASTER) as {
-                        value: string
-                        label: string
-                      }[]
-                    ).map(({ value, label }) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
+              ) : main ? (
+                <img
+                  src={main.url}
+                  alt={main.fileName}
+                  className="w-full max-h-[380px] object-contain"
                 />
+              ) : (
+                <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
+                  No image
+                </div>
+              )}
+
+              {hasMulti && (
+                <>
+                  <button
+                    type="button"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                    onClick={prev}
+                    aria-label="Prev"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                    onClick={next}
+                    aria-label="Next"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="px-3 py-2 text-xs text-muted-foreground flex items-center justify-between">
+              <span className="truncate">
+                {gallery[idx]?.label ?? main?.fileName ?? "-"}
+              </span>
+              <span>{totalImages ?? 0} images</span>
+            </div>
+          </Card>
+
+          {/* right: info */}
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              {product?.description || "—"}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded border p-2">
+                <div className="text-xs text-muted-foreground">Category</div>
+                <div className="font-medium">
+                  {product?.category?.name ?? "—"}
+                </div>
+              </div>
+              <div className="rounded border p-2">
+                <div className="text-xs text-muted-foreground">
+                  Images (total)
+                </div>
+                <div className="font-medium">{totalImages ?? 0}</div>
+              </div>
+              <div className="rounded border p-2">
+                <div className="text-xs text-muted-foreground">Min price</div>
+                <div className="font-medium">
+                  {product?.minPriceMinor != null
+                    ? (Number(product.minPriceMinor) / 100).toLocaleString(
+                        "th-TH",
+                        { style: "currency", currency: "THB" }
+                      )
+                    : "-"}
+                </div>
+              </div>
+              <div className="rounded border p-2">
+                <div className="text-xs text-muted-foreground">Total stock</div>
+                <div className="font-medium">
+                  {Number(product?.totalStock ?? 0)}
+                </div>
               </div>
             </div>
-          </form>
-        </ScrollArea>
 
-        <div className="flex gap-3 pt-4 border-t">
-          <Button
-            type="submit"
-            className="flex-1"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting
-              ? "Saving..."
-              : editingProduct
-                ? "Update Product"
-                : "Add Product"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
+            <div className="pt-2">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (!product?.uuid) return
+                  onOpenChange(false)
+                  router.push(`/products/${product.uuid}`)
+                }}
+              >
+                View detail
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   )
 }
+
+export default ProductDialog
