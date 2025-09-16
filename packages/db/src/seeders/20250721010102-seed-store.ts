@@ -32,9 +32,9 @@ export default {
         website: '-', // ไม่มีเว็บ ใช้ "-"
         logo_url: null,
         description: 'Second store linked to same bank account',
-        status: StoreStatus.PENDING,
-        created_at: now,
-        updated_at: now,
+        status: StoreStatus.APPROVED,
+        created_at: new Date(),
+        updated_at: new Date(),
         deleted_at: null,
       },
     ]);
