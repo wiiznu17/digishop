@@ -70,6 +70,15 @@ type DS_Payload = {
 };
 
 // ===== internal helpers =====
+
+const findProductByUuidForStore = async (uuid: string, storeId: number) => {
+  return Product.findOne({ where: { uuid, storeId } });
+};
+
+const findItemByUuidForProduct = async (itemUuid: string, productId: number) => {
+  return ProductItem.findOne({ where: { uuid: itemUuid, productId } });
+};
+
 const pickUploadBlobByKey = (
   files: Express.Multer.File[] | undefined,
   uploadKey?: string | null
@@ -108,6 +117,7 @@ const coerceStatus = (s?: string): ProductStatus => {
     ? (val as ProductStatus)
     : ProductStatus.SUSPENDED; // หรือจะใช้ ACTIVE ก็ได้ตามที่ตกลง
 };
+
 // Create/Update main helper
 async function applyDesiredState(opts: {
   req: AuthenticatedRequest;
@@ -352,46 +362,131 @@ async function applyDesiredState(opts: {
       }
     }
 
+    // หลังจาก upsert variations/options เสร็จแล้ว ให้โหลด variations+options "ตัวจริง" อีกรอบ
+    const finalVars = await Variation.findAll({
+      where: { productId },
+      include: [{ model: VariationOption, as: "options", attributes: ["uuid", "variationId", "sortOrder"] }],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    // ทำ map ลำดับ variation -> index (อ้างตาม order ของ desired.variations)
+    const varIndexById = new Map<number, number>();
+    {
+      // จับคู่ตามชื่อ/uuid ที่เพิ่งอัปเดตมา โดยยึดลำดับของ desired.variations เป็นหลัก
+      // ถ้าจับคู่ด้วย uuid ไม่ครบ ให้ fallback เป็นลำดับที่ query ได้
+      const byName = new Map(finalVars.map(v => [v.name, v]));
+      desired.variations.forEach((dv, idx) => {
+        const match = (dv.uuid && finalVars.find(v => v.uuid === dv.uuid)) || byName.get(dv.name);
+        if (match) varIndexById.set(match.id, idx);
+      });
+      // ใส่ที่ยังไม่มี index ต่อท้าย
+      let cursor = desired.variations.length;
+      for (const v of finalVars) {
+        if (!varIndexById.has(v.id)) varIndexById.set(v.id, cursor++);
+      }
+    }
+
+    // สร้างชุดคีย์คอมโบที่ "โครงสร้างใหม่" อนุญาต (cartesian product ของ option uuids)
+    const cartesian = <T,>(arr: T[][]): T[][] =>
+      arr.reduce<T[][]>((acc, cur) => acc.flatMap(a => cur.map(c => [...a, c])), [[]]);
+
+    const optionUuidMatrix = finalVars
+      .sort((a, b) => (varIndexById.get(a.id)! - varIndexById.get(b.id)!))
+      .map(v => (v.options ?? [])
+        .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .map((o: { uuid: any; }) => o.uuid));
+
+    const allowedComboKeys = new Set<string>(
+      (optionUuidMatrix.length === 0 || optionUuidMatrix.some(x => x.length === 0))
+        ? [] // (จะไม่เกิดเพราะ validate ไปแล้ว)
+        : cartesian(optionUuidMatrix).map(arr => arr.join("|"))
+    );
+
+    const itemComboKey = (it: ProductItem & { configurations?: (ProductConfiguration & { variationOption?: VariationOption })[] }) => {
+      const pairs = (it.configurations ?? [])
+        .map(c => ({
+          variationId: c.variationOption?.variationId!,
+          optionUuid: c.variationOption?.uuid!,
+        }))
+        .filter(p => !!p.variationId && !!p.optionUuid);
+
+      const sorted = pairs.sort((a, b) => (varIndexById.get(a.variationId)! - varIndexById.get(b.variationId)!));
+      return sorted.map(p => p.optionUuid).join("|");
+    };
+
     // ---------- 4) items (diff) ----------
     const curItems = await ProductItem.findAll({
       where: { productId },
-      include: [{ model: ProductItemImage, as: "productItemImage" }],
+      include: [
+        { model: ProductItemImage, as: "productItemImage" },
+        {
+          model: ProductConfiguration,
+          as: "configurations",
+          include: [{ model: VariationOption, as: "variationOption", attributes: ["uuid", "variationId"] }]
+        }
+      ],
       transaction: t,
       lock: t.LOCK.UPDATE
     });
+
 
     const desiredItemUuidSet = new Set(
       desired.items.map((it) => it.uuid).filter((x): x is string => !!x)
     );
 
-    // 4.1 delete items that are gone
+    // 4.1 delete items that are gone (STRUCTURE-DRIVEN)
     for (const it of curItems) {
-      if (!desiredItemUuidSet.has(it.uuid)) {
-        // cleanup image (if any)
-        const oldImg = await ProductItemImage.findOne({
-          where: { productItemId: it.id },
-          transaction: t
-        });
+      const key = itemComboKey(it as any);
+      if (!allowedComboKeys.has(key)) {
+        // รูป (ถ้ามี)
+        const oldImg = await ProductItemImage.findOne({ where: { productItemId: it.id }, transaction: t });
         if (oldImg) {
           await azureBlobService.deleteImage(oldImg.blobName);
           await oldImg.destroy({ transaction: t });
         }
+        // configurations
+        await ProductConfiguration.destroy({ where: { productItemId: it.id }, transaction: t });
+        // item
         await it.destroy({ transaction: t });
       }
     }
+    // NOTE: ถ้าโครงสร้างยังอนุญาต แต่ผู้ใช้ไม่ส่งแถว (omit) ⇒ **จะไม่ลบ**
+
 
     // 4.2 upsert items
+    // variation >= 1
+    if ((desired.variations?.length ?? 0) < 1) {
+      await t.rollback();
+      return res.status(400).json({ error: "At least one variation is required" });
+    }
+    // ทุก variation ต้องมี option อย่างน้อย 1
+    for (const v of desired.variations) {
+      if ((v.options?.length ?? 0) < 1) {
+        await t.rollback();
+        return res.status(400).json({ error: `Variation "${v.name}" must have at least 1 option` });
+      }
+    }
+    // 4.2 upsert items
     for (const d of desired.items) {
-      // resolve option uuids
+      // --- SKU is REQUIRED when creating or updating ---
+      const sku = (d.sku ?? "").trim();
+      if (!d.uuid && !sku) {
+        await t.rollback();
+        return res.status(400).json({ error: `SKU is required (clientKey=${d.clientKey ?? "-"})` });
+      }
+      if (d.uuid && sku.length === 0) {
+        // ถ้าอยากบังคับเสมอ ให้ error เช่นกัน
+        await t.rollback();
+        return res.status(400).json({ error: `SKU is required for item uuid=${d.uuid}` });
+      }
+
+      // resolve option uuids (เหมือนเดิม)
       const optionUuids: string[] = [];
       for (const ref of d.optionRefs) {
         if (!ref) continue;
-        if (ref.length === 36 || ref.length === 32) {
-          // ดูเป็น uuid -> ใช้ตรง ๆ
-          optionUuids.push(ref);
-        } else if (optionUuidByClientId.has(ref)) {
-          optionUuids.push(optionUuidByClientId.get(ref)!);
-        }
+        if (ref.length === 36 || ref.length === 32) optionUuids.push(ref);
+        else if (optionUuidByClientId.has(ref)) optionUuids.push(optionUuidByClientId.get(ref)!);
       }
 
       let item: ProductItem | null = null;
@@ -400,16 +495,18 @@ async function applyDesiredState(opts: {
         if (!item) continue;
 
         const willUpdate: any = {};
-        if ((item.sku || "") !== (d.sku || "")) willUpdate.sku = d.sku || "";
+        // CHANGED: ไม่ใส่ || "" อีกต่อไป
+        if ((item.sku || "") !== sku) willUpdate.sku = sku;
         if (item.priceMinor !== d.priceMinor) willUpdate.priceMinor = d.priceMinor;
         if (item.stockQuantity !== d.stockQuantity) willUpdate.stockQuantity = d.stockQuantity;
         if ((item as any).isEnable !== d.isEnable) willUpdate.isEnable = d.isEnable;
         if (Object.keys(willUpdate).length) await item.update(willUpdate, { transaction: t });
       } else {
+        // CREATE: ต้องมี sku แล้ว (เช็คไว้ข้างบน)
         item = await ProductItem.create(
           {
             productId,
-            sku: d.sku || "",
+            sku, // ใช้ค่า FE เท่านั้น
             priceMinor: d.priceMinor,
             stockQuantity: d.stockQuantity,
             imageUrl: null,
@@ -937,17 +1034,48 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response) =>
       await t.rollback();
       return res.status(404).json({ error: "No store found" });
     }
-    const product = await Product.findOne({ where: { uuid: productUuid, storeId: store.id }, include: [{ model: ProductImage, as: "images" }] });
+
+    const product = await Product.findOne({
+      where: { uuid: productUuid, storeId: store.id },
+      include: [
+        { model: ProductImage, as: "images", attributes: ["blobName"] },
+        {
+          model: ProductItem,
+          as: "items",
+          attributes: ["id"],
+          include: [
+            {
+              model: ProductItemImage,
+              as: "productItemImage",
+              attributes: ["blobName"],   // ต้องมี blobName เพื่อไปลบไฟล์
+              required: false,
+            },
+          ],
+        },
+      ],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
     if (!product) {
       await t.rollback();
       return res.status(404).json({ error: "Product not found" });
     }
 
-    if (product.images?.length) {
-      const blobNames = product.images.map((img) => img.blobName);
-      await azureBlobService.deleteMultipleImages(blobNames);
+    // collect blob names (product-level + item-level)
+    const productBlobNames = (product.images ?? []).map(img => img.blobName);
+    const itemBlobNames = (product.items ?? [])
+      .map(it => it.productItemImage?.blobName)
+      .filter((x): x is string => !!x);
+
+    const allBlobs = [...productBlobNames, ...itemBlobNames];
+    if (allBlobs.length) {
+      await azureBlobService.deleteMultipleImages(allBlobs);
     }
+
+    // destroy product (paranoid + CASCADE จัดการลูก ๆ ให้)
     await product.destroy({ transaction: t });
+
     await t.commit();
     return res.status(204).send();
   } catch (error) {
@@ -956,6 +1084,7 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response) =>
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 /** PATCH /merchant/products/bulk/status */
 export const bulkUpdateProductStatus = async (req: AuthenticatedRequest, res: Response) => {
@@ -1105,7 +1234,7 @@ export const duplicateProduct = async (req: AuthenticatedRequest, res: Response)
         const ni = await ProductItem.create(
           {
             productId: dest.id,
-            sku: it.sku ? `${it.sku}-COPY` : `SKU-${dest.id}-${Date.now().toString(36)}`,
+            sku: it.sku,
             stockQuantity: it.stockQuantity,
             priceMinor: it.priceMinor,
             imageUrl: it.imageUrl ?? null,
@@ -1137,6 +1266,42 @@ export const duplicateProduct = async (req: AuthenticatedRequest, res: Response)
   } catch (e) {
     await t.rollback();
     console.error("duplicateProduct error", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/** PUT /merchant/products/:productUuid/items/:itemUuid */
+export const updateProductItem = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { productUuid, itemUuid } = req.params as { productUuid: string; itemUuid: string };
+    const store = await ensureStore(req);
+    if (!store) return res.status(404).json({ error: "No store found" });
+    const product = await findProductByUuidForStore(productUuid, store.id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+
+    const item = await findItemByUuidForProduct(itemUuid, product.id);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+
+    const { sku, stockQuantity, priceMinor, imageUrl, isEnable } = req.body as {
+      sku?: string;
+      stockQuantity?: number;
+      priceMinor?: number;
+      imageUrl?: string | null;
+      isEnable?: boolean;
+    };
+
+    await item.update({ sku, stockQuantity, priceMinor, imageUrl, isEnable });
+
+    return res.json({
+      uuid: item.uuid,
+      sku: item.sku,
+      stockQuantity: item.stockQuantity,
+      priceMinor: item.priceMinor,
+      imageUrl: item.imageUrl,
+      isEnable: item.isEnable,
+    });
+  } catch (e) {
+    console.error("updateProductItem error", e);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

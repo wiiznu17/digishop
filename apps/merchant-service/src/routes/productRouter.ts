@@ -15,6 +15,7 @@ import {
   listCategories,
   syncCreateDesiredProduct,
   syncUpdateDesiredProduct,
+  updateProductItem,
 } from "../controllers/productController";
 
 const router = Router();
@@ -51,5 +52,8 @@ router.put(
 // Bulk
 router.patch("/bulk/status", authenticate, bulkUpdateProductStatus);
 router.delete("/bulk/delete", authenticate, bulkDeleteProducts);
+
+// items
+router.put("/:productUuid/items/:itemUuid", authenticate, updateProductItem);
 
 export default router;
