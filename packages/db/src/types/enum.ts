@@ -64,6 +64,7 @@ export enum OrderStatus {
   REFUND_PROCESSING = "REFUND_PROCESSING", // กำลังคืนเงิน (อยู่ระหว่างดำเนินการ)
   REFUND_SUCCESS = "REFUND_SUCCESS",    // คืนเงินสำเร็จ (API provider success)
   REFUND_FAIL = "REFUND_FAIL",          // คืนเงินล้มเหลว (API provider fail)
+  REFUND_RERY = "REFUND_RETRY"
 }
 
 
