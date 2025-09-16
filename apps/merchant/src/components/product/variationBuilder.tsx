@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Plus, Trash2 } from "lucide-react"
 import { ImageLike, ImageUpload } from "./imageUpload"
+import { Switch } from "../ui/switch"
 
 // ===== Types for Draft on client =====
 export type OptionDraft = {
@@ -375,13 +376,23 @@ export default function VariationBuilder({
                 {items.map((r) => (
                   <tr key={r.key} className="border-t align-top">
                     <td className="p-2 align-top">
-                      <input
+                      {/* <input
                         type="checkbox"
                         checked={r.enabled}
                         onChange={(e) =>
                           patchRow(r.key, { enabled: e.target.checked })
                         }
+                      /> */}
+                      <Switch
+                        checked={!!r.enabled}
+                        onCheckedChange={(checked) =>
+                          patchRow(r.key, { enabled: checked })
+                        }
+                        aria-label={`Toggle enable for ${r.sku || r.label}`}
                       />
+                      <span className="text-xs text-muted-foreground">
+                        {r.enabled ? "Enabled" : "Disabled"}
+                      </span>
                     </td>
                     <td className="p-2 align-top">
                       <ItemImageCell

@@ -156,8 +156,8 @@ export default function AddProductPage() {
         categoryUuid: categoryUuid ?? null
       },
       images: { product: desiredImages },
-      variations: desiredVariations as any,
-      items: desiredItems as any
+      variations: desiredVariations,
+      items: desiredItems
     }
 
     setCreating(true)

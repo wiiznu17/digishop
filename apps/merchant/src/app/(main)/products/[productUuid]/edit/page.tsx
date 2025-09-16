@@ -27,6 +27,7 @@ import {
   VariationEditor,
   type VariationDraft
 } from "@/components/product/variationEditor"
+import { Switch } from "@/components/ui/switch"
 
 // ใช้ค่านี้เป็นตัวแทน "ไม่เลือกหมวด"
 const NONE_VALUE = "none"
@@ -631,7 +632,7 @@ export default function EditProductPage() {
                                   : undefined
                             }
                           >
-                            <td className="p-2 align-top">
+                            {/* <td className="p-2 align-top">
                               <input
                                 type="checkbox"
                                 checked={r.isEnable}
@@ -642,6 +643,21 @@ export default function EditProductPage() {
                                   })
                                 }
                               />
+                            </td> */}
+                            <td className="p-2 align-top">
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  checked={r.isEnable}
+                                  disabled={willDelete}
+                                  onCheckedChange={(checked) =>
+                                    patchItem(r.key, { isEnable: checked })
+                                  }
+                                  aria-label={`Toggle enable for ${r.sku || r.label}`}
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  {r.isEnable ? "Enabled" : "Disabled"}
+                                </span>
+                              </div>
                             </td>
 
                             <td className="p-2 align-top">
