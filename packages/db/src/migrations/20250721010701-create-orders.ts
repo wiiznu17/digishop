@@ -12,12 +12,11 @@ export default {
           primaryKey: true,
           allowNull: false,
         },
-        order_code: { type: DataTypes.STRING(64), allowNull: false },
-        customer_id: {
+        checkout_id: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
-          references: { model: "USERS", key: "id" },
-          onDelete: "RESTRICT",
+          references: { model: "CHECKOUT", key: "id" },
+          onDelete: "CASCADE",
           onUpdate: "CASCADE",
         },
         store_id: {
@@ -59,26 +58,26 @@ export default {
       { engine: "InnoDB", charset: "utf8mb4", collate: "utf8mb4_unicode_ci" }
     );
 
-    await queryInterface.addIndex("ORDERS", ["customer_id"]);
+    await queryInterface.addIndex("ORDERS", ["checkout_id"]);
     await queryInterface.addIndex("ORDERS", ["store_id"]);
     await queryInterface.addIndex("ORDERS", ["status"]);
     await queryInterface.addIndex("ORDERS", ["created_at"]);
-    await queryInterface.addConstraint("ORDERS", {
-      type: "unique",
-      fields: ["order_code"],
-      name: "uq_orders_order_code",
-    });
-    await queryInterface.addConstraint("ORDERS", {
-      type: "unique",
-      fields: ["reference"],
-      name: "uq_orders_reference",
-    });
+    // await queryInterface.addConstraint("ORDERS", {
+    //   type: "unique",
+    //   fields: ["order_code"],
+    //   name: "uq_orders_order_code",
+    // });
+    // await queryInterface.addConstraint("ORDERS", {
+    //   type: "unique",
+    //   fields: ["reference"],
+    //   name: "uq_orders_reference",
+    // });
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
     // ต้องดร็อป constraints/indices ที่ผูกกับ ENUM ก่อนดร็อปตาราง (สำหรับบาง dialect)
-    await queryInterface.removeConstraint("ORDERS", "uq_orders_order_code").catch(() => {});
-    await queryInterface.removeConstraint("ORDERS", "uq_orders_reference").catch(() => {});
+    // await queryInterface.removeConstraint("ORDERS", "uq_orders_order_code").catch(() => {});
+    // await queryInterface.removeConstraint("ORDERS", "uq_orders_reference").catch(() => {});
     await queryInterface.dropTable("ORDERS");
   },
 };

@@ -3,7 +3,7 @@ import { PaymentStatus, PaymentType } from "../types/enum";
 
 export interface PaymentAttributes {
   id: number;
-  orderId: number;
+  checkoutId: number;
 
   // UI/redirect (optional)
   urlRedirect?: string | null;
@@ -54,7 +54,7 @@ export class Payment
   implements PaymentAttributes
 {
   public id!: number;
-  public orderId!: number;
+  public checkoutId!: number;
 
   public urlRedirect!: string | null;
 
@@ -89,10 +89,10 @@ export class Payment
           autoIncrement: true,
           primaryKey: true,
         },
-        orderId: {
+        checkoutId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
-          field: "order_id",
+          field: "checkout_id",
         },
         urlRedirect: {
           type: DataTypes.STRING(2048),
@@ -170,7 +170,6 @@ export class Payment
           defaultValue: {},
           field: "pgw_payload",
         },
-
         createdAt: {
           type: DataTypes.DATE,
           allowNull: false,
@@ -196,7 +195,6 @@ export class Payment
         paranoid: true,
         deletedAt: "deleted_at",
         indexes: [
-          { fields: ["order_id"] },
           { fields: ["status"] },
           { fields: ["provider_ref"] },
           { fields: ["created_at"] },

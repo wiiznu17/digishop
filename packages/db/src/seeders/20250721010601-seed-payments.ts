@@ -4,7 +4,7 @@ import { QueryInterface } from "sequelize";
 const now = new Date();
 const minor = (baht: number) => Math.round(baht * 100);
 const ok = (o: number, method: string, amountBaht: number, channel: string, pgw = "SETTLED") => ({
-  order_id: o,
+  checkout_id: o,
   payment_method: method,
   status: "SUCCESS",
   paid_at: now,
@@ -26,7 +26,7 @@ const ok = (o: number, method: string, amountBaht: number, channel: string, pgw 
 });
 
 const pending = (o: number, method: string, channel: string) => ({
-  order_id: o,
+  checkout_id: o,
   payment_method: method,
   status: "PENDING",
   paid_at: null,
@@ -48,7 +48,7 @@ const pending = (o: number, method: string, channel: string) => ({
 });
 
 const failed = (o: number, method: string, channel: string) => ({
-  order_id: o,
+  checkout_id: o,
   payment_method: method,
   status: "FAILED",
   paid_at: null,
@@ -73,70 +73,70 @@ export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkInsert("PAYMENTS", [
       // 6001 PENDING
-      pending(6001, "PROMPTPAY", "PROMPTPAY"),
+      pending(1, "PROMPTPAY", "PROMPTPAY"),
 
       // 6002 FAILED
-      failed(6002, "PROMPTPAY", "PROMPTPAY"),
+      failed(2, "PROMPTPAY", "PROMPTPAY"),
 
       // 6003 PAID (3500)
-      ok(6003, "CREDIT_CARD", 3500, "CARD"),
+      ok(3, "CREDIT_CARD", 3500, "CARD"),
 
       // 6004 PROCESSING (4500)
-      ok(6004, "CREDIT_CARD", 4500, "CARD"),
+      ok(4, "CREDIT_CARD", 4500, "CARD"),
 
       // 6005 READY_TO_SHIP (5600)
-      ok(6005, "CREDIT_CARD", 5600, "CARD"),
+      ok(5, "CREDIT_CARD", 5600, "CARD"),
 
       // 6006 HANDED_OVER (2300)
-      ok(6006, "CREDIT_CARD", 2300, "CARD"),
+      ok(6, "CREDIT_CARD", 2300, "CARD"),
 
       // 6007 SHIPPED (2200)
-      ok(6007, "PROMPTPAY", 2200, "PROMPTPAY"),
+      ok(7, "PROMPTPAY", 2200, "PROMPTPAY"),
 
       // 6008 DELIVERED COD (3200)
-      ok(6008, "CASH_ON_DELIVERY", 3200, "COD", "SETTLED"),
+      ok(8, "CASH_ON_DELIVERY", 3200, "COD", "SETTLED"),
 
       // 6009 COMPLETE (2800)
-      ok(6009, "QR", 2800, "QR"),
+      ok(9, "QR", 2800, "QR"),
 
       // 6010 MERCHANT_CANCELED (3100) — จ่ายมาแล้ว
-      ok(6010, "CREDIT_CARD", 3100, "CARD"),
+      ok(10, "CREDIT_CARD", 3100, "CARD"),
 
       // 6011 TRANSIT_LACK COD (ยังไม่เก็บ)
-      pending(6011, "CASH_ON_DELIVERY", "COD"),
+      pending(11, "CASH_ON_DELIVERY", "COD"),
 
       // 6012 RE_TRANSIT (1950)
-      ok(6012, "PROMPTPAY", 1950, "PROMPTPAY"),
+      ok(12, "PROMPTPAY", 1950, "PROMPTPAY"),
 
       // 6013 REFUND_REQUEST (4100)
-      ok(6013, "CREDIT_CARD", 4100, "CARD", "SETTLED"),
+      ok(13, "CREDIT_CARD", 4100, "CARD", "SETTLED"),
 
       // 6014 AWAITING_RETURN (2500)
-      ok(6014, "QR", 2500, "QR"),
+      ok(14, "QR", 2500, "QR"),
 
       // 6015 RECEIVE_RETURN (2550)
-      ok(6015, "CREDIT_CARD", 2550, "CARD"),
+      ok(15, "CREDIT_CARD", 2550, "CARD"),
 
       // 6016 RETURN_VERIFIED (2600)
-      ok(6016, "CREDIT_CARD", 2600, "CARD"),
+      ok(16, "CREDIT_CARD", 2600, "CARD"),
 
       // 6017 RETURN_FAIL (2650)
-      ok(6017, "PROMPTPAY", 2650, "PROMPTPAY"),
+      ok(17, "PROMPTPAY", 2650, "PROMPTPAY"),
 
       // 6018 REFUND_REJECTED (4200)
-      ok(6018, "CREDIT_CARD", 4200, "CARD"),
+      ok(18, "CREDIT_CARD", 4200, "CARD"),
 
       // 6019 REFUND_APPROVED (4300)
-      ok(6019, "PROMPTPAY", 4300, "PROMPTPAY"),
+      ok(19, "PROMPTPAY", 4300, "PROMPTPAY"),
 
       // 6020 REFUND_SUCCESS (5100) — คืนเงินแล้วตั้งต้น 0; จะอัปเดต amount_refunded_minor ตอนทำ refund จริง
-      ok(6020, "CREDIT_CARD", 5100, "CARD"),
+      ok(20, "CREDIT_CARD", 5100, "CARD"),
 
       // 6021 REFUND_FAIL (4400)
-      ok(6021, "QR", 4400, "QR"),
+      ok(21, "QR", 4400, "QR"),
 
       // 6022 (4100)
-      ok(6022, "QR", 4100, "QR"),
+      ok(22, "QR", 4100, "QR"),
     ]);
   },
 
