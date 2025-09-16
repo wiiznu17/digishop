@@ -1,3 +1,4 @@
+import { CheckOut } from "@digishop/db/src/models/CheckOut";
 import { Order } from "@digishop/db/src/models/Order";
 import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
 import { Payment } from "@digishop/db/src/models/Payment";
@@ -31,37 +32,39 @@ export const getNotify = async (req: Request, res: Response) => {
   }
   try {
     console.log(status);
-    const findOrderId = await Order.findOne({
-      where: { reference: String(reference) },
-      attributes: ["id", "grandTotalMinor"],
-    });
     const findPaymentId = await Payment.findOne({
-      where: { orderId: findOrderId?.id },
-      attributes: ["id"],
+      where: { providerRef: reference },
+      attributes: ["id","checkoutId"],
     });
-    if (findOrderId) {
+    const checkOutId = findPaymentId.checkoutId
+    const paymentId = findPaymentId.id
+    const findOrder = await Order.findAll({
+      where: { checkoutId: checkOutId},
+      attributes: ["id"]
+    })
+    if (checkOutId) {
       const data = await Payment.update(
         {
           pgwStatus: status,
           pgwPayload: {
             "status": status,
-            "orderId": findOrderId.id
+            "checkoutId": checkOutId
           }
         },
         {
           where: {
-            orderId: Number(findOrderId.id),
+            checkoutId: checkOutId,
           },
         }
       );
     }
-    if (status == "APPROVED" && findOrderId && findPaymentId) {
+    if (status == "APPROVED" && checkOutId && paymentId) {
       await Order.update(
         {
           status: OrderStatus.PAID,
         },
         {
-          where: { id: Number(findOrderId.id) },
+          where: { checkoutId: checkOutId},
         }
       );
       await Payment.update(
@@ -69,36 +72,39 @@ export const getNotify = async (req: Request, res: Response) => {
           status: PaymentStatus.SUCCESS,
         },
         {
-          where: { orderId: Number(findOrderId.id) },
+          where: { checkoutId: checkOutId},
         }
       );
-      const createLog = await OrderStatusHistory.create({
-        orderId: findOrderId.id,
-        fromStatus: OrderStatus.PENDING,
-        toStatus: OrderStatus.PAID,
-        changedByType: ActorType.SYSTEM,
-        source: "API",
-        metadata: {},
-      });
+      //ต้อง loop
+      for(let i = 0 ; i < findOrder.length ; i++){
+        let createLog = await OrderStatusHistory.create({
+          orderId: findOrder[i].id,
+          fromStatus: OrderStatus.PENDING,
+          toStatus: OrderStatus.PAID,
+          changedByType: ActorType.SYSTEM,
+          source: "API",
+          metadata: {},
+        });
+        createLog.save();
+      }
       await PaymentGatewayEvent.create({
-        orderId: findOrderId.id,
-        paymentId: findPaymentId.id,
+        checkoutId: checkOutId,
+        paymentId: paymentId, //
         type: "NOTIFY",
-        amountMinor: findOrderId.grandTotalMinor,
+        amountMinor: amount, //
         provider: "DIGIPAY",
         status: "SUCCESS",
         reqJson: req.body,
         resJson: {},
       });
-      createLog.save();
     }
-    if (status == "CANCELED" && findOrderId && findPaymentId) {
+    if (status == "CANCELED" && checkOutId && paymentId) {
       await Order.update(
         {
           status: OrderStatus.CUSTOMER_CANCELED,
         },
         {
-          where: { id: Number(findOrderId.id) },
+          where: { checkoutId: checkOutId},
         }
       );
       await Payment.update(
@@ -106,36 +112,38 @@ export const getNotify = async (req: Request, res: Response) => {
           status: PaymentStatus.FAILED,
         },
         {
-          where: { orderId: Number(findOrderId.id) },
+          where: { checkoutId: checkOutId },
         }
       );
-      const createLog = await OrderStatusHistory.create({
-        orderId: findOrderId.id,
-        fromStatus: OrderStatus.PENDING,
-        toStatus: OrderStatus.CUSTOMER_CANCELED,
-        changedByType: ActorType.SYSTEM,
-        source: "API",
-        metadata: {},
-      });
+      for(let i = 0 ; i <  findOrder.length ; i++){
+        let createLog = await OrderStatusHistory.create({
+          orderId: findOrder[i].id,
+          fromStatus: OrderStatus.PENDING,
+          toStatus: OrderStatus.CUSTOMER_CANCELED,
+          changedByType: ActorType.SYSTEM,
+          source: "API",
+          metadata: {},
+        });
+        createLog.save();
+      }
       await PaymentGatewayEvent.create({
-        orderId: findOrderId.id,
-        paymentId: findPaymentId.id,
+        checkoutId: checkOutId,
+        paymentId: paymentId,
         type: "NOTIFY",
-        amountMinor: findOrderId.grandTotalMinor,
+        amountMinor: amount,
         provider: "DIGIPAY",
         status: "FAILED",
         reqJson: req.body,
         resJson: {},
       });
-      createLog.save();
     }
-    if (status == "FAILED" && findOrderId && findPaymentId) {
+    if (status == "FAILED" && checkOutId && paymentId) {
       await Order.update(
         {
           status: OrderStatus.CUSTOMER_CANCELED,
         },
         {
-          where: { id: Number(findOrderId.id) },
+          where: {checkoutId: checkOutId},
         }
       );
       await Payment.update(
@@ -143,28 +151,30 @@ export const getNotify = async (req: Request, res: Response) => {
           status: PaymentStatus.FAILED,
         },
         {
-          where: { orderId: Number(findOrderId.id) },
+          where: {checkoutId: checkOutId},
         }
       );
-      const createLog = await OrderStatusHistory.create({
-        orderId: findOrderId.id,
-        fromStatus: OrderStatus.PENDING,
-        toStatus: OrderStatus.CUSTOMER_CANCELED,
-        changedByType: ActorType.SYSTEM,
-        source: "API",
-        metadata: {},
-      });
+      for(let i = 0 ; i < findOrder.length ; i++){
+        let createLog = await OrderStatusHistory.create({
+          orderId: findOrder[i].id,
+          fromStatus: OrderStatus.PENDING,
+          toStatus: OrderStatus.CUSTOMER_CANCELED,
+          changedByType: ActorType.SYSTEM,
+          source: "API",
+          metadata: {},
+        });
+        createLog.save();
+      }
       await PaymentGatewayEvent.create({
-        orderId: findOrderId.id,
-        paymentId: findPaymentId.id,
+        checkoutId: checkOutId,
+        paymentId: paymentId,
         type: "NOTIFY",
-        amountMinor: findOrderId.grandTotalMinor,
+        amountMinor: amount,
         provider: "DIGIPAY",
         status: "FAILED",
         reqJson: req.body,
         resJson: {},
       });
-      createLog.save();
     }
   } catch (error) {
     res.json({ error: error });
@@ -176,31 +186,20 @@ export const getCallBack = async (req: Request, res: Response) => {
   const process_status = req.query.process_status;
   const reference = req.query.reference;
   const sign = req.query.sign;
-  const findId = await Order.findOne({
-    where: { reference: String(reference) },
-    attributes: ["id", "status"],
+  const findId = await Payment.findOne({
+    where: { providerRef: String(reference) },
+    attributes: ["id", "checkoutId"],
   });
+  console.log(findId)
+  if(!findId)return
+  const orderCode = await CheckOut.findOne({
+    where: {id: findId?.checkoutId} , attributes: ["orderCode"]
+  })
   //res.send(window.location.replace(`http://localhost:3000/digishop/order/${String(findId.id)}`))
-  const linkResult = JSON.stringify(`http://localhost:3000/digishop/order/${String(findId?.id)}`)
+  const linkResult = JSON.stringify(`http://localhost:3000/digishop/order/${String(orderCode?.orderCode)}`)
   const link = JSON.stringify('http://localhost:3000')
   if (process_status == "true") {
     if (findId) {
-      await Order.update(
-        {
-          status: OrderStatus.PAID,
-        },
-        {
-          where: { id: Number(findId.id) },
-        }
-      );
-      await Payment.update(
-        {
-          status: PaymentStatus.SUCCESS,
-        },
-        {
-          where: { orderId: Number(findId.id) },
-        }
-      );
       res.send(`
           <html>
             <body>
@@ -211,24 +210,8 @@ export const getCallBack = async (req: Request, res: Response) => {
           </html>
         `);
     }
-  } else if (process_status == "false" && findId?.status != OrderStatus.PAID) {
+  } else if (process_status == "false") {
     if (findId) {
-      await Order.update(
-        {
-          status: OrderStatus.CUSTOMER_CANCELED, //system error in case notify mai send
-        },
-        {
-          where: { id: Number(findId.id) },
-        }
-      );
-      await Payment.update(
-        {
-          status: PaymentStatus.FAILED,
-        },
-        {
-          where: { orderId: Number(findId.id) },
-        }
-      );
       res.send(`
           <html>
             <body>

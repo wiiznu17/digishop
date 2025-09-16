@@ -12,40 +12,42 @@
 //   createdAt: Date
 //   updatedAt: Date
 // }
-
+export interface ProductItem {
+    id: number;
+    productId: number
+    sku: string;
+    stock_quantity: number;
+    price_minor: number;
+    image_url?: string | undefined;
+}
 export interface Product {
   id: number
+  uuid: string
   name: string
   description: string
-  price: number
-  stockQuantity: number
-  store: {
-    id: number
-    storeName: string
-    logoUrl: string
-    description: string
-  }
-  category: {
-    id: number
-    name: string
-  }
+  items: [
+    ProductItem
+  ]
+  store: Store
+  category: Category
 }
 
+export interface Store {
+  id: number
+  storeName: string
+  logoUrl: string
+  description: string
+}
+export interface Category {
+  id: number
+  name: string
+}
 export interface OrderProduct {
   id: number
   name: string
   description: string
   price: number
   stockQuantity: number
-  store: {
-    id: number
-    storeName: string
-    logoUrl: string
-    description: string
-  }
-  category: {
-    id: number
-    name: string
-  }
-  
+  store: Store
+  category: Category
 }
