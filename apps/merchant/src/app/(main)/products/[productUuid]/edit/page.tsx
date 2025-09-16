@@ -322,9 +322,10 @@ export default function EditProductPage() {
       const row = prev.find((r) => r.key === key)
       if (!row) return prev
       if (!row.uuid) return prev.filter((r) => r.key !== key)
-      return prev.map((r) =>
-        r.key === key ? { ...r, toBeDeleted: !r.toBeDeleted } : r
-      )
+      // return prev.map((r) =>
+      //   r.key === key ? { ...r, toBeDeleted: !r.toBeDeleted } : r
+      // )
+      return prev
     })
   }
   const getOptionPairs = (r: ItemEdit): { name?: string; value: string }[] => {
@@ -363,7 +364,19 @@ export default function EditProductPage() {
       }
       seen.add(k)
     }
+    // SKU ต้องมี (เฉพาะแถว active ที่จะถูกบันทึก)
+    const missing = itemEdits
+      .filter((x) => !x.toBeDeleted)
+      .filter((x) => !(x.sku || "").trim())
+      .map((x) => x.label)
 
+    if (missing.length) {
+      alert(
+        "SKU is required for:\n" +
+          missing.map((s, i) => `${i + 1}. ${s}`).join("\n")
+      )
+      return
+    }
     setSaving(true)
     try {
       // product images
@@ -594,7 +607,7 @@ export default function EditProductPage() {
                         <th className="text-left p-2">SKU</th>
                         <th className="text-right p-2">Price (THB)</th>
                         <th className="text-right p-2">Stock</th>
-                        <th className="text-right p-2 w-[96px]">Actions</th>
+                        {/* <th className="text-right p-2 w-[96px]">Actions</th> */}
                       </tr>
                     </thead>
                     <tbody>
@@ -743,7 +756,7 @@ export default function EditProductPage() {
                               />
                             </td>
 
-                            <td className="p-2 text-right">
+                            {/* <td className="p-2 text-right">
                               <Button
                                 size="sm"
                                 variant={willDelete ? "secondary" : "outline"}
@@ -751,7 +764,27 @@ export default function EditProductPage() {
                               >
                                 {willDelete ? "Undo" : "Delete"}
                               </Button>
-                            </td>
+                            </td> */}
+                            {/* <td className="p-2 text-right">
+                              {!r.uuid ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => removeItem(r.key)}
+                                >
+                                  Discard
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  disabled
+                                  title="Cannot delete directly. Remove by editing variations/options."
+                                >
+                                  Delete
+                                </Button>
+                              )}
+                            </td> */}
                           </tr>
                         )
                       })}
