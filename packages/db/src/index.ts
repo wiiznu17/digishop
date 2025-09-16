@@ -39,6 +39,7 @@ import { RefundImage } from "../src/models/RefundImage";
 import { RefundStatusHistory } from "../src/models/RefundStatusHistory";
 import { Review } from "../src/models/Review";
 import { Dispute } from "../src/models/Dispute";
+import { CheckOut } from "../src/models/CheckOut";
 
 // ── Analytics
 import { ProductView } from "../src/models/ProductView";
@@ -83,6 +84,7 @@ export function initModels(conn: Sequelize) {
   RefundStatusHistory.initModel(conn);
   Review.initModel(conn);
   Dispute.initModel(conn);
+  CheckOut.initModel(conn);
 
   ProductView.initModel(conn);
   StoreView.initModel(conn);
@@ -99,12 +101,12 @@ export function initModels(conn: Sequelize) {
   User.hasOne(Store, { foreignKey: { name: "userId", field: "user_id" }, as: "store", onDelete: "CASCADE", onUpdate: "CASCADE" });
   Store.belongsTo(User, { foreignKey: { name: "userId", field: "user_id" }, as: "owner", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
-  User.hasMany(Order, { foreignKey: { name: "customerId", field: "customer_id" }, as: "orders", onDelete: "RESTRICT", onUpdate: "CASCADE" });
-  Order.belongsTo(User, { foreignKey: { name: "customerId", field: "customer_id" }, as: "customer", onDelete: "RESTRICT", onUpdate: "CASCADE" });
-
+  User.hasMany(CheckOut, { foreignKey: { name: "customerId", field: "customer_id" }, as: "checkout", onDelete: "RESTRICT", onUpdate: "CASCADE" });
+  CheckOut.belongsTo(User, { foreignKey: { name: "customerId", field: "customer_id" }, as: "customer", onDelete: "RESTRICT", onUpdate: "CASCADE" });
+  
   User.hasMany(Review, { foreignKey: { name: "userId", field: "user_id" }, as: "reviews", onDelete: "CASCADE", onUpdate: "CASCADE" });
   Review.belongsTo(User, { foreignKey: { name: "userId", field: "user_id" }, as: "author", onDelete: "CASCADE", onUpdate: "CASCADE" });
-
+  
   User.hasMany(ProductView, { foreignKey: { name: "userId", field: "user_id" }, as: "productViews" });
   ProductView.belongsTo(User, { foreignKey: { name: "userId", field: "user_id" }, as: "viewer" });
 
@@ -113,20 +115,20 @@ export function initModels(conn: Sequelize) {
 
   User.hasMany(Dispute, { foreignKey: { name: "customerId", field: "customer_id" }, as: "disputes", onDelete: "CASCADE", onUpdate: "CASCADE" });
   Dispute.belongsTo(User, { foreignKey: { name: "customerId", field: "customer_id" }, as: "customer", onDelete: "CASCADE", onUpdate: "CASCADE" });
-
+  
   // Store <-> Products / Orders / Configs / Views / Addresses / ProfileImages / BankAccounts
   Store.hasMany(Product, { foreignKey: { name: "storeId", field: "store_id" }, as: "products", onDelete: "CASCADE", onUpdate: "CASCADE" });
   Product.belongsTo(Store, { foreignKey: { name: "storeId", field: "store_id" }, as: "store", onDelete: "CASCADE", onUpdate: "CASCADE" });
-
+  
   Store.hasMany(Order, { foreignKey: { name: "storeId", field: "store_id" }, as: "storeOrders", onDelete: "RESTRICT", onUpdate: "CASCADE" });
   Order.belongsTo(Store, { foreignKey: { name: "storeId", field: "store_id" }, as: "store", onDelete: "RESTRICT", onUpdate: "CASCADE" });
-
+  
   Store.hasMany(ShippingConfig, { foreignKey: { name: "storeId", field: "store_id" }, as: "shippingConfigs", onDelete: "CASCADE", onUpdate: "CASCADE" });
   ShippingConfig.belongsTo(Store, { foreignKey: { name: "storeId", field: "store_id" }, as: "store", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
   Store.hasMany(StoreView, { foreignKey: { name: "storeId", field: "store_id" }, as: "views" });
   StoreView.belongsTo(Store, { foreignKey: { name: "storeId", field: "store_id" }, as: "store" });
-
+  
   Store.hasMany(MerchantAddress, { foreignKey: { name: "storeId", field: "store_id" }, as: "addresses", onDelete: "CASCADE", onUpdate: "CASCADE" });
   MerchantAddress.belongsTo(Store, { foreignKey: { name: "storeId", field: "store_id" }, as: "store", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
@@ -149,7 +151,7 @@ export function initModels(conn: Sequelize) {
 
   Product.hasMany(Variation, { foreignKey: { name: "productId", field: "product_id" }, as: "variations", onDelete: "CASCADE", onUpdate: "CASCADE" });
   Variation.belongsTo(Product, { foreignKey: { name: "productId", field: "product_id" }, as: "product", onDelete: "CASCADE", onUpdate: "CASCADE" });
-
+  
   Variation.hasMany(VariationOption, { foreignKey: { name: "variationId", field: "variation_id" }, as: "options", onDelete: "CASCADE", onUpdate: "CASCADE" });
   VariationOption.belongsTo(Variation, { foreignKey: { name: "variationId", field: "variation_id" }, as: "variation", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
@@ -170,7 +172,7 @@ export function initModels(conn: Sequelize) {
 
   Product.hasMany(ProductView, { foreignKey: { name: "productId", field: "product_id" }, as: "views" });
   ProductView.belongsTo(Product, { foreignKey: { name: "productId", field: "product_id" }, as: "product" });
-
+  
   Product.hasMany(OrderItem, { foreignKey: { name: "productId", field: "product_id" }, as: "orderItems", onDelete: "RESTRICT", onUpdate: "CASCADE" });
   OrderItem.belongsTo(Product, { foreignKey: { name: "productId", field: "product_id" }, as: "product", onDelete: "RESTRICT", onUpdate: "CASCADE" });
 
@@ -180,7 +182,7 @@ export function initModels(conn: Sequelize) {
 
   ShoppingCart.hasMany(ShoppingCartItem, { foreignKey: { name: "cartId", field: "cart_id" }, as: "items", onDelete: "CASCADE", onUpdate: "CASCADE" });
   ShoppingCartItem.belongsTo(ShoppingCart, { foreignKey: { name: "cartId", field: "cart_id" }, as: "cart", onDelete: "CASCADE", onUpdate: "CASCADE" });
-
+  
   ProductItem.hasMany(ShoppingCartItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "cartItems", onDelete: "RESTRICT", onUpdate: "CASCADE" });
   ShoppingCartItem.belongsTo(ProductItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "productItem", onDelete: "RESTRICT", onUpdate: "CASCADE" });
 
@@ -192,9 +194,13 @@ export function initModels(conn: Sequelize) {
   ProductItem.hasMany(OrderItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "orderItems", onDelete: "SET NULL", onUpdate: "CASCADE" });
   OrderItem.belongsTo(ProductItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "productItem", onDelete: "SET NULL", onUpdate: "CASCADE" });
 
-  Order.hasOne(Payment, { foreignKey: { name: "orderId", field: "order_id" }, as: "payment", onDelete: "CASCADE", onUpdate: "CASCADE" });
-  Payment.belongsTo(Order, { foreignKey: { name: "orderId", field: "order_id" }, as: "order", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  CheckOut.hasOne(Payment, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "payment", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  Payment.belongsTo(CheckOut, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "checkout", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
+  CheckOut.hasMany(Order, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "orders", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  Order.belongsTo(CheckOut, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "checkout", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  
+  
   Order.hasOne(ShippingInfo, { foreignKey: { name: "orderId", field: "order_id" }, as: "shippingInfo", onDelete: "CASCADE", onUpdate: "CASCADE" });
   ShippingInfo.belongsTo(Order, { foreignKey: { name: "orderId", field: "order_id" }, as: "order", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
@@ -251,7 +257,7 @@ export function initModels(conn: Sequelize) {
     ShoppingCart, ShoppingCartItem,
     // Order
     Order, OrderItem, OrderStatusHistory, ShippingType, ShippingInfo, Payment, PaymentGatewayEvent,
-    RefundOrder, RefundImage, RefundStatusHistory, Review, Dispute,
+    RefundOrder, RefundImage, RefundStatusHistory, Review, Dispute,CheckOut,
     // Analytics
     ProductView, StoreView,
     // Admin
