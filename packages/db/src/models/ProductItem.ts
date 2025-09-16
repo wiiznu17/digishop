@@ -4,9 +4,11 @@ import type { ProductConfiguration } from "./ProductConfiguration";
 
 export interface ProductItemAttributes {
   id: number;
+  uuid: string;
   productId: number;
   sku: string;                 // ⬅️ NOT NULL
   stockQuantity: number;
+  isEnable: boolean;
   priceMinor: number;
   imageUrl?: string | null;
 
@@ -18,7 +20,7 @@ export interface ProductItemAttributes {
 export interface ProductItemCreationAttributes
   extends Optional<
     ProductItemAttributes,
-    "id" | "imageUrl" | "createdAt" | "updatedAt" | "deletedAt"
+    "id" | "uuid" | "imageUrl" | "createdAt" | "updatedAt" | "deletedAt" | "isEnable"
   > {}
 
 export class ProductItem
@@ -26,9 +28,11 @@ export class ProductItem
   implements ProductItemAttributes
 {
   public id!: number;
+  public uuid!: string;
   public productId!: number;
   public sku!: string;
   public stockQuantity!: number;
+  public isEnable!: boolean;
   public priceMinor!: number;
   public imageUrl!: string | null;
 
@@ -46,6 +50,12 @@ export class ProductItem
           autoIncrement: true,
           primaryKey: true,
         },
+        uuid: {
+          type: DataTypes.UUID,
+          allowNull: false,
+          unique: true,
+          defaultValue: DataTypes.UUIDV4,
+        },
         productId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
@@ -59,7 +69,6 @@ export class ProductItem
             len: { args: [1, 191], msg: "sku length invalid" },
           },
           set(value: unknown) {
-            // Trim ช่องว่าง; ปล่อยให้ controller/hook เป็นคน gen ถ้าไม่มีค่า
             if (typeof value === "string") {
               const v = value.trim();
               // @ts-ignore
@@ -75,6 +84,12 @@ export class ProductItem
           allowNull: false,
           defaultValue: 0,
           field: "stock_quantity",
+        },
+        isEnable: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue: true,
+          field: "is_enable",
         },
         priceMinor: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -111,8 +126,8 @@ export class ProductItem
         paranoid: true,
         deletedAt: "deleted_at",
         indexes: [
+          { fields: ["uuid"], unique: true, name: "uq_product_items_uuid" },
           { fields: ["product_id"] },
-          // unique ต่อสินค้า
           { unique: true, fields: ["product_id", "sku"], name: "uniq_items_product_sku" },
         ],
         hooks: {

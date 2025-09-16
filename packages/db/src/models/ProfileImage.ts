@@ -3,6 +3,7 @@ import { sequelize } from '../db'
 
 export interface ProfileMerchantImageAttributes {
   id: string
+  uuid: string
   storeId: number
   url: string
   blobName: string
@@ -12,13 +13,14 @@ export interface ProfileMerchantImageAttributes {
 }
 
 export interface ProfileMerchantImageCreationAttributes
-  extends Optional<ProfileMerchantImageAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+  extends Optional<ProfileMerchantImageAttributes, 'id' | "uuid" | 'createdAt' | 'updatedAt'> {}
 
 export class ProfileMerchantImage
   extends Model<ProfileMerchantImageAttributes, ProfileMerchantImageCreationAttributes>
   implements ProfileMerchantImageAttributes
 {
   public id!: string
+  public uuid!: string
   public storeId!: number
   public url!: string
   public blobName!: string
@@ -30,9 +32,15 @@ export class ProfileMerchantImage
 ProfileMerchantImage.init(
   {
     id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    uuid: {        // CHAR(36) for UUID v4
       type: DataTypes.UUID,
+      allowNull: false,
+      unique: true,
       defaultValue: DataTypes.UUIDV4,
-      primaryKey: true
     },
     storeId: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -41,7 +49,8 @@ ProfileMerchantImage.init(
         model: 'stores',
         key: 'id'
       },
-      field: 'store_id'
+      field: 'store_id',
+      unique: true
     },
     url: {
       type: DataTypes.TEXT,

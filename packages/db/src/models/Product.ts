@@ -10,17 +10,24 @@ export interface ProductAttributes {
   name: string;
   description?: string | null;
   // not use
-  //price: number;  now we use product item for price/stock (string) , simple (number)
-  //stockQuantity: number;  now we use product item for price/stock
+  // price: number;  now we use product item for price/stock (string) , simple (number)
+  // stockQuantity: number;  now we use product item for price/stock
   status: ProductStatus;
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date | null;
 }
 
 export interface ProductCreationAttributes
-  extends Optional<ProductAttributes, 'id' | 'description' | 'status' | 'createdAt' | 'updatedAt'> {}
+  extends Optional<
+    ProductAttributes,
+    'id' | 'uuid' | 'description' | 'status' | 'createdAt' | 'updatedAt' | 'deletedAt'
+  > {}
 
-export class Product extends Model<ProductAttributes, ProductCreationAttributes> implements ProductAttributes {
+export class Product
+  extends Model<ProductAttributes, ProductCreationAttributes>
+  implements ProductAttributes
+{
   public id!: number;
   public uuid!: string;
   public storeId!: number;
@@ -28,10 +35,12 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
   public name!: string;
   public description!: string | null;
   public status!: ProductStatus;
-  public images?: ProductImage[];
-
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+  public readonly deletedAt!: Date | null;
+
+  // associations
+  public images?: ProductImage[];
 
   static initModel(sequelize: Sequelize): typeof Product {
     Product.init(
@@ -42,19 +51,22 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
           primaryKey: true,
         },
         uuid: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
-          field: 'uuid'
+          type: DataTypes.UUID,              // CHAR(36)
+          allowNull: false,
+          unique: true,
+          defaultValue: DataTypes.UUIDV4,    // generate v4 ฝั่งแอป
         },
         storeId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           field: 'store_id',
+          references: { model: 'STORES', key: 'id' },
         },
         categoryId: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           field: 'category_id',
+          references: { model: 'CATEGORIES', key: 'id' },
         },
         name: {
           type: DataTypes.STRING(191),
@@ -81,13 +93,25 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
           field: 'updated_at',
           defaultValue: DataTypes.NOW,
         },
+        deletedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: 'deleted_at',
+        },
       },
       {
         sequelize,
         tableName: 'PRODUCTS',
         modelName: 'Product',
-        paranoid: true,            // เปิด soft delete
-        deletedAt: 'deleted_at',   // ชื่อคอลัมน์ soft delete
+        paranoid: true,          // ใช้ deleted_at
+        deletedAt: 'deleted_at',
+        indexes: [
+          { name: 'uq_products_uuid', unique: true, fields: ['uuid'] },
+          { name: 'ix_products_store', fields: ['store_id'] },
+          { name: 'ix_products_category', fields: ['category_id'] },
+          { name: 'ix_products_status', fields: ['status'] },
+          { name: 'ix_products_created_at', fields: ['created_at'] },
+        ],
       }
     );
     return Product;
