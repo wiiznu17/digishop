@@ -42,13 +42,43 @@ export class ProductConfiguration
   static initModel(sequelize: Sequelize): typeof ProductConfiguration {
     ProductConfiguration.init(
       {
-        id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-        uuid: { type: DataTypes.UUID, allowNull: false, unique: true, defaultValue: DataTypes.UUIDV4 },
-        productItemId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, field: "product_item_id" },
-        variationOptionId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, field: "variation_option_id" },
-        createdAt: { type: DataTypes.DATE, allowNull: false, field: "created_at", defaultValue: DataTypes.NOW },
-        updatedAt: { type: DataTypes.DATE, allowNull: false, field: "updated_at", defaultValue: DataTypes.NOW },
-        deletedAt: { type: DataTypes.DATE, allowNull: true, field: "deleted_at" },
+        id: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          autoIncrement: true,
+          primaryKey: true
+        },
+        uuid: { type: DataTypes.UUID,
+          allowNull: false,
+          unique: true,
+          defaultValue: DataTypes.UUIDV4
+        },
+        productItemId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          field: "product_item_id"
+        },
+        variationOptionId: {
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          field: "variation_option_id"
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: "created_at",
+          defaultValue: DataTypes.NOW
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: "updated_at",
+          defaultValue: DataTypes.NOW
+        },
+        deletedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: "deleted_at"
+        },
       },
       {
         sequelize,
