@@ -574,3 +574,106 @@ export async function deleteProductItemImageRequester(
     return false
   }
 }
+
+// new
+// ===== Desired-state Types =====
+export type DesiredImageInput = {
+  uuid?: string
+  uploadKey?: string
+  fileName?: string
+  isMain?: boolean
+  sortOrder: number
+}
+
+export type DesiredVariationOption = {
+  uuid?: string
+  clientId?: string
+  value: string
+  sortOrder: number
+}
+
+export type DesiredVariation = {
+  uuid?: string
+  clientId?: string
+  name: string
+  options: DesiredVariationOption[]
+}
+
+export type DesiredItemImage = {
+  uuid?: string
+  uploadKey?: string
+  remove?: boolean
+} | null
+
+export type DesiredItem = {
+  uuid?: string
+  clientKey?: string
+  sku?: string
+  priceMinor: number
+  stockQuantity: number
+  isEnable: boolean
+  optionRefs: string[] // uuid หรือ clientId
+  image?: DesiredItemImage
+}
+
+export type DesiredPayload = {
+  ifMatchUpdatedAt?: string | null
+  product: {
+    name: string
+    description?: string | null
+    status: string
+    categoryUuid?: string | null
+  }
+  images: { product: DesiredImageInput[] }
+  variations: DesiredVariation[]
+  items: DesiredItem[]
+}
+
+export async function createProductDesiredRequester(
+  payload: DesiredPayload,
+  productImages: File[] = [],
+  itemImages: File[] = []
+): Promise<Product | null> {
+  try {
+    const form = new FormData()
+    form.append("desired", JSON.stringify(payload))
+    productImages.forEach((f) => form.append("productImages", f, f.name))
+    itemImages.forEach((f) => form.append("itemImages", f, f.name))
+    console.log(form.append)
+    const res = await axios.post("/api/merchant/products/desired", form, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" }
+    })
+    return res.data as Product
+  } catch (e) {
+    console.error("createProductDesiredRequester error:", e)
+    return null
+  }
+}
+
+export async function updateProductDesiredRequester(
+  productUuid: string,
+  payload: DesiredPayload,
+  productImages: File[] = [],
+  itemImages: File[] = []
+): Promise<Product | null> {
+  try {
+    const form = new FormData()
+    form.append("desired", JSON.stringify(payload))
+    productImages.forEach((f) => form.append("productImages", f, f.name))
+    itemImages.forEach((f) => form.append("itemImages", f, f.name))
+
+    const res = await axios.put(
+      `/api/merchant/products/${productUuid}/desired`,
+      form,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" }
+      }
+    )
+    return res.data as Product
+  } catch (e) {
+    console.error("updateProductDesiredRequester error:", e)
+    return null
+  }
+}
