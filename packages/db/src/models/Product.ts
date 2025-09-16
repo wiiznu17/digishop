@@ -1,7 +1,8 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
 import { ProductStatus } from '../types/enum';
-import { ProductImage } from './ProductImage';
-
+import type { NonAttribute, Association } from 'sequelize';
+import type { ProductImage } from './ProductImage';
+import type { ProductItem } from './ProductItem';
 export interface ProductAttributes {
   id: number;
   uuid: string;
@@ -40,7 +41,14 @@ export class Product
   public readonly deletedAt!: Date | null;
 
   // associations
-  public images?: ProductImage[];
+  // public images?: ProductImage[];
+  declare images?: NonAttribute<ProductImage[]>;
+  declare items?: NonAttribute<ProductItem[]>;
+
+  declare static associations: {
+    images: Association<Product, ProductImage>;
+    items: Association<Product, ProductItem>;
+  };
 
   static initModel(sequelize: Sequelize): typeof Product {
     Product.init(

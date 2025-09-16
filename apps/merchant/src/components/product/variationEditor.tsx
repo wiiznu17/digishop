@@ -269,10 +269,17 @@ export function VariationEditor({ value, onChange }: Props) {
                       </Button>
                     </div>
                   ) : (
+                    // ปุ่มลบ Variation
                     <Button
                       size="sm"
                       variant="destructive"
                       onClick={() => setPendingDeleteVar(v.clientId)}
+                      disabled={value.length <= 1} // ← กันลบชุดสุดท้าย
+                      title={
+                        value.length <= 1
+                          ? "Must have at least 1 variation"
+                          : undefined
+                      }
                     >
                       <Trash2 className="h-4 w-4 mr-1" />
                       Delete
@@ -355,6 +362,7 @@ export function VariationEditor({ value, onChange }: Props) {
                               </Button>
                             </div>
                           ) : (
+                            // ปุ่มลบ Option
                             <Button
                               size="sm"
                               variant="destructive"
@@ -363,6 +371,12 @@ export function VariationEditor({ value, onChange }: Props) {
                                   v: v.clientId,
                                   o: o.clientId
                                 })
+                              }
+                              disabled={v.options.length <= 1} // ← กันลบ option สุดท้ายในชุด
+                              title={
+                                v.options.length <= 1
+                                  ? "Each variation must have at least 1 option"
+                                  : undefined
                               }
                             >
                               <Trash2 className="h-4 w-4" />
