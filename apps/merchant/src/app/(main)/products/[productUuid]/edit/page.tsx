@@ -327,7 +327,24 @@ export default function EditProductPage() {
       )
     })
   }
+  const getOptionPairs = (r: ItemEdit): { name?: string; value: string }[] => {
+    const pairs: { name?: string; value: string }[] = []
 
+    // พยายาม map จาก variationsDraft ปัจจุบัน (ตาม index)
+    for (let i = 0; i < r.optionKeys.length; i++) {
+      const v = variationsDraft[i]
+      const k = r.optionKeys[i]
+      const opt = v?.options.find((o) => (o.uuid ?? o.clientId) === k)
+      if (v && opt) pairs.push({ name: v.name, value: opt.value })
+    }
+
+    // ถ้าจับคู่ไม่ได้ครบ (เช่น แถวจะถูกลบเพราะโครงสร้างเปลี่ยน) → fallback ใช้ label เดิม
+    if (pairs.length === 0 || pairs.length !== r.optionKeys.length) {
+      const parts = (r.label || "").split(" / ").filter(Boolean)
+      if (parts.length) return parts.map((val) => ({ value: val }))
+    }
+    return pairs
+  }
   // ===== Save (Desired) =====
   const handleSave = async () => {
     if (!name.trim()) {
@@ -435,9 +452,9 @@ export default function EditProductPage() {
           status,
           categoryUuid: categoryUuid === NONE_VALUE ? null : categoryUuid
         },
-        images: { product: desiredImages as any },
-        variations: desiredVariations as any,
-        items: desiredItems.filter(Boolean) as any[]
+        images: { product: desiredImages },
+        variations: desiredVariations,
+        items: desiredItems.filter(Boolean) as []
       }
 
       const updated = await updateProductDesiredRequester(
@@ -562,8 +579,191 @@ export default function EditProductPage() {
             </div>
 
             {/* Items editor (เดิม) */}
-            {/* ...โค้ดตาราง item ที่คุณมีอยู่คงเดิม... */}
-            {/* เพื่อประหยัดพื้นที่ ตัด UI table ออกในคำตอบนี้ แต่ในโปรเจกต์ใช้ของเดิมได้เลย */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Items (SKUs)</div>
+              {itemEdits.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No items</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-[1080px] w-full text-sm border rounded">
+                    <thead className="bg-muted/40">
+                      <tr>
+                        <th className="text-left p-2 w-[88px]">Enable</th>
+                        <th className="text-left p-2 w-[124px]">Image</th>
+                        <th className="text-left p-2 min-w-[220px]">Options</th>
+                        <th className="text-left p-2">SKU</th>
+                        <th className="text-right p-2">Price (THB)</th>
+                        <th className="text-right p-2">Stock</th>
+                        <th className="text-right p-2 w-[96px]">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itemEdits.map((r) => {
+                        const isNew = !r.uuid && !r.toBeDeleted
+                        const willDelete = !!r.toBeDeleted
+                        const pairs = getOptionPairs(r)
+                        return (
+                          <tr
+                            key={r.key}
+                            className={[
+                              "border-t align-top",
+                              isNew ? "bg-emerald-50/40" : "",
+                              willDelete ? "bg-rose-50/60 opacity-90" : ""
+                            ].join(" ")}
+                            title={
+                              isNew
+                                ? "ยังไม่มี UUID — จะถูกสร้างเมื่อกด Save"
+                                : willDelete
+                                  ? "คอมบิเนชันนี้ไม่อยู่ใน Variations ปัจจุบัน — จะถูกลบเมื่อกด Save"
+                                  : undefined
+                            }
+                          >
+                            <td className="p-2 align-top">
+                              <input
+                                type="checkbox"
+                                checked={r.isEnable}
+                                disabled={willDelete}
+                                onChange={(e) =>
+                                  patchItem(r.key, {
+                                    isEnable: e.target.checked
+                                  })
+                                }
+                              />
+                            </td>
+
+                            <td className="p-2 align-top">
+                              <div className="relative w-20 h-20">
+                                <ImageUpload
+                                  variant="compact"
+                                  mode="local"
+                                  images={r.image ? [r.image] : []}
+                                  onImagesChange={(imgs) =>
+                                    patchItem(r.key, {
+                                      image: imgs[0] ?? null
+                                    })
+                                  }
+                                  maxImages={1}
+                                  cropAspect={1}
+                                />
+
+                                {/* Badges */}
+                                {isNew && (
+                                  <span className="absolute -top-1.5 -left-1.5 bg-emerald-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded shadow pointer-events-none">
+                                    ใหม่
+                                  </span>
+                                )}
+                                {willDelete && (
+                                  <span className="absolute -top-1.5 -left-1.5 bg-rose-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded shadow pointer-events-none">
+                                    จะถูกลบ
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* NEW: Option mapping badges */}
+                            <td className="p-2 align-top">
+                              {pairs.length ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {pairs.map((p, idx) => (
+                                    <span
+                                      key={idx}
+                                      title={p.name}
+                                      className={[
+                                        "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] bg-muted/40",
+                                        willDelete ? "opacity-60" : ""
+                                      ].join(" ")}
+                                    >
+                                      {p.name && (
+                                        <span className="text-muted-foreground mr-1">
+                                          {p.name}:
+                                        </span>
+                                      )}
+                                      <span className="font-medium">
+                                        {p.value}
+                                      </span>
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">
+                                  –
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="p-2">
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  value={r.sku}
+                                  disabled={willDelete}
+                                  onChange={(e) =>
+                                    patchItem(r.key, { sku: e.target.value })
+                                  }
+                                  placeholder="SKU"
+                                />
+                                {isNew && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                                    ใหม่
+                                  </span>
+                                )}
+                                {willDelete && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
+                                    จะถูกลบ
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="p-2 text-right">
+                              <Input
+                                className="text-right"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                disabled={willDelete}
+                                value={r.price}
+                                onChange={(e) =>
+                                  patchItem(r.key, { price: e.target.value })
+                                }
+                                placeholder="0.00"
+                              />
+                            </td>
+
+                            <td className="p-2 text-right">
+                              <Input
+                                className="text-right"
+                                type="number"
+                                min="0"
+                                disabled={willDelete}
+                                value={r.stock}
+                                onChange={(e) =>
+                                  patchItem(r.key, { stock: e.target.value })
+                                }
+                                placeholder="0"
+                              />
+                            </td>
+
+                            <td className="p-2 text-right">
+                              <Button
+                                size="sm"
+                                variant={willDelete ? "secondary" : "outline"}
+                                onClick={() => removeItem(r.key)}
+                              >
+                                {willDelete ? "Undo" : "Delete"}
+                              </Button>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                • แถวพื้นเขียว = คอมบิเนชันใหม่ (จะถูกสร้างเมื่อ Save) —
+                แถวพื้นชมพู = คอมบิเนชันที่จะถูกลบเมื่อ Save
+              </p>
+            </div>
 
             {/* Actions */}
             <div className="flex gap-3">
