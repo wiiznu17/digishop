@@ -1,6 +1,6 @@
-// @digishop/db/src/models/ProductItem.ts
-import { Model, DataTypes, Optional, Sequelize } from "sequelize";
+import { Model, DataTypes, Optional, Sequelize, NonAttribute, Association } from "sequelize";
 import type { ProductConfiguration } from "./ProductConfiguration";
+import { ProductItemImage } from "./ProductItemImage";
 
 export interface ProductItemAttributes {
   id: number;
@@ -41,6 +41,11 @@ export class ProductItem
   public readonly deletedAt!: Date | null;
 
   declare configurations?: ProductConfiguration[];
+  declare productItemImage?: NonAttribute<ProductItemImage | null>;
+
+  declare static associations: {
+    productItemImage: Association<ProductItem, ProductItemImage>;
+  };
 
   static initModel(sequelize: Sequelize): typeof ProductItem {
     ProductItem.init(
