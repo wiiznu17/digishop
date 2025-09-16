@@ -234,8 +234,8 @@ export function initModels(conn: Sequelize) {
   Address.hasMany(ShippingInfo, { as: "shippingInfos", foreignKey: { name: "shippingAddress", field: "shipping_address" }, onDelete: "RESTRICT", onUpdate: "CASCADE" });
 
   // PaymentGatewayEvent
-  Order.hasMany(PaymentGatewayEvent, { foreignKey: { name: "orderId", field: "order_id" }, as: "gatewayEvents", onDelete: "CASCADE", onUpdate: "CASCADE" });
-  PaymentGatewayEvent.belongsTo(Order, { foreignKey: { name: "orderId", field: "order_id" }, as: "order", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  CheckOut.hasOne(PaymentGatewayEvent, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "gatewayEvents", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  PaymentGatewayEvent.belongsTo(Order, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "order", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
   Payment.hasMany(PaymentGatewayEvent, { foreignKey: { name: "paymentId", field: "payment_id" }, as: "gatewayEvents", onDelete: "CASCADE", onUpdate: "CASCADE" });
   PaymentGatewayEvent.belongsTo(Payment, { foreignKey: { name: "paymentId", field: "payment_id" }, as: "payment", onDelete: "CASCADE", onUpdate: "CASCADE" });
