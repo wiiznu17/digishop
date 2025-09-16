@@ -33,7 +33,10 @@ export default {
                 return {
                     id,
                     customer_id: customer,
-                    order_code: orderCode
+                    order_code: orderCode,
+                    created_at: now,
+                    updated_at: now,
+                    deleted_at: null,
                 }
             })
             
