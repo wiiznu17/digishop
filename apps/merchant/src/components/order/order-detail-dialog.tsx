@@ -276,7 +276,7 @@ export function OrderDetailDialog({
             trackingNumber={order.trackingNumber ?? undefined}
             onStatusChange={onStatusChange}
             onTrackingNumberUpdate={onTrackingNumberUpdate}
-            /** ⬇️ ส่ง handler hand over ลงไป */
+            /** ส่ง handler hand over ลงไป */
             onHandedOver={onHandedOver}
           />
 

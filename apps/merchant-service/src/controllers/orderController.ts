@@ -1,7 +1,7 @@
 // apps/merchant-service/src/controllers/orderController.ts
 import { Request, Response } from "express"
 import axios from "axios"
-import { Includeable, IncludeOptions, literal, Op, WhereOptions } from "sequelize"
+import { IncludeOptions, literal, Op, WhereOptions } from "sequelize"
 
 import { Order } from "@digishop/db/src/models/Order"
 import { OrderItem } from "@digishop/db/src/models/OrderItem"
@@ -124,7 +124,7 @@ const CHECKOUT_INCLUDE_BASE: IncludeOptions = {
   model: CheckOut,
   as: "checkout",
   attributes: ["id", "orderCode", "customerId"],
-  paranoid: false, // ปิด soft-delete condition ใน ON clause เพื่อกัน error หากตารางยังไม่มี deleted_at
+  paranoid: false, // กันเคสไม่มีคอลัมน์ deleted_at
   include: [
     {
       model: User,
@@ -473,7 +473,7 @@ export async function listOrders(req: Request, res: Response) {
       model: CheckOut,
       as: "checkout",
       attributes: ["id", "orderCode", "customerId"],
-      paranoid: false, // กัน error deleted_at
+      paranoid: false,
       required: !!hasTextQuery,
       include: [
         {
@@ -511,10 +511,7 @@ export async function listOrders(req: Request, res: Response) {
       ],
     }
 
-    const includes: IncludeOptions[] = [
-      checkoutInclude,
-      ...ORDER_BASE_INCLUDES.filter((i) => i.as !== "checkout"),
-    ]
+    const includes: IncludeOptions[] = [checkoutInclude, ...ORDER_BASE_INCLUDES.filter((i) => i.as !== "checkout")]
 
     const { rows, count } = await Order.findAndCountAll({
       where: finalWhere,
@@ -569,6 +566,7 @@ export async function updateOrder(req: Request, res: Response) {
     RE_TRANSIT: ShippingStatus.IN_TRANSIT,
   }
 
+  // ✅ อัปเดต ALLOWED NEXT ให้รองรับ REFUND_RETRY
   const ALLOWED_NEXT: Record<string, string[]> = {
     PENDING: ["CUSTOMER_CANCELED", "PAID"],
     PAID: ["PROCESSING", "MERCHANT_CANCELED", "REFUND_REQUEST"],
@@ -591,13 +589,15 @@ export async function updateOrder(req: Request, res: Response) {
     REFUND_APPROVED: ["REFUND_PROCESSING", "REFUND_FAIL"],
     REFUND_PROCESSING: ["REFUND_SUCCESS"],
     REFUND_SUCCESS: [],
-    REFUND_FAIL: ["REFUND_PROCESSING", "REFUND_FAIL"],
+    REFUND_FAIL: ["REFUND_RETRY", "REFUND_PROCESSING"], // ← retry ได้ (สองแบบ: รุ่นเก่า/ใหม่)
+    REFUND_RETRY: [], // ระบบจะเป็นคนเปลี่ยนต่อเป็น PROCESSING/FAIL เอง
   }
 
   const TERMINAL = new Set<string>(["COMPLETE", "CUSTOMER_CANCELED", "REFUND_SUCCESS", "RETURN_FAIL"])
 
   const t = await Order.sequelize!.transaction()
   let postCommit: null | (() => Promise<void>) = null
+  let willTouchPGW = false
 
   try {
     const order = await Order.findByPk(orderId, { include: ORDER_BASE_INCLUDES, transaction: t })
@@ -690,10 +690,15 @@ export async function updateOrder(req: Request, res: Response) {
       )
     }
 
-    if (["REFUND_REQUEST", "REFUND_APPROVED", "MERCHANT_CANCELED", "REFUND_SUCCESS", "REFUND_FAIL"].includes(nextStatus)) {
+    // Reflect RefundOrder row (สร้างครั้งแรก)
+    if (
+      ["REFUND_REQUEST", "REFUND_APPROVED", "MERCHANT_CANCELED", "REFUND_SUCCESS", "REFUND_FAIL", "REFUND_RETRY"].includes(
+        nextStatus
+      )
+    ) {
       let refund = await RefundOrder.findOne({ where: { orderId: (order as any).id }, transaction: t })
 
-      const orderGrandMinor = read<number>(order, "grand_total_minor", "grandTotalMinor)".replace(")", "")) ?? 0
+      const orderGrandMinor = read<number>(order, "grand_total_minor", "grandTotalMinor") ?? 0
       const currency = read<string>(order, "currency_code", "currencyCode") ?? "THB"
 
       if (!refund && (nextStatus === "REFUND_REQUEST" || nextStatus === "MERCHANT_CANCELED")) {
@@ -721,10 +726,14 @@ export async function updateOrder(req: Request, res: Response) {
         } else if (nextStatus === "REFUND_FAIL") {
           await refund.update({ status: "FAIL" } as any, { transaction: t })
         }
+        // REFUND_RETRY ไม่ต้องแก้ status ในตาราง refund โดยตรง ปล่อยให้ history สะท้อน
       }
     }
 
-    if (nextStatus === "REFUND_APPROVED" || nextStatus === "MERCHANT_CANCELED") {
+    // Trigger PGW เมื่อ APPROVED / MERCHANT_CANCELED / RETRY
+    if (nextStatus === "REFUND_APPROVED" || nextStatus === "MERCHANT_CANCELED" || nextStatus === "REFUND_RETRY") {
+      willTouchPGW = true
+      console.log("next status: ", nextStatus)
       const pay = (order as any).checkout?.payment
       const providerRef = read<string>(pay, "provider_ref", "providerRef")
       const orderRef = read<string>(order, "reference", "reference")
@@ -736,6 +745,7 @@ export async function updateOrder(req: Request, res: Response) {
       postCommit = async () => {
         if (!reference) {
           console.warn(`[refund] skip: order ${orderId} has no provider_ref/reference`)
+          await Order.update({ status: "REFUND_FAIL" } as any, { where: { id: orderId } })
           return
         }
 
@@ -760,11 +770,14 @@ export async function updateOrder(req: Request, res: Response) {
             return
           }
 
-          const payloadReason = reason ?? (nextStatus === "MERCHANT_CANCELED" ? "Merchant canceled" : "Refund approved")
+          const payloadReason =
+            reason ?? (nextStatus === "MERCHANT_CANCELED" ? "Merchant canceled" : "Refund approved / retry")
+
           const resp =
             action === "VOID"
               ? await pgwVoid(reference, payloadReason, correlationId ?? undefined)
               : await pgwRefund(reference, payloadReason, correlationId ?? undefined)
+
           const ok = resp?.res_code === "0000"
 
           if (refundOrderId) {
@@ -772,12 +785,14 @@ export async function updateOrder(req: Request, res: Response) {
               refundOrderId,
               fromStatus: "APPROVED",
               toStatus: ok ? "APPROVED" : "FAIL",
-              reason: ok ? `${action} accepted by PGW` : `${action} fail: ${resp?.res_desc ?? "unknown"}`,
+              reason: ok
+                ? `${action} accepted by PGW${nextStatus === "REFUND_RETRY" ? " (retry)" : ""}`
+                : `${action} fail: ${resp?.res_desc ?? "unknown"}`,
               changedByType: "SYSTEM",
               changedById: 0,
               source: "PAYMENT_GATEWAY",
               correlationId,
-              metadata: { response: resp, action, detail },
+              metadata: { response: resp, action, detail, retry: nextStatus === "REFUND_RETRY" },
             } as any)
           }
 
@@ -793,7 +808,7 @@ export async function updateOrder(req: Request, res: Response) {
               reason: `${action} accepted by PGW`,
               source: "PAYMENT_GATEWAY",
               correlationId,
-              metadata: { response: resp },
+              metadata: { response: resp, retry: nextStatus === "REFUND_RETRY" },
             } as any)
           } else {
             await Order.update({ status: "REFUND_FAIL" } as any, { where: { id: orderId } })
@@ -806,7 +821,7 @@ export async function updateOrder(req: Request, res: Response) {
               reason: `${action} failed: ${resp?.res_desc ?? "unknown"}`,
               source: "PAYMENT_GATEWAY",
               correlationId,
-              metadata: { response: resp },
+              metadata: { response: resp, retry: nextStatus === "REFUND_RETRY" },
             } as any)
           }
         } catch (e: any) {
@@ -822,17 +837,20 @@ export async function updateOrder(req: Request, res: Response) {
             reason: "PGW API error",
             source: "PAYMENT_GATEWAY",
             correlationId,
-            metadata: { error: e?.response?.data ?? e?.message },
+            metadata: { error: e?.response?.data ?? e?.message, retry: nextStatus === "REFUND_RETRY" },
           } as any)
         }
       }
     }
 
     await order.reload({ include: ORDER_BASE_INCLUDES, transaction: t })
-    const dto = serializeOrder(order)
-
     await t.commit()
+
+    // ถ้ามียิง PGW ให้รอผล แล้วค่อยส่งสถานะล่าสุดกลับไป (FE จะโชว์ toast ตามผล)
     if (postCommit) await postCommit()
+
+    const fresh = await Order.findByPk(orderId, { include: ORDER_BASE_INCLUDES })
+    const dto = serializeOrder(fresh ?? order)
 
     return res.json({ data: dto })
   } catch (err) {
