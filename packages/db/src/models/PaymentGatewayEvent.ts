@@ -3,7 +3,7 @@ import { Model, DataTypes, Optional, Sequelize } from "sequelize";
 
 export interface PaymentGatewayEventAttributes {
   id: number;
-  orderId: number | null; // จะมีเมื่อ type = refund เพราะตอนนี้ payment มีหลาย order id แล้ว
+  checkoutId: number | null; // จะมีเมื่อ type = refund เพราะตอนนี้ payment มีหลาย order id แล้ว
   paymentId: number;
   refundOrderId?: number | null;
 
@@ -23,7 +23,7 @@ export interface PaymentGatewayEventAttributes {
 export interface PaymentGatewayEventCreationAttributes
   extends Optional<
     PaymentGatewayEventAttributes,
-    "id" | "orderId" | "refundOrderId" | "providerRef" | "requestId" | "reqJson" | "resJson" | "createdAt"
+    "id" | "checkoutId" | "refundOrderId" | "providerRef" | "requestId" | "reqJson" | "resJson" | "createdAt"
   > {}
 
 export class PaymentGatewayEvent
@@ -31,7 +31,7 @@ export class PaymentGatewayEvent
   implements PaymentGatewayEventAttributes
 {
   public id!: number;
-  public orderId!: number | null;
+  public checkoutId!: number | null;
   public paymentId!: number;
   public refundOrderId!: number | null;
 
@@ -51,7 +51,7 @@ export class PaymentGatewayEvent
     PaymentGatewayEvent.init(
       {
         id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-        orderId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, field: "order_id" },
+        checkoutId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, field: "checkout_id" },
         paymentId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, field: "payment_id" },
         refundOrderId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, field: "refund_order_id" },
 
@@ -74,7 +74,7 @@ export class PaymentGatewayEvent
         timestamps: false,     // append-only (no updated_at / deleted_at)
         underscored: true,
         indexes: [
-          { name: "idx_pge_order_id", fields: ["order_id"] },
+          { name: "idx_pge_checkout_id", fields: ["checkout_id"] },
           { name: "idx_pge_payment_id", fields: ["payment_id"] },
           { name: "idx_pge_refund_order_id", fields: ["refund_order_id"] },
           { name: "idx_pge_provider_ref", fields: ["provider_ref"] },
