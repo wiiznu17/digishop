@@ -3,7 +3,10 @@ import { v4 as uuidv4 } from "uuid"
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkInsert("PRODUCTS", [
+    const now = new Date();
+    const toMinor = (baht: number) => baht * 100;
+
+    await queryInterface.bulkInsert('PRODUCTS', [
       {
         id: 1001,
         uuid: uuidv4(),
@@ -64,12 +67,10 @@ export default {
         updated_at: new Date(),
         deleted_at: null,
       },
-    ])
+    ]);
   },
 
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete("PRODUCTS", {
-      id: [1001, 1002, 1003, 1004, 1005],
-    })
+    await queryInterface.bulkDelete('PRODUCTS', { id: [1001, 1002, 1003, 1004, 1005] });
   },
-}
+};

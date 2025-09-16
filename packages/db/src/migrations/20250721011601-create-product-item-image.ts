@@ -3,7 +3,7 @@ import { QueryInterface, DataTypes } from 'sequelize'
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
     await queryInterface.createTable(
-      'PRODUCT_IMAGES',
+      'PRODUCT_ITEM_IMAGES',
       {
         id: {
           type: DataTypes.INTEGER.UNSIGNED,
@@ -17,11 +17,11 @@ export default {
           allowNull: false,
           unique: true,
         },
-        product_id: {
+        product_item_id: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           references: {
-            model: 'PRODUCTS',
+            model: 'PRODUCT_ITEMS',
             key: 'id',
           },
           onDelete: 'CASCADE',
@@ -38,16 +38,6 @@ export default {
         file_name: {
           type: DataTypes.STRING(255),
           allowNull: false,
-        },
-        is_main: {
-          type: DataTypes.BOOLEAN,
-          allowNull: false,
-          defaultValue: false,
-        },
-        sort_order: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-          defaultValue: 0,
         },
         created_at: {
           type: DataTypes.DATE,
@@ -70,12 +60,10 @@ export default {
     )
 
     // Indexes
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['uuid'], { unique: true, name: 'uq_product_images_uuid' })
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'sort_order'], { name: 'ix_product_images_product_sort' })
-    await queryInterface.addIndex('PRODUCT_IMAGES', ['product_id', 'is_main'], { name: 'ix_product_images_product_main' })
+    await queryInterface.addIndex('PRODUCT_ITEM_IMAGES', ['uuid'], { unique: true, name: 'uq_product_item_images_uuid' })
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
-    await queryInterface.dropTable('PRODUCT_IMAGES')
+    await queryInterface.dropTable('PRODUCT_ITEM_IMAGES')
   },
 }

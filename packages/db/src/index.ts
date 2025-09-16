@@ -15,7 +15,7 @@ import { ShippingConfig } from "../src/models/ShippingConfig";
 import { Category } from "../src/models/Category";
 import { Product } from "../src/models/Product";
 import { ProductImage } from "../src/models/ProductImage";
-
+import { ProductItemImage } from "../src/models/ProductItemImage";
 // Variations / SKU
 import { Variation } from "../src/models/Variation";
 import { VariationOption } from "../src/models/VariationOption";
@@ -61,7 +61,8 @@ export function initModels(conn: Sequelize) {
 
   Category.initModel(conn);
   Product.initModel(conn);
-  // ProductImage.initModel(conn); // FIX: เปิดใช้งาน
+  ProductImage.initModel(conn);
+  ProductItemImage.initModel(conn);
 
   Variation.initModel(conn);
   VariationOption.initModel(conn);
@@ -131,7 +132,7 @@ export function initModels(conn: Sequelize) {
   Store.hasMany(MerchantAddress, { foreignKey: { name: "storeId", field: "store_id" }, as: "addresses", onDelete: "CASCADE", onUpdate: "CASCADE" });
   MerchantAddress.belongsTo(Store, { foreignKey: { name: "storeId", field: "store_id" }, as: "store", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
-  Store.hasMany(ProfileMerchantImage, { foreignKey: { name: "storeId", field: "store_id" }, as: "profileImages", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  Store.hasOne(ProfileMerchantImage, { foreignKey: { name: "storeId", field: "store_id" }, as: "profileImages", onDelete: "CASCADE", onUpdate: "CASCADE" });
   ProfileMerchantImage.belongsTo(Store, { foreignKey: { name: "storeId", field: "store_id" }, as: "store", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
   Store.hasMany(BankAccount, { foreignKey: { name: "storeId", field: "store_id" }, as: "bankAccounts", onDelete: "CASCADE", onUpdate: "CASCADE" });
@@ -159,6 +160,9 @@ export function initModels(conn: Sequelize) {
 
   ProductItem.hasMany(ProductConfiguration, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "configurations", onDelete: "CASCADE", onUpdate: "CASCADE" });
   ProductConfiguration.belongsTo(ProductItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "productItem", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  
+  ProductItem.hasOne(ProductItemImage, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "productItemImage", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  ProductItemImage.belongsTo(ProductItem, { foreignKey: { name: "productItemId", field: "product_item_id" }, as: "productItem", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
   VariationOption.hasMany(ProductConfiguration, { foreignKey: { name: "variationOptionId", field: "variation_option_id" }, as: "configurations", onDelete: "CASCADE", onUpdate: "CASCADE" });
   ProductConfiguration.belongsTo(VariationOption, { foreignKey: { name: "variationOptionId", field: "variation_option_id" }, as: "variationOption", onDelete: "CASCADE", onUpdate: "CASCADE" });
@@ -248,7 +252,7 @@ export function initModels(conn: Sequelize) {
     User, Address, Store, MerchantAddress, ProfileMerchantImage, BankAccount, ShippingConfig,
     // Catalog
     Category, Product, ProductImage,
-    Variation, VariationOption, ProductItem, ProductConfiguration,
+    Variation, VariationOption, ProductItem, ProductConfiguration, ProductItemImage,
     // Cart
     ShoppingCart, ShoppingCartItem,
     // Order

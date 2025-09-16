@@ -5,11 +5,17 @@ export = {
   async up(queryInterface: QueryInterface) {
     await queryInterface.createTable("profile_images", {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        primaryKey: true,
+          type: DataTypes.INTEGER.UNSIGNED,
+          allowNull: false,
+          autoIncrement: true,
+          primaryKey: true,
       },
+      uuid: {
+          // เก็บเป็น CHAR(36); default uuid v4 ให้ที่ Model/Seeder (MySQL ไม่มี uuidv4() ใน DB)
+          type: DataTypes.STRING(36),
+          allowNull: false,
+          unique: true,
+        },
       store_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
