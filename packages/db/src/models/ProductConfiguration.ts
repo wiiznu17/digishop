@@ -47,7 +47,8 @@ export class ProductConfiguration
           autoIncrement: true,
           primaryKey: true
         },
-        uuid: { type: DataTypes.UUID,
+        uuid: {
+          type: DataTypes.UUID,
           allowNull: false,
           unique: true,
           defaultValue: DataTypes.UUIDV4
