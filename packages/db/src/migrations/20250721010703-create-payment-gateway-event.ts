@@ -5,10 +5,10 @@ export default {
     await queryInterface.createTable("PAYMENT_GATEWAY_EVENTS", {
       id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true, allowNull: false },
 
-      order_id: {
+      checkout_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: true,
-        references: { model: "ORDERS", key: "id" },
+        references: { model: "CHECKOUT", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
@@ -45,7 +45,7 @@ export default {
       collate: "utf8mb4_unicode_ci",
     });
 
-    await queryInterface.addIndex("PAYMENT_GATEWAY_EVENTS", { name: "idx_pge_order_id", fields: ["order_id"] });
+    await queryInterface.addIndex("PAYMENT_GATEWAY_EVENTS", { name: "idx_pge_checkout_id", fields: ["checkout_id"] });
     await queryInterface.addIndex("PAYMENT_GATEWAY_EVENTS", { name: "idx_pge_payment_id", fields: ["payment_id"] });
     await queryInterface.addIndex("PAYMENT_GATEWAY_EVENTS", { name: "idx_pge_refund_order_id", fields: ["refund_order_id"] });
     await queryInterface.addIndex("PAYMENT_GATEWAY_EVENTS", { name: "idx_pge_provider_ref", fields: ["provider_ref"] });
@@ -61,7 +61,7 @@ export default {
     try { await queryInterface.removeIndex("PAYMENT_GATEWAY_EVENTS", "idx_pge_provider_ref"); } catch {}
     try { await queryInterface.removeIndex("PAYMENT_GATEWAY_EVENTS", "idx_pge_refund_order_id"); } catch {}
     try { await queryInterface.removeIndex("PAYMENT_GATEWAY_EVENTS", "idx_pge_payment_id"); } catch {}
-    try { await queryInterface.removeIndex("PAYMENT_GATEWAY_EVENTS", "idx_pge_order_id"); } catch {}
+    try { await queryInterface.removeIndex("PAYMENT_GATEWAY_EVENTS", "idx_pge_checkout_id"); } catch {}
     await queryInterface.dropTable("PAYMENT_GATEWAY_EVENTS");
   },
 };

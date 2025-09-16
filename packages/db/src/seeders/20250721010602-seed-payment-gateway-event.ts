@@ -12,7 +12,7 @@ export default {
       // ─────────────────────────────────────────────────────────
       // 6002: Payment FAILED
       {
-        order_id: 6002,
+        checkout_id: 2,
         payment_id: 2,
         refund_order_id: null,
         type: "PAYMENT.AUTHORIZE",
@@ -29,7 +29,7 @@ export default {
       // ─────────────────────────────────────────────────────────
       // 6003: Payment SUCCESS (AUTH + CAPTURE)
       {
-        order_id: 6003,
+        checkout_id: 3,
         payment_id: 3,
         refund_order_id: null,
         type: "PAYMENT.AUTHORIZE",
@@ -43,7 +43,7 @@ export default {
         created_at: now,
       },
       {
-        order_id: 6003,
+        checkout_id: 3,
         payment_id: 3,
         refund_order_id: null,
         type: "PAYMENT.CAPTURE",
@@ -60,7 +60,7 @@ export default {
       // ─────────────────────────────────────────────────────────
       // 6013: Refund requested (no PG action yet, just log request inbound)
       {
-        order_id: 6013,
+        checkout_id: 13,
         payment_id: 13,
         refund_order_id: 1,
         type: "REFUND.REQUEST",
@@ -77,7 +77,7 @@ export default {
       // ─────────────────────────────────────────────────────────
       // 6019: Refund approved (PG create refund request)
       {
-        order_id: 6019,
+        checkout_id: 19,
         payment_id: 19,
         refund_order_id: 7,
         type: "REFUND.CREATE",
@@ -94,7 +94,7 @@ export default {
       // ─────────────────────────────────────────────────────────
       // 6020: Refund success
       {
-        order_id: 6020,
+        checkout_id: 20,
         payment_id: 20,
         refund_order_id: 8,
         type: "REFUND.CREATE",
@@ -108,7 +108,7 @@ export default {
         created_at: now,
       },
       {
-        order_id: 6020,
+        checkout_id: 20,
         payment_id: 20,
         refund_order_id: 8,
         type: "REFUND.SUCCESS",
@@ -125,7 +125,7 @@ export default {
       // ─────────────────────────────────────────────────────────
       // 6021: Refund fail by PGW
       {
-        order_id: 6021,
+        checkout_id: 21,
         payment_id: 21,
         refund_order_id: 9,
         type: "REFUND.CREATE",
@@ -139,7 +139,7 @@ export default {
         created_at: now,
       },
       {
-        order_id: 6021,
+        checkout_id: 21,
         payment_id: 21,
         refund_order_id: 9,
         type: "REFUND.FAIL",
@@ -157,7 +157,7 @@ export default {
 
   async down(queryInterface: QueryInterface) {
     await queryInterface.bulkDelete("PAYMENT_GATEWAY_EVENTS", {
-      order_id: [6002, 6003, 6013, 6019, 6020, 6021],
+      checkout_id: [2, 3, 13, 19, 20, 21],
     });
   },
 };
