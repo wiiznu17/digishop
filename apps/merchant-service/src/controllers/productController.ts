@@ -4,7 +4,7 @@ import { Op, sequelize } from "@digishop/db/src/db";
 import { col, fn, literal, Op as SQ, where as sqWhere, type Order, type OrderItem } from "sequelize";
 import { azureBlobService } from "../helpers/azureBlobService";
 
-import { Product } from "@digishop/db/src/models/Product";
+import { Product, ProductAttributes, ProductCreationAttributes } from "@digishop/db/src/models/Product";
 import { ProductImage } from "@digishop/db/src/models/ProductImage";
 import { Store } from "@digishop/db/src/models/Store";
 import { Category } from "@digishop/db/src/models/Category";
@@ -1422,3 +1422,540 @@ export const deleteProductItemImage = async (req: AuthenticatedRequest, res: Res
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// ===== helper types for desired state =====
+type DS_ImageInput = {
+  uuid?: string;                    // ของเดิมบนเซิร์ฟเวอร์
+  uploadKey?: string;               // ไฟล์ใหม่: ใช้แมพกับชื่อไฟล์ "uploadKey__xxx.jpg"
+  fileName?: string;                // ไว้ส่งกลับ/ดีบัก
+  isMain?: boolean;
+  sortOrder: number;
+};
+
+type DS_VariationOption = {
+  uuid?: string;                    // เดิม
+  clientId?: string;                // ฝั่ง FE ใช้ชั่วคราว
+  value: string;
+  sortOrder: number;
+};
+
+type DS_Variation = {
+  uuid?: string;
+  clientId?: string;
+  name: string;
+  options: DS_VariationOption[];
+};
+
+type DS_ItemImage = {
+  uuid?: string;                    // ถ้าจะคงรูปเดิม
+  uploadKey?: string;               // ถ้าเปลี่ยน/ใส่รูปใหม่
+  remove?: boolean;                 // ถ้าต้องการลบรูปเดิม
+};
+
+type DS_Item = {
+  uuid?: string;                    // ถ้าเป็นของเดิม
+  clientKey?: string;               // ไว้ดีบัก/แมพฝั่ง FE (ไม่จำเป็นต้อง uniq ฝั่ง BE)
+  sku?: string;
+  priceMinor: number;
+  stockQuantity: number;
+  isEnable: boolean;
+  optionRefs: string[];             // เรียงตามลำดับ variation; ใส่ได้ทั้ง option.uuid หรือ option.clientId
+  image?: DS_ItemImage | null;      // null = ไม่แตะ, {remove:true}=ลบ, {uploadKey}=อัปใหม่, {uuid}=คงเดิม
+};
+
+type DS_Payload = {
+  ifMatchUpdatedAt?: string | null; // concurrency (เฉพาะ PUT)
+  product: {
+    name: string;
+    description?: string | null;
+    status: string;
+    categoryUuid?: string | null;
+  };
+  images: { product: DS_ImageInput[] };
+  variations: DS_Variation[];
+  items: DS_Item[];
+};
+
+// ===== internal helpers =====
+const pickUploadBlobByKey = (
+  files: Express.Multer.File[] | undefined,
+  uploadKey?: string | null
+) => {
+  if (!files?.length || !uploadKey) return undefined;
+  // ตั้งชื่อไฟล์จาก FE เป็น `${uploadKey}__original.ext`
+  return files.find((f) => String(f.originalname || "").startsWith(`${uploadKey}__`));
+};
+
+const ensureMainImage = async (productId: number, t: any) => {
+  const hasMain = await ProductImage.count({ where: { productId, isMain: true }, transaction: t });
+  if (!hasMain) {
+    const first = await ProductImage.findOne({
+      where: { productId },
+      order: [
+        ["sortOrder", "ASC"],
+        ["createdAt", "ASC"],
+      ],
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+    if (first) await first.update({ isMain: true }, { transaction: t });
+  }
+};
+
+const mapCategoryUuid = async (uuid?: string | null) => {
+  if (!uuid) return null;
+  const cat = await Category.findOne({ where: { uuid } });
+  return cat ? cat.id : null;
+};
+
+/** แปลง string ที่มาจาก FE ให้เป็น ProductStatus; ถ้าไม่ตรง enum ให้ fallback */
+const coerceStatus = (s?: string): ProductStatus => {
+  const val = (s ?? "").toUpperCase();
+  return (Object.values(ProductStatus) as string[]).includes(val)
+    ? (val as ProductStatus)
+    : ProductStatus.SUSPENDED; // หรือจะใช้ ACTIVE ก็ได้ตามที่ตกลง
+};
+// ===== core reconciler =====
+async function applyDesiredState(opts: {
+  req: AuthenticatedRequest;
+  res: Response;
+  mode: "create" | "update";
+  productUuid?: string;
+}) {
+  const { req, res, mode, productUuid } = opts;
+  const filesP = (req.files as any)?.productImages as Express.Multer.File[] | undefined;
+  const filesI = (req.files as any)?.itemImages as Express.Multer.File[] | undefined;
+  console.log("Poduct images: ", filesP)
+  console.log("Poduct item images: ", filesI)
+  
+  const t = await sequelize.transaction();
+  const uploadedBlobNames: string[] = []; // compensation on error
+
+  try {
+    const store = await ensureStore(req);
+    if (!store) {
+      await t.rollback();
+      return res.status(404).json({ error: "No store found" });
+    }
+
+    const desiredRaw = (req.body?.desired ?? req.body?.payload ?? req.body?.productData) as string;
+    if (!desiredRaw) {
+      await t.rollback();
+      return res.status(400).json({ error: "desired payload required" });
+    }
+    const desired = JSON.parse(desiredRaw) as DS_Payload;
+
+    // ---------- 1) upsert product ----------
+    let product: Product | null = null;
+
+    if (mode === "create") {
+      const categoryId = await mapCategoryUuid(desired.product.categoryUuid ?? null);
+      if (!categoryId) {
+        await t.rollback();
+        return res.status(400).json({ error: "categoryUuid is required or invalid" });
+      }
+      const createPayload: ProductCreationAttributes = {
+        storeId: store.id,
+        name: desired.product.name,
+        description: desired.product.description ?? null,
+        status: coerceStatus(desired.product.status), // << แปลงให้เป็น enum
+        categoryId: categoryId,
+      };
+
+      product = await Product.create(createPayload, { transaction: t });
+    } else {
+      product = await Product.findOne({
+        where: { uuid: productUuid!, storeId: store.id },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+      if (!product) {
+        await t.rollback();
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      // concurrency
+      if (desired.ifMatchUpdatedAt) {
+        const cur = new Date(product.updatedAt).toISOString();
+        if (cur !== new Date(desired.ifMatchUpdatedAt).toISOString()) {
+          await t.rollback();
+          return res.status(409).json({ error: "Conflict: product has been modified" });
+        }
+      }
+
+      const categoryId = await mapCategoryUuid(desired.product.categoryUuid ?? null);
+
+      const updatePayload: Partial<ProductAttributes> = {
+        name: desired.product.name,
+        description: desired.product.description ?? null,
+        status: coerceStatus(desired.product.status), // << enum
+        ...(categoryId != null ? { categoryId } : {}), // << ไม่ส่ง null
+      };
+
+      await product.update(updatePayload, { transaction: t });
+    }
+
+    // reload basic info id
+    const productId = product!.id;
+
+    // ---------- 2) product images (diff) ----------
+    const currentImgs = await ProductImage.findAll({
+      where: { productId },
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+    const keepUuidSet = new Set(
+      desired.images.product
+        .map((x) => x.uuid)
+        .filter((x): x is string => !!x)
+    );
+
+    // 2.1 delete removed
+    for (const img of currentImgs) {
+      if (!keepUuidSet.has(img.uuid)) {
+        await azureBlobService.deleteImage(img.blobName);
+        await img.destroy({ transaction: t });
+      }
+    }
+    
+    console.log("filesP:", filesP?.map(f => f.originalname));
+    console.log("desired product imgs:", desired.images.product);
+
+    const missing = desired.images.product
+      .filter(p => p.uploadKey && !pickUploadBlobByKey(filesP, p.uploadKey))
+      .map(p => p.uploadKey);
+    if (filesP?.length && missing.length) {
+      console.warn("[product-images] files uploaded but uploadKey mismatch:", missing);
+    }
+
+    // 2.2 add new
+    const createdImgByKey = new Map<string, ProductImage>();
+    for (const p of desired.images.product) {
+      if (p.uploadKey) {
+        const f = pickUploadBlobByKey(filesP, p.uploadKey);
+        if (!f) continue;
+        const { url, blobName } = await azureBlobService.uploadImage(f, `products/${product!.uuid}`);
+        uploadedBlobNames.push(blobName);
+        const created = await ProductImage.create(
+          {
+            productId,
+            url,
+            blobName,
+            fileName: f.originalname.split("__").slice(1).join("__") || f.originalname,
+            isMain: !!p.isMain, // เดี๋ยว normalize อีกที
+            sortOrder: p.sortOrder ?? 0,
+          },
+          { transaction: t }
+        );
+        createdImgByKey.set(p.uploadKey, created);
+      }
+    }
+
+    // 2.3 reorder + main
+    // แปลง desired -> records ที่เรามี uuid แน่ ๆ
+    const recordsToOrder: Array<{ imageUuid: string; sortOrder: number; isMain?: boolean }> = [];
+    let desiredMainUuid: string | undefined;
+
+    for (const p of desired.images.product) {
+      if (p.uuid) {
+        recordsToOrder.push({ imageUuid: p.uuid, sortOrder: p.sortOrder, isMain: p.isMain });
+        if (p.isMain) desiredMainUuid = p.uuid;
+      } else if (p.uploadKey) {
+        const rec = createdImgByKey.get(p.uploadKey);
+        if (rec) {
+          recordsToOrder.push({ imageUuid: rec.uuid, sortOrder: p.sortOrder, isMain: p.isMain });
+          if (p.isMain) desiredMainUuid = rec.uuid;
+        }
+      }
+    }
+
+    for (const it of recordsToOrder) {
+      await ProductImage.update(
+        { sortOrder: it.sortOrder },
+        { where: { uuid: it.imageUuid, productId }, transaction: t }
+      );
+    }
+
+    if (desiredMainUuid) {
+      await ProductImage.update(
+        { isMain: false },
+        { where: { productId, uuid: { [Op.ne]: desiredMainUuid } }, transaction: t }
+      );
+      await ProductImage.update(
+        { isMain: true },
+        { where: { productId, uuid: desiredMainUuid }, transaction: t }
+      );
+    }
+    await ensureMainImage(productId, t);
+
+    // ---------- 3) variations + options (diff) ----------
+    const curVars = await Variation.findAll({
+      where: { productId },
+      include: [{ model: VariationOption, as: "options" }],
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+
+    // ลบ variation ที่ไม่อยู่ใน desired
+    const desiredVarUuidSet = new Set(
+      desired.variations.map((v) => v.uuid).filter((x): x is string => !!x)
+    );
+    for (const v of curVars) {
+      if (v.uuid && !desiredVarUuidSet.has(v.uuid)) {
+        await Variation.destroy({ where: { id: v.id }, transaction: t });
+      }
+    }
+
+    // สร้าง/อัปเดต variation & options + เก็บแมพ clientId->optionUuid
+    const optionUuidByClientId = new Map<string, string>();
+
+    for (const v of desired.variations) {
+      let vRec: Variation | null = null;
+      if (v.uuid) {
+        vRec = await Variation.findOne({ where: { uuid: v.uuid, productId }, transaction: t });
+        if (!vRec) continue;
+        if (vRec.name !== v.name) await vRec.update({ name: v.name }, { transaction: t });
+      } else {
+        vRec = await Variation.create({ productId, name: v.name }, { transaction: t });
+      }
+
+      // options
+      const curOpts = await VariationOption.findAll({
+        where: { variationId: vRec.id },
+        transaction: t,
+        lock: t.LOCK.UPDATE
+      });
+
+      const desiredOptUuidSet = new Set(
+        v.options.map((o) => o.uuid).filter((x): x is string => !!x)
+      );
+      for (const o of curOpts) {
+        if (o.uuid && !desiredOptUuidSet.has(o.uuid)) {
+          await o.destroy({ transaction: t });
+        }
+      }
+
+      // upsert options + reorder
+      for (const o of v.options) {
+        if (o.uuid) {
+          const rec = await VariationOption.findOne({
+            where: { uuid: o.uuid, variationId: vRec.id },
+            transaction: t
+          });
+          if (rec) {
+            const willUpdate: any = {};
+            if (rec.value !== o.value) willUpdate.value = o.value;
+            if ((rec.sortOrder ?? 0) !== (o.sortOrder ?? 0)) willUpdate.sortOrder = o.sortOrder ?? 0;
+            if (Object.keys(willUpdate).length) await rec.update(willUpdate, { transaction: t });
+            if (o.clientId) optionUuidByClientId.set(o.clientId, rec.uuid);
+          }
+        } else {
+          const created = await VariationOption.create(
+            { variationId: vRec.id, value: o.value, sortOrder: o.sortOrder ?? 0 },
+            { transaction: t }
+          );
+          if (o.clientId) optionUuidByClientId.set(o.clientId, created.uuid);
+        }
+      }
+    }
+
+    // ---------- 4) items (diff) ----------
+    const curItems = await ProductItem.findAll({
+      where: { productId },
+      include: [{ model: ProductItemImage, as: "productItemImage" }],
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+
+    const desiredItemUuidSet = new Set(
+      desired.items.map((it) => it.uuid).filter((x): x is string => !!x)
+    );
+
+    // 4.1 delete items that are gone
+    for (const it of curItems) {
+      if (!desiredItemUuidSet.has(it.uuid)) {
+        // cleanup image (if any)
+        const oldImg = await ProductItemImage.findOne({
+          where: { productItemId: it.id },
+          transaction: t
+        });
+        if (oldImg) {
+          await azureBlobService.deleteImage(oldImg.blobName);
+          await oldImg.destroy({ transaction: t });
+        }
+        await it.destroy({ transaction: t });
+      }
+    }
+
+    // 4.2 upsert items
+    for (const d of desired.items) {
+      // resolve option uuids
+      const optionUuids: string[] = [];
+      for (const ref of d.optionRefs) {
+        if (!ref) continue;
+        if (ref.length === 36 || ref.length === 32) {
+          // ดูเป็น uuid -> ใช้ตรง ๆ
+          optionUuids.push(ref);
+        } else if (optionUuidByClientId.has(ref)) {
+          optionUuids.push(optionUuidByClientId.get(ref)!);
+        }
+      }
+
+      let item: ProductItem | null = null;
+      if (d.uuid) {
+        item = await ProductItem.findOne({ where: { uuid: d.uuid, productId }, transaction: t });
+        if (!item) continue;
+
+        const willUpdate: any = {};
+        if ((item.sku || "") !== (d.sku || "")) willUpdate.sku = d.sku || "";
+        if (item.priceMinor !== d.priceMinor) willUpdate.priceMinor = d.priceMinor;
+        if (item.stockQuantity !== d.stockQuantity) willUpdate.stockQuantity = d.stockQuantity;
+        if ((item as any).isEnable !== d.isEnable) willUpdate.isEnable = d.isEnable;
+        if (Object.keys(willUpdate).length) await item.update(willUpdate, { transaction: t });
+      } else {
+        item = await ProductItem.create(
+          {
+            productId,
+            sku: d.sku || "",
+            priceMinor: d.priceMinor,
+            stockQuantity: d.stockQuantity,
+            imageUrl: null,
+            isEnable: d.isEnable
+          },
+          { transaction: t }
+        );
+      }
+
+      // 4.2.1 image reconcile
+      if (d.image) {
+        const existing = await ProductItemImage.findOne({
+          where: { productItemId: item.id },
+          transaction: t
+        });
+
+        if (d.image.remove === true) {
+          if (existing) {
+            await azureBlobService.deleteImage(existing.blobName);
+            await existing.destroy({ transaction: t });
+          }
+        } else if (d.image.uploadKey) {
+          // replace with new file
+          const f = pickUploadBlobByKey(filesI, d.image.uploadKey);
+          if (f) {
+            if (existing) {
+              await azureBlobService.deleteImage(existing.blobName);
+              await existing.destroy({ transaction: t });
+            }
+            const { url, blobName } = await azureBlobService.uploadImage(
+              f,
+              `products/${product!.uuid}/items/${item.uuid}`
+            );
+            uploadedBlobNames.push(blobName);
+            await ProductItemImage.create(
+              {
+                productItemId: item.id,
+                url,
+                blobName,
+                fileName: f.originalname.split("__").slice(1).join("__") || f.originalname
+              },
+              { transaction: t }
+            );
+          }
+        }
+        // d.image.uuid -> “คงเดิม” ไม่ต้องทำอะไร
+      }
+
+      // 4.2.2 configurations reconcile
+      if (optionUuids.length) {
+        const opts = await VariationOption.findAll({
+          where: { uuid: optionUuids },
+          include: [{ model: Variation, as: "variation", where: { productId } }],
+          transaction: t
+        });
+        const allowedIds = new Set(opts.map((o) => o.id));
+
+        const existing = await ProductConfiguration.findAll({
+          where: { productItemId: item.id },
+          transaction: t
+        });
+        const existIds = new Set(existing.map((c) => c.variationOptionId));
+
+        const targetIds = new Set<number>(opts.map((o) => o.id));
+        const toAdd = [...targetIds].filter((x) => !existIds.has(x));
+        const toDel = [...existIds].filter((x) => !targetIds.has(x));
+
+        for (const addId of toAdd) {
+          if (allowedIds.has(addId)) {
+            await ProductConfiguration.create(
+              { productItemId: item.id, variationOptionId: addId },
+              { transaction: t }
+            );
+          }
+        }
+        if (toDel.length) {
+          await ProductConfiguration.destroy({
+            where: { productItemId: item.id, variationOptionId: toDel },
+            transaction: t
+          });
+        }
+      }
+    }
+
+    await t.commit();
+
+    // ---------- 5) return fresh detail ----------
+    const detail = await Product.findOne({
+      where: { uuid: product!.uuid },
+      attributes: ["uuid", "name", "description", "status", "createdAt", "updatedAt"],
+      include: [
+        { model: Category, as: "category", attributes: ["uuid", "name"], required: false },
+        {
+          model: ProductImage,
+          as: "images",
+          separate: true,
+          attributes: ["uuid","url","fileName","isMain","sortOrder","createdAt"],
+          order: [["sortOrder","ASC"],["createdAt","ASC"]],
+        },
+        {
+          model: Variation,
+          as: "variations",
+          attributes: ["uuid","name","createdAt","updatedAt"],
+          include: [
+            { model: VariationOption, as: "options", attributes: ["uuid","value","sortOrder","createdAt","updatedAt"] }
+          ]
+        },
+        {
+          model: ProductItem,
+          as: "items",
+          attributes: ["uuid","sku","stockQuantity","priceMinor","isEnable","createdAt","updatedAt"],
+          include: [
+            { model: ProductItemImage, as: "productItemImage", attributes: ["uuid","url","fileName"], required: false },
+            {
+              model: ProductConfiguration,
+              as: "configurations",
+              attributes: ["uuid"],
+              include: [{ model: VariationOption, as: "variationOption", attributes: ["uuid","value","sortOrder","variationId"] }]
+            }
+          ]
+        }
+      ]
+    });
+
+    return res.status(mode === "create" ? 201 : 200).json(detail);
+  } catch (e) {
+    // compensation: ลบไฟล์ที่อัปโหลดใหม่แล้ว fail
+    if (uploadedBlobNames.length) {
+      try { await azureBlobService.deleteMultipleImages(uploadedBlobNames); } catch {}
+    }
+    await t.rollback();
+    console.error("applyDesiredState error:", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// ===== public handlers =====
+export const syncCreateDesiredProduct = async (req: AuthenticatedRequest, res: Response) =>
+  applyDesiredState({ req, res, mode: "create" });
+
+export const syncUpdateDesiredProduct = async (req: AuthenticatedRequest, res: Response) =>
+  applyDesiredState({ req, res, mode: "update", productUuid: (req.params as any).productUuid });
