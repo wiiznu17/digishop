@@ -200,7 +200,6 @@ export function initModels(conn: Sequelize) {
   CheckOut.hasMany(Order, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "orders", onDelete: "CASCADE", onUpdate: "CASCADE" });
   Order.belongsTo(CheckOut, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "checkout", onDelete: "CASCADE", onUpdate: "CASCADE" });
   
-  
   Order.hasOne(ShippingInfo, { foreignKey: { name: "orderId", field: "order_id" }, as: "shippingInfo", onDelete: "CASCADE", onUpdate: "CASCADE" });
   ShippingInfo.belongsTo(Order, { foreignKey: { name: "orderId", field: "order_id" }, as: "order", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
