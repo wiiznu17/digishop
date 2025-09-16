@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Logo from "./../logo.png";
 import Image from "next/image";
-import { CircleUser, ClipboardList } from "lucide-react";
+import { CircleUser, ClipboardList, ShoppingCart } from "lucide-react";
 import { AuthProvider  } from "@/contexts/auth-context";
 import { Noto_Sans_Thai_Looped } from "next/font/google";
 
@@ -23,6 +23,12 @@ export default function MainLayout({
               <Image src={Logo} alt="icon" height={70} />
             </Link>
             <nav className="hidden md:flex space-x-6 ">
+              <Link
+                href="/digishop/shopping-cart"
+                className="text-black hover:text-gray-500 text-2xl "
+              >
+                <ShoppingCart size={40} />
+              </Link>
               <Link
                 href="/digishop/order/status"
                 className="text-black hover:text-gray-500 text-2xl px-10"

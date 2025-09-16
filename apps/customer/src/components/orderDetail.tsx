@@ -30,6 +30,7 @@ export default function OrderDetailPage({ order }: orderDetailInterface) {
       .filter(Boolean)
       .join(" ");
   }; 
+  
   const sumPriceProduct = sumprice(order)
   return order == undefined ? (
     <></>

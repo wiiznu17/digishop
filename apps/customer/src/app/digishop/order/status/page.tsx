@@ -24,7 +24,7 @@ export default function OrderStatus() {
   const [count, setCount] = useState<number>();
   const [ isShowCancel ,setIsShowCancel] = useState<boolean>()
   const [selectShowDetail, setSelectShowDetail] = useState<
-    Orders | undefined
+    string | undefined
   >();
   const [orderDetail, setOrderDetail] = useState<OrderDetail>();
   const [selectStatus, setSelectStatus] = useState<string>("PENDING");
@@ -39,14 +39,16 @@ export default function OrderStatus() {
     fetchData();
   }, [user]);
   useEffect(() => {
-    if(!user)return
+    if(!user || !selectShowDetail)return
+    console.log('select id',selectShowDetail)
     const fetchOrder = async () => {
-      const res = await fetchOrders(Number(selectShowDetail?.id),user.id);
-      setOrderDetail(res.body);
+      const res = await fetchOrders(String(selectShowDetail),user.id);
+      // setOrderDetail();
+      console.log('order detail',res.body)
     };
     fetchOrder();
   }, [selectShowDetail,user]);
-  console.log(orderDetail);
+  console.log(orders);
   if (!orders) return;
   const getFilterOrder = () => {
     if (!orders) return;
@@ -61,11 +63,13 @@ export default function OrderStatus() {
     )
   }
   const filterOrder = getFilterOrder();
+  console.log(filterOrder)
   const handleChangeState = (state: string) => {
     setSelectStatus(state);
     setSelectShowDetail(undefined);
   };
   const handleShowDetail = (order: Orders) => {
+    console.log('order',order)
     setSelectShowDetail(order);
   };
   return (
@@ -81,7 +85,7 @@ export default function OrderStatus() {
             </Button>
           </div>
         ))}
-      </div>
+      </div>   
       <div className="grid grid-cols-2">
         <div className="flex justify-center">
             <div className="flex flex-col">
@@ -98,11 +102,11 @@ export default function OrderStatus() {
                 )}
             </div>
         </div>
-        <div >
+        {/* <div >
           {selectShowDetail != undefined && (
             <OrderDetailPage order={orderDetail} />
           )}
-        </div>
+        </div> */}
       </div>      
     </div>
   );
