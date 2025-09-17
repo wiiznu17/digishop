@@ -24,6 +24,7 @@ export type OrderStatus =
   | "REFUND_PROCESSING"
   | "REFUND_SUCCESS"
   | "REFUND_FAIL"
+  | "REFUND_RETRY" // NEW
 
 // จาก back-end (mapping enum เดิมของระบบขนส่ง)
 export type ShippingStatus =
@@ -51,7 +52,6 @@ export interface OrderItem {
 export interface ShippingAddress {
   recipientName?: string
   phone?: string
-  /** เปลี่ยนเป็น camelCase ให้ตรง snapshot */
   addressNumber?: string
   building?: string
   subStreet?: string
@@ -69,11 +69,8 @@ export interface PaymentSummary {
   channel?: string
   pgwStatus?: string
   paidAt?: string
-  /** major units */
   authorized?: number
-  /** major units */
   captured?: number
-  /** major units */
   refunded?: number
 }
 
@@ -90,16 +87,12 @@ export interface Order {
   createdAt: string
   updatedAt?: string
 
-  // amounts (major units) — มาจาก *_minor ใน DB
   currency?: string
   subtotal?: number
   shippingCost?: number
   tax?: number
   discount?: number
   grandTotal: number
-
-  /** @deprecated ใช้ grandTotal แทน; คงไว้กันโค้ดเก่าพัง */
-  // totalPrice?: number
 
   status: OrderStatus
   statusHistory?: OrderStatus[]
@@ -113,10 +106,9 @@ export interface Order {
   shippedAt?: string | null
   shippingStatus?: ShippingStatus
 
-  orderItems?: OrderItem[] // optional → ป้องกัน undefined
+  orderItems?: OrderItem[]
 
   notes?: string | null
   refundReason?: string | null
-  /** major units */
   refundAmount?: number | null
 }

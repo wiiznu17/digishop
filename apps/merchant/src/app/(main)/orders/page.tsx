@@ -16,6 +16,8 @@ import {
   OrderSummary,
   fetchOrderSummary
 } from "@/utils/requestUtils/requestOrderUtils"
+import { useToast } from "@/hooks/use-toast"
+// import { useToast } from "@/components/ui/use-toast"
 
 /** --- Strongly typed API response from listOrders --- */
 type ListOrdersResponse = _ListOrdersResponse
@@ -47,6 +49,7 @@ export default function OrdersPage() {
 
   // helpers from hook
   const { getStatusIcon, getStatusBadgeColor, getStatusText } = useOrderStatus()
+  const { toast } = useToast()
 
   // debounce search (250ms)
   const debouncedQ = useDebouncedValue<string>(searchTerm, 250)
@@ -76,7 +79,6 @@ export default function OrdersPage() {
           signal: ac.signal
         }
         const res: ListOrdersResponse = await listOrdersRequester(params)
-        console.log("Fetched orders:", res.data)
         setOrders(res.data)
         setTotal(res.meta.total)
       } catch (e: unknown) {
@@ -110,7 +112,8 @@ export default function OrdersPage() {
     }
     run()
     return () => ac.abort()
-  }, []) // <- ตอนนี้ดึงแบบ global; ถ้าอยากให้เปลี่ยนตาม filter ก็เพิ่ม deps แล้วส่งพารามิเตอร์ใน fetchOrderSummary
+  }, [])
+
   // ===== Backed-by-API updates =====
 
   // Update status (optimistic -> call API -> rollback if failed)
@@ -121,6 +124,12 @@ export default function OrdersPage() {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
 
+    const willTouchPGW = [
+      "MERCHANT_CANCELED",
+      "REFUND_APPROVED",
+      "REFUND_RETRY"
+    ].includes(newStatus)
+
     // optimistic
     setOrders((prevList) =>
       prevList.map((o) => {
@@ -130,11 +139,47 @@ export default function OrdersPage() {
       })
     )
 
+    if (willTouchPGW) {
+      toast({
+        title: "Contacting payment gateway…",
+        description: "Submitting refund request to PGW."
+      })
+    }
+
     try {
       const res = await updateOrderRequester(orderId, { status: newStatus })
       const updated = res.data
+
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
+
+      // show result toast for PGW-related actions
+      if (willTouchPGW) {
+        if (updated.status === "REFUND_PROCESSING") {
+          toast({
+            title: "Refund accepted",
+            description:
+              "Payment gateway accepted the refund. Waiting for processing."
+          })
+        } else if (updated.status === "REFUND_FAIL") {
+          toast({
+            title: "Refund failed",
+            description:
+              "Payment gateway rejected or errored. You can retry from this screen.",
+            variant: "destructive"
+          })
+        } else {
+          toast({
+            title: "Status updated",
+            description: `New status: ${getStatusText(updated.status)}`
+          })
+        }
+      } else {
+        toast({
+          title: "Status updated",
+          description: `New status: ${getStatusText(updated.status)}`
+        })
+      }
     } catch (e) {
       // rollback
       setOrders((list) =>
@@ -142,11 +187,14 @@ export default function OrdersPage() {
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
       console.error(e)
-      alert("Failed to update order status. Please try again.")
+      toast({
+        title: "Failed to update",
+        description: "Please try again.",
+        variant: "destructive"
+      })
     }
   }
 
-  // Update tracking number only (ใช้กรณีสถานะอื่น ๆ)
   const handleTrackingNumberUpdate = async (
     orderId: string,
     trackingNumber: string,
@@ -155,7 +203,6 @@ export default function OrdersPage() {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
 
-    // optimistic
     setOrders((list) =>
       list.map((o) => (o.id === orderId ? { ...o, trackingNumber } : o))
     )
@@ -168,18 +215,25 @@ export default function OrdersPage() {
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
+
+      toast({
+        title: "Tracking updated",
+        description: "Tracking number has been saved."
+      })
     } catch (e) {
-      // rollback
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
       console.error(e)
-      alert("Failed to update tracking number. Please try again.")
+      toast({
+        title: "Failed to update tracking",
+        description: "Please try again.",
+        variant: "destructive"
+      })
     }
   }
 
-  // Handed over (อัปเดตสถานะเป็น HANDED_OVER + ตั้ง tracking พร้อมกันใน API เดียว)
   const handleHandedOver = async (
     orderId: string,
     trackingNumber: string,
@@ -188,7 +242,6 @@ export default function OrdersPage() {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
 
-    // optimistic: เปลี่ยนสถานะ + ใส่ tracking
     setOrders((list) =>
       list.map((o) => {
         if (o.id !== orderId) return o
@@ -208,14 +261,22 @@ export default function OrdersPage() {
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
+
+      toast({
+        title: "Parcel handed over",
+        description: "Status updated and tracking number saved."
+      })
     } catch (e) {
-      // rollback
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
       console.error(e)
-      alert("Failed to hand over order. Please try again.")
+      toast({
+        title: "Failed to hand over",
+        description: "Please try again.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -277,14 +338,12 @@ export default function OrdersPage() {
         onClose={handleCloseDialog}
         onStatusChange={handleStatusChange}
         onTrackingNumberUpdate={handleTrackingNumberUpdate}
-        /** ⬇️ ส่งเข้าไปเพื่อให้ OrderStatusManager ใช้ input tracking + ปุ่ม hand over */
         onHandedOver={handleHandedOver}
       />
     </div>
   )
 }
 
-/** small debounce hook — no `any`, no NodeJS.Timeout */
 function useDebouncedValue<T>(value: T, delay = 250): T {
   const [v, setV] = useState<T>(value)
   const tRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -300,7 +359,6 @@ function useDebouncedValue<T>(value: T, delay = 250): T {
   return v
 }
 
-/** narrow unknown error into “abort-like” error safely */
 function isAbortError(err: unknown): boolean {
   if (!err) return false
   if (
