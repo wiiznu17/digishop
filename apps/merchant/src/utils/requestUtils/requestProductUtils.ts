@@ -60,7 +60,6 @@ export type CreateItemPayload = {
 export type UpdateItemPayload = Partial<CreateItemPayload>
 export type SetItemConfigurationsPayload = { optionUuids: string[] }
 
-// apps/merchant/src/utils/requestUtils/requestProductUtils.ts
 export type SuggestResponse = {
   products: Array<{
     uuid: string
@@ -151,51 +150,6 @@ export async function fetchProductDetailRequester(
 }
 
 // ============== Create / Update / Delete / Duplicate =================
-export async function createProductRequester(
-  productData: CreateProductRequest,
-  images: File[] = []
-): Promise<Product | null> {
-  try {
-    const formData = new FormData()
-    formData.append("productData", JSON.stringify(productData))
-    images.forEach((f) => formData.append("images", f))
-
-    const res = await axios.post("/api/merchant/products", formData, {
-      withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" }
-    })
-    return res.data as Product
-  } catch (error) {
-    console.error("Error creating product:", error)
-    return null
-  }
-}
-
-export async function updateProductRequester(
-  productUuid: string,
-  productData: UpdateProductRequest,
-  images: File[] = []
-): Promise<Product | null> {
-  try {
-    const formData = new FormData()
-    formData.append("productData", JSON.stringify(productData))
-    images.forEach((f) => formData.append("images", f))
-
-    const res = await axios.put(
-      `/api/merchant/products/${productUuid}`,
-      formData,
-      {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" }
-      }
-    )
-    return res.data as Product
-  } catch (error) {
-    console.error("Error updating product:", error)
-    return null
-  }
-}
-
 export async function deleteProductRequester(
   productUuid: string
 ): Promise<boolean> {
@@ -337,150 +291,7 @@ export async function bulkDeleteProductsRequester(
   }
 }
 
-// ============== Variations =================
-export async function createVariationRequester(
-  productUuid: string,
-  payload: CreateVariationPayload
-): Promise<{ uuid: string; name: string } | null> {
-  try {
-    const res = await axios.post(
-      `/api/merchant/products/${productUuid}/variations`,
-      payload,
-      { withCredentials: true }
-    )
-    return res.data
-  } catch (error) {
-    console.error("Error creating variation:", error)
-    return null
-  }
-}
-
-export async function updateVariationRequester(
-  productUuid: string,
-  variationUuid: string,
-  payload: UpdateVariationPayload
-): Promise<{ uuid: string; name: string } | null> {
-  try {
-    const res = await axios.put(
-      `/api/merchant/products/${productUuid}/variations/${variationUuid}`,
-      payload,
-      { withCredentials: true }
-    )
-    return res.data
-  } catch (error) {
-    console.error("Error updating variation:", error)
-    return null
-  }
-}
-
-export async function deleteVariationRequester(
-  productUuid: string,
-  variationUuid: string
-): Promise<boolean> {
-  try {
-    await axios.delete(
-      `/api/merchant/products/${productUuid}/variations/${variationUuid}`,
-      { withCredentials: true }
-    )
-    return true
-  } catch (error) {
-    console.error("Error deleting variation:", error)
-    return false
-  }
-}
-
-// ============== Variation Options =================
-export async function createVariationOptionRequester(
-  productUuid: string,
-  variationUuid: string,
-  payload: CreateOptionPayload
-): Promise<{ uuid: string; value: string; sortOrder: number } | null> {
-  try {
-    const res = await axios.post(
-      `/api/merchant/products/${productUuid}/variations/${variationUuid}/options`,
-      payload,
-      { withCredentials: true }
-    )
-    return res.data
-  } catch (error) {
-    console.error("Error creating option:", error)
-    return null
-  }
-}
-
-export async function updateVariationOptionRequester(
-  productUuid: string,
-  variationUuid: string,
-  optionUuid: string,
-  payload: UpdateOptionPayload
-): Promise<{ uuid: string; value: string; sortOrder: number } | null> {
-  try {
-    const res = await axios.put(
-      `/api/merchant/products/${productUuid}/variations/${variationUuid}/options/${optionUuid}`,
-      payload,
-      { withCredentials: true }
-    )
-    return res.data
-  } catch (error) {
-    console.error("Error updating option:", error)
-    return null
-  }
-}
-
-export async function deleteVariationOptionRequester(
-  productUuid: string,
-  variationUuid: string,
-  optionUuid: string
-): Promise<boolean> {
-  try {
-    await axios.delete(
-      `/api/merchant/products/${productUuid}/variations/${variationUuid}/options/${optionUuid}`,
-      { withCredentials: true }
-    )
-    return true
-  } catch (error) {
-    console.error("Error deleting option:", error)
-    return false
-  }
-}
-
-export async function reorderVariationOptionsRequester(
-  productUuid: string,
-  variationUuid: string,
-  orders: ReorderOptionsPayload["orders"]
-): Promise<boolean> {
-  try {
-    await axios.patch(
-      `/api/merchant/products/${productUuid}/variations/${variationUuid}/options/reorder`,
-      { orders },
-      { withCredentials: true }
-    )
-    return true
-  } catch (error) {
-    console.error("Error reordering options:", error)
-    return false
-  }
-}
-
-// ============== Items / Configurations =================
-export async function createProductItemRequester(
-  productUuid: string,
-  payload: CreateItemPayload
-): Promise<unknown | null> {
-  try {
-    const res = await axios.post(
-      `/api/merchant/products/${productUuid}/items`,
-      payload,
-      { withCredentials: true }
-    )
-    return res.data
-  } catch (error) {
-    console.error("Error creating product item:", error)
-    return null
-  }
-}
-
-export async function updateProductItemRequester(
+export async function updateProductItemRequester( // for enable/disable items
   productUuid: string,
   itemUuid: string,
   payload: UpdateItemPayload
@@ -498,79 +309,105 @@ export async function updateProductItemRequester(
   }
 }
 
-export async function deleteProductItemRequester(
-  productUuid: string,
-  itemUuid: string
-): Promise<boolean> {
-  try {
-    await axios.delete(
-      `/api/merchant/products/${productUuid}/items/${itemUuid}`,
-      { withCredentials: true }
-    )
-    return true
-  } catch (error) {
-    console.error("Error deleting product item:", error)
-    return false
-  }
+// new
+// ===== Desired-state Types =====
+export type DesiredImageInput = {
+  uuid?: string
+  uploadKey?: string
+  fileName?: string
+  isMain?: boolean
+  sortOrder: number
 }
 
-export async function setItemConfigurationsRequester(
-  productUuid: string,
-  itemUuid: string,
-  optionUuids: string[]
-): Promise<unknown[] | null> {
+export type DesiredVariationOption = {
+  uuid?: string
+  clientId?: string
+  value: string
+  sortOrder: number
+}
+
+export type DesiredVariation = {
+  uuid?: string
+  clientId?: string
+  name: string
+  options: DesiredVariationOption[]
+}
+
+export type DesiredItemImage = {
+  uuid?: string
+  uploadKey?: string
+  remove?: boolean
+} | null
+
+export type DesiredItem = {
+  uuid?: string
+  clientKey?: string
+  sku?: string
+  priceMinor: number
+  stockQuantity: number
+  isEnable: boolean
+  optionRefs: string[] // uuid หรือ clientId
+  image?: DesiredItemImage
+}
+
+export type DesiredPayload = {
+  ifMatchUpdatedAt?: string | null
+  product: {
+    name: string
+    description?: string | null
+    status: string
+    categoryUuid?: string | null
+  }
+  images: { product: DesiredImageInput[] }
+  variations: DesiredVariation[]
+  items: DesiredItem[]
+}
+
+export async function createProductDesiredRequester(
+  payload: DesiredPayload,
+  productImages: File[] = [],
+  itemImages: File[] = []
+): Promise<Product | null> {
   try {
-    const res = await axios.put(
-      `/api/merchant/products/${productUuid}/items/${itemUuid}/configurations`,
-      { optionUuids },
-      { withCredentials: true }
-    )
-    return res.data as unknown[]
-  } catch (error) {
-    console.error("Error setting item configurations:", error)
+    const form = new FormData()
+    form.append("desired", JSON.stringify(payload))
+    productImages.forEach((f) => form.append("productImages", f, f.name))
+    itemImages.forEach((f) => form.append("itemImages", f, f.name))
+    console.log(form.append)
+    const res = await axios.post("/api/merchant/products/desired", form, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" }
+    })
+    return res.data as Product
+  } catch (e) {
+    console.error("createProductDesiredRequester error:", e)
     return null
   }
 }
 
-// apps/merchant/src/utils/requestUtils/requestProductUtils.ts
-export async function uploadProductItemImageRequester(
+export async function updateProductDesiredRequester(
   productUuid: string,
-  itemUuid: string,
-  file: File
-): Promise<{ uuid: string; url: string; fileName: string } | null> {
+  payload: DesiredPayload,
+  productImages: File[] = [],
+  itemImages: File[] = []
+): Promise<Product | null> {
   try {
-    console.log("Product uuid", productUuid)
-    console.log("Product item uuid", itemUuid)
-    console.log("File image", file)
     const form = new FormData()
-    form.append("image", file)
-    const res = await axios.post(
-      `/api/merchant/products/${productUuid}/items/${itemUuid}/image`,
+    form.append("desired", JSON.stringify(payload))
+    productImages.forEach((f) => form.append("productImages", f, f.name))
+    itemImages.forEach((f) => form.append("itemImages", f, f.name))
+
+    const res = await axios.put(
+      `/api/merchant/products/${productUuid}/desired`,
       form,
       {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" }
       }
     )
-    return res.data as { uuid: string; url: string; fileName: string }
+    return res.data as Product
   } catch (e) {
-    console.error("Error uploading product item image:", e)
+    console.error("updateProductDesiredRequester error:", e)
     return null
-  }
-}
-
-export async function deleteProductItemImageRequester(
-  productUuid: string,
-  itemUuid: string
-): Promise<boolean> {
-  try {
-    await axios.delete(
-      `/api/merchant/products/${productUuid}/items/${itemUuid}/image`,
-      { withCredentials: true }
-    )
-    return true
-  } catch (e) {
-    console.error("Error deleting product item image:", e)
-    return false
   }
 }

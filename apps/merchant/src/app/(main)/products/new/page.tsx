@@ -1,4 +1,3 @@
-// apps/merchant/src/app/(main)/products/new/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -6,15 +5,10 @@ import { useRouter } from "next/navigation"
 import { MerchantHeader } from "@/components/dashboard-header"
 import { ImageUpload, type ImageLike } from "@/components/product/imageUpload"
 import {
-  createProductRequester,
-  createVariationRequester,
-  createVariationOptionRequester,
-  createProductItemRequester,
-  setItemConfigurationsRequester,
   fetchCategoriesRequester,
-  type CreateProductRequest,
   type CategoryDto,
-  uploadProductItemImageRequester
+  createProductDesiredRequester,
+  type DesiredPayload
 } from "@/utils/requestUtils/requestProductUtils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,11 +39,9 @@ export default function AddProductPage() {
   const [uiImages, setUiImages] = useState<ImageLike[]>([])
   const [creating, setCreating] = useState(false)
 
-  // categories
   const [categories, setCategories] = useState<CategoryDto[]>([])
   const [catLoading, setCatLoading] = useState(false)
 
-  // variations & generated items
   const [variations, setVariations] = useState<VariationDraft[]>([])
   const [rows, setRows] = useState<ItemDraft[]>([])
 
@@ -65,24 +57,7 @@ export default function AddProductPage() {
     void run()
   }, [])
 
-  const toFileFromBlobUrl = async (img: ImageLike) => {
-    const resp = await fetch(img.url)
-    const blob = await resp.blob()
-    return new File([blob], img.fileName, { type: blob.type || undefined })
-  }
-
-  const convertBlobsToFiles = async (images: ImageLike[]): Promise<File[]> => {
-    const files: File[] = []
-    for (const img of images) {
-      if (img.url.startsWith("blob:")) {
-        const resp = await fetch(img.url)
-        const blob = await resp.blob()
-        files.push(new File([blob], img.fileName, { type: blob.type }))
-      }
-    }
-    return files
-  }
-
+  // helpers
   const toMinor = (val: string) => {
     const n = Number(val || 0)
     return Number.isNaN(n) ? 0 : Math.round(n * 100)
@@ -90,6 +65,16 @@ export default function AddProductPage() {
   const toInt = (val: string) => {
     const n = parseInt(val || "0", 10)
     return Number.isNaN(n) ? 0 : n
+  }
+  const randomKey = () => Math.random().toString(36).slice(2, 10)
+
+  // สร้าง File ใหม่พร้อม “ชื่อไฟล์ = uploadKey__original”
+  const toFileFromBlobUrl = async (img: ImageLike, uploadKey: string) => {
+    const resp = await fetch(img.url)
+    const blob = await resp.blob()
+    const ext = img.fileName?.split(".").pop() ?? "jpg"
+    const fileName = `${uploadKey}__${img.fileName || `image.${ext}`}`
+    return new File([blob], fileName, { type: blob.type || undefined })
   }
 
   const handleCreate = async () => {
@@ -102,78 +87,96 @@ export default function AddProductPage() {
       return
     }
 
-    const payload: CreateProductRequest = {
-      name,
-      description: description || null,
-      status,
-      categoryUuid: categoryUuid,
-      categoryId: null,
-      expectedSkuCount: rows.length
+    // ----- build desired payload -----
+    const productImageFiles: File[] = []
+    const desiredImages: DesiredPayload["images"]["product"] = []
+    for (let idx = 0; idx < uiImages.length; idx++) {
+      const img = uiImages[idx]
+      if (img.url.startsWith("blob:")) {
+        const uploadKey = `p-${randomKey()}`
+        const f = await toFileFromBlobUrl(img, uploadKey)
+        productImageFiles.push(f)
+        desiredImages.push({
+          uploadKey,
+          fileName: img.fileName,
+          isMain: !!img.isMain,
+          sortOrder: idx
+        })
+      } else {
+        desiredImages.push({
+          fileName: img.fileName,
+          isMain: !!img.isMain,
+          sortOrder: idx
+        })
+      }
+    }
+
+    // variations
+    const desiredVariations = variations.map((v) => ({
+      clientId: v.cid,
+      name: v.name,
+      options: v.options
+        .slice()
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .map((o) => ({
+          clientId: o.cid,
+          value: o.value,
+          sortOrder: o.sortOrder ?? 0
+        }))
+    }))
+
+    // items
+    const itemImageFiles: File[] = []
+    const desiredItems = await Promise.all(
+      rows.map(async (r) => {
+        let image: DesiredPayload["items"][number]["image"] = null
+        if (r.image && r.image.url.startsWith("blob:")) {
+          const uploadKey = `it-${randomKey()}`
+          const f = await toFileFromBlobUrl(r.image, uploadKey)
+          itemImageFiles.push(f)
+          image = { uploadKey }
+        }
+        return {
+          clientKey: r.key,
+          sku: (r.sku || "").trim() || undefined,
+          priceMinor: toMinor(r.price),
+          stockQuantity: toInt(r.stock),
+          isEnable: !!r.enabled,
+          optionRefs: r.optionCids, // <- clientIds; BE จะ map จาก variations.options.clientId -> uuid
+          image
+        }
+      })
+    )
+
+    const payload: DesiredPayload = {
+      product: {
+        name,
+        description: description || null,
+        status,
+        categoryUuid: categoryUuid ?? null
+      },
+      images: { product: desiredImages },
+      variations: desiredVariations,
+      items: desiredItems
     }
 
     setCreating(true)
     try {
-      // 1) create product + upload main images
-      const files = await convertBlobsToFiles(uiImages)
-      const created = await createProductRequester(payload, files)
+      console.log("create product with: ", payload)
+      console.log("create product image with: ", productImageFiles)
+      console.log("create product item image with: ", itemImageFiles)
+      const created = await createProductDesiredRequester(
+        payload,
+        productImageFiles,
+        itemImageFiles
+      )
       if (!created?.uuid) {
         alert("Create failed")
         setCreating(false)
         return
       }
-      const productUuid = created.uuid as string
-
-      // 2) variations + options
-      const optCidToServerUuid = new Map<string, string>()
-      for (const v of variations) {
-        const vRes = await createVariationRequester(productUuid, {
-          name: v.name
-        })
-        if (!vRes?.uuid) continue
-        for (const opt of v.options) {
-          const oRes = await createVariationOptionRequester(
-            productUuid,
-            vRes.uuid,
-            { value: opt.value, sortOrder: opt.sortOrder }
-          )
-          if (oRes?.uuid) optCidToServerUuid.set(opt.cid, oRes.uuid)
-        }
-      }
-
-      // 3) items + configurations + item image
-      for (const r of rows) {
-        const itemRes = await createProductItemRequester(productUuid, {
-          sku: r.sku || undefined,
-          stockQuantity: toInt(r.stock),
-          priceMinor: toMinor(r.price),
-          imageUrl: null,
-          isEnable: !!r.enabled
-        })
-        const itemUuid =
-          (itemRes as any)?.uuid ??
-          (typeof itemRes === "string" ? itemRes : undefined)
-
-        if (itemUuid && r.image && r.image.url.startsWith("blob:")) {
-          const f = await toFileFromBlobUrl(r.image)
-          await uploadProductItemImageRequester(productUuid, itemUuid, f)
-        }
-
-        if (itemUuid) {
-          const optionUuids = r.optionCids
-            .map((cid) => optCidToServerUuid.get(cid))
-            .filter((x): x is string => Boolean(x))
-          if (optionUuids.length) {
-            await setItemConfigurationsRequester(
-              productUuid,
-              itemUuid,
-              optionUuids
-            )
-          }
-        }
-      }
-
       alert("Created")
-      router.push(`/products/${productUuid}`)
+      router.push(`/products/${created.uuid}`)
     } catch (e) {
       console.error(e)
       alert("Error while creating")

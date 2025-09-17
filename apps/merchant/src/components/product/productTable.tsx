@@ -1,4 +1,3 @@
-// apps/merchant/src/components/product/productTable.tsx
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -31,6 +30,9 @@ interface ProductTableProps {
   selectedUuids: Set<string>
   onToggleRow: (uuid: string, checked: boolean) => void
   onToggleAllOnPage: (uuids: string[], checked: boolean) => void
+
+  /** ซ่อน/แสดงคอลัมน์ checkbox */
+  showSelection?: boolean
 }
 
 // บาง BE จะส่ง field นับรูปมาใหม่ — กำหนด type เฉพาะเพื่อเลี่ยง any
@@ -46,26 +48,31 @@ export function ProductTable({
   onQuickView,
   selectedUuids,
   onToggleRow,
-  onToggleAllOnPage
+  onToggleAllOnPage,
+  showSelection = false
 }: ProductTableProps) {
   const allUuidsOnPage = products.map((p) => p.uuid)
   const allOnPageSelected =
-    products.length > 0 && products.every((p) => selectedUuids.has(p.uuid))
+    showSelection &&
+    products.length > 0 &&
+    products.every((p) => selectedUuids.has(p.uuid))
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[44px]">
-            <input
-              type="checkbox"
-              aria-label="Select all"
-              checked={allOnPageSelected}
-              onChange={(e) =>
-                onToggleAllOnPage(allUuidsOnPage, e.currentTarget.checked)
-              }
-            />
-          </TableHead>
+          {showSelection && (
+            <TableHead className="w-[44px]">
+              <input
+                type="checkbox"
+                aria-label="Select all"
+                checked={allOnPageSelected}
+                onChange={(e) =>
+                  onToggleAllOnPage(allUuidsOnPage, e.currentTarget.checked)
+                }
+              />
+            </TableHead>
+          )}
           <TableHead>Product</TableHead>
           <TableHead>Category</TableHead>
           <TableHead>Price</TableHead>
@@ -92,16 +99,18 @@ export function ProductTable({
 
           return (
             <TableRow key={product.uuid}>
-              <TableCell>
-                <input
-                  type="checkbox"
-                  aria-label={`Select ${product.name}`}
-                  checked={rowChecked}
-                  onChange={(e) =>
-                    onToggleRow(product.uuid, e.currentTarget.checked)
-                  }
-                />
-              </TableCell>
+              {showSelection && (
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${product.name}`}
+                    checked={rowChecked}
+                    onChange={(e) =>
+                      onToggleRow(product.uuid, e.currentTarget.checked)
+                    }
+                  />
+                </TableCell>
+              )}
 
               <TableCell>
                 <div className="flex items-center gap-3">

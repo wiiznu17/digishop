@@ -6,25 +6,29 @@ export default {
     const now = new Date();
 
     await q.bulkInsert("PRODUCT_ITEMS", [
-      // Smartphone X (product_id: 1001)
-      { uuid: uuidv4(), product_id: 1001, sku: "X-BLK-128", stock_quantity: 50,  price_minor: 4_999_000, is_enable: true, image_url: null, created_at: now, updated_at: now, deleted_at: null },
-      { uuid: uuidv4(), product_id: 1001, sku: "X-SLV-256", stock_quantity: 50,  price_minor: 5_499_000, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      // Smartphone X (product_id: 1001) —500
+      { uuid: uuidv4(), product_id: 1001, sku: "X-BLK-128", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1001, sku: "X-SLV-256", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1001, sku: "X-BLK-256", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1001, sku: "X-SLV-128", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
 
       // Smartphone Y (1002)
-      { uuid: uuidv4(), product_id: 1002, sku: "Y-BLU-64",  stock_quantity: 80,  price_minor: 2_999_000, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null },
-      { uuid: uuidv4(), product_id: 1002, sku: "Y-BLK-128", stock_quantity: 70,  price_minor: 3_199_000, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1002, sku: "Y-BLU",     stock_quantity: 80, price_minor: 2_999_000, is_enable: true, image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1002, sku: "Y-BLK",     stock_quantity: 70, price_minor: 3_199_000, is_enable: true, image_url: null, created_at: now, updated_at: now, deleted_at: null },
 
-      // Laptop Pro 15 (1003)
-      { uuid: uuidv4(), product_id: 1003, sku: "L15-16-512", stock_quantity: 25, price_minor: 119_900_00, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null }, // 119,900.00
-      { uuid: uuidv4(), product_id: 1003, sku: "L15-32-1TB", stock_quantity: 25, price_minor: 139_900_00, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null },  // 139,900.00
+      // Laptop Pro 15 (1003) —1,200
+      { uuid: uuidv4(), product_id: 1003, sku: "L15-16-512", stock_quantity: 25, price_minor: 120_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1003, sku: "L15-32-1TB", stock_quantity: 25, price_minor: 120_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1003, sku: "L15-16-1TB", stock_quantity: 25, price_minor: 120_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1003, sku: "L15-32-512", stock_quantity: 25, price_minor: 120_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
 
-      // Wireless Earbuds (1004)
-      { uuid: uuidv4(), product_id: 1004, sku: "EB-WHT",     stock_quantity: 120, price_minor: 1_199_000, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      // Wireless Earbuds (1004) —150
+      { uuid: uuidv4(), product_id: 1004, sku: "EB-WHT",     stock_quantity: 120, price_minor: 15_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
 
       // Smartwatch Z (1005)
-      { uuid: uuidv4(), product_id: 1005, sku: "SWZ-S",      stock_quantity: 25,  price_minor: 2_999_000, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null },
-      { uuid: uuidv4(), product_id: 1005, sku: "SWZ-M",      stock_quantity: 25,  price_minor: 2_999_000, is_enable: true,image_url: null, created_at: now, updated_at: now, deleted_at: null },
-      { uuid: uuidv4(), product_id: 1005, sku: "SWZ-L",      stock_quantity: 25,  price_minor: 2_999_000, is_enable: false,image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1005, sku: "SWZ-S",      stock_quantity: 25,  price_minor: 2_999_000, is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1005, sku: "SWZ-M",      stock_quantity: 25,  price_minor: 2_999_000, is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1005, sku: "SWZ-L",      stock_quantity: 25,  price_minor: 2_999_000, is_enable: false, image_url: null, created_at: now, updated_at: now, deleted_at: null },
     ]);
   },
 

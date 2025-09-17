@@ -1,4 +1,6 @@
 import { Model, DataTypes, Optional, Sequelize } from "sequelize";
+import type { NonAttribute, Association, HasManyGetAssociationsMixin } from "sequelize";
+import type { VariationOption } from "./VariationOption";
 
 export interface VariationAttributes {
   id: number;
@@ -25,6 +27,14 @@ export class Variation
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
   public readonly deletedAt!: Date | null;
+
+  declare options?: NonAttribute<VariationOption[]>;
+
+  declare getOptions: HasManyGetAssociationsMixin<VariationOption>;
+
+  declare static associations: {
+    options: Association<Variation, VariationOption>;
+  };
 
   static initModel(sequelize: Sequelize): typeof Variation {
     Variation.init(
