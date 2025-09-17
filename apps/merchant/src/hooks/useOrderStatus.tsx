@@ -273,7 +273,7 @@ export const useOrderStatus = () => {
       case "REFUND_REQUEST":
         return ["REFUND_APPROVED", "REFUND_REJECTED"]
       case "REFUND_FAIL":
-        return ["REFUND_RETRY"] // ⬅️ NEW: retry ปลอดภัย
+        return ["REFUND_RETRY"] // NEW: retry ปลอดภัย
       case "AWAITING_RETURN":
         return ["RECEIVE_RETURN", "RETURN_FAIL"]
       case "RECEIVE_RETURN":
