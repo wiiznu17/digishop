@@ -1,4 +1,3 @@
-// src/seeders/20250828094000-seed-orders-all-statuses.ts
 import { QueryInterface } from "sequelize";
 
 const SNAP = {
