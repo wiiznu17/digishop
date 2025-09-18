@@ -42,7 +42,7 @@ export default function ShoppingCart() {
     };
     fetchCart();
   }, [user]);
-  
+  console.log(data)
   useEffect(()=> {
       setPrice(sumPrice(select))
   },[select])
@@ -66,7 +66,7 @@ export default function ShoppingCart() {
     order.customerId = user.id
     order.orderData = select
     const cardIds = select.map(item => item.id)
-    console.log('card id',cardIds)
+    console.log(order)
     const res = await createOrderId(order);
     const del = await deleteCart(cardIds)    
     if (res) {
@@ -74,7 +74,8 @@ export default function ShoppingCart() {
     }
   };
   const cartData = rawCartData();
-  return cartData ? (
+  if(!data) return
+  return data?.length > 0 ? (
     <div className="grid grid-cols-2">
       <div className="flex justify-center items-center">
         <div>

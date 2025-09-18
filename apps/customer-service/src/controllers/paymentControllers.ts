@@ -24,14 +24,7 @@ export const getNotify = async (req: Request, res: Response) => {
     bank_reference,
     authorize_token,
   } = req.body;
-  console.log(req.body.status);
   try {
-    console.log("order status", req.body);
-  } catch (error) {
-    console.log("error", error);
-  }
-  try {
-    console.log(status);
     const findPaymentId = await Payment.findOne({
       where: { providerRef: reference },
       attributes: ["id","checkoutId"],
@@ -70,6 +63,7 @@ export const getNotify = async (req: Request, res: Response) => {
       await Payment.update(
         {
           status: PaymentStatus.SUCCESS,
+          paidAt: timestamp
         },
         {
           where: { checkoutId: checkOutId},
@@ -91,7 +85,7 @@ export const getNotify = async (req: Request, res: Response) => {
         checkoutId: checkOutId,
         paymentId: paymentId, //
         type: "NOTIFY",
-        amountMinor: amount, //
+        amountMinor: amount*100, //
         provider: "DIGIPAY",
         status: "SUCCESS",
         reqJson: req.body,
@@ -130,7 +124,7 @@ export const getNotify = async (req: Request, res: Response) => {
         checkoutId: checkOutId,
         paymentId: paymentId,
         type: "NOTIFY",
-        amountMinor: amount,
+        amountMinor: amount*100,
         provider: "DIGIPAY",
         status: "FAILED",
         reqJson: req.body,
@@ -169,7 +163,7 @@ export const getNotify = async (req: Request, res: Response) => {
         checkoutId: checkOutId,
         paymentId: paymentId,
         type: "NOTIFY",
-        amountMinor: amount,
+        amountMinor: amount*100,
         provider: "DIGIPAY",
         status: "FAILED",
         reqJson: req.body,
@@ -190,7 +184,6 @@ export const getCallBack = async (req: Request, res: Response) => {
     where: { providerRef: String(reference) },
     attributes: ["id", "checkoutId"],
   });
-  console.log(findId)
   if(!findId)return
   const orderCode = await CheckOut.findOne({
     where: {id: findId?.checkoutId} , attributes: ["orderCode"]

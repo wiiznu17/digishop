@@ -79,7 +79,14 @@ export const getProduct = async(req: Request , res: Response,  next: NextFunctio
 export const getAllProduct = async(req: Request , res: Response) => {
   
   try {
-    const product = await Product.findAll()
+    const product = await Product.findAll(
+      { include: [
+      {
+        model: ProductItem,
+        as: "items"
+      }
+    ]}
+    )
     if(!product){
       return res.status(404).json({ error: `not found` });
     }
@@ -87,4 +94,10 @@ export const getAllProduct = async(req: Request , res: Response) => {
   }catch (error){
     return res.status(500).json({ error: "Internal server error"})
   }
+}
+
+export const getProductDetail = async(req: Request , res: Response,  next: NextFunction) => {
+  const productData = await Product.findAll(
+    
+  )
 }

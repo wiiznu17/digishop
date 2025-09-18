@@ -13,17 +13,14 @@ export default  function SearchResult({
 }) {
   const [result, setResult] = useState()
   const { query } = use(searchParams)
-  console.log(query)
   const router = useRouter()
   useEffect(() => {
   const fetchProduct = async () => {
     const res = await searchProduct(query);
     setResult(res.data);
-    console.log('res',res)
   };
   fetchProduct();
 }, [query]);
-  console.log('result',result)
   return !result ? (
     <NotFound props={query} />
   ) : (
