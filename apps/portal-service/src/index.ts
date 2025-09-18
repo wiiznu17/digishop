@@ -1,8 +1,10 @@
 import express from 'express';
+import cors from "cors"
 import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
+const cookieParser = require("cookie-parser")
 
 const PORT = Number(process.env.PORT) || 4001;
 
@@ -13,9 +15,14 @@ async function main() {
 
     const app = express();
     app.use(express.json());
-
+    // app.use(cookieParser())
+    app.use(cors({
+      origin: ["http://localhost:3002"],
+      credentials: true
+    }))
     initModels(sequelize); 
-    app.use(router);
+    // app.use(router);
+    app.use('/api', router);
 
     const server = app.listen(PORT, () => {
       console.log(`Merchant Service listening at: http://localhost:${PORT}`);
