@@ -1,5 +1,5 @@
 import { QueryInterface, DataTypes } from 'sequelize';
-import { ProductStatus } from '../types/enum';
+import { ProductReqStatus, ProductStatus } from '../types/enum';
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
@@ -23,6 +23,8 @@ export default {
       name: { type: DataTypes.STRING(191), allowNull: false },
       description: { type: DataTypes.TEXT, allowNull: true },
       status: { type: DataTypes.ENUM(...Object.values(ProductStatus)), allowNull: false, defaultValue: ProductStatus.ACTIVE },
+      reqStatus: { type: DataTypes.ENUM(...Object.values(ProductReqStatus)), allowNull: false, defaultValue: ProductReqStatus.PENDING },
+      rejectReason: { type: DataTypes.STRING(191), allowNull: true },
       created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
       deleted_at: { type: DataTypes.DATE, allowNull: true },
