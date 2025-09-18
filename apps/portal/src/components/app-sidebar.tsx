@@ -1,20 +1,32 @@
-'use client'
+"use client"
 
+import Link from "next/link"
+import Image from "next/image"
 import {
-  Calendar,
-  ChevronUp,
   Home,
-  Inbox,
-  Package,
-  Search,
-  Settings,
   ShoppingCart,
+  RotateCcw,
+  Gavel,
+  CreditCard,
+  Wallet,
+  Package,
+  FolderTree,
+  Users,
+  Store,
+  UserCog,
+  MessageSquareWarning,
+  Star,
+  BadgePercent,
+  Truck,
+  Image as ImageIcon,
+  ShieldCheck,
+  Shield,
+  SlidersHorizontal,
+  Settings,
   User,
-  BarChart3,
-  Plus,
-  Users
-} from 'lucide-react'
-import Link from 'next/link'
+  ChevronUp,
+  BarChart3
+} from "lucide-react"
 
 import {
   Sidebar,
@@ -26,81 +38,149 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
-} from '@/components/ui/sidebar'
+} from "@/components/ui/sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu"
 
-const items = [
+type NavItem = {
+  title: string
+  url: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+type NavGroup = {
+  label: string
+  items: NavItem[]
+}
+
+const groups: NavGroup[] = [
   {
-    title: 'Dashboard',
-    url: '/',
-    icon: Home
+    label: "Platform Overview",
+    items: [
+      { title: "Dashboard", url: "/", icon: Home },
+      { title: "Analytics", url: "/admin/analytics", icon: BarChart3 }
+    ]
   },
   {
-    title: 'Orders',
-    url: '/orders',
-    icon: ShoppingCart
+    label: "Commerce",
+    items: [
+      { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+      { title: "Refunds", url: "/admin/refunds", icon: RotateCcw },
+      // { title: "Disputes", url: "/admin/disputes", icon: Gavel },
+      { title: "Payments", url: "/admin/payments", icon: CreditCard },
+      { title: "Payouts", url: "/admin/payouts", icon: Wallet }
+    ]
   },
   {
-    title: 'Products',
-    url: '/products',
-    icon: Package
+    label: "Catalog",
+    items: [
+      { title: "Products", url: "/admin/products", icon: Package },
+      { title: "Categories", url: "/admin/categories", icon: FolderTree }
+    ]
   },
   {
-    title: 'Customers',
-    url: '/customers',
-    icon: Users
+    label: "Users & Merchants",
+    items: [
+      { title: "Customers", url: "/admin/customers", icon: Users },
+      // { title: "Stores", url: "/admin/stores", icon: Store },
+      { title: "Merchants", url: "/admin/merchants", icon: UserCog }
+    ]
   },
+  // {
+  //   label: "Moderation",
+  //   items: [
+  //     { title: "Reviews", url: "/admin/reviews", icon: Star },
+  //     { title: "Reports", url: "/admin/reports", icon: MessageSquareWarning }
+  //   ]
+  // },
+  // {
+  //   label: "Growth & Ops",
+  //   items: [
+  //     { title: "Promotions", url: "/admin/promotions", icon: BadgePercent },
+  //     { title: "Logistics", url: "/admin/logistics", icon: Truck },
+  //     { title: "Banners / CMS", url: "/admin/cms", icon: ImageIcon }
+  //   ]
+  // },
   {
-    title: 'Analytics',
-    url: '/analytics',
-    icon: BarChart3
-  },
-  {
-    title: 'Profile',
-    url: '/profile',
-    icon: User
-  },
-  {
-    title: 'Settings',
-    url: '/settings',
-    icon: Settings
+    label: "System",
+    items: [
+      {
+        title: "Admin Users & Roles",
+        url: "/admin/admins",
+        icon: Shield
+      },
+      {
+        title: "Audit Logs",
+        url: "/admin/audit-logs",
+        icon: ShieldCheck
+      } // ,
+      // {
+      //   title: "Feature Flags",
+      //   url: "/admin/system/feature-flags",
+      //   icon: SlidersHorizontal
+      // },
+      // { title: "Settings", url: "/admin/system/settings", icon: Settings }
+    ]
   }
 ]
 
-export function AppSidebar() {
+export function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Merchant Dashboard</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Brand */}
+        <div className="px-3 pt-4 pb-3 border-b">
+          <Link
+            href="/"
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition"
+          >
+            {/* วางไฟล์โลโก้ไว้ที่ /public/logo.svg หรือเปลี่ยน path ได้ */}
+            <Image
+              src="/logo.svg"
+              alt="DigiShop"
+              width={28}
+              height={28}
+              className="rounded-sm"
+              priority
+            />
+            <span className="text-lg font-semibold tracking-tight">
+              DigiShop
+            </span>
+          </Link>
+        </div>
+
+        {groups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User /> Merchant Account
+                  <User /> Admin Account
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -108,14 +188,17 @@ export function AppSidebar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>
-                  <span>Account Settings</span>
+                {/* <DropdownMenuItem asChild>
+                  <Link href="/admin/account">Account Settings</Link>
+                </DropdownMenuItem> */}
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/system/admins">Team & Roles</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Business Profile</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/system/audit-logs">View Audit Logs</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Sign out</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/logout">Sign out</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
