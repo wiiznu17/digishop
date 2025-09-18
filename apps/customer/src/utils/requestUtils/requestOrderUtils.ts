@@ -46,7 +46,6 @@ export const createWishList = async(data: ShoppingCartProps) => {
 }
 
 export const createOrder = async(data:Order) => {
-    console.log(data)
     return await new Promise((resolve, reject) => {
         axios   
             .post(`${endpoint}/api/order/create`,data)
@@ -72,7 +71,6 @@ export const fetchOrders = async(id:string, userId: number) => {
     })
 }
 export const deleteCart = async(id: (number | undefined)[]) => {
-    console.log('id in req', id)
     return await new Promise((resolve,reject) => {
         axios
             .post(`${endpoint}/api/order/cart/id`, id)

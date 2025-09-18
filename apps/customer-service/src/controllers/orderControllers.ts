@@ -60,6 +60,9 @@ export const findOrder = async (
         "reference",
         "status",
         "created_at",
+        "subtotal_minor",
+        "shipping_fee_minor",
+        "discount_total_minor",
         "grand_total_minor",
         "currency_code",
         "order_note",
@@ -101,7 +104,7 @@ export const findOrder = async (
         {
           model: OrderItem,
           as: "items",
-          attributes: ["quantity", "unit_price_minor"],
+          // attributes: ["quantity", "unit_price_minor","line_total_minor","discount_minor"],
           include: [
             {
               model: ProductItem,
@@ -143,34 +146,50 @@ export const findUserOrder = async (
         "currency_code",
         "order_note",
         "grand_total_minor",
+        "subtotal_minor",
+        "shipping_fee_minor",
+        "discount_total_minor",
       ],
       include: [
         {
           model: OrderItem,
           as: "items",
-          attributes: [
-            "quantity",
-            "unit_price_minor",
-            "discount_minor",
-            "product_name_snapshot",
-          ],
           include: [
             {
-              model: Product,
-              as: "product",
-              attributes: ["name"],
-              include: [
-                {
-                  model: ProductImage,
-                  as: "images",
-                  attributes: ["url", "blobName", "fileName"],
-                },
-                {
-                  model: Store,
-                  as: "store",
-                  attributes: ["storeName"],
-                },
-              ],
+            model: ProductItem,
+            as: "productItem",
+            include: [
+              {
+                model: Product,
+                as: "product",
+                include: [
+                  {
+                    model: ProductImage,
+                    as: "images",
+                    attributes: ["url", "blobName", "fileName"],
+                  },
+                  {
+                    model: Store,
+                    as: "store",
+                  },
+                ],
+              },
+            ],
+          }],
+        },
+        {
+          model: ShippingInfo,
+          as: "shippingInfo",
+          attributes: ["id"],
+          include: [
+            {
+              model: Address,
+              as: "address",
+            },
+            {
+              model: ShippingType,
+              as: "shippingType",
+              attributes: ["name", "description", "estimatedDays", "price"],
             },
           ],
         },
@@ -192,6 +211,7 @@ export const findUserOrder = async (
                 "amount_captured_minor",
                 "amount_refunded_minor",
                 "pgw_status",
+                "updated_at"
               ],
             },
           ],
@@ -348,11 +368,20 @@ export const createOrderId = async (
         customerId: customerId,
         orderCode: orderCod,
       });
+      const sumprice = (data) => {
+      if(!data)return 0
+      let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          sum += (data[i].lineTotalMinor)
+          console.log(sum)
+        }
+        return sum
+    }
       Object.entries(groupStoreId).map(async ([key, values]) => {
         let orderData = await Order.create({
           checkoutId: checkoutId.id,
-          reference: orderCod+key,
-          subtotalMinor: 0,
+          reference: orderCod + key,
+          subtotalMinor: sumprice(values), 
           shippingFeeMinor: 0,
           taxTotalMinor: 0,
           discountTotalMinor: 0,
@@ -400,12 +429,15 @@ export const createOrder = async (
     paymentMethod,
     shippingTypeId,
     shippingAddress,
-    grandTotalMinor,
+    productprice, //รวมเผื่อมีสองร้าน
+    shippingfee,
     orderNote,
   } = req.body;
 
   try {
     const user = await User.findByPk(customerId);
+    const taxTotalMinor = 0
+    const discountTotalMinor = 0
     const checkoutId = await CheckOut.findOne({
       where: { orderCode: orderCode },
       attributes: ["id"],
@@ -414,20 +446,20 @@ export const createOrder = async (
     const orderId = await Order.findAll({
       where: {checkoutId: checkoutId.id}
     })
-    const updateOrder = await Order.update(
-      {
-        subtotalMinor: grandTotalMinor,
-        shippingFeeMinor: 0,
-        taxTotalMinor: 0,
-        discountTotalMinor: 0,
-        grandTotalMinor,
-        currencyCode: "THB",
-        orderNote,
-      },
-      { where: { checkoutId: checkoutId.id } }
-    );
-    // loop
+    const grandTotalMinor = productprice + (shippingfee * orderId.length) + taxTotalMinor - discountTotalMinor; //รวมทั้งหมด ส่งให้จ่าย
+    
     for (let i = 0; i < orderId.length; i++) {
+      await Order.update(
+        {
+          shippingFeeMinor: shippingfee , //ราคาต่อร้าน
+          taxTotalMinor,
+          discountTotalMinor,
+          currencyCode: "THB",
+          orderNote,
+          grandTotalMinor: shippingfee + orderId[i].subtotalMinor + taxTotalMinor - discountTotalMinor, // , ไปรวมใน database แทน
+        },
+        { where: { id: orderId[i].id } }
+      );
       let orderData = await ShippingInfo.create({
         orderId: orderId[i].id,
         shippingTypeId,
@@ -646,15 +678,26 @@ export const createCart = async (
       cardId = haveshoppingCart.id;
     }
     if (product) {
-      const cardData = await ShoppingCartItem.create({
-        cartId: cardId,
-        productItemId,
-        quantity,
-        unitPriceMinor: product.priceMinor,
-      });
-      res.json({ data: cardData });
+      const findProduct = await ShoppingCartItem.findOne({
+        where: {productItemId: productItemId}
+      })
+      if(findProduct?.productItemId){
+        const cardData = await ShoppingCartItem.update({
+          quantity: quantity + findProduct.quantity,
+        },{where : { productItemId: productItemId }});
+        res.json({ data: cardData });
+      }else{
+        const cardData = await ShoppingCartItem.create({
+          cartId: cardId,
+          productItemId,
+          quantity,
+          unitPriceMinor: product.priceMinor,
+        });
+        res.json({ data: cardData });
+      }
     }
   } catch (error) {
+    console.log()
     res.json({ error: error });
   }
 };

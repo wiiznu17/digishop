@@ -12,7 +12,11 @@ export interface OrderDetail {
   reference: string;
   status: string;
   grand_total_minor: number;
+  subtotal_minor:number
+  shipping_fee_minor:number
+  discount_total_minor:number
   created_at: Date;
+  currency_code: string
   checkout: CheckOut
   shippingInfo: {
     id: number;
@@ -27,8 +31,10 @@ export interface OrderDetail {
   items: [
     {
       quantity: number;
-      unit_price_minor: number;
+      unitPriceMinor: number;
+      lineTotalMinor: number
       productItem: ProductItemProps;
+      product_name_snapshot: string
     },
   ];
 }
@@ -84,7 +90,8 @@ export interface Order {
   customerId: number;
   orderNote?: string;
   paymentMethod: PaymentMethod | string;
-  grandTotalMinor: number;
+  productprice: number,
+  shippingfee: number,
   shippingTypeId: number;
   shippingAddress: number;
   createdAt?: Date;

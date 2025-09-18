@@ -36,9 +36,9 @@ export default function OrderPage() {
     paymentMethod: PaymentMethod.CREDIT_CARD,
     shippingTypeId: 0,
     shippingAddress: 0,
-    grandTotalMinor: 0,
+    productprice: 0,
+    shippingfee: 0,
   });
-  const [total, setTotal] = useState(0);
   const [price, setPrice] = useState<number[]>([]);
   const [note, setNote] = useState<string>("");
   const [addresses, setAddresses] = useState<Address[]>();
@@ -61,7 +61,6 @@ export default function OrderPage() {
     };
     fetchData();
   }, [user, orderCode]);
-  console.log(orderDetail);
   useEffect(() => {
     const isMain = addresses?.filter((item) => item.isDefault === true);
     if (isMain) {
@@ -85,10 +84,8 @@ export default function OrderPage() {
       shippingAddress: selectAddress.id,
       paymentMethod: paymentMethod,
       orderNote: note,
-      grandTotalMinor:
-        shipping[selectShippingTypeId - 1].price * orderDetail.length +
-        total +
-        sumPriceTotal(orderDetail),
+      productprice: sumPriceTotal(orderDetail) * 100,
+      shippingfee: shipping[selectShippingTypeId - 1].price,
     });
   }, [
     orderCode,
@@ -99,17 +96,16 @@ export default function OrderPage() {
     selectShippingTypeId,
     note,
     paymentMethod,
-    shipping,
-    total,
+    shipping
   ]);
   const sumPrice = (
-    items: [
-      {
-        quantity: number;
-        unit_price_minor: number;
-        productItem: ProductItemProps;
-      },
-    ]
+    items: [{
+    quantity: number;
+    unitPriceMinor: number;
+    lineTotalMinor: number;
+    productItem: ProductItemProps;
+    product_name_snapshot: string;
+  }]
   ) => {
     let sum = 0;
     for (let i = 0; i < items.length; i++) {
@@ -145,12 +141,11 @@ export default function OrderPage() {
   };
   const handleOrder = async () => {
     if (!order) return;
+    console.log(order)
     const res = await createOrder(order);
-    console.log("res", res.data);
     if (res.data.redirect_url) {
       redirect(res.data.redirect_url, RedirectType.replace);
     }
-    console.log('send',order);
   };
 
   const handleOnClickSelectAddress = (): void => {
@@ -205,7 +200,7 @@ export default function OrderPage() {
                                     {value.productItem.sku}
                                   </div>
                                   <div className="absolute bottom-5 right-0  text-gray-500 ">
-                                    price: {value.unit_price_minor / 100}
+                                    price: {value.unitPriceMinor / 100}
                                   </div>
                                   <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
                                     x {String(value.quantity)}
@@ -234,7 +229,7 @@ export default function OrderPage() {
                 <div className="rounded-lg shadow-md py-4 px-2">
                   {selectAddress && (
                     <div>
-                      <div className="bg-gray-200 p-3 rounded-2xl max-w-xl ">
+                      <div className="bg-gray-200 p-3 rounded-2xl max-w-xl mb-2">
                         <div className="font-bold">
                           {selectAddress.recipientName}
                         </div>
@@ -300,14 +295,13 @@ export default function OrderPage() {
                     </div>
                     <div className=" font-medium">
                       {shipping[selectShippingTypeId - 1].price *
-                        orderDetail.length}
+                        orderDetail.length / 100}
                     </div>
                   </div>
                   <div className=" border-gray-400 pt-2 flex justify-end items-center border-t">
                     <span className="text-lg font-semibold">
                       {shipping[selectShippingTypeId - 1].price *
-                        orderDetail.length +
-                        total +
+                        orderDetail.length / 100 +
                         sumPriceTotal(orderDetail)}
                     </span>
                   </div>
@@ -359,6 +353,35 @@ export default function OrderPage() {
     </div>
   ) : (
     <div>
+      {orderDetail[0].checkout.payment.pgw_status == "PENDING" && (
+        <div>
+          <div className="flex justify-center items-center p-4 ">
+            <div>
+              <div className="flex mb-3">
+                <div className="text-4xl m-3 p-3">Order is error</div>
+                <p>Please order again</p>
+              </div>
+              <div className="flex justify-center">
+                <div className="flex">
+                  <Button
+                    onClick={() => router.replace("/digishop/order/status")}
+                    className="p-3  cursor-pointer text-black"
+                  >
+                    see order status
+                  </Button>
+                  <Button
+                    onClick={() => router.replace("/digishop")}
+                    className="ml-6 p-4 bg-blue-300 cursor-pointer"
+                  >
+                    back first page
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+      }
       {orderDetail[0].checkout.payment.pgw_status == "APPROVED" && (
         <div>
           <div className="flex justify-center items-center p-4 ">
