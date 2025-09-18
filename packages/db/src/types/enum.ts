@@ -22,6 +22,12 @@ export enum StoreStatus {
   BANNED = 'BANNED',
 }
 
+export enum UserStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  BANNED = 'BANNED',
+}
+
 export enum BankAccountStatus {
   PENDING = 'PENDING',
   APPROVED = 'VERIFIED',
