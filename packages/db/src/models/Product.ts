@@ -1,5 +1,5 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
-import { ProductStatus } from '../types/enum';
+import { ProductReqStatus, ProductStatus } from '../types/enum';
 import type { NonAttribute, Association } from 'sequelize';
 import type { ProductImage } from './ProductImage';
 import type { ProductItem } from './ProductItem';
@@ -14,6 +14,8 @@ export interface ProductAttributes {
   // price: number;  now we use product item for price/stock (string) , simple (number)
   // stockQuantity: number;  now we use product item for price/stock
   status: ProductStatus;
+  reqStatus: ProductReqStatus;
+  rejectReason: string;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
@@ -36,6 +38,8 @@ export class Product
   public name!: string;
   public description!: string | null;
   public status!: ProductStatus;
+  public reqStatus!: ProductReqStatus;
+  public rejectReason!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
   public readonly deletedAt!: Date | null;
@@ -88,6 +92,15 @@ export class Product
           type: DataTypes.ENUM(...Object.values(ProductStatus)),
           allowNull: false,
           defaultValue: ProductStatus.ACTIVE,
+        },
+        reqStatus: {
+          type: DataTypes.ENUM(...Object.values(ProductReqStatus)),
+          allowNull: false,
+          defaultValue: ProductReqStatus.PENDING,
+        },
+        rejectReason: {
+          type: DataTypes.STRING(191),
+          allowNull: true,
         },
         createdAt: {
           type: DataTypes.DATE,

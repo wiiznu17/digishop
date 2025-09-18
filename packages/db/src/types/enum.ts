@@ -22,6 +22,12 @@ export enum StoreStatus {
   BANNED = 'BANNED',
 }
 
+export enum UserStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  BANNED = 'BANNED',
+}
+
 export enum BankAccountStatus {
   PENDING = 'PENDING',
   APPROVED = 'VERIFIED',
@@ -35,9 +41,14 @@ export enum ShippingType {
 
 export enum ProductStatus { // สำหรับให้ร้านค้าเลือกว่าสินค้านี้ยังขายอยู่ไหม ส่วน status ที่เกี่ยวกับการขอลงขายสินค้ายังไม่มี
   ACTIVE = 'ACTIVE',
-  SUSPENDED = 'SUSPENDED'
+  INACTIVE = 'INACTIVE'
 }
 
+export enum ProductReqStatus { // สำหรับให้ร้านค้าเลือกว่าสินค้านี้ยังขายอยู่ไหม ส่วน status ที่เกี่ยวกับการขอลงขายสินค้ายังไม่มี
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECT = 'REJECT'
+}
 export enum OrderStatus {
   PENDING = "PENDING",                  // รอการชำระเงิน (ลูกค้ายังไม่ได้จ่าย)
   CUSTOMER_CANCELED = "CUSTOMER_CANCELED", // ลูกค้ายกเลิกเองก่อนจ่าย

@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import {
   ChevronUp,
   Home,
@@ -9,10 +11,8 @@ import {
   User,
   BarChart3,
   Users,
-  WalletCards,
   WalletMinimal
 } from "lucide-react"
-import Link from "next/link"
 
 import {
   Sidebar,
@@ -20,7 +20,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -32,53 +31,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
-import { Button } from "./ui/button"
 
-const items = [
-  {
-    title: "Dashboard*",
-    url: "/",
-    icon: Home
-  },
-  {
-    title: "Orders",
-    url: "/orders",
-    icon: ShoppingCart
-  },
-  {
-    title: "Products",
-    url: "/products",
-    icon: Package
-  },
-  {
-    title: "Customers*",
-    url: "/customers",
-    icon: Users
-  },
-  {
-    title: "Analytics*",
-    url: "/analytics",
-    icon: BarChart3
-  },
-  {
-    title: "Bank Account",
-    url: "/balance",
-    icon: WalletMinimal
-  },
-  {
-    title: "Profile",
-    url: "/profile",
-    icon: User
-  },
-  {
-    title: "Settings*",
-    url: "/settings",
-    icon: Settings
-  }
+type NavItem = {
+  title: string
+  url: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+const items: NavItem[] = [
+  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Orders", url: "/orders", icon: ShoppingCart },
+  { title: "Products", url: "/products", icon: Package },
+  { title: "Customers", url: "/customers", icon: Users },
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Bank Account", url: "/balance", icon: WalletMinimal },
+  { title: "Profile", url: "/profile", icon: User },
+  { title: "Settings", url: "/settings", icon: Settings }
 ]
-// วางฟังก์ชันนี้ไว้นอก AppSidebar หรือจะ import มาจากไฟล์อื่นก็ได้
+
+// โลโก้ง่าย ๆ (inline SVG) — เปลี่ยนได้ตามต้องการ
 function Logo() {
   return (
     <svg
@@ -90,6 +63,7 @@ function Logo() {
       strokeLinecap="round"
       strokeLinejoin="round"
       className="mr-2 h-6 w-6"
+      aria-hidden="true"
     >
       <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
     </svg>
@@ -97,26 +71,35 @@ function Logo() {
 }
 
 export function AppSidebar() {
-  const { logout, isLoading } = useAuth()
+  const pathname = usePathname()
   const router = useRouter()
+  const { logout, isLoading } = useAuth()
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/"
+    return pathname.startsWith(href)
+  }
 
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          {/* <SidebarGroupLabel>Merchant</SidebarGroupLabel> */}
-          <SidebarHeader>
-            <div className="flex items-center gap-2">
+          <SidebarHeader className="border-b px-3 py-4">
+            <Link href="/" className="flex items-center gap-2">
               <Logo />
               <h2 className="text-xl font-semibold tracking-tight">DigiShop</h2>
-            </div>
+            </Link>
           </SidebarHeader>
+
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <Link
+                      href={item.url}
+                      aria-current={isActive(item.url) ? "page" : undefined}
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -127,31 +110,34 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User /> Merchant Account
+                  <User />
+                  Merchant Account
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>
-                  <span>Account Settings</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">Account Settings</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Business Profile</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">Business Profile</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="flex-1"
+                    className="w-full"
                     disabled={isLoading}
                     onClick={async () => {
                       await logout()
