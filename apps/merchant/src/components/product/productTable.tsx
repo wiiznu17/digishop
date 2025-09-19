@@ -9,8 +9,21 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { Edit, Trash2, Package, Image as ImageIcon, Eye } from "lucide-react"
+import {
+  Edit,
+  Trash2,
+  Package,
+  Image as ImageIcon,
+  Eye,
+  Info
+} from "lucide-react"
 import type { ProductListItem } from "../../types/props/productProp"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "../ui/tooltip"
 
 function formatTHBFromMinor(minor?: number | null) {
   const m = typeof minor === "number" ? minor : 0
@@ -57,6 +70,17 @@ export function ProductTable({
     products.length > 0 &&
     products.every((p) => selectedUuids.has(p.uuid))
 
+  const statusBadgeClass = (s: string) =>
+    s === "ACTIVE"
+      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+
+  const approvalBadgeClass = (a: string) =>
+    a === "APPROVED"
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300"
+      : a === "PENDING"
+        ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
+        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" // REJECT
   return (
     <Table>
       <TableHeader>
@@ -78,6 +102,7 @@ export function ProductTable({
           <TableHead>Price</TableHead>
           <TableHead>In Stock</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>Approval</TableHead>
           <TableHead>Images</TableHead>
           <TableHead>Action</TableHead>
         </TableRow>
@@ -156,18 +181,44 @@ export function ProductTable({
                 </span>
               </TableCell>
 
+              {/* Product Status */}
               <TableCell>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    product.status === "ACTIVE"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                      : product.status === "OUT_OF_STOCK"
-                        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                        : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-                  }`}
+                  className={`px-2 py-1 rounded-full text-xs ${statusBadgeClass(product.status)}`}
                 >
                   {product.status}
                 </span>
+              </TableCell>
+
+              {/* Approval Status + Reason */}
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${approvalBadgeClass(product.reqStatus)}`}
+                  >
+                    {product.reqStatus}
+                  </span>
+                  {product.reqStatus === "REJECT" && product.rejectReason && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="p-1 rounded hover:bg-muted"
+                            aria-label="Reject reason"
+                          >
+                            <Info className="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs leading-snug">
+                            {product.rejectReason}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
               </TableCell>
 
               <TableCell>
@@ -187,7 +238,6 @@ export function ProductTable({
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-
                   <Button
                     variant="outline"
                     size="sm"
@@ -195,13 +245,10 @@ export function ProductTable({
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (product.uuid) onDelete(product.uuid)
-                    }}
+                    onClick={() => product.uuid && onDelete(product.uuid)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

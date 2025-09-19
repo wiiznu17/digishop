@@ -1,4 +1,3 @@
-// apps/merchant/src/app/(main)/products/[productUuid]/page.tsx
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
@@ -22,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ProductItemLite } from "@/types/props/productProp"
 
 type ProductDetail = Awaited<ReturnType<typeof fetchProductDetailRequester>>
 
@@ -221,6 +221,7 @@ export default function ProductDetailPage() {
                     <p className="text-sm text-muted-foreground mt-2">
                       {data.description || "—"}
                     </p>
+
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
                       {data.category?.name && (
                         <div className="px-2 py-1 rounded border bg-muted/40">
@@ -231,12 +232,22 @@ export default function ProductDetailPage() {
                         Status: {data.status}
                       </div>
                       <div className="px-2 py-1 rounded border bg-muted/40">
+                        Approval: {data.reqStatus}
+                      </div>
+                      <div className="px-2 py-1 rounded border bg-muted/40">
                         Created: {formatDate(data.createdAt)}
                       </div>
                       <div className="px-2 py-1 rounded border bg-muted/40">
                         Updated: {formatDate(data.updatedAt)}
                       </div>
                     </div>
+
+                    {data.reqStatus === "REJECT" && !!data.rejectReason && (
+                      <div className="mt-3 text-sm rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2">
+                        <span className="font-medium">Rejected reason:</span>{" "}
+                        <span className="opacity-90">{data.rejectReason}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -403,12 +414,13 @@ export default function ProductDetailPage() {
                             (it as { isEnable?: boolean }).isEnable !== false
                           // รองรับทั้ง field เดิมและใหม่
                           const itemImgUrl =
-                            (it as any).productItemImage?.url ??
+                            (it as ProductItemLite).productItemImage?.url ??
                             it.imageUrl ??
                             null
                           const itemLabel =
                             it.sku ||
-                            (it as any).productItemImage?.fileName ||
+                            (it as ProductItemLite).productItemImage
+                              ?.fileName ||
                             "Item image"
                           return (
                             <tr key={it.uuid} className="border-t">
