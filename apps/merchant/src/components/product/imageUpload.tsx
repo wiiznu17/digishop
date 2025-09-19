@@ -1,4 +1,3 @@
-// apps/merchant/src/components/product/imageUpload.tsx
 "use client"
 
 import { useState, useRef } from "react"
@@ -64,6 +63,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [fileInputKey, setFileInputKey] = useState(0) // เพื่อ recreate input ทุกครั้งหลังเลือกไฟล์
 
   // สำหรับ compact: กำลังจะเปลี่ยนภาพ index ไหน
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null)
@@ -180,7 +180,10 @@ export function ImageUpload({
   // ===== File pick =====
   const triggerPick = (opts?: { replaceAt?: number | null }) => {
     setReplaceIndex(opts?.replaceAt ?? null)
-    fileInputRef.current?.click()
+    // recreate input เพื่อกัน onChange เงียบเมื่อเลือกไฟล์เดิม
+    setFileInputKey((k) => k + 1)
+    // ใช้ setTimeout เล็กน้อยเพื่อให้ input ถูก mount ใหม่ก่อน click
+    setTimeout(() => fileInputRef.current?.click(), 0)
   }
 
   const handleFileSelect = async (
@@ -213,31 +216,40 @@ export function ImageUpload({
         const previewUrl = URL.createObjectURL(file)
         newThumbs.push({
           url: previewUrl,
-          fileName: file.name,
-          isMain: images.length === 0 && newThumbs.length === 0,
-          sortOrder: images.length + newThumbs.length - 1
+          fileName: file.name
         })
       }
 
       if (variant === "compact") {
+        // replace ที่ index ระบุ
         const idx = replaceIndex ?? (images.length ? 0 : null)
         if (idx == null) {
+          // ไม่มีรูปเดิม → เพิ่มใหม่
           onImagesChange(
             [...images, ...newThumbs.slice(0, 1)].map((img, i) => ({
               ...img,
+              isMain: i === 0 ? true : img.isMain,
               sortOrder: i
             }))
           )
         } else if (newThumbs[0]) {
           const next = images.map((im, i) =>
-            i === idx ? { ...newThumbs[0], isMain: im.isMain } : im
+            i === idx
+              ? {
+                  ...newThumbs[0],
+                  // preserve บาง flag จากภาพเดิมไว้
+                  isMain: im.isMain
+                }
+              : im
           )
           onImagesChange(next.map((x, i) => ({ ...x, sortOrder: i })))
         }
       } else {
+        // เพิ่มต่อท้าย (default)
         onImagesChange(
           [...images, ...newThumbs].map((img, idx) => ({
             ...img,
+            isMain: idx === 0 ? true : img.isMain,
             sortOrder: idx
           }))
         )
@@ -248,11 +260,13 @@ export function ImageUpload({
     } finally {
       setUploading(false)
       setReplaceIndex(null)
+      // reset input value + recreate key กันเลือกไฟล์เดิมแล้วไม่ยิง onChange
       if (fileInputRef.current) fileInputRef.current.value = ""
+      setFileInputKey((k) => k + 1)
     }
   }
 
-  // ===== Mutations =====
+  // ===== Mutations (server) =====
   const removeImage = async (index: number, e?: React.MouseEvent) => {
     e?.preventDefault()
     e?.stopPropagation()
@@ -361,7 +375,9 @@ export function ImageUpload({
     return (
       <div
         className="relative w-full h-full rounded-md border bg-muted/30 overflow-hidden group"
-        onClick={() => hasImage && openPreviewAt(0)}
+        onClick={() => {
+          if (hasImage) openPreviewAt(0)
+        }}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -370,6 +386,7 @@ export function ImageUpload({
       >
         {/* input ไฟล์ — แยกออก ไม่ห่อด้วย label */}
         <Input
+          key={fileInputKey}
           ref={fileInputRef}
           type="file"
           accept="image/*"
@@ -398,7 +415,7 @@ export function ImageUpload({
               alt={images[0].fileName}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
             />
-            {/* overlay: background คลิกทะลุไป container เพื่อเปิด preview */}
+            {/* overlay: ใช้ pointer-events-none กับพื้นหลัง แต่ปุ่มเป็น pointer-events-auto */}
             <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               <Button
                 type="button"
@@ -467,6 +484,7 @@ export function ImageUpload({
       </div>
 
       <Input
+        key={fileInputKey}
         ref={fileInputRef}
         type="file"
         accept="image/*"
@@ -639,6 +657,11 @@ export function ImageUpload({
       {/* ===== Preview (Lightbox) ===== */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] p-0 overflow-hidden">
+          {/* A11y: ต้องมี DialogTitle */}
+          <DialogHeader>
+            <DialogTitle className="sr-only">Image preview</DialogTitle>
+          </DialogHeader>
+
           <div className="relative bg-black">
             {images[previewIndex] && (
               <img
@@ -654,6 +677,7 @@ export function ImageUpload({
                   type="button"
                   className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
                   onClick={prevPreview}
+                  aria-label="Previous image"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
@@ -661,6 +685,7 @@ export function ImageUpload({
                   type="button"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
                   onClick={nextPreview}
+                  aria-label="Next image"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
