@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { ProductItemLite } from "@/types/props/productProp"
 
@@ -496,6 +496,11 @@ export default function ProductDetailPage() {
       {/* ===== Lightbox Preview ===== */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] p-0 overflow-hidden">
+          {/* A11y: ต้องมี DialogTitle */}
+          <DialogHeader>
+            <DialogTitle className="sr-only">Image preview</DialogTitle>
+          </DialogHeader>
+
           <div className="relative bg-black">
             {previewList[previewIndex] && (
               <img
