@@ -34,7 +34,7 @@ router.post(
   authenticate,
   upload.fields([
     { name: "productImages", maxCount: 20 },
-    { name: "itemImages", maxCount: 500 }
+    { name: "itemImages", maxCount: 50 }
   ]) as any,
   syncCreateDesiredProduct
 );
@@ -44,7 +44,7 @@ router.put(
   authenticate,
   upload.fields([
     { name: "productImages", maxCount: 20 },
-    { name: "itemImages", maxCount: 500 }
+    { name: "itemImages", maxCount: 50 }
   ]) as any,
   syncUpdateDesiredProduct
 );
