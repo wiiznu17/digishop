@@ -2,6 +2,7 @@ import { NextFunction, Response, Request, Router } from 'express'
 import sequelize from '@digishop/db'
 import userRouter from './routes/userRouter'
 import categoryRouter from './routes/categoryRouter'
+import productRouter from './routes/productRouter'
 
 const router = Router()
 
@@ -17,6 +18,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.use('/user', userRouter)
 router.use('/admin/categories', categoryRouter)
+router.use('/admin/products', productRouter)
 
 export default router
 

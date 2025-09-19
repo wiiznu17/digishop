@@ -68,7 +68,7 @@ const groups: NavGroup[] = [
   {
     label: "Commerce",
     items: [
-      { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+      { title: "Orders*", url: "/admin/orders", icon: ShoppingCart },
       { title: "Refunds", url: "/admin/refunds", icon: RotateCcw },
       // { title: "Disputes", url: "/admin/disputes", icon: Gavel },
       { title: "Payments", url: "/admin/payments", icon: CreditCard },
