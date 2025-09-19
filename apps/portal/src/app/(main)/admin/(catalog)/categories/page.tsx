@@ -36,6 +36,7 @@ import { CategoryQuickViewDialog } from "@/components/admin/categories/category-
 import { CategoryFormDialog } from "@/components/admin/categories/category-form"
 // import { ConfirmHideDialog } from "@/components/admin/categories/confirm-hide"
 import { DeleteOrMoveDialog } from "@/components/admin/categories/delete-or-move"
+import { DashboardHeader } from "@/components/dashboard-header"
 
 // ——— URL query helpers ———
 function useQueryState() {
@@ -231,99 +232,102 @@ export default function AdminCategoriesPage() {
   }, [])
 
   return (
-    <div className="p-4">
-      <Card>
-        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <CardTitle>Categories</CardTitle>
-            <CardDescription>
-              แสดงเฉพาะ Root ก่อน — คลิกเพื่อดู Subcategories (มี breadcrumb,
-              quick view, search+suggest)
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button className="gap-2" onClick={() => onEdit(undefined)}>
-              <Plus className="h-4 w-4" />
-              Add Category
-            </Button>
-          </div>
-        </CardHeader>
+    <div>
+      <DashboardHeader
+        title="Category"
+        description="Manage all categories in platform"
+      ></DashboardHeader>
+      <div className="p-4">
+        <Card>
+          <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <CardTitle>Categories</CardTitle>
+              <CardDescription>Click to see Subcategories</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button className="gap-2" onClick={() => onEdit(undefined)}>
+                <Plus className="h-4 w-4" />
+                Add Category
+              </Button>
+            </div>
+          </CardHeader>
 
-        <CardContent className="space-y-4">
-          <CategoryBreadcrumbs items={crumbs} onNavigate={(u) => goTo(u)} />
+          <CardContent className="space-y-4">
+            <CategoryBreadcrumbs items={crumbs} onNavigate={(u) => goTo(u)} />
 
-          <CategorySearchBar
-            defaultValue={{ q }}
-            onApply={onSearchApply}
-            suggest={suggest}
-          />
+            <CategorySearchBar
+              defaultValue={{ q }}
+              onApply={onSearchApply}
+              suggest={suggest}
+            />
 
-          <CategoryTable
-            loading={loading}
-            rows={rows}
-            onRowClick={onRowClick}
-            onQuickView={onQuickView}
-            onEdit={onEdit}
-            // onToggleHide={onToggleHide}
-            onDelete={onDelete}
-          />
+            <CategoryTable
+              loading={loading}
+              rows={rows}
+              onRowClick={onRowClick}
+              onQuickView={onQuickView}
+              onEdit={onEdit}
+              // onToggleHide={onToggleHide}
+              onDelete={onDelete}
+            />
 
-          <AdminPagination
-            currentPage={page}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            itemsPerPage={pageSize}
-            onPageChange={onPageChange}
-            onItemsPerPageChange={onPageSizeChange}
-            showItemsPerPageSelector
-          />
-        </CardContent>
-      </Card>
+            <AdminPagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={pageSize}
+              onPageChange={onPageChange}
+              onItemsPerPageChange={onPageSizeChange}
+              showItemsPerPageSelector
+            />
+          </CardContent>
+        </Card>
 
-      {/* Quick view */}
-      <CategoryQuickViewDialog
-        item={quickView}
-        onOpenChange={() => setQuickView(null)}
-      />
+        {/* Quick view */}
+        <CategoryQuickViewDialog
+          item={quickView}
+          onOpenChange={() => setQuickView(null)}
+        />
 
-      {/* Create / Edit */}
-      <CategoryFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        initial={
-          editItem
-            ? {
-                name: editItem.name,
-                // status: editItem.status,
-                parentUuid: editItem.parentUuid
-              }
-            : {
-                name: "",
-                // status: "ACTIVE",
-                parentUuid: parentUuid ?? null
-              }
-        }
-        parentDefaultName={crumbs[crumbs.length - 1]?.name ?? "Root"}
-        onSubmit={onSubmitForm}
-      />
+        {/* Create / Edit */}
+        <CategoryFormDialog
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          initial={
+            editItem
+              ? {
+                  name: editItem.name,
+                  // status: editItem.status,
+                  parentUuid: editItem.parentUuid
+                }
+              : {
+                  name: "",
+                  // status: "ACTIVE",
+                  parentUuid: parentUuid ?? null
+                }
+          }
+          parentDefaultName={crumbs[crumbs.length - 1]?.name ?? "Root"}
+          onSubmit={onSubmitForm}
+        />
 
-      {/* Hide confirm */}
-      {/* <ConfirmHideDialog
+        {/* Hide confirm */}
+        {/* <ConfirmHideDialog
         item={hideItem}
         onCancel={() => setHideItem(null)}
         onConfirm={onConfirmHide}
       /> */}
 
-      {/* Delete or Move */}
-      <DeleteOrMoveDialog
-        item={deleteItem}
-        options={flatOptions}
-        onCancel={() => setDeleteItem(null)}
-        onMoveAndDelete={(targetUuid) => {
-          if (!deleteItem) return
-          onMoveAndDelete(deleteItem.uuid, targetUuid)
-        }}
-      />
+        {/* Delete or Move */}
+        <DeleteOrMoveDialog
+          item={deleteItem}
+          options={flatOptions}
+          onCancel={() => setDeleteItem(null)}
+          onMoveAndDelete={(targetUuid) => {
+            if (!deleteItem) return
+            onMoveAndDelete(deleteItem.uuid, targetUuid)
+          }}
+        />
+      </div>
     </div>
   )
 }
