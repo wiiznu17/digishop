@@ -15,7 +15,7 @@ export interface ProductAttributes {
   // stockQuantity: number;  now we use product item for price/stock
   status: ProductStatus;
   reqStatus: ProductReqStatus;
-  rejectReason: string;
+  rejectReason: string | null;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
@@ -39,7 +39,7 @@ export class Product
   public description!: string | null;
   public status!: ProductStatus;
   public reqStatus!: ProductReqStatus;
-  public rejectReason!: string;
+  public rejectReason!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
   public readonly deletedAt!: Date | null;
