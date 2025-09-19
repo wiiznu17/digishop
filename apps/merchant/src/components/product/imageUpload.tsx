@@ -11,7 +11,6 @@ import {
   Image as ImageIcon,
   Star,
   Crop as CropIcon,
-  Repeat as ChangeIcon,
   ChevronLeft,
   ChevronRight
 } from "lucide-react"
@@ -63,7 +62,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [fileInputKey, setFileInputKey] = useState(0) // เพื่อ recreate input ทุกครั้งหลังเลือกไฟล์
+  const [fileInputKey, setFileInputKey] = useState(0) // recreate input ทุกครั้งหลังเลือกไฟล์
 
   // สำหรับ compact: กำลังจะเปลี่ยนภาพ index ไหน
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null)
@@ -350,6 +349,10 @@ export function ImageUpload({
     }
   }
 
+  // ===== Helpers: ตรวจว่าคลิกมาจากปุ่มควบคุมบนภาพหรือไม่ =====
+  const isFromCtrl = (el: EventTarget | null) =>
+    !!(el && (el as HTMLElement).closest('[data-imgui="ctrl"]'))
+
   // ===== Preview (Lightbox) =====
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewIndex, setPreviewIndex] = useState<number>(0)
@@ -375,8 +378,10 @@ export function ImageUpload({
     return (
       <div
         className="relative w-full h-full rounded-md border bg-muted/30 overflow-hidden group"
-        onClick={() => {
-          if (hasImage) openPreviewAt(0)
+        onClick={(e) => {
+          if (!hasImage) return
+          if (isFromCtrl(e.target)) return // กดปุ่มควบคุม → ไม่เปิด preview
+          openPreviewAt(0)
         }}
         role="button"
         tabIndex={0}
@@ -415,7 +420,7 @@ export function ImageUpload({
               alt={images[0].fileName}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
             />
-            {/* overlay: ใช้ pointer-events-none กับพื้นหลัง แต่ปุ่มเป็น pointer-events-auto */}
+            {/* overlay: ปิด pointer กับพื้นหลัง แต่เปิดให้กับปุ่ม */}
             <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               <Button
                 type="button"
@@ -423,6 +428,11 @@ export function ImageUpload({
                 variant="secondary"
                 className={actionBtnClass}
                 title="Crop"
+                data-imgui="ctrl"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -434,23 +444,14 @@ export function ImageUpload({
               <Button
                 type="button"
                 size="icon"
-                variant="secondary"
-                className={actionBtnClass}
-                title="Change image"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  triggerPick({ replaceAt: 0 })
-                }}
-              >
-                <ChangeIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
                 variant="destructive"
                 className={actionBtnClass}
                 title="Remove"
+                data-imgui="ctrl"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 onClick={(e) => removeImage(0, e)}
               >
                 <X className="h-4 w-4" />
@@ -516,7 +517,10 @@ export function ImageUpload({
             >
               <div
                 className="aspect-square relative cursor-zoom-in"
-                onClick={() => openPreviewAt(index)}
+                onClick={(e) => {
+                  // เปิด preview เฉพาะคลิกพื้นหลัง ไม่ใช่คลิกปุ่ม overlay
+                  if (e.target === e.currentTarget) openPreviewAt(index)
+                }}
               >
                 <img
                   src={image.url}
@@ -615,6 +619,7 @@ export function ImageUpload({
       <Dialog open={cropOpen} onOpenChange={setCropOpen}>
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
+            {/* A11y: Radix ต้องมี DialogTitle */}
             <DialogTitle>Crop image</DialogTitle>
           </DialogHeader>
 
@@ -657,10 +662,21 @@ export function ImageUpload({
       {/* ===== Preview (Lightbox) ===== */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] p-0 overflow-hidden">
-          {/* A11y: ต้องมี DialogTitle */}
+          {/* A11y: ต้องมี DialogTitle (ซ่อนด้วย sr-only) */}
           <DialogHeader>
             <DialogTitle className="sr-only">Image preview</DialogTitle>
           </DialogHeader>
+
+          {/* ปุ่มปิดสีแดง มุมขวาบน */}
+          <button
+            type="button"
+            aria-label="Close preview"
+            onClick={() => setPreviewOpen(false)}
+            className="absolute right-3 top-3 z-50 inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+            title="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
 
           <div className="relative bg-black">
             {images[previewIndex] && (
