@@ -4,11 +4,13 @@ import type { Product, ProductListItem } from "@/types/props/productProp"
 //  light-weight เพื่อลด coupling
 export type SortBy = "createdAt" | "updatedAt" | "name" | "price"
 export type SortDir = "asc" | "desc"
+export type reqStatus = "PENDING" | "APPROVED" | "REJECT"
 
 export type FetchProductsParams = {
   q?: string
   categoryUuid?: string
-  status?: string
+  status?: "ACTIVE" | "INACTIVE"
+  reqStatus?: reqStatus
   inStock?: boolean
   sortBy?: SortBy
   sortDir?: SortDir
@@ -356,6 +358,7 @@ export type DesiredPayload = {
     name: string
     description?: string | null
     status: string
+    // reqStatus: string
     categoryUuid?: string | null
   }
   images: { product: DesiredImageInput[] }

@@ -24,7 +24,7 @@ export interface ProductAttributes {
 export interface ProductCreationAttributes
   extends Optional<
     ProductAttributes,
-    'id' | 'uuid' | 'description' | 'status' | 'createdAt' | 'updatedAt' | 'deletedAt'
+    'id' | 'uuid' | 'description' | 'reqStatus' | 'rejectReason' | 'createdAt' | 'updatedAt' | 'deletedAt'
   > {}
 
 export class Product

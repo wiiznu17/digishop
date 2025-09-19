@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover"
 import { Search, RotateCcw } from "lucide-react"
-import CATEGORYMASTER from "@/constants/master/categoryMaster.json"
+// import CATEGORYMASTER from "@/constants/master/categoryMaster.json"
 import PRODUCT_STATUS_MASTER from "@/constants/master/productStatusMaster.json"
+import PRODUCT_REQ_STATUS_MASTER from "@/constants/master/productReqStatusMaster.json"
 import type {
   CategoryDto,
   SortBy,
@@ -26,7 +27,8 @@ import { fetchProductSuggestionsRequester } from "@/utils/requestUtils/requestPr
 export type ProductFilterState = {
   q: string
   categoryUuid?: string
-  status?: string
+  status?: "ACTIVE" | "INACTIVE"
+  reqStatus?: "PENDING" | "APPROVED" | "REJECT" // << NEW
   stock: "in" | "out" | "all"
   sortBy: SortBy
   sortDir: SortDir
@@ -45,6 +47,7 @@ const DEFAULT_FILTERS: ProductFilterState = {
   q: "",
   categoryUuid: undefined,
   status: undefined,
+  reqStatus: undefined,
   stock: "all",
   sortBy: "createdAt",
   sortDir: "desc"
@@ -78,6 +81,14 @@ export function ProductFilters({
   const statuses = useMemo(
     () =>
       (Object.values(PRODUCT_STATUS_MASTER) as {
+        value: string
+        label: string
+      }[]) ?? [],
+    []
+  )
+  const reqStatuses = useMemo(
+    () =>
+      (Object.values(PRODUCT_REQ_STATUS_MASTER) as {
         value: string
         label: string
       }[]) ?? [],
@@ -262,7 +273,7 @@ export function ProductFilters({
         </div>
 
         {/* Status */}
-        <div>
+        {/* <div>
           <label className="block text-sm mb-1">Status</label>
           <Select
             value={v.status ?? ALL_VALUE}
@@ -276,6 +287,52 @@ export function ProductFilters({
             <SelectContent>
               <SelectItem value={ALL_VALUE}>All</SelectItem>
               {(statuses ?? []).map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div> */}
+        <div>
+          <label className="block text-sm mb-1">Product Status</label>
+          <Select
+            value={v.status ?? ALL_VALUE}
+            onValueChange={(val) =>
+              onChange({ status: val === ALL_VALUE ? undefined : (val as any) })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_VALUE}>All</SelectItem>
+              {statuses.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Approval Status (reqStatus) */}
+        <div>
+          <label className="block text-sm mb-1">Approval</label>
+          <Select
+            value={v.reqStatus ?? ALL_VALUE}
+            onValueChange={(val) =>
+              onChange({
+                reqStatus: val === ALL_VALUE ? undefined : (val as any)
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All approvals" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_VALUE}>All</SelectItem>
+              {reqStatuses.map((s) => (
                 <SelectItem key={s.value} value={s.value}>
                   {s.label}
                 </SelectItem>

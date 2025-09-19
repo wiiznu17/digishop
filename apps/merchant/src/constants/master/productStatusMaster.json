@@ -3,8 +3,8 @@
     "value": "ACTIVE",
     "label": "Active"
   },
-  "SUSPENDED": {
-    "value": "SUSPENDED",
-    "label": "Suspended"
+  "INACTIVE": {
+    "value": "INACTIVE",
+    "label": "Inactive"
   }
 }

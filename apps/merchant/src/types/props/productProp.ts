@@ -1,22 +1,32 @@
+// import { reqStatus } from "@/utils/requestUtils/requestProductUtils"
+
 // เพิ่ม interface สำหรับหน้า List
 export interface ProductListItem {
   uuid: string
   name: string
   description?: string | null
   status: ProductStatus // ใช้ enum เดิม (ไม่ใช่ string ธรรมดา)
+  reqStatus: reqStatus // << NEW
+  rejectReason?: string | null
   minPriceMinor?: number | null // ราคาต่ำสุดของ SKU หน่วยสตางค์
   totalStock?: number | null // stock รวมจาก SKU
   category?: { uuid: string; name: string } | null
   images?: ProductImage[]
-  createdAt: string // list รับเป็น string ชัดเจน
+  createdAt: string
   updatedAt: string
 }
 
 /** ================= Enums ================= */
 export enum ProductStatus {
   ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  OUT_OF_STOCK = "OUT_OF_STOCK"
+  INACTIVE = "INACTIVE"
+  // OUT_OF_STOCK = "OUT_OF_STOCK"
+}
+
+export enum reqStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECT = "REJECT"
 }
 
 /** =============== Lite Models (relations) =============== */
@@ -97,6 +107,8 @@ export interface Product {
   totalStock?: number | null
 
   status: ProductStatus
+  reqStatus: reqStatus
+  rejectReason?: string
 
   images?: ProductImage[]
 
@@ -120,6 +132,7 @@ export const defaultProduct: Product = {
   categoryId: undefined,
   totalStock: null,
   status: ProductStatus.ACTIVE,
+  reqStatus: reqStatus.PENDING,
   images: [],
   minPriceMinor: null,
   createdAt: undefined,

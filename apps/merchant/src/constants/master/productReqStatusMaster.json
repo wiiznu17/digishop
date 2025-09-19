@@ -1,0 +1,14 @@
+{
+  "PENDING": {
+    "value": "PENDING",
+    "label": "Pending"
+  },
+  "APPROVED": {
+    "value": "APPROVED",
+    "label": "Approved"
+  },
+  "REJECT": {
+    "value": "REJECT",
+    "label": "Reject"
+  }
+}

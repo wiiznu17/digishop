@@ -27,7 +27,14 @@ export default function ProductsPage() {
   const pageSize = Number(searchParams.get("pageSize") ?? 20)
   const q = searchParams.get("q") ?? ""
   const categoryUuid = searchParams.get("categoryUuid") ?? undefined
-  const status = searchParams.get("status") ?? undefined
+  const status =
+    (searchParams.get("status") as "ACTIVE" | "INACTIVE" | null) ?? undefined
+  const reqStatus =
+    (searchParams.get("reqStatus") as
+      | "PENDING"
+      | "APPROVED"
+      | "REJECT"
+      | null) ?? undefined
   const inStockParam = searchParams.get("inStock")
   const inStock = inStockParam == null ? undefined : inStockParam === "true"
   const sortBy =
@@ -39,6 +46,7 @@ export default function ProductsPage() {
     q,
     categoryUuid,
     status,
+    reqStatus,
     stock: inStock === undefined ? "all" : inStock ? "in" : "out",
     sortBy,
     sortDir
@@ -49,11 +57,12 @@ export default function ProductsPage() {
       q,
       categoryUuid,
       status,
+      reqStatus,
       stock: inStock === undefined ? "all" : inStock ? "in" : "out",
       sortBy,
       sortDir
     })
-  }, [q, categoryUuid, status, inStock, sortBy, sortDir])
+  }, [q, categoryUuid, status, reqStatus, inStock, sortBy, sortDir])
 
   const [products, setProducts] = useState<ProductRow[]>([])
   const [loading, setLoading] = useState<boolean>(false)
@@ -79,6 +88,7 @@ export default function ProductsPage() {
       q,
       categoryUuid,
       status,
+      reqStatus,
       inStock,
       sortBy,
       sortDir,
@@ -90,7 +100,17 @@ export default function ProductsPage() {
     setProducts(res.data)
     setTotalItems(res.meta.total)
     setTotalPages(res.meta.totalPages || 1)
-  }, [q, categoryUuid, status, inStock, sortBy, sortDir, page, pageSize])
+  }, [
+    q,
+    categoryUuid,
+    status,
+    reqStatus,
+    inStock,
+    sortBy,
+    sortDir,
+    page,
+    pageSize
+  ])
 
   useEffect(() => {
     void fetchList()
@@ -110,6 +130,7 @@ export default function ProductsPage() {
       q: filters.q,
       categoryUuid: filters.categoryUuid,
       status: filters.status,
+      reqStatus: filters.reqStatus,
       inStock:
         filters.stock === "all" ? undefined : String(filters.stock === "in"),
       sortBy: filters.sortBy,
@@ -123,6 +144,7 @@ export default function ProductsPage() {
       q: "",
       categoryUuid: undefined,
       status: undefined,
+      reqStatus: undefined,
       stock: "all",
       sortBy: "createdAt",
       sortDir: "desc"
@@ -131,6 +153,7 @@ export default function ProductsPage() {
       q: undefined,
       categoryUuid: undefined,
       status: undefined,
+      reqStatus: undefined,
       inStock: undefined,
       sortBy: "createdAt",
       sortDir: "desc",

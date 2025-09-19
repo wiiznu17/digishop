@@ -12,8 +12,114 @@ import { Variation } from "@digishop/db/src/models/Variation";
 import { VariationOption } from "@digishop/db/src/models/VariationOption";
 import { ProductItem } from "@digishop/db/src/models/ProductItem";
 import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
-import { ProductStatus } from "@digishop/db/src/types/enum";
+import { ProductReqStatus, ProductStatus } from "@digishop/db/src/types/enum";
 import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
+
+// ===== helper: canon/compare review-impacting footprint =====
+const canon = (x: unknown) => JSON.stringify(x)
+
+type ReviewFootprint = {
+  name: string
+  description: string | null
+  categoryId: number | null
+  images: { uuids: string[]; mainUuid: string | null }         // ไม่สนใจ sortOrder
+  variations: { name: string; options: string[] }[]             // เทียบด้วยชื่อ/ค่า
+  items: { sku: string; comboKey: string }[]                    // ไม่ใส่ราคา/สต็อก/isEnable
+}
+
+/** comboKey: option uuids เรียงตามลำดับ variation */
+const makeComboKeyFromItem = (
+  it: ProductItem & { configurations?: (ProductConfiguration & { variationOption?: VariationOption })[] },
+  varIndexById: Map<number, number>
+) => {
+  const pairs = (it.configurations ?? [])
+    .map(c => ({
+      variationId: c.variationOption?.variationId!,
+      optionUuid: c.variationOption?.uuid!
+    }))
+    .filter(p => !!p.variationId && !!p.optionUuid)
+
+  const sorted = pairs.sort((a, b) => (varIndexById.get(a.variationId)! - varIndexById.get(b.variationId)!))
+  return sorted.map(p => p.optionUuid).join("|")
+}
+
+const buildFootprintFromDB = async (productId: number, t: any): Promise<ReviewFootprint> => {
+  const [p, imgs, vars, items] = await Promise.all([
+    Product.findByPk(productId),
+    ProductImage.findAll({ where: { productId }, transaction: t }),
+    Variation.findAll({ where: { productId }, include: [{ model: VariationOption, as: "options" }], transaction: t }),
+    ProductItem.findAll({
+      where: { productId },
+      include: [{
+        model: ProductConfiguration, as: "configurations",
+        include: [{ model: VariationOption, as: "variationOption", attributes: ["uuid","variationId"] }]
+      }],
+      transaction: t
+    })
+  ])
+
+  // สร้างแผนที่ index ของ variation เพื่อสร้าง comboKey ให้สม่ำเสมอ
+  const varIndexById = new Map<number, number>()
+  vars.forEach((v, i) => varIndexById.set(v.id, i))
+
+  const mainImg = imgs.find(i => i.isMain) ?? null
+  return {
+    name: p!.name.trim(),
+    description: (p!.description ?? null)?.toString().trim() || null,
+    categoryId: p!.categoryId ?? null,
+    images: {
+      uuids: imgs.map(i => i.uuid).sort(),
+      mainUuid: mainImg?.uuid ?? null
+    },
+    variations: vars
+      .map(v => ({
+        name: v.name.trim(),
+        options: (v.options ?? []).map(o => o.value.trim()).sort()
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    items: items
+      .map(it => ({
+        sku: (it.sku ?? "").trim(),
+        comboKey: makeComboKeyFromItem(it as any, varIndexById)
+      }))
+      .sort((a, b) => (a.sku + a.comboKey).localeCompare(b.sku + b.comboKey))
+  }
+}
+
+const buildFootprintFromDesired = (desired: DS_Payload, resolvedCategoryId: number | null): ReviewFootprint => {
+  // ถ้ารูปมี uploadKey อย่างน้อย 1 ถือว่า “ชุดรูปภาพเปลี่ยน”
+  const desiredImgUuids = desired.images.product
+    .map(p => p.uuid)
+    .filter((u): u is string => !!u)
+    .sort()
+  const desiredMainUuid =
+    desired.images.product.find(p => p.isMain && p.uuid)?.uuid ?? null
+  const hasNewUploads = desired.images.product.some(p => !!p.uploadKey)
+
+  // variations/options: เทียบชื่อและค่า (ไม่พึ่ง uuid เพื่อรองรับออปชันใหม่)
+  const vars = (desired.variations ?? []).map(v => ({
+    name: (v.name ?? "").trim(),
+    options: (v.options ?? []).map(o => (o.value ?? "").trim()).sort()
+  })).sort((a, b) => a.name.localeCompare(b.name))
+
+  // items: เทียบเฉพาะโครงสร้าง SKU + mapping (optionRefs เรียง/รวมเป็น key)
+  const items = (desired.items ?? []).map(it => ({
+    sku: (it.sku ?? "").trim(),
+    comboKey: [...(it.optionRefs ?? [])].sort().join("|")
+  })).sort((a, b) => (a.sku + a.comboKey).localeCompare(b.sku + b.comboKey))
+
+  return {
+    name: (desired.product.name ?? "").trim(),
+    description: (desired.product.description ?? null)?.toString().trim() || null,
+    categoryId: resolvedCategoryId,
+    images: {
+      uuids: hasNewUploads ? ["__NEW__"] : desiredImgUuids, // มีไฟล์ใหม่ = diff ทันที
+      mainUuid: desiredMainUuid // ถ้า main ใหม่เป็น uploadKey เรามองเป็น NEW อยู่แล้ว
+    },
+    variations: vars,
+    items
+  }
+}
 
 /** Helpers */
 // ===== helper types for desired state =====
@@ -115,7 +221,7 @@ const coerceStatus = (s?: string): ProductStatus => {
   const val = (s ?? "").toUpperCase();
   return (Object.values(ProductStatus) as string[]).includes(val)
     ? (val as ProductStatus)
-    : ProductStatus.SUSPENDED; // หรือจะใช้ ACTIVE ก็ได้ตามที่ตกลง
+    : ProductStatus.INACTIVE; // หรือจะใช้ ACTIVE ก็ได้ตามที่ตกลง
 };
 
 // Create/Update main helper
@@ -163,6 +269,8 @@ async function applyDesiredState(opts: {
         description: desired.product.description ?? null,
         status: coerceStatus(desired.product.status), // << แปลงให้เป็น enum
         categoryId: categoryId,
+        reqStatus: ProductReqStatus.PENDING,
+        rejectReason: undefined
       };
 
       product = await Product.create(createPayload, { transaction: t });
@@ -187,14 +295,23 @@ async function applyDesiredState(opts: {
       }
 
       const categoryId = await mapCategoryUuid(desired.product.categoryUuid ?? null);
+      // 1) คำนวณรอยเท้าก่อน/หลัง (review-impacting footprint)
+      const beforeFP = await buildFootprintFromDB(product!.id, t)
+      const afterFP  = buildFootprintFromDesired(desired, categoryId ?? beforeFP.categoryId)
 
+      // 2) เปรียบเทียบ
+      const needsReapproval = canon(beforeFP) !== canon(afterFP)
       const updatePayload: Partial<ProductAttributes> = {
         name: desired.product.name,
         description: desired.product.description ?? null,
         status: coerceStatus(desired.product.status), // << enum
         ...(categoryId != null ? { categoryId } : {}), // << ไม่ส่ง null
       };
-
+      // 4) ถ้าจำเป็นค่อยรีเซ็ต reqStatus
+      if (needsReapproval) {
+        updatePayload.reqStatus   = ProductReqStatus.PENDING
+        updatePayload.rejectReason = undefined
+      }
       await product.update(updatePayload, { transaction: t });
     }
 
@@ -596,7 +713,7 @@ async function applyDesiredState(opts: {
     // ---------- 5) return fresh detail ----------
     const detail = await Product.findOne({
       where: { uuid: product!.uuid },
-      attributes: ["uuid", "name", "description", "status", "createdAt", "updatedAt"],
+      attributes: ["uuid", "name", "description", "status", "reqStatus", "rejectReason", "createdAt", "updatedAt"],
       include: [
         { model: Category, as: "category", attributes: ["uuid", "name"], required: false },
         {
@@ -754,6 +871,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       q,
       categoryUuid,
       status,
+      reqStatus,
       sortBy = "createdAt",
       sortDir = "desc",
     } = req.query as Record<string, string | undefined>;
@@ -776,6 +894,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
     }
     if (orConds.length) whereProduct[Op.or] = orConds;
     if (status) whereProduct.status = status;
+    if (reqStatus) whereProduct.reqStatus = reqStatus;
 
     // 4) include
     const include: any[] = [];
@@ -876,6 +995,8 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
         "description",
         "categoryId",
         "status",
+        "reqStatus",
+        "rejectReason",
         "createdAt",
         "updatedAt",
         [minPriceExpr, "minPriceMinor"],
@@ -919,7 +1040,7 @@ export const getProductDetail = async (req: AuthenticatedRequest, res: Response)
 
     const product = await Product.findOne({
       where: { uuid: productUuid, storeId: store.id },
-      attributes: ["uuid", "name", "description", "status", "createdAt", "updatedAt"],
+      attributes: ["uuid", "name", "description", "status", "reqStatus","rejectReason", "createdAt", "updatedAt"],
       include: [
         { model: Store, as: "store", attributes: ["uuid", "storeName", "email", "status"], required: false },
         { model: Category, as: "category", attributes: ["uuid", "name"], required: false },
@@ -1183,6 +1304,8 @@ export const duplicateProduct = async (req: AuthenticatedRequest, res: Response)
         // priceMinor: (src as any).priceMinor ?? null,   // base price ถ้ามี (ไม่ยุ่งกับ price_minor)
         // stockQuantity: src.stockQuantity ?? null,
         status: src.status,
+        reqStatus: ProductReqStatus.PENDING,      // << NEW
+        rejectReason: undefined 
       },
       { transaction: t }
     );
