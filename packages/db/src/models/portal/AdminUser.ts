@@ -1,24 +1,33 @@
-import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
-import { AdminRole } from '../../types/enum';
+import { Model, DataTypes, Optional, Sequelize } from "sequelize";
+import { AdminUserStatus } from "../../types/portal"; // ACTIVE | SUSPENDED
 
 export interface AdminUserAttributes {
   id: number;
+  uuid?: string | null;
   email: string;
   name: string;
-  password: string;
-  role: AdminRole;
-  createdAt?: Date; // managed by sequelize
-  updatedAt?: Date; // mapped to edit_at in DB
+  password: string;           // bcrypt hash
+  status: AdminUserStatus;    // ACTIVE|SUSPENDED
+  lastLoginAt?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
 }
 
-export interface AdminUserCreationAttributes extends Optional<AdminUserAttributes, 'id' | 'role'> {}
+export interface AdminUserCreationAttributes
+  extends Optional<AdminUserAttributes, "id" | "uuid" | "status" | "lastLoginAt" | "createdAt" | "updatedAt" | "deletedAt"> {}
 
 export class AdminUser extends Model<AdminUserAttributes, AdminUserCreationAttributes> implements AdminUserAttributes {
   public id!: number;
+  public uuid!: string | null;
   public email!: string;
   public name!: string;
   public password!: string;
-  public role!: AdminRole;
+  public status!: AdminUserStatus;
+  public lastLoginAt!: Date | null;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+  public readonly deletedAt!: Date | null;
 
   static initModel(sequelize: Sequelize): typeof AdminUser {
     AdminUser.init(
@@ -28,10 +37,15 @@ export class AdminUser extends Model<AdminUserAttributes, AdminUserCreationAttri
           autoIncrement: true,
           primaryKey: true,
         },
+        uuid: {
+          type: DataTypes.STRING(36),
+          allowNull: true,
+          unique: false,
+        },
         email: {
           type: DataTypes.STRING(191),
           allowNull: false,
-          unique: true,
+          unique: true,               // unique, indexed
         },
         name: {
           type: DataTypes.STRING(191),
@@ -39,33 +53,43 @@ export class AdminUser extends Model<AdminUserAttributes, AdminUserCreationAttri
         },
         password: {
           type: DataTypes.STRING(191),
-          allowNull: false,
+          allowNull: false,           // bcrypt hash
         },
-        role: {
-          type: DataTypes.ENUM(...Object.values(AdminRole)),
+        status: {
+          type: DataTypes.ENUM(...Object.values(AdminUserStatus)),
           allowNull: false,
-          defaultValue: AdminRole.ADMIN,
+          defaultValue: AdminUserStatus.ACTIVE,
+        },
+        lastLoginAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: "last_login_at",
         },
         createdAt: {
           type: DataTypes.DATE,
           allowNull: false,
-          field: 'created_at',
+          field: "created_at",
           defaultValue: DataTypes.NOW,
         },
         updatedAt: {
           type: DataTypes.DATE,
           allowNull: false,
-          // ER used edit_at
-          field: 'updated_at',
+          field: "updated_at",
           defaultValue: DataTypes.NOW,
+        },
+        deletedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: "deleted_at",
         },
       },
       {
         sequelize,
-        tableName: 'ADMIN_USERS',
-        modelName: 'AdminUser',
-        paranoid: true,            // เปิด soft delete
-        deletedAt: 'deleted_at',   // ชื่อคอลัมน์ soft delete
+        tableName: "ADMIN_USERS",
+        modelName: "AdminUser",
+        paranoid: true,
+        deletedAt: "deleted_at",
+        indexes: [{ fields: ["email"] }],
       }
     );
     return AdminUser;
