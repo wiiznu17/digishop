@@ -105,8 +105,6 @@ export class ShoppingCartItem
         sequelize,
         tableName: "SHOPPING_CART_ITEMS",
         modelName: "ShoppingCartItem",
-        paranoid: true,
-        deletedAt: "deleted_at",
         indexes: [
           { fields: ["cart_id"] },
           { fields: ["product_item_id"] },

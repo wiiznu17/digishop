@@ -14,8 +14,6 @@ export default function LoginPage() {
   });
   const {login, isLoading, user} = useAuth()
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  console.log(login)
-  console.log(isLoading)
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value} = e.target;
     setFormData(prev => ({
@@ -57,14 +55,9 @@ export default function LoginPage() {
       try {
         const success = await login(formData.email, formData.password)
         if(success){
-          console.log('user in login page',user)
           router.replace("/digishop")
         }
       } catch (error) {
-      
-        // if (success) {
-      //   } else {
-      // }
         console.log('error',error)
       }
     };
@@ -108,7 +101,6 @@ export default function LoginPage() {
           />
           {/* Submit Button */}
           <Button
-            type="submit"
             size="lg"
             className="w-full group"
             disabled={isLoading}

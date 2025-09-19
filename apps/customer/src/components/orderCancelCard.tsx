@@ -7,12 +7,12 @@ import { Home } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
 import { Noto_Sans_Thai_Looped, Rubik } from "next/font/google";
 import Button from "./button";
-import { Orders } from "@/types/props/orderProp";
+import { OrderDetail } from "@/types/props/orderProp";
 import CancelReasonMaster from "../master/cancelReason.json";
 import RefundReasonMaster from "../master/refundReason.json"
 interface CancelOrderProps {
   isShowCancel: boolean;
-  order: Orders;
+  order: OrderDetail;
   reason: string;
   setReason: React.Dispatch<SetStateAction<string>>;
   detail: string;
@@ -115,7 +115,7 @@ export const CancelOrder = ({
 };
 interface RefundOrderProps {
   isShowRefund: boolean;
-  order: Orders;
+  order: OrderDetail;
   reason: string;
   setReason: React.Dispatch<SetStateAction<string>>;
   detail: string;

@@ -20,11 +20,11 @@ const rubik = Rubik({
 })
 export default function OrderStatus() {
   const { user } = useAuth();
-  const [orders, setOrders] = useState<Orders[]>();
+  const [orders, setOrders] = useState<OrderDetail[]>();
   const [count, setCount] = useState<number>();
   const [ isShowCancel ,setIsShowCancel] = useState<boolean>()
   const [selectShowDetail, setSelectShowDetail] = useState<
-    Orders | undefined
+    OrderDetail | undefined
   >();
   const [orderDetail, setOrderDetail] = useState<OrderDetail>();
   const [selectStatus, setSelectStatus] = useState<string>("PENDING");
@@ -38,15 +38,7 @@ export default function OrderStatus() {
     };
     fetchData();
   }, [user]);
-  useEffect(() => {
-    if(!user)return
-    const fetchOrder = async () => {
-      const res = await fetchOrders(Number(selectShowDetail?.id),user.id);
-      setOrderDetail(res.body);
-    };
-    fetchOrder();
-  }, [selectShowDetail,user]);
-  console.log(orderDetail);
+  console.log(orders)
   if (!orders) return;
   const getFilterOrder = () => {
     if (!orders) return;
@@ -54,18 +46,12 @@ export default function OrderStatus() {
       StateConfig[selectStatus].status.includes(order.status)
     );
   };
-  const findOrder = (findId:number) => {
-    if (!orders) return;
-    return orders.filter((order) => 
-      order.id == findId
-    )
-  }
   const filterOrder = getFilterOrder();
   const handleChangeState = (state: string) => {
     setSelectStatus(state);
     setSelectShowDetail(undefined);
   };
-  const handleShowDetail = (order: Orders) => {
+  const handleShowDetail = (order: OrderDetail) => {
     setSelectShowDetail(order);
   };
   return (
@@ -81,14 +67,13 @@ export default function OrderStatus() {
             </Button>
           </div>
         ))}
-      </div>
+      </div>   
       <div className="grid grid-cols-2">
         <div className="flex justify-center">
             <div className="flex flex-col">
                 {filterOrder.length > 0 ? (
                 filterOrder.map((order, index: number) => (
                     <div key={index} 
-                    // onClick={() => handleShowDetail(order)}
                     >
                       <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail}/>
                     </div>
@@ -100,7 +85,7 @@ export default function OrderStatus() {
         </div>
         <div >
           {selectShowDetail != undefined && (
-            <OrderDetailPage order={orderDetail} />
+            <OrderDetailPage order={selectShowDetail} />
           )}
         </div>
       </div>      
