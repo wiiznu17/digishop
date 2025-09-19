@@ -1,4 +1,3 @@
-// db/index.ts
 import { checkDatabaseConnection, sequelize } from "./db";
 import { Sequelize } from "sequelize";
 
@@ -45,17 +44,28 @@ import { CheckOut } from "../src/models/CheckOut";
 import { ProductView } from "../src/models/ProductView";
 import { StoreView } from "../src/models/StoreView";
 
-// ── Admin
+// ── Admin (portal)
 import { AdminUser } from "../src/models/portal/AdminUser";
 import { AdminSystemLog } from "../src/models/portal/AdminSystemLog";
+import { AdminSession } from "../src/models/portal/AdminSession";
+import { AdminPasswordReset } from "../src/models/portal/AdminPasswordReset";
+import { AdminInvite } from "../src/models/portal/AdminInvite";
+import { AdminMfaFactor } from "../src/models/portal/AdminMfaFactor";
+import { AdminMfaChallenge } from "../src/models/portal/AdminMfaChallenge";
+import { AdminRecoveryCode } from "../src/models/portal/AdminRecoveryCode";
+import { AdminRole } from "../src/models/portal/AdminRole";
+import { AdminPermission } from "../src/models/portal/AdminPermission";
+import { AdminRolePermission } from "../src/models/portal/AdminRolePermission";
+import { AdminUserRole } from "../src/models/portal/AdminUserRole";
+import { AdminApiKey } from "../src/models/portal/AdminApiKey";
 
 export function initModels(conn: Sequelize) {
-  // ── init
+  // ── init (Core)
   User.initModel(conn);
   Address.initModel(conn);
   Store.initModel(conn);
   MerchantAddress.initModel(conn);
-  // ProfileMerchantImage.initModel(conn); // FIX: เปิดใช้งาน
+  // ProfileMerchantImage.initModel(conn); // ถ้าพร้อมใช้งานค่อยเปิด
   BankAccount.initModel(conn);
   ShippingConfig.initModel(conn);
 
@@ -89,8 +99,20 @@ export function initModels(conn: Sequelize) {
   ProductView.initModel(conn);
   StoreView.initModel(conn);
 
+  // ── init (Admin)
   AdminUser.initModel(conn);
   AdminSystemLog.initModel(conn);
+  AdminSession.initModel(conn);
+  AdminPasswordReset.initModel(conn);
+  AdminInvite.initModel(conn);
+  AdminMfaFactor.initModel(conn);
+  AdminMfaChallenge.initModel(conn);
+  AdminRecoveryCode.initModel(conn);
+  AdminRole.initModel(conn);
+  AdminPermission.initModel(conn);
+  AdminRolePermission.initModel(conn);
+  AdminUserRole.initModel(conn);
+  AdminApiKey.initModel(conn);
 
   // ─────────────────────────── Associations ───────────────────────────
 
@@ -242,9 +264,70 @@ export function initModels(conn: Sequelize) {
   RefundOrder.hasMany(PaymentGatewayEvent, { foreignKey: { name: "refundOrderId", field: "refund_order_id" }, as: "gatewayEvents", onDelete: "SET NULL", onUpdate: "CASCADE" });
   PaymentGatewayEvent.belongsTo(RefundOrder, { foreignKey: { name: "refundOrderId", field: "refund_order_id" }, as: "refundOrder", onDelete: "SET NULL", onUpdate: "CASCADE" });
 
-  // Admin
+  // ── Admin: User ↔ Sessions / Resets / Invites / MFA / Recovery / API Keys / Logs
+  AdminUser.hasMany(AdminSession, { foreignKey: { name: "adminId", field: "admin_id" }, as: "sessions", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminSession.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  AdminUser.hasMany(AdminPasswordReset, { foreignKey: { name: "adminId", field: "admin_id" }, as: "passwordResets", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminPasswordReset.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  AdminUser.hasMany(AdminInvite, { foreignKey: { name: "invitedByAdminId", field: "invited_by_admin_id" }, as: "invites", onDelete: "RESTRICT", onUpdate: "CASCADE" });
+  AdminInvite.belongsTo(AdminUser, { foreignKey: { name: "invitedByAdminId", field: "invited_by_admin_id" }, as: "invitedBy", onDelete: "RESTRICT", onUpdate: "CASCADE" });
+
+  AdminUser.hasMany(AdminMfaFactor, { foreignKey: { name: "adminId", field: "admin_id" }, as: "mfaFactors", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminMfaFactor.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  AdminUser.hasMany(AdminMfaChallenge, { foreignKey: { name: "adminId", field: "admin_id" }, as: "mfaChallenges", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminMfaChallenge.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  AdminUser.hasMany(AdminRecoveryCode, { foreignKey: { name: "adminId", field: "admin_id" }, as: "recoveryCodes", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminRecoveryCode.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  AdminUser.hasMany(AdminApiKey, { foreignKey: { name: "adminId", field: "admin_id" }, as: "apiKeys", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminApiKey.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
   AdminUser.hasMany(AdminSystemLog, { foreignKey: { name: "adminId", field: "admin_id" }, as: "logs", onDelete: "CASCADE", onUpdate: "CASCADE" });
   AdminSystemLog.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  // ── Admin: Roles ↔ Permissions (M:N) + join tables
+  AdminRole.belongsToMany(AdminPermission, {
+    through: AdminRolePermission,
+    foreignKey: { name: "roleId", field: "role_id" },
+    otherKey: { name: "permissionId", field: "permission_id" },
+    as: "permissions",
+  });
+  AdminPermission.belongsToMany(AdminRole, {
+    through: AdminRolePermission,
+    foreignKey: { name: "permissionId", field: "permission_id" },
+    otherKey: { name: "roleId", field: "role_id" },
+    as: "roles",
+  });
+
+  AdminRole.hasMany(AdminRolePermission, { foreignKey: { name: "roleId", field: "role_id" }, as: "rolePermissions", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminRolePermission.belongsTo(AdminRole, { foreignKey: { name: "roleId", field: "role_id" }, as: "role", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  AdminPermission.hasMany(AdminRolePermission, { foreignKey: { name: "permissionId", field: "permission_id" }, as: "permissionRoles", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminRolePermission.belongsTo(AdminPermission, { foreignKey: { name: "permissionId", field: "permission_id" }, as: "permission", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  // ── Admin: Users ↔ Roles (M:N)
+  AdminUser.belongsToMany(AdminRole, {
+    through: AdminUserRole,
+    foreignKey: { name: "adminId", field: "admin_id" },
+    otherKey: { name: "roleId", field: "role_id" },
+    as: "roles",
+  });
+  AdminRole.belongsToMany(AdminUser, {
+    through: AdminUserRole,
+    foreignKey: { name: "roleId", field: "role_id" },
+    otherKey: { name: "adminId", field: "admin_id" },
+    as: "admins",
+  });
+
+  AdminUser.hasMany(AdminUserRole, { foreignKey: { name: "adminId", field: "admin_id" }, as: "userRoles", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminUserRole.belongsTo(AdminUser, { foreignKey: { name: "adminId", field: "admin_id" }, as: "admin", onDelete: "CASCADE", onUpdate: "CASCADE" });
+
+  AdminRole.hasMany(AdminUserRole, { foreignKey: { name: "roleId", field: "role_id" }, as: "userRoles", onDelete: "CASCADE", onUpdate: "CASCADE" });
+  AdminUserRole.belongsTo(AdminRole, { foreignKey: { name: "roleId", field: "role_id" }, as: "role", onDelete: "CASCADE", onUpdate: "CASCADE" });
 
   return {
     // Core
@@ -256,11 +339,14 @@ export function initModels(conn: Sequelize) {
     ShoppingCart, ShoppingCartItem,
     // Order
     Order, OrderItem, OrderStatusHistory, ShippingType, ShippingInfo, Payment, PaymentGatewayEvent,
-    RefundOrder, RefundImage, RefundStatusHistory, Review, Dispute,CheckOut,
+    RefundOrder, RefundImage, RefundStatusHistory, Review, Dispute, CheckOut,
     // Analytics
     ProductView, StoreView,
     // Admin
-    AdminUser, AdminSystemLog,
+    AdminUser, AdminSystemLog, AdminSession, AdminPasswordReset, AdminInvite,
+    AdminMfaFactor, AdminMfaChallenge, AdminRecoveryCode,
+    AdminRole, AdminPermission, AdminRolePermission, AdminUserRole,
+    AdminApiKey,
   };
 }
 
