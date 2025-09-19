@@ -27,8 +27,6 @@ const AuthPage: React.FC = () => {
     });
     const {login, isLoading, user} = useAuth()
     const [errors, setErrors] = useState<{[key: string]: string}>({});
-    console.log(login)
-    console.log(isLoading)
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value} = e.target;
       setFormData(prev => ({
@@ -46,7 +44,6 @@ const AuthPage: React.FC = () => {
       if (!formData.password) {
         newErrors.password = 'Password is required';
       } 
-      
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     };
@@ -55,15 +52,12 @@ const AuthPage: React.FC = () => {
       e.preventDefault();
       if (!validateForm()) return;
       const success = await login(formData.email, formData.password)
-      console.log('success',success)
       if (success) {
         router.push("/digishop")
       } else {
-        
         try {
           const success = await login(formData.email, formData.password)
           if(success){
-            console.log('user in login page',user)
             router.replace("/digishop")
           }
         } catch (error) {

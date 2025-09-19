@@ -9,8 +9,6 @@ export async function middleware(req: NextRequest) {
   if (PUBLIC_PATHS.includes(pathname)) {
     if (token) {
       try {
-        console.log("Token:", token)
-        console.log("JWT_SECRET:", process.env.JWT_SECRET)
         const payload = await jwtVerify(
           token,
           new TextEncoder().encode(process.env.JWT_SECRET!)
@@ -20,8 +18,7 @@ export async function middleware(req: NextRequest) {
         } else {
           return NextResponse.redirect(new URL("/register"))
         }
-      } catch (error) {
-        console.log('token',error)
+      } catch {
         return NextResponse.next()
       }
     } else {
@@ -30,15 +27,13 @@ export async function middleware(req: NextRequest) {
   }
 
   if (!token) {
-    console.log('no token')
     return NextResponse.redirect(new URL("/", req.url))
   }
 
   try {
     await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET!))
     return NextResponse.next()
-  } catch (error){
-    console.log('!token',error)
+  } catch {
     return NextResponse.redirect(new URL("/", req.url))
   }
 }

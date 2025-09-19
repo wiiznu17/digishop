@@ -26,16 +26,12 @@ const SearchPage = () => {
   if(hasSearched){
     router.push(`/digishop/search?query=${searchQuery}`)
   }
-  const {user} = useAuth()
-  console.log('user',user)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-[#C2D1F4]">
       {/* Main Content */}
       <main className="">
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-4">
-              {/* <h1 className='absolute right-1/3 top-1/3 text-black'>
-                Hello {user?.id}
-              </h1> */}
             {/* Logo/Title */}
             <div className=" text-center mb-12">
               <h2 className={`relative text-5xl md:text-6xl font-bold text-gray-800 mb-4 ${rubik.className}`}>

@@ -9,11 +9,7 @@ export default function PaymentRedirect() {
   const reference = searchParams.get('reference')
   const sign = searchParams.get('sign')
   const router = useRouter()
-  console.log('ref',reference)
-  console.log('status',process_status)
-  useEffect(()=>{
-    console.log('hi')
-  },[])
+
   useEffect(()=>{
     if(process_status){
        const updateData = async() => {

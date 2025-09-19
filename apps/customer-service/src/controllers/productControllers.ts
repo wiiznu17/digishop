@@ -5,6 +5,7 @@ import { Category } from '@digishop/db/src/models/Category'
 import { ProductImage } from '@digishop/db/src/models/ProductImage'
 import { Store } from '@digishop/db/src/models/Store'
 import { ProductStatus, StoreStatus } from '@digishop/db/src/types/enum'
+import { ProductItem } from '@digishop/db/src/models/ProductItem'
 
 
 export const searchProduct = async(req: Request , res: Response , next: NextFunction) => {
@@ -15,11 +16,10 @@ export const searchProduct = async(req: Request , res: Response , next: NextFunc
       where: {
         [Op.and]: [
         { name: {[Op.like]: `%${query}%`}},
-        { stockQuantity: { [Op.gt]: 0}},
         { status: ProductStatus.ACTIVE}
         ]
       },
-      attributes: ['id','uuid','name','price'],
+      attributes: ['id','uuid','name'],
       include: [
         {
           model: Store,
@@ -44,27 +44,32 @@ export const getProduct = async(req: Request , res: Response,  next: NextFunctio
       where: {
         [Op.and]: [
         { uuid: id},
-        { stockQuantity: { [Op.gt]: 0}},
         { status: ProductStatus.ACTIVE}
         ]
       },
       include: [
+        {
+          model: ProductItem,
+          as: 'items',
+          attributes: ['id','sku','image_url','price_minor','stock_quantity']
+        },
         {
           model: Store,
           as: 'store',
           where: {status: StoreStatus.APPROVED },
           attributes: ['id','storeName','logoUrl','description'] 
 
-        },{
+        },
+        {
           model: Category,
           as: 'category',
           attributes: ['id','name']
         }
       ],
-      attributes: ['id', 'name', 'price', 'stockQuantity', 'description']
+      attributes: ['id', 'name','description']
     });
     if(!productDetail){
-      return res.status(404).json({ error: `not found` });
+      return res.status(404).json({ error: `${id} not found` });
     }
     return res.json({data: productDetail})
   }catch (error){
@@ -74,7 +79,14 @@ export const getProduct = async(req: Request , res: Response,  next: NextFunctio
 export const getAllProduct = async(req: Request , res: Response) => {
   
   try {
-    const product = await Product.findAll()
+    const product = await Product.findAll(
+      { include: [
+      {
+        model: ProductItem,
+        as: "items"
+      }
+    ]}
+    )
     if(!product){
       return res.status(404).json({ error: `not found` });
     }
@@ -82,4 +94,10 @@ export const getAllProduct = async(req: Request , res: Response) => {
   }catch (error){
     return res.status(500).json({ error: "Internal server error"})
   }
+}
+
+export const getProductDetail = async(req: Request , res: Response,  next: NextFunction) => {
+  const productData = await Product.findAll(
+    
+  )
 }
