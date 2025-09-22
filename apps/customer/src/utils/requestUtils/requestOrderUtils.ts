@@ -119,7 +119,6 @@ export const fetchUserChart = async(id:number) => {
     })
 }
 export const updateOrderStatus = async(id: number) => {
-    console.log(id)
     return await new Promise((resolve,reject) => {
         axios
             .patch(`${endpoint}/api/order/status/${id}`)
