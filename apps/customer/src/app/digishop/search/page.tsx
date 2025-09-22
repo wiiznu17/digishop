@@ -21,6 +21,7 @@ export default  function SearchResult({
   };
   fetchProduct();
 }, [query]);
+  console.log(result)
   return !result ? (
     <NotFound props={query} />
   ) : (

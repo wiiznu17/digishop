@@ -22,6 +22,10 @@ export const searchProduct = async(req: Request , res: Response , next: NextFunc
       attributes: ['id','uuid','name'],
       include: [
         {
+          model: ProductItem,
+          as: 'items',
+        },
+        {
           model: Store,
           as: 'store',
           attributes: ['id','storeName']
@@ -51,7 +55,6 @@ export const getProduct = async(req: Request , res: Response,  next: NextFunctio
         {
           model: ProductItem,
           as: 'items',
-          attributes: ['id','sku','image_url','price_minor','stock_quantity']
         },
         {
           model: Store,

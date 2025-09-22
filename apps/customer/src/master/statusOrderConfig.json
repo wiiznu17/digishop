@@ -17,7 +17,7 @@
   "COMPLETE": {
     "label": "complete",
     "value": "COMPLETE",
-    "status": ["RETURN_FAIL", "REFUND_APPROVED", "REFUND_SUCCESS", "DELIVERED"]
+    "status": [ "DELIVERED","COMPLETE"]
   },
   "CANCEL": {
     "label": "cancel",
@@ -31,7 +31,10 @@
       "REFUND_REQUEST",
       "AWAITING_RETURN",
       "RECEIVE_RETURN",
-      "RETURN_VERIFIED"
+      "RETURN_VERIFIED",
+      "RETURN_FAIL", 
+      "REFUND_APPROVED", 
+      "REFUND_SUCCESS"
     ]
   }
 }
