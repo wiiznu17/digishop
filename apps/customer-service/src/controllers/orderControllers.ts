@@ -710,10 +710,8 @@ export const updateOrderStatus = async( req: Request,
   res: Response,
   next: NextFunction) => {
     const id = req.params.id
-    console.log(id)
     const order = await Order.findByPk(id)
     try {
-      console.log(order.status)
       if(order && order.status == OrderStatus.DELIVERED){
         const createStatus = await OrderStatusHistory.create({
           orderId: order.id,
