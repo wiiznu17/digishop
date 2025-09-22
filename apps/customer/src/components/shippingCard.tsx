@@ -19,7 +19,8 @@ export default function ShippingCardDetail({item,selected}:ShippingCard) {
                     <div>estimatedDays: {item.estimatedDays}</div>
                 </div>
                 <div className="flex justify-center items-center text-3xl font-extrabold">
-                    {item.price/100}
+                    ฿ {(item.price/100).toString()
+                              .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </div>
             </div>
         </div>

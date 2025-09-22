@@ -11,12 +11,11 @@ import {
   createOrder,
   fetchOrders,
   getShippingType,
+  deleteOrder,
 } from "@/utils/requestUtils/requestOrderUtils";
 import { getAddress } from "@/utils/requestUtils/requestUserUtils";
-import Link from "next/link";
 import { redirect, RedirectType, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import AddressCard from "@/components/addressCard";
 import ShippingCardDetail from "@/components/shippingCard";
 import { DialogSelectAddress } from "@/components/dialogSelectAddress";
 import { PaymentMethod } from "../../../../../../../packages/db/src/types/enum";
@@ -25,6 +24,9 @@ import Button from "@/components/button";
 import { ClipboardCheck, Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PaymentMethodMaster from "../../../../master/paymentMethod.json";
+import creditMethodLogo from '../../../creaditMethod.png'
+import qrLogo from '../../../qrLogo.png'
+import Image from "next/image";
 export default function OrderPage() {
   const { id } = useParams();
   const orderCode = String(id);
@@ -49,6 +51,8 @@ export default function OrderPage() {
   const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1);
   const [isShowSelectAddress, setIsShowSelectAddress] = useState(false);
   const [orderDetail, setOrderDetail] = useState<OrderDetail[]>();
+  const [nextPath, setNextPath] = useState<string | null>();
+  const [showModal, setShowModel] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
@@ -61,6 +65,7 @@ export default function OrderPage() {
     };
     fetchData();
   }, [user, orderCode]);
+  console.log(orderDetail);
   useEffect(() => {
     const isMain = addresses?.filter((item) => item.isDefault === true);
     if (isMain) {
@@ -96,16 +101,55 @@ export default function OrderPage() {
     selectShippingTypeId,
     note,
     paymentMethod,
-    shipping
+    shipping,
   ]);
+  useEffect(() => {
+    window.history.pushState(null, "", window.location.pathname);
+    const handlePopStateBeforePayment = () => {
+      setShowModel(true);
+      setNextPath("/digishop");
+    };
+    const handlePopStateAfterPayment = () => {
+      setShowModel(true);
+    };
+
+    if (!orderDetail) return;
+    if (orderDetail[0].checkout.payment) {
+      window.addEventListener("popstate", handlePopStateAfterPayment);
+      console.log(showModal);
+    } else {
+      window.addEventListener("popstate", handlePopStateBeforePayment);
+      console.log(showModal);
+    }
+  }, [orderDetail, router, showModal]);
+  const handleCancel = () => {
+    setShowModel(false);
+  };
+  const handleConfirmCancel = async () => {
+    setShowModel(false);
+    // del order
+    const cancel = await deleteOrder(orderCode);
+    if (nextPath && cancel.data) {
+      router.push(nextPath);
+    }
+  };
+  const handleConfirmBack = async (link: string) => {
+    console.log("hi");
+    setShowModel(false);
+    router.push("/digishop");
+    // router.push(link)
+  };
+
   const sumPrice = (
-    items: [{
-    quantity: number;
-    unitPriceMinor: number;
-    lineTotalMinor: number;
-    productItem: ProductItemProps;
-    product_name_snapshot: string;
-  }]
+    items: [
+      {
+        quantity: number;
+        unitPriceMinor: number;
+        lineTotalMinor: number;
+        productItem: ProductItemProps;
+        productNameSnapshot: string;
+      },
+    ]
   ) => {
     let sum = 0;
     for (let i = 0; i < items.length; i++) {
@@ -141,7 +185,7 @@ export default function OrderPage() {
   };
   const handleOrder = async () => {
     if (!order) return;
-    console.log(order)
+    console.log(order);
     const res = await createOrder(order);
     if (res.data.redirect_url) {
       redirect(res.data.redirect_url, RedirectType.replace);
@@ -162,10 +206,36 @@ export default function OrderPage() {
   };
   if (!orderDetail || !shipping || !user) return;
 
+  if (!orderDetail[0]) {
+    redirect("/digishop", RedirectType.replace);
+  }
+  console.log("show", showModal);
   return !orderDetail[0].checkout.payment ? (
     <div>
       {orderDetail[0].status == "PENDING" && (
         <div className="flex justify-center p-2 ">
+          {showModal && (
+            <div className="fixed inset-0 flex items-center justify-center">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <h2 className="text-xl font-bold mb-4">Confirm Navigation</h2>
+                <p className="mb-4">This order will be canceled</p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 pu-2 bg-gray-200 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmCancel}
+                    className="px-4 pu-2 bg-blue-500 text-white rounded"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="min-h-screen p-3 ">
             <>
               {/* store info */}
@@ -200,7 +270,10 @@ export default function OrderPage() {
                                     {value.productItem.sku}
                                   </div>
                                   <div className="absolute bottom-5 right-0  text-gray-500 ">
-                                    price: {value.unitPriceMinor / 100}
+                                    ฿{" "}
+                                    {(value.unitPriceMinor / 100)
+                                      .toString()
+                                      .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                                   </div>
                                   <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
                                     x {String(value.quantity)}
@@ -212,7 +285,10 @@ export default function OrderPage() {
                         ))}
                         <div className="flex justify-end items-end">
                           <span className="flex justify-end items-end border-t w-fit">
-                            total {sumPrice(values.items)}
+                            total ฿{" "}
+                            {sumPrice(values.items)
+                              .toString()
+                              .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                           </span>
                         </div>
                       </div>
@@ -281,7 +357,9 @@ export default function OrderPage() {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Product</span>
                     <span className="font-medium">
-                      {sumPriceTotal(orderDetail)}
+                      {sumPriceTotal(orderDetail)
+                        .toString()
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                     </span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
@@ -294,15 +372,22 @@ export default function OrderPage() {
                       </div>
                     </div>
                     <div className=" font-medium">
-                      {shipping[selectShippingTypeId - 1].price *
-                        orderDetail.length / 100}
+                      {(shipping[selectShippingTypeId - 1].price *
+                        orderDetail.length) /
+                        100}
                     </div>
                   </div>
                   <div className=" border-gray-400 pt-2 flex justify-end items-center border-t">
                     <span className="text-lg font-semibold">
-                      {shipping[selectShippingTypeId - 1].price *
-                        orderDetail.length / 100 +
-                        sumPriceTotal(orderDetail)}
+                      ฿
+                      {(
+                        (shipping[selectShippingTypeId - 1].price *
+                          orderDetail.length) /
+                          100 +
+                        sumPriceTotal(orderDetail)
+                      )
+                        .toString()
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                     </span>
                   </div>
                 </div>
@@ -312,22 +397,46 @@ export default function OrderPage() {
                 <div className="border-b text-4xl mb-2 py-4 font-extrabold">
                   Payment
                 </div>
-                <div className="rounded-lg shadow-md py-4 px-2">
+                <div className="rounded-lg shadow-md py-4 px-2 ">
                   <div>select your payment method</div>
                   {Object.entries(PaymentMethodMaster).map(
                     ([payment, config]) => (
-                      <button
-                        key={payment}
-                        className={` m-3  flex p-4 rounded-xl border ${payment == paymentMethod ? "border-black" : "border-gray-300 text-gray-300"}`}
-                        onClick={() => handlePayment(config.value)}
-                      >
-                        {config.label}
-                      </button>
+                      <div key={payment} className={`flex m-2 border p-3 rounded-xs w-1/2 items-start ${!config.valid ? 'border-gray-300': ''}`}>
+                        <input
+                          type="radio"
+                          id={config.label}
+                          name={config.label}
+                          value={config.value}
+                          disabled={!config.valid}
+                          checked={paymentMethod == config.value}
+                          onChange={() => handlePayment(config.value)}
+                          className=""
+                        />
+                        <label htmlFor="config.label" className={`${!config.valid ? 'text-gray-300': ''}`}>
+                          <div className="ml-2">
+                            <div>{config.label}</div>
+                            {
+                              config.label === 'CREDIT CARD'&&
+                              <Image src={creditMethodLogo} alt='credit method pricture' width={300} className="py-4"/>
+                            }
+                            {
+                              config.label === 'QR'&&
+                              <Image src={qrLogo} alt='qr method pricture' width={100} className="pt-4"/>
+
+                            }
+                          </div>
+                          <p></p>
+                        {
+                          !config.valid && <p className=" text-red-600">* not available</p>
+                        }
+                        </label>
+                      </div>
                     )
                   )}
-                </div>
+                  </div>
               </div>
               {/* buttonb  */}
+
               <div className="flex justify-end">
                 <Button
                   onClick={handleOrder}
@@ -379,9 +488,34 @@ export default function OrderPage() {
               </div>
             </div>
           </div>
+          {showModal && (
+            <div className="fixed inset-0 flex items-center justify-center">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <h2 className="text-xl font-bold mb-4">Confirm Navigation</h2>
+                <p className="mb-4">This order will be canceled</p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 pu-2 bg-gray-200 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleConfirmBack(
+                        `/digishop/product/${orderDetail[0].items[0].productItem.product.uuid}`
+                      )
+                    }
+                    className="px-4 pu-2 bg-blue-500 text-white rounded"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )
-      }
+      )}
       {orderDetail[0].checkout.payment.pgw_status == "APPROVED" && (
         <div>
           <div className="flex justify-center items-center p-4 ">
@@ -408,6 +542,28 @@ export default function OrderPage() {
               </div>
             </div>
           </div>
+          {showModal && (
+            <div className="fixed inset-0 flex items-center justify-center">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <h2 className="text-xl font-bold mb-4">Confirm Navigation</h2>
+                <p className="mb-4">This order will be canceled</p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 pu-2 bg-gray-200 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleConfirmBack("/digishop")}
+                    className="px-4 pu-2 bg-blue-500 text-white rounded"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
       {orderDetail[0].checkout.payment.pgw_status == "CANCELED" && (
@@ -436,6 +592,28 @@ export default function OrderPage() {
               </div>
             </div>
           </div>
+          {showModal && (
+            <div className="fixed inset-0 flex items-center justify-center">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <h2 className="text-xl font-bold mb-4">Confirm Navigation</h2>
+                <p className="mb-4">This order will be canceled</p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 pu-2 bg-gray-200 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleConfirmBack("/digishop")}
+                    className="px-4 pu-2 bg-blue-500 text-white rounded"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
       {orderDetail[0].checkout.payment.pgw_status == "FAILED" && (
@@ -468,6 +646,28 @@ export default function OrderPage() {
               </div>
             </div>
           </div>
+          {showModal && (
+            <div className="fixed inset-0 flex items-center justify-center">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <h2 className="text-xl font-bold mb-4">Confirm Navigation</h2>
+                <p className="mb-4">This order will be canceled</p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 pu-2 bg-gray-200 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleConfirmBack("/digishop")}
+                    className="px-4 pu-2 bg-blue-500 text-white rounded"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

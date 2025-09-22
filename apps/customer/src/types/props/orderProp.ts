@@ -1,10 +1,9 @@
 import {
     OrderStatus,
-    PaymentMethod,
-    PaymentType,
+    PaymentMethod
 } from "../../../../../packages/db/src/types/enum";
 import { Address } from "./addressProp";
-import { Product, ProductItem, Store } from "./productProp";
+import { Store } from "./productProp";
 //ข้อมูลการจ่ายเงิน ที่อยู่จัดส่ง ก่อนจ่ายเงิน
 export interface OrderDetail {
   id: number;
@@ -34,7 +33,7 @@ export interface OrderDetail {
       unitPriceMinor: number;
       lineTotalMinor: number
       productItem: ProductItemProps;
-      product_name_snapshot: string
+      productNameSnapshot: string
     },
   ];
 }

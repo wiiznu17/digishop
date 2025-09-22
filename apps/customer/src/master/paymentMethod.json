@@ -1,10 +1,12 @@
 {
     "CREDIT_CARD": {
       "label": "CREDIT CARD",
-      "value": "CREDIT_CARD"
+      "value": "CREDIT_CARD",
+      "valid": true
     },
     "QR": {
       "label": "QR",
-      "value": "QR"
+      "value": "QR",
+      "valid": false
     }
 }
