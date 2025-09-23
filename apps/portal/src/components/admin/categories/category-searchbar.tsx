@@ -68,7 +68,7 @@ export function CategorySearchBar({ defaultValue, onApply, suggest }: Props) {
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverAnchor asChild>
               <Input
-                placeholder="ค้นหาจากชื่อหมวดหมู่"
+                placeholder="Search by category name"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onFocus={() => q.trim() && setOpen(true)}
