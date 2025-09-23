@@ -1,5 +1,5 @@
-// apps/portal-service/src/routes/adminProductRouter.ts
-import { Router } from "express"
+// apps/portal-service/src/routes/productRouter.ts
+import { Router } from "express";
 import {
   adminListProducts,
   adminSuggestProducts,
@@ -7,18 +7,30 @@ import {
   adminModerateProduct,
   adminBulkModerateProducts,
   adminListCategories,
-} from "../controllers/productController"
+} from "../controllers/productController";
+import { authenticateAdmin, requirePerms } from "../middlewares/auth";
 
-const router = Router()
+const router = Router();
 
-// Products
-router.get("/list", /*authenticateAdmin,*/ adminListProducts)
-router.get("/suggest", /*authenticateAdmin,*/ adminSuggestProducts)
-router.get("/:uuid", /*authenticateAdmin,*/ adminGetProductDetail)
-router.patch("/:uuid/moderate", /*authenticateAdmin,*/ adminModerateProduct)
-router.post("/bulk/moderate", /*authenticateAdmin,*/ adminBulkModerateProducts)
+router.get("/list",
+  requirePerms("PRODUCT.READ"),
+  adminListProducts);
+router.get("/suggest",
+  requirePerms("PRODUCT.READ"),
+  adminSuggestProducts);
+router.get("/:uuid",
+  requirePerms("PRODUCT.READ"),
+  adminGetProductDetail);
+router.patch("/:uuid/moderate",
+  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  adminModerateProduct);
+router.post("/bulk/moderate",
+  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  adminBulkModerateProducts);
 
 // Categories (flat)
-router.get("/categories/list", /*authenticateAdmin,*/ adminListCategories)
+router.get("/categories/list",
+  requirePerms("CATEGORY.MANAGE"),
+  adminListCategories);
 
-export default router
+export default router;

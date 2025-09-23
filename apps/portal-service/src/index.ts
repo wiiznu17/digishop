@@ -1,11 +1,14 @@
 import express from 'express';
-import cors from "cors"
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+// import cookieParser from 'cookie-parser';
 import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
-const cookieParser = require("cookie-parser")
-
+const cookieParser = require('cookie-parser');
+ 
 const PORT = Number(process.env.PORT) || 4001;
 
 async function main() {
@@ -14,18 +17,27 @@ async function main() {
     await checkDatabaseConnection();
 
     const app = express();
-    app.use(express.json());
-    // app.use(cookieParser())
+    app.disable('x-powered-by');
+    app.use(helmet({ crossOriginResourcePolicy: false }));
+    app.use(express.json({ limit: '1mb' }));
+    app.use(cookieParser());
+
     app.use(cors({
-      origin: ["http://localhost:3002"],
+      origin: ["http://localhost:3002"], // TODO: เปลี่ยนเป็น admin domain จริง
       credentials: true
-    }))
-    initModels(sequelize); 
-    // app.use(router);
+    }));
+
+    // brute-force limit เฉพาะ endpoint auth
+    // const loginLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+    // app.use('/api/auth/login', loginLimiter);
+    // app.use('/api/auth/mfa', loginLimiter);
+    // app.use('/api/auth/refresh', rateLimit({ windowMs: 10 * 60 * 1000, max: 120 }));
+
+    initModels(sequelize);
     app.use('/api', router);
 
     const server = app.listen(PORT, () => {
-      console.log(`Merchant Service listening at: http://localhost:${PORT}`);
+      console.log(`Portal Service listening at: http://localhost:${PORT}`);
     });
 
     // Server error handling

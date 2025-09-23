@@ -30,7 +30,7 @@ export function ProfileLogoUpload({
     setUploading(true)
 
     try {
-      const file = files[0] // เอาไฟล์แรกเท่านั้น (รูปเดียว)
+      const file = files[0]
 
       // Validate file type
       if (!file.type.startsWith("image/")) {
