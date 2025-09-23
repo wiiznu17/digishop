@@ -7,19 +7,27 @@ import { SetStateAction, useState } from "react";
 import { SquareChevronRight } from "lucide-react";
 import OrderStatusConfig from "../master/statusOrderDetail.json";
 import CancelReasonMaster from "../master/cancelReason.json";
+import { updateOrderStatus } from "@/utils/requestUtils/requestOrderUtils";
 interface OrderCard {
   item: OrderDetail;
   handleShowDetail: (item: OrderDetail) => void;
   selectShowDetail: OrderDetail | undefined;
+  isShowCancel:boolean
+  setIsShowCancel:React.Dispatch<SetStateAction<boolean>>;
+  isShowRefund:boolean
+  setIsShowRefund:React.Dispatch<SetStateAction<boolean>>;
 }
 
 export default function OrderCard({
   item,
   handleShowDetail,
   selectShowDetail,
+  isShowCancel,
+  setIsShowCancel,
+  isShowRefund,
+  setIsShowRefund
 }: OrderCard) {
-  const [isShowCancel, setIsShowCancel] = useState<boolean>(false);
-  const [isShowRefund, setIsShowRefund] = useState<boolean>(false);
+
   const [reason, setReason] = useState<string>(
     CancelReasonMaster["CC01"].label
   );
@@ -30,6 +38,12 @@ export default function OrderCard({
     setReason("");
     setDetail("");
   };
+  const handleConfirmed = async() => {
+    const data = await updateOrderStatus(item.id)
+    if(data.data){
+      window.location.reload()
+    }
+  }
   return (
     <div className=" px-4 py-2 mb-5 border w-md rounded-2xl ">
       <div>
@@ -43,7 +57,7 @@ export default function OrderCard({
         }
         {item.items.map((items, index) => (
           <div key={index}>
-            {!items.productItem && <div>{items.product_name_snapshot}</div>}
+            {!items.productItem && <div>{items.productNameSnapshot}</div>}
             {items.productItem && (
               <div>
                 <div className="flex gap-4 relative mb-2">
@@ -51,11 +65,14 @@ export default function OrderCard({
                   <div>
                     <div className="flex-1">
                       <div>{items.productItem.product.name}</div>
+                      <div className="text-xs text-gray-500 ">
+                        {items.productItem.sku}
+                      </div>
                       <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
                         x {String(items.quantity)}
                       </div>
                       <div className="absolute bottom-5 right-0  text-gray-500 ">
-                        {items.unitPriceMinor / 100 } {item.currency_code}
+                        { (items.unitPriceMinor / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") } {item.currency_code}
                       </div>
                     </div>
                   </div>
@@ -65,7 +82,7 @@ export default function OrderCard({
           </div>
         ))}
         <div className="flex justify-end border-b mb-2 pb-2">
-          total {item.grand_total_minor /100} {item.currency_code}
+          total {(item.grand_total_minor /100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} {item.currency_code}
         </div>
         {/* ราคาที่จ่าย */}
       </div>
@@ -101,7 +118,7 @@ export default function OrderCard({
             >
               Refund
             </Button>
-            <Button color="bg-green-300" hidden={isShowRefund} className="ml-4">
+            <Button color="bg-green-300" hidden={isShowRefund} className="ml-4" onClick={handleConfirmed}>
               Confirmed
             </Button>
           </>

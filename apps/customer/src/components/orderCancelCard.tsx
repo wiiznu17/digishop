@@ -102,7 +102,7 @@ export const CancelOrder = ({
           <Button
             size="sm"
             onClick={handleOnCancel}
-            className=" bg-white border-red-500  mx-2"
+            className=" bg-red-300  mx-2"
           >
             Cancel
           </Button>
@@ -199,11 +199,11 @@ export const RefundOrder = ({
             </div>
           </div>
         </div>
-        <div className="flex justify-end px-6">
+        <div className="flex justify-end ">
           <Button
             size="sm"
             onClick={handleOnCancel}
-            className=" bg-white border-red-500  mx-2"
+            className=" bg-red-300  mx-2"
           >
             Cancel
           </Button>

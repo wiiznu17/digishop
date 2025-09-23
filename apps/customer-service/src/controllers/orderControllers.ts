@@ -25,7 +25,7 @@ import axios from "axios";
 import { count } from "console";
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
 const signKey =
   process.env.MERCHANRT_SIGN_KEY ??
   "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
@@ -636,7 +636,11 @@ export const deleteOrder = async (
   next: NextFunction
 ) => {
   try {
-    return res.status(200).json({ message: "connect del order" });
+    const id = req.params.id
+    const delOrder = await CheckOut.destroy({
+      where: {orderCode: id}
+    })
+    return res.status(200).json({ data: "connect del order" });
   } catch (error) {
     console.log("error", error);
   }
@@ -701,3 +705,27 @@ export const createCart = async (
     res.json({ error: error });
   }
 };
+
+export const updateOrderStatus = async( req: Request,
+  res: Response,
+  next: NextFunction) => {
+    const id = req.params.id
+    const order = await Order.findByPk(id)
+    try {
+      if(order && order.status == OrderStatus.DELIVERED){
+        const createStatus = await OrderStatusHistory.create({
+          orderId: order.id,
+          fromStatus: order.status,
+          toStatus: OrderStatus.COMPLETE,
+          changedByType: ActorType.CUSTOMER,
+        })
+        const updateOrder = await Order.update({
+          status: OrderStatus.COMPLETE
+        }, { where: {id: order.id}})
+        res.json({data: createStatus})
+      }
+    } catch (error) {
+      console.log(error.message)
+      res.json({error: error})
+    }
+  }
