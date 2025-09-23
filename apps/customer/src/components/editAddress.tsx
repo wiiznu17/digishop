@@ -23,7 +23,6 @@ export function EditAddress({
   const {user} = useAuth()
   const [address, setAddress] = useState(item);
   const handleOnConfirm = async () => {
-    console.log(address);
     // patch address
     if(!user) return
     const updateAdd = await updateAddress(user.id,address)
@@ -41,7 +40,6 @@ export function EditAddress({
   const handleOnCancel = () => {
     setEditAddShow(false);
   };
-  console.log(editAddShow);
   return (
     <div>
       <Dialog

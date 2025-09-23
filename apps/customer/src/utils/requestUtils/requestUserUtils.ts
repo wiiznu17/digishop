@@ -70,3 +70,17 @@ export const deleteAddress = async(id: number| undefined) => {
             })
     })
 }
+
+export const updateUserName = async(id: number, data: {firstName: string, lastName: string , middleName: string}) => {
+    return await new Promise((resolve, reject) => {
+        axios
+            .patch(`${endpoint}/api/customer/name/${id}`,data)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+
+}

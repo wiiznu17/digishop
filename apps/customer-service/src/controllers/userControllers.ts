@@ -228,3 +228,22 @@ export const deleteAddress = async (req: Request, res: Response) => {
     console.log(error.message)    
   }
 };
+
+export const updateUserName = async ( req: Request, res: Response) => {
+  const id = req.params.id
+  const {
+    firstName,
+    lastName,
+    middleName
+  } = req.body
+  try {
+    await User.update({
+      firstName: firstName,
+      lastName: lastName,
+      middleName: middleName
+    }, { where: { id: id}})
+    res.json({data: 'success'})
+  } catch (error) {
+    console.log(error.message)
+  }
+}
