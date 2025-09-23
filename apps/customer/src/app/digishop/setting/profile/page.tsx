@@ -16,7 +16,7 @@ import {
 } from "@/utils/requestUtils/requestUserUtils";
 import { Address } from "@/types/props/addressProp";
 import { DialogAddress } from "@/components/createAddress";
-import AddressCard from "@/components/addressCard";
+import {AddressCardForSetting} from "@/components/addressCard";
 import Button from "@/components/button";
 
 const UserProfilePage = () => {
@@ -177,7 +177,7 @@ const UserProfilePage = () => {
                   key={index}
                   // onClick={() => }
                 >
-                  <AddressCard item={item} />
+                  <AddressCardForSetting item={item} />
                 </div>
               ))}
               <Button onClick={handleOnClickAddress} border="border-black">create address</Button>

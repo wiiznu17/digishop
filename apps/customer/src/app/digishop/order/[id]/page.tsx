@@ -21,7 +21,7 @@ import { DialogSelectAddress } from "@/components/dialogSelectAddress";
 import { PaymentMethod } from "../../../../../../../packages/db/src/types/enum";
 import InputField from "@/components/inputField";
 import Button from "@/components/button";
-import { ClipboardCheck, Minus, Plus } from "lucide-react";
+import { ClipboardCheck} from "lucide-react";
 import { useRouter } from "next/navigation";
 import PaymentMethodMaster from "../../../../master/paymentMethod.json";
 import creditMethodLogo from '../../../creaditMethod.png'
@@ -204,7 +204,7 @@ export default function OrderPage() {
   const handlePayment = (e) => {
     setPaymentMethod(e);
   };
-  if (!orderDetail || !shipping || !user) return;
+  if (!orderDetail || !shipping || !user || !selectAddress ) return;
 
   if (!orderDetail[0]) {
     redirect("/digishop", RedirectType.replace);
@@ -303,27 +303,28 @@ export default function OrderPage() {
                   Address
                 </div>
                 <div className="rounded-lg shadow-md py-4 px-2">
-                  {selectAddress && (
-                    <div>
-                      <div className="bg-gray-200 p-3 rounded-2xl max-w-xl mb-2">
-                        <div className="font-bold">
-                          {selectAddress.recipientName}
-                        </div>
-                        <div className="mx-4">
-                          <p>{formatAddress(selectAddress)}</p>
-                          <p>{selectAddress.phone}</p>
-                        </div>
-                        <div className="flex justify-end">
-                          <Button
-                            size="sm"
-                            onClick={handleOnClickSelectAddress}
-                          >
-                            change address
-                          </Button>
-                        </div>
+                  
+                  <div>
+                    <div className="bg-gray-200 p-3 rounded-2xl max-w-xl mb-2">
+                      <div className="font-bold">
+                        {selectAddress.recipientName}
+                      </div>
+                      <div className="mx-4">
+                        <p>{formatAddress(selectAddress)}</p>
+                        <p>{selectAddress.phone}</p>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={handleOnClickSelectAddress}
+                          color="bg-white"
+                        >
+                          change address
+                        </Button>
                       </div>
                     </div>
-                  )}
+                  </div>
+                  
                   <div className="">select your shipping type</div>
                   {shipping?.map((item: Shipping, index: number) => (
                     <div
