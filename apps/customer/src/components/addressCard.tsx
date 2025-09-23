@@ -1,5 +1,13 @@
 import { House, Phone, User } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
+import { Pen, Pin } from 'lucide-react'
+import { EditAddress } from "./editAddress";
+import { SetStateAction, useState } from "react";
+import { Rubik } from "next/font/google";
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "300"
+})
 interface AddressCard {
   item: Address;
 }
@@ -19,14 +27,20 @@ export default function AddressCard({ item }: AddressCard) {
       .filter(Boolean)
       .join(' ')
   }
+  const [editAddShow,setEditAddShow] = useState(false)
   return (
-    <div className={`border ${item.isDefault == true ? "border-amber-600" : "border-black"} rounded-2xl mb-3 p-4 w-fit`}>
+    <div className={`relative border  rounded-2xl mb-3 p-4 `}>
       <div
          className="" 
       > 
         <div className="flex">
           <h5 className="font-bold text-black mb-6 ">{item.addressType}</h5>
-          {item.isDefault == true && <div className="mx-3">is Default</div>}
+          {item.isDefault == true && 
+          <div className="flex">
+            <Pin/>
+            <div className="mx-3">is Default</div>
+
+          </div>}
         </div>
         <div className="space-y-6">
           <div className="flex items-center space-x-4">
@@ -66,6 +80,12 @@ export default function AddressCard({ item }: AddressCard) {
           </div>
         </div>
       </div>
+      <button className="absolute right-10 bottom-5 hover:bg-gray-300/50 cursor-pointer p-3 rounded-full" onClick={() => setEditAddShow(true)}>
+        <Pen />
+      </button>
+      <EditAddress 
+      item={item} setEditAddShow={setEditAddShow} editAddShow={editAddShow}      
+      />
     </div>
   );
 }
