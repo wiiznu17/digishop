@@ -2,29 +2,19 @@
 import React, { useEffect, useState } from "react";
 import {
   User,
-  Phone,
   Mail,
   Lock,
-  Edit3,
-  UserPlus,
-  Key,
-  Save,
-  X,
-  Eye,
-  EyeOff,
-  House,
 } from "lucide-react";
-import { useRouter, redirect, RedirectType } from "next/navigation";
+import { useRouter} from "next/navigation";
 import { Profile } from "@/types/props/userProp";
 import { logoutUser } from "@/utils/requestUtils/requestLoginUtils";
 import { useAuth } from "@/contexts/auth-context";
 import {
   createAddress,
   getAddress,
-  getUserDetail,
+  getUserDetail
 } from "@/utils/requestUtils/requestUserUtils";
 import { Address } from "@/types/props/addressProp";
-import Link from "next/link";
 import { DialogAddress } from "@/components/createAddress";
 import AddressCard from "@/components/addressCard";
 import Button from "@/components/button";
@@ -135,6 +125,20 @@ const UserProfilePage = () => {
                   <>
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                        <User size={18} className="text-gray-600" />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          User Name
+                        </label>
+                        <p className="text-gray-800 text-lg">
+                          {username}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                         <Mail size={18} className="text-gray-600" />
                       </div>
                       <div className="flex-1">
@@ -156,7 +160,7 @@ const UserProfilePage = () => {
                           Password
                         </label>
                         <p className="text-gray-800 text-lg">
-                          {currentUser.password}
+                          reset password
                         </p>
                       </div>
                     </div>
@@ -176,7 +180,7 @@ const UserProfilePage = () => {
                   <AddressCard item={item} />
                 </div>
               ))}
-              <Button onClick={handleOnClickAddress}>create address</Button>
+              <Button onClick={handleOnClickAddress} border="border-black">create address</Button>
             </div>
           </div>
         </div>
