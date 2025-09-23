@@ -67,8 +67,6 @@ export const getMerchantProfile = async (req: AuthenticatedRequest, res: Respons
               model: ProfileMerchantImage,
               as: "profileImages",
               attributes: ["id", "url", "fileName", "createdAt"],
-              // limit: 1,
-              // order: [['createdAt', 'DESC']] // ดึงเฉพาะรูปล่าสุด
             }
           ]
         }

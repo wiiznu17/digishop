@@ -1,24 +1,30 @@
 import { NextFunction, Response, Request, Router } from 'express'
 import sequelize from '@digishop/db'
-import userRouter from './routes/userRouter'
+// import userRouter from './routes/userRouter'
 import categoryRouter from './routes/categoryRouter'
 import productRouter from './routes/productRouter'
+import authRouter from './routes/authRouter';
+import { authenticateAdmin, requirePerms } from './middlewares/auth';
 
 const router = Router()
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (_req, res) => {
   try {
-    await sequelize.authenticate()
-    res.status(200).json({ database: 'Database connected' })
+    await sequelize.authenticate();
+    res.status(200).json({ database: 'Database connected' });
   } catch (error) {
-    console.error('DB Error:', error)
-    res.status(500).json({ database: 'Databas disconnected' })
+    res.status(500).json({ database: 'Database disconnected' });
   }
-})
+});
 
-router.use('/user', userRouter)
-router.use('/admin/categories', categoryRouter)
-router.use('/admin/products', productRouter)
+// router.use('/user', userRouter);
+
+router.use('/admin', authenticateAdmin);
+
+router.use('/admin/categories', categoryRouter);
+
+router.use('/admin/products', productRouter);
+router.use('/auth', authRouter);
 
 export default router
 

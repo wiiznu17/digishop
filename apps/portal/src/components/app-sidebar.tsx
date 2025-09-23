@@ -45,6 +45,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { Button } from "./ui/button"
+import { logout } from "@/utils/requesters/authRequester"
+import { useAuth } from "@/lib/authClient"
 
 type NavItem = {
   title: string
@@ -129,6 +132,7 @@ const groups: NavGroup[] = [
 ]
 
 export function AdminSidebar() {
+  // const { loading } = useAuth()
   return (
     <Sidebar>
       <SidebarContent>
@@ -198,7 +202,21 @@ export function AdminSidebar() {
                   <Link href="/admin/system/audit-logs">View Audit Logs</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/logout">Sign out</Link>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    // disabled={loading}
+                    onClick={async () => {
+                      try {
+                        await logout()
+                      } finally {
+                        // ไม่ต้องทำอะไรต่อ AuthGuard จะพาออกเอง
+                      }
+                    }}
+                  >
+                    Logout
+                  </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
