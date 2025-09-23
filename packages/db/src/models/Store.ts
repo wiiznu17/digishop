@@ -10,7 +10,7 @@ export interface StoreAttributes {
   phone?: string | null;
   businessType: string;
   website?: string | null;
-  logoUrl?: string | null;
+  logoUrl?: string | null; // ไม่ได้ใช้
   description?: string | null;
   status: StoreStatus;
   createdAt?: Date;
