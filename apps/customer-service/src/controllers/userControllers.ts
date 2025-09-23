@@ -218,7 +218,13 @@ export const updateAddress = async (req: Request, res: Response) => {
 
 export const deleteAddress = async (req: Request, res: Response) => {
   const id = req.params.id;
-  await Address.destroy({
-    where: { id: id },
-  });
+  console.log(id)
+  try {
+    await Address.destroy({
+      where: { id: id },
+    });
+    res.json({data: 'success'})
+  } catch (error) {
+    console.log(error.message)    
+  }
 };

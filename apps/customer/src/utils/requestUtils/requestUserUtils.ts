@@ -58,10 +58,10 @@ export const updateAddress = async(userId: number | undefined, data: Address) =>
     })  
 }
 
-export const deleteAddress = async(id: number) => {
+export const deleteAddress = async(id: number| undefined) => {
     return await new Promise((resolve, reject) => {
         axios
-            .delete(`${endpoint}/api/address/${id}`)
+            .delete(`${endpoint}/api/customer/address/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
