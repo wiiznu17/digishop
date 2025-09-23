@@ -5,11 +5,10 @@ import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import InputField from "@/components/inputField";
 import { Home } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
-import { Rubik } from "next/font/google";
+import { Noto_Sans_Thai_Looped } from "next/font/google";
 import Button from "./button";
-const rubik = Rubik({
-  subsets: ["latin"],
-  weight: "300"
+const notoSanLoop = Noto_Sans_Thai_Looped({
+  weight:'400'
 })
 interface CreateAddress {
   isShowAddress: boolean;
@@ -71,7 +70,7 @@ export const DialogAddress = ({
           className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
 
-        <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${rubik.className}`}>
+        <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${notoSanLoop.className}`}>
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <DialogPanel
               transition
@@ -210,8 +209,9 @@ export const DialogAddress = ({
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-700/25 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <div className="bg-gray-700/25 px-4 py-1 sm:flex sm:flex-row-reverse sm:px-6">
                 <Button
+                  size="sm"
                   onClick={handleOnConfirm}
                   disabled={!validateForm()}
                   className={`${!validateForm() ? "bg-gray-300" : "bg-green-500 hover:bg-red-400"} text-sm  text-white sm:ml-3 sm:w-auto`}
@@ -219,8 +219,9 @@ export const DialogAddress = ({
                   Confirm
                 </Button>
                 <Button
+                  size="sm"
                   onClick={handleOnCancel}
-                  className=" bg-white/10 text-white"
+                  className=" bg-white"
                 >
                   Cancel
                 </Button>

@@ -1,23 +1,23 @@
 import { Address } from "@/types/props/addressProp";
-import { MouseEventHandler, SetStateAction, useState } from "react"
+import { SetStateAction, useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
   DialogPanel,
 } from "@headlessui/react";
-import AddressCard from "./addressCard";
+import {AddressCardForOrder} from "./addressCard";
 import { Noto_Sans_Thai_Looped } from "next/font/google";
 import Button from "./button";
 const notoSanLoop = Noto_Sans_Thai_Looped({
   weight:'400'
 })
 interface SelectAddress {
-    isShown: boolean
-    setIsShown: React.Dispatch<SetStateAction<boolean>>
-    handleOnCancel: () => void
-    addresses?: Address[]
-    selectAddress?: Address
-    setSelectAddress: React.Dispatch<SetStateAction<Address|undefined>>
+  isShown: boolean
+  setIsShown: React.Dispatch<SetStateAction<boolean>>
+  handleOnCancel: () => void
+  addresses?: Address[]
+  selectAddress: Address
+  setSelectAddress: React.Dispatch<SetStateAction<Address| undefined>>
 }
 export const DialogSelectAddress = ({
     isShown,
@@ -27,7 +27,7 @@ export const DialogSelectAddress = ({
     selectAddress,
     setSelectAddress,
 }: SelectAddress ) => {
-    const [select,setSelect] = useState(selectAddress)
+    const [select,setSelect] = useState<Address>(selectAddress)
     const handleOnConfirm = () => {
       setSelectAddress(select)
       setIsShown(false)
@@ -53,7 +53,7 @@ export const DialogSelectAddress = ({
                             {
                                 addresses?.map((item, index) => (
                                     <button key={index} onClick={() => setSelect(item)}>
-                                        <AddressCard item={item}/>
+                                        <AddressCardForOrder item={item} select={select}/>
                                     </button>
                                 ))
                             }
@@ -71,7 +71,7 @@ export const DialogSelectAddress = ({
                         <Button
                           size="sm"
                           onClick={handleOnCancel}
-                          className="justify-center bg-white/10 "
+                          className="justify-center bg-white "
                         >
                           Cancel
                         </Button>
