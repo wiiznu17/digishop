@@ -2,19 +2,11 @@
 import React, { useEffect, useState } from "react";
 import {
   User,
-  Phone,
   Mail,
   Lock,
-  Edit3,
-  UserPlus,
-  Key,
-  Save,
-  X,
-  Eye,
-  EyeOff,
-  House,
+  Pen
 } from "lucide-react";
-import { useRouter, redirect, RedirectType } from "next/navigation";
+import { useRouter} from "next/navigation";
 import { Profile } from "@/types/props/userProp";
 import { logoutUser } from "@/utils/requestUtils/requestLoginUtils";
 import { useAuth } from "@/contexts/auth-context";
@@ -22,12 +14,14 @@ import {
   createAddress,
   getAddress,
   getUserDetail,
+  updateUserName
 } from "@/utils/requestUtils/requestUserUtils";
 import { Address } from "@/types/props/addressProp";
-import Link from "next/link";
 import { DialogAddress } from "@/components/createAddress";
-import AddressCard from "@/components/addressCard";
+import {AddressCardForSetting} from "@/components/addressCard";
 import Button from "@/components/button";
+import InputField from "@/components/inputField";
+import { middleware } from "@/middleware";
 
 const UserProfilePage = () => {
   const [currentUser, setCurrentUser] = useState<Profile>();
@@ -47,9 +41,26 @@ const UserProfilePage = () => {
     isDefault: false,
     addressType: "HOME",
   });
+  const [name, setName] = useState({
+   firstName: '',
+    lastName: '',
+    middleName: ''
+  })
   const router = useRouter();
   const { user } = useAuth();
   const [isShowAddress, setIsShowAddress] = useState(false);
+  const [isEditName, setIsEditName] = useState(false)
+  const handleChangeName = async() => {
+    if(!user || !name) return
+    const changeData = await updateUserName(user.id , name)
+    setIsEditName(false)
+    if(changeData.data){
+      window.location.reload()
+    }
+  }
+  const handleInputChange = (e) => {
+    setName({...name, [e.target.name]: e.target.value })
+  }
   const handleOnClickAddress = (): void => {
     setIsShowAddress(true);
   };
@@ -90,10 +101,18 @@ const UserProfilePage = () => {
       const resAddress = await getAddress(user?.id);
       setCurrentUser(resUser.data);
       setAddressUser(resAddress.data);
+      
     };
     fetchData();
   }, [user, isShowAddress]);
-  console.log("currentUser", currentUser);
+  useEffect(() => {
+    if(!currentUser)return
+    setName({
+            firstName: currentUser.firstName,
+            lastName: currentUser.lastName,
+            middleName: currentUser.middleName
+          })
+  },[currentUser])
   const formatName = (firstName: string|undefined , middleName: string|undefined ,lastName: string|undefined) => {
     return [
       firstName,
@@ -135,6 +154,74 @@ const UserProfilePage = () => {
                   <>
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                        <User size={18} className="text-gray-600" />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          User Name
+                        </label>
+                        {
+                          !isEditName && (
+                            <div className="flex">
+                              <p className="text-gray-800 text-lg border-b w-1/2">
+                                {username}
+                              </p>
+                              <button className=" hover:bg-gray-300/50 cursor-pointer p-2 rounded-full" onClick={() => setIsEditName(true)}>
+                                <Pen />
+                              </button>
+                            </div>
+                          )
+                        }
+                        {
+                          isEditName && (
+                            <div>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <InputField
+                                  label="First Name"
+                                  name="firstName"
+                                  value={name.firstName}
+                                  onChange={handleInputChange}
+                                  placeholder="Enter your first name"
+                                  type="text"
+                                  // error={errors.firstName}
+                                />
+                                <InputField
+                                  label="Middle Name"
+                                  name="middleName"
+                                  value={name.middleName}
+                                  onChange={handleInputChange}
+                                  placeholder="Enter your middle name"
+                                  type="text"
+                                  // error={errors.firstName}
+                                />
+
+                                <InputField
+                                  label="Last Name"
+                                  name="lastName"
+                                  value={name.lastName}
+                                  onChange={handleInputChange}
+                                  placeholder="Enter your last name"
+                                  type="text"
+                                  // error={errors.lastName}
+                                />
+                              </div>
+                              <div className="flex justify-end items-end">
+                                <Button size="sm" onClick={() => setIsEditName(false)}>
+                                  cancel
+                                </Button>
+                                <Button size="sm" onClick={handleChangeName} className="ml-4" color="bg-green-300">
+                                  confirm
+                                </Button>
+                              </div>
+                        
+                            </div>
+                          )
+                        }
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                         <Mail size={18} className="text-gray-600" />
                       </div>
                       <div className="flex-1">
@@ -156,7 +243,7 @@ const UserProfilePage = () => {
                           Password
                         </label>
                         <p className="text-gray-800 text-lg">
-                          {currentUser.password}
+                          reset password
                         </p>
                       </div>
                     </div>
@@ -173,10 +260,10 @@ const UserProfilePage = () => {
                   key={index}
                   // onClick={() => }
                 >
-                  <AddressCard item={item} />
+                  <AddressCardForSetting item={item} />
                 </div>
               ))}
-              <Button onClick={handleOnClickAddress}>create address</Button>
+              <Button onClick={handleOnClickAddress} border="border-black">create address</Button>
             </div>
           </div>
         </div>

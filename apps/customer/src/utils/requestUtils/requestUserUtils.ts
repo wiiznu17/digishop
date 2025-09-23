@@ -44,3 +44,43 @@ export const getAddress = async(id:number|undefined ) => {
             })
     })
 }
+
+export const updateAddress = async(userId: number | undefined, data: Address) => {
+    return await new Promise((resolve, reject) => {
+        axios
+            .patch(`${endpoint}/api/customer/address/${userId}`,data)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })  
+}
+
+export const deleteAddress = async(id: number| undefined) => {
+    return await new Promise((resolve, reject) => {
+        axios
+            .delete(`${endpoint}/api/customer/address/${id}`)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+}
+
+export const updateUserName = async(id: number, data: {firstName: string, lastName: string , middleName: string}) => {
+    return await new Promise((resolve, reject) => {
+        axios
+            .patch(`${endpoint}/api/customer/name/${id}`,data)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+
+}
