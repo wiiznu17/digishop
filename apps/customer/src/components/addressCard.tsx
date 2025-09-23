@@ -1,9 +1,10 @@
 import { House, Phone, User } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
-import { Pen, Pin } from 'lucide-react'
+import { Pen, Pin , Trash2} from 'lucide-react'
 import { EditAddress } from "./editAddress";
 import { SetStateAction, useState } from "react";
 import { Rubik } from "next/font/google";
+import { deleteAddress } from "@/utils/requestUtils/requestUserUtils";
 const rubik = Rubik({
   subsets: ["latin"],
   weight: "300"
@@ -28,6 +29,12 @@ export default function AddressCard({ item }: AddressCard) {
       .join(' ')
   }
   const [editAddShow,setEditAddShow] = useState(false)
+  const handleDelete = async(id: number| undefined) => {
+    const delData = await deleteAddress(id)
+    if(delData.data){
+      window.location.reload()
+    }
+  }
   return (
     <div className={`relative border  rounded-2xl mb-3 p-4 `}>
       <div
@@ -80,9 +87,17 @@ export default function AddressCard({ item }: AddressCard) {
           </div>
         </div>
       </div>
-      <button className="absolute right-10 bottom-5 hover:bg-gray-300/50 cursor-pointer p-3 rounded-full" onClick={() => setEditAddShow(true)}>
+      <button className="absolute right-15 top-5 hover:bg-gray-300/50 cursor-pointer p-2 rounded-full" onClick={() => setEditAddShow(true)}>
         <Pen />
       </button>
+      {
+        !item.isDefault && (
+        <button className="absolute right-3 top-5 hover:bg-red-300/50 cursor-pointer p-2 rounded-full" onClick={() => handleDelete(item.id)}>
+          <Trash2 />
+        </button>
+
+        )
+      }
       <EditAddress 
       item={item} setEditAddShow={setEditAddShow} editAddShow={editAddShow}      
       />
