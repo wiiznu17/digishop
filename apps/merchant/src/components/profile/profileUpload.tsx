@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -8,7 +8,7 @@ import { X, Upload, Image as ImageIcon } from "lucide-react"
 import { ProfileMerchantImage } from "@/types/props/userProp"
 
 interface ProfileLogoUploadProps {
-  images: ProfileMerchantImage[]
+  images: ProfileMerchantImage[] | ProfileMerchantImage | null | undefined
   onImagesChange: (images: ProfileMerchantImage[]) => void
   maxImages?: number
 }
@@ -20,6 +20,12 @@ export function ProfileLogoUpload({
 }: ProfileLogoUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Normalize to array
+  const imgList = useMemo<ProfileMerchantImage[]>(() => {
+    if (!images) return []
+    return Array.isArray(images) ? images : [images]
+  }, [images])
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -45,8 +51,8 @@ export function ProfileLogoUpload({
       }
 
       // Clean up existing blob URLs to prevent memory leaks
-      images.forEach((image) => {
-        if (image.url.startsWith("blob:")) {
+      imgList.forEach((image) => {
+        if (image.url?.startsWith?.("blob:")) {
           URL.revokeObjectURL(image.url)
         }
       })
@@ -57,10 +63,9 @@ export function ProfileLogoUpload({
       const imageData: ProfileMerchantImage = {
         url: previewUrl,
         fileName: file.name
-        // ไม่เก็บ file ใน prop แล้ว
       }
 
-      // แทนที่รูปเดิมด้วยรูปใหม่ (รูปเดียว)
+      // โปรไฟล์มีรูปเดียว → แทนที่ทันที
       onImagesChange([imageData])
     } catch (error) {
       console.error("Error processing file:", error)
@@ -75,15 +80,15 @@ export function ProfileLogoUpload({
 
   const removeImage = () => {
     // Clean up blob URL ถ้ามี
-    if (images.length > 0 && images[0].url.startsWith("blob:")) {
-      URL.revokeObjectURL(images[0].url)
+    if (imgList.length > 0 && imgList[0].url?.startsWith?.("blob:")) {
+      URL.revokeObjectURL(imgList[0].url)
     }
 
     // ลบออกจาก preview เท่านั้น (จะลบจริงเมื่อกด Save)
     onImagesChange([])
   }
 
-  const hasImage = images.length > 0
+  const hasImage = imgList.length > 0
 
   return (
     <div className="space-y-4">
@@ -126,8 +131,8 @@ export function ProfileLogoUpload({
         <Card className="relative group overflow-hidden">
           <div className="aspect-square relative max-w-xs mx-auto">
             <img
-              src={images[0].url}
-              alt={images[0].fileName || "Profile logo"}
+              src={imgList[0].url}
+              alt={imgList[0].fileName || "Profile logo"}
               className="w-full h-full object-cover"
             />
 
@@ -160,10 +165,10 @@ export function ProfileLogoUpload({
           {/* File Info */}
           <div className="p-2">
             <p className="text-xs text-muted-foreground truncate">
-              {images[0].fileName}
+              {imgList[0].fileName}
             </p>
             <p className="text-xs text-green-600">
-              {images[0].url.startsWith("blob:")
+              {imgList[0].url?.startsWith?.("blob:")
                 ? "New image - will upload on save"
                 : "Current logo"}
             </p>
