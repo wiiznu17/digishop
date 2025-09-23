@@ -21,8 +21,9 @@ const rubik = Rubik({
 export default function OrderStatus() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<OrderDetail[]>();
+  const [isShowCancel, setIsShowCancel] = useState<boolean>(false);
+  const [isShowRefund, setIsShowRefund] = useState<boolean>(false);
   const [count, setCount] = useState<number>();
-  const [ isShowCancel ,setIsShowCancel] = useState<boolean>()
   const [selectShowDetail, setSelectShowDetail] = useState<
     OrderDetail | undefined
   >();
@@ -50,6 +51,8 @@ export default function OrderStatus() {
   const handleChangeState = (state: string) => {
     setSelectStatus(state);
     setSelectShowDetail(undefined);
+    setIsShowCancel(false)
+    setIsShowRefund(false)
   };
   const handleShowDetail = (order: OrderDetail) => {
     setSelectShowDetail(order);
@@ -75,7 +78,8 @@ export default function OrderStatus() {
                 filterOrder.map((order, index: number) => (
                     <div key={index} 
                     >
-                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail}/>
+                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} isShowCancel={isShowCancel} setIsShowCancel={setIsShowCancel}
+                    isShowRefund={isShowRefund} setIsShowRefund={setIsShowRefund}/>
                     </div>
                 ))
                 ) : (

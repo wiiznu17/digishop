@@ -16,7 +16,7 @@ import { Minus, Plus } from "lucide-react";
 export default function ProductDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
-  const discountMinor = 0
+  const discountMinor = 0;
   const productId = String(id);
   const router = useRouter();
   const [product, setProduct] = useState<Product>();
@@ -46,13 +46,13 @@ export default function ProductDetailPage() {
           productItemId: selected.id,
           quantity: amount,
           discountMinor: discountMinor,
-          lineTotalMinor: selected.price_minor * amount - discountMinor,
+          lineTotalMinor: selected.priceMinor * amount - discountMinor,
           productItem: {
             id: selected.id,
             productId: product.id,
             sku: selected.sku,
-            stockQuantity: selected.stock_quantity,
-            priceMinor: selected.price_minor,
+            stockQuantity: selected.stockQuantity,
+            priceMinor: selected.priceMinor,
             product: {
               id: product.id,
               uuid: product.uuid,
@@ -72,9 +72,9 @@ export default function ProductDetailPage() {
     });
   }, [user, product, amount, selected]);
   const handleSelected = (item: ProductItem) => {
-    setSelected(item)
-    setAmount(1)
-  }
+    setSelected(item);
+    setAmount(1);
+  };
   const handleBuy = async () => {
     if (!data) return;
     console.log("data", data);
@@ -89,14 +89,14 @@ export default function ProductDetailPage() {
     console.log("res", wishList);
     const res = await createWishList(wishList);
     if (res.data) {
-      alert("success");
+      alert("Item successfully added to cart");
     }
   };
-
+  console.log(product);
   return product ? (
     <div className="flex justify-center">
       <div className="p-6">
-        <div className="grid grid-cols-2 mb-6 ">
+        <div className="grid grid-cols-2 mb-6 gap-4 ">
           <div className="w-[610px] h-[550px] bg-pink-200 text-center">
             picture
           </div>
@@ -118,40 +118,44 @@ export default function ProductDetailPage() {
             </div>
             {selected && (
               <div className="flex items-center justify-center text-8xl">
-                <div>{selected.price_minor / 100} </div>
+                <div>
+                  ฿{" "}
+                  {(selected.priceMinor / 100)
+                    .toString()
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
+                </div>
               </div>
             )}
             <div>
               {selected && (
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center mb-5">
                   <div>
-                  <div className="flex my-4 gap-2">
-                    <button
-                      disabled={amount == 1}
-                      onClick={() => setAmount(amount - 1)}
-                      className={`p-2 rounded-xs  bg-red-400 ${amount == 1 ? "opacity-0" : "opacity-100"}`}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
+                    <div className="flex my-4 ">
+                      <button
+                        disabled={amount == 1}
+                        onClick={() => setAmount(amount - 1)}
+                        className={`p-2 rounded-xs  bg-red-400 ${amount == 1 ? "opacity-0" : "opacity-100"}`}
+                      >
+                        <Minus className="w-7 h-7" />
+                      </button>
 
-                    <span className="w-8 text-center font-medium text-gray-900">
-                      {amount}
-                    </span>
+                      <span className="w-20 text-2xl bg-gray-200 text-center font-medium text-gray-900">
+                        {amount}
+                      </span>
 
-                    <button
-                      disabled={amount == selected.stock_quantity}
-                      className={`p-2 rounded-xs bg-green-300 ${amount == selected.stock_quantity ? "opacity-0" : "opacity-100"}`}
-                      onClick={() => setAmount(amount + 1)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {/* <div className="flex text-gray-400 text-[16px] items-end justify-end">
+                      <button
+                        disabled={amount == selected.stockQuantity}
+                        className={`p-2 rounded-xs bg-green-300 ${amount == selected.stockQuantity ? "opacity-0" : "opacity-100"}`}
+                        onClick={() => setAmount(amount + 1)}
+                      >
+                        <Plus className="w-7 h-7" />
+                      </button>
+                    </div>
+                    {/* <div className="flex text-gray-400 text-[16px] items-end justify-end">
                     stock: {selected.stock_quantity}
                   </div> */}
+                  </div>
                 </div>
-                </div>
-                
               )}
 
               <div className="flex items-center justify-center">
@@ -161,8 +165,8 @@ export default function ProductDetailPage() {
                   color="border-gray-500"
                   className="w-[200px]"
                   disabled={
-                    selected?.stock_quantity !== undefined &&
-                    selected.stock_quantity < 0
+                    selected?.stockQuantity !== undefined &&
+                    selected.stockQuantity < 0
                   }
                 >
                   Add
@@ -178,17 +182,18 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
-        </div>
-        <h2 className="text-2xl ">Description</h2>
-        <h2 className="ml-5 my-4">{product.description}</h2>
-        <div className="border-1 mb-3 border-gray-500"></div>
-        <div className="flex p-6 rounded-2xl w-2xl bg-gray-200 border-b">
-          <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
-          <div className="px-4">
-            <h1 className="text-2xl font-extrabold">
-              {product.store.storeName}
-            </h1>
-            <h6 className="mt-4">{product.store.description}</h6>
+          <div className="border p-4 rounded-2xl">
+            <h2 className="text-2xl w-fit border-b">Description</h2>
+            <h2 className="ml-5 my-5">{product.description}</h2>
+          </div>
+          <div className="flex p-6 rounded-2xl w-2xl bg-gray-200 border-b">
+            <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
+            <div className="px-4">
+              <h1 className="text-2xl font-extrabold">
+                {product.store.storeName}
+              </h1>
+              <h6 className="mt-4">{product.store.description}</h6>
+            </div>
           </div>
         </div>
       </div>
