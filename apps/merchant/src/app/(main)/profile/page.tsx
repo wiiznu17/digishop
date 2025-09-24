@@ -20,26 +20,36 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { MerchantHeader } from "@/components/dashboard-header"
-import {
-  User,
-  Building,
-  CreditCard,
-  Bell,
-  Shield,
-  Save,
-  Upload
-} from "lucide-react"
+import { User, Building, Save, Edit, CheckCircle } from "lucide-react"
 import {
   fetchMerchantProfileRequester,
+  updateMerchantAddressRequester,
   updateMerchantProfileRequester
 } from "@/utils/requestUtils/requestProfileUtils"
 import {
   defaultMerchant,
   MerchantProfileFormValues,
   MerchantProfileProps,
-  ProfileMerchantImage
+  ProfileMerchantImage,
+  MerchantAddressForm
 } from "@/types/props/userProp"
 import { ProfileLogoUpload } from "@/components/profile/profileUpload"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { cn } from "@/utils/tailwindUtils"
+
+function normalizeImages(
+  imgs: MerchantProfileFormValues["store"]["profileImages"]
+): ProfileMerchantImage[] {
+  if (!imgs) return []
+  return Array.isArray(imgs) ? imgs : [imgs]
+}
 
 export default function ProfilePage({ merchant }: MerchantProfileProps) {
   const [profileData, setProfileData] = useState<MerchantProfileFormValues>(
@@ -48,21 +58,22 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
+  // dialog state
+  const [editOpen, setEditOpen] = useState(false)
+  const [editingAddress, setEditingAddress] =
+    useState<MerchantAddressForm | null>(null)
+
   // useEffect for fetch merchant detail
   useEffect(() => {
-    handleFetchMerchantProfile()
+    void handleFetchMerchantProfile()
   }, [])
 
   const handleFetchMerchantProfile = async () => {
     try {
       setIsLoading(true)
       const currentProfile = await fetchMerchantProfileRequester()
-      console.log("Fetched merchant profile:", currentProfile)
-
       if (!currentProfile?.store || !currentProfile?.store.addresses) {
-        console.warn("Invalid merchant profile, using default")
         setProfileData(defaultMerchant)
-        return
       } else {
         setProfileData(currentProfile)
       }
@@ -93,71 +104,59 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
     }))
   }
 
-  const handleAddressChange = (index: number, field: string, value: string) => {
-    const updatedAddresses = [...profileData.store.addresses]
-    updatedAddresses[index] = {
-      ...updatedAddresses[index],
-      [field]: value
-    }
+  const handleAddressChange = (
+    index: number,
+    field: keyof MerchantAddressForm,
+    value: string | boolean
+  ) => {
+    const updated = [...profileData.store.addresses]
+    updated[index] = { ...updated[index], [field]: value as never }
     setProfileData((prev) => ({
       ...prev,
-      store: {
-        ...prev.store,
-        addresses: updatedAddresses
-      }
+      store: { ...prev.store, addresses: updated }
     }))
   }
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setProfileData((prev) => ({ ...prev, [field]: value }))
+  const setDefaultAddressByIndex = (index: number) => {
+    const updated = profileData.store.addresses.map((a, i) => ({
+      ...a,
+      isDefault: i === index
+    }))
+    setProfileData((prev) => ({
+      ...prev,
+      store: { ...prev.store, addresses: updated }
+    }))
   }
 
   const handleSave = async () => {
     try {
       setIsSaving(true)
 
-      // Convert blob URLs to actual files for new images (เหมือน ProductDialog)
-      const imageFiles: File[] = []
+      const imgList = normalizeImages(profileData.store.profileImages)
 
-      if (
-        profileData.store.profileImages &&
-        profileData.store.profileImages.length > 0
-      ) {
-        const image = profileData.store.profileImages[0] // เอารูปเดียว
-        // Only process new images (blob URLs)
-        if (image.url.startsWith("blob:")) {
-          try {
-            const response = await fetch(image.url)
-            const blob = await response.blob()
-            const file = new File([blob], image.fileName, { type: blob.type })
-            imageFiles.push(file)
-          } catch (error) {
-            console.error("Error converting blob to file:", error)
-          }
+      const imageFiles: File[] = []
+      if (imgList.length > 0 && imgList[0].url?.startsWith?.("blob:")) {
+        try {
+          const response = await fetch(imgList[0].url)
+          const blob = await response.blob()
+          const file = new File([blob], imgList[0].fileName, {
+            type: blob.type
+          })
+          imageFiles.push(file)
+        } catch (error) {
+          console.error("Error converting blob to file:", error)
         }
       }
 
-      console.log("Profile data to save:", profileData)
-      console.log("Images to upload:", imageFiles.length)
-
-      // เรียกใช้ updateMerchantProfileRequester แบบแยกกัน
       const result = await updateMerchantProfileRequester(
         profileData,
         imageFiles
       )
-
       if (result) {
-        // Clean up blob URLs after successful save
-        profileData.store.profileImages?.forEach((image) => {
-          if (image.url.startsWith("blob:")) {
-            URL.revokeObjectURL(image.url)
-          }
-        })
-
-        // รีเฟรชข้อมูลใหม่จากเซิร์ฟเวอร์
+        if (imgList.length > 0 && imgList[0].url?.startsWith?.("blob:")) {
+          URL.revokeObjectURL(imgList[0].url)
+        }
         await handleFetchMerchantProfile()
-
-        console.log("Profile updated successfully")
         alert("Profile updated successfully!")
       }
     } catch (error) {
@@ -167,6 +166,25 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
       setIsSaving(false)
     }
   }
+
+  const openEditDialog = (addr: MerchantAddressForm) => {
+    setEditingAddress(addr)
+    setEditOpen(true)
+  }
+
+  const submitEditAddress = async () => {
+    if (!editingAddress) return
+    try {
+      await updateMerchantAddressRequester(editingAddress.id, editingAddress)
+      setEditOpen(false)
+      await handleFetchMerchantProfile()
+    } catch (e) {
+      console.error(e)
+      alert("Update address failed")
+    }
+  }
+
+  const metrics = profileData.store.metrics
 
   return (
     <div>
@@ -193,7 +211,7 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                 Update your business details and contact information
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Business Name</Label>
@@ -210,7 +228,7 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   <Label htmlFor="ownerName">Owner Name</Label>
                   <Input
                     id="ownerName"
-                    value={profileData.store.addresses[0]?.ownerName}
+                    value={profileData.store.addresses[0]?.ownerName || ""}
                     onChange={(e) =>
                       handleAddressChange(0, "ownerName", e.target.value)
                     }
@@ -238,10 +256,67 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   />
                 </div>
               </div>
+
+              {/* Address list */}
+              <div className="space-y-2">
+                <Label>Business Addresses</Label>
+                <RadioGroup
+                  value={String(
+                    profileData.store.addresses.findIndex((a) => a.isDefault) ??
+                      0
+                  )}
+                  onValueChange={(val) => setDefaultAddressByIndex(Number(val))}
+                >
+                  <div className="space-y-3">
+                    {profileData.store.addresses.map((addr, idx) => (
+                      <div
+                        key={addr.id ?? idx}
+                        className={cn(
+                          "border rounded-lg p-3 flex items-start gap-3",
+                          addr.isDefault && "border-primary"
+                        )}
+                      >
+                        <RadioGroupItem value={String(idx)} className="mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {addr.addressType} {addr.isDefault && "(Default)"}
+                            </span>
+                            {addr.isDefault && (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {addr.address_number}{" "}
+                            {addr.subStreet && `, ${addr.subStreet}`}{" "}
+                            {addr.street && `, ${addr.street}`}{" "}
+                            {addr.building && `, ${addr.building}`} ,{" "}
+                            {addr.subdistrict}, {addr.district}, {addr.province}{" "}
+                            {addr.postalCode}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(addr)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" /> Edit
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground">
+                  Choose default and click &quot;Save Changes&quot; merchant
+                  data
+                </p>
+              </div>
+
+              {/* Quick edit first address */}
               <Card>
                 <CardContent className="space-y-4">
                   <div className="space-y-4 py-4">
-                    <Label htmlFor="address">Business Address</Label>
+                    <Label htmlFor="address">Quick Edit First Address</Label>
                     <div className="grid grid-cols-4 md:grid-cols-4 grid-rows-2 gap-4">
                       <div className="space-y-2">
                         <Label className="!text-xs" htmlFor="addressNumber">
@@ -249,11 +324,13 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         </Label>
                         <Input
                           id="addressNumber"
-                          value={profileData.store.addresses[0]?.address_number}
+                          value={
+                            profileData.store.addresses[0]?.address_number || ""
+                          }
                           onChange={(e) =>
                             handleAddressChange(
                               0,
-                              "addressNumber",
+                              "address_number",
                               e.target.value
                             )
                           }
@@ -261,18 +338,16 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="!text-xs" htmlFor="addressNumber">
+                        <Label className="!text-xs" htmlFor="addressSubStreet">
                           Address SubStreet
                         </Label>
                         <Input
                           id="addressSubStreet"
-                          value={profileData.store.addresses[0]?.subStreet}
+                          value={
+                            profileData.store.addresses[0]?.subStreet || ""
+                          }
                           onChange={(e) =>
-                            handleAddressChange(
-                              0,
-                              "addressSubStreet",
-                              e.target.value
-                            )
+                            handleAddressChange(0, "subStreet", e.target.value)
                           }
                           placeholder="Address SubStreet"
                         />
@@ -283,13 +358,9 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         </Label>
                         <Input
                           id="addressStreet"
-                          value={profileData.store.addresses[0]?.street}
+                          value={profileData.store.addresses[0]?.street || ""}
                           onChange={(e) =>
-                            handleAddressChange(
-                              0,
-                              "addressStreet",
-                              e.target.value
-                            )
+                            handleAddressChange(0, "street", e.target.value)
                           }
                           placeholder="Address Street"
                         />
@@ -300,13 +371,9 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         </Label>
                         <Input
                           id="addressBuilding"
-                          value={profileData.store.addresses[0]?.building}
+                          value={profileData.store.addresses[0]?.building || ""}
                           onChange={(e) =>
-                            handleAddressChange(
-                              0,
-                              "addressBuilding",
-                              e.target.value
-                            )
+                            handleAddressChange(0, "building", e.target.value)
                           }
                           placeholder="Address Building"
                         />
@@ -320,11 +387,13 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         </Label>
                         <Input
                           id="addressSubdistrict"
-                          value={profileData.store.addresses[0]?.subdistrict}
+                          value={
+                            profileData.store.addresses[0]?.subdistrict || ""
+                          }
                           onChange={(e) =>
                             handleAddressChange(
                               0,
-                              "addressSubdistrict",
+                              "subdistrict",
                               e.target.value
                             )
                           }
@@ -337,13 +406,9 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         </Label>
                         <Input
                           id="addressDistrict"
-                          value={profileData.store.addresses[0]?.district}
+                          value={profileData.store.addresses[0]?.district || ""}
                           onChange={(e) =>
-                            handleAddressChange(
-                              0,
-                              "addressDistrict",
-                              e.target.value
-                            )
+                            handleAddressChange(0, "district", e.target.value)
                           }
                           placeholder="Address District"
                         />
@@ -354,13 +419,9 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         </Label>
                         <Input
                           id="addressProvince"
-                          value={profileData.store.addresses[0]?.province}
+                          value={profileData.store.addresses[0]?.province || ""}
                           onChange={(e) =>
-                            handleAddressChange(
-                              0,
-                              "addressProvince",
-                              e.target.value
-                            )
+                            handleAddressChange(0, "province", e.target.value)
                           }
                           placeholder="Address Province"
                         />
@@ -371,9 +432,11 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                         </Label>
                         <Input
                           id="addressZip"
-                          value={profileData.store.addresses[0]?.postalCode}
+                          value={
+                            profileData.store.addresses[0]?.postalCode || ""
+                          }
                           onChange={(e) =>
-                            handleAddressChange(0, "addressZip", e.target.value)
+                            handleAddressChange(0, "postalCode", e.target.value)
                           }
                           placeholder="Address Zip"
                         />
@@ -382,6 +445,7 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   </div>
                 </CardContent>
               </Card>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="businessType">Business Type</Label>
@@ -435,16 +499,6 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                   rows={3}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="taxId">Tax ID Number</Label>
-                <Input
-                  id="taxId"
-                  value={"profileData.taxId"}
-                  onChange={(e) => handleStoreChange("taxId", e.target.value)}
-                  placeholder="xxx-xx-xxxx"
-                />
-              </div>
             </CardContent>
           </Card>
 
@@ -459,7 +513,7 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
             <CardContent className="space-y-4">
               {!isLoading && (
                 <ProfileLogoUpload
-                  images={profileData.store.profileImages || []}
+                  images={profileData.store.profileImages}
                   onImagesChange={handleImagesChange}
                   maxImages={1}
                 />
@@ -468,25 +522,199 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
               <div className="space-y-2 pt-4">
                 <div className="flex justify-between">
                   <span className="text-sm">Member Since</span>
-                  <span className="text-sm font-medium">Jan 2024</span>
+                  <span className="text-sm font-medium">
+                    {metrics?.memberSince
+                      ? new Date(metrics.memberSince).toLocaleDateString()
+                      : "-"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Total Products</span>
-                  <span className="text-sm font-medium">245</span>
+                  <span className="text-sm font-medium">
+                    {metrics?.totalProducts ?? 0}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Total Orders</span>
-                  <span className="text-sm font-medium">1,234</span>
+                  <span className="text-sm font-medium">
+                    {metrics?.totalOrders ?? 0}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Rating</span>
-                  <span className="text-sm font-medium">4.8/5</span>
+                  <span className="text-sm font-medium">
+                    {metrics?.rating ? `${metrics.rating.toFixed(1)}/5` : "-"}
+                  </span>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Edit Address Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Address</DialogTitle>
+          </DialogHeader>
+          {editingAddress && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Owner Name</Label>
+                  <Input
+                    value={editingAddress.ownerName}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        ownerName: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input
+                    value={editingAddress.phone}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        phone: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Address Number</Label>
+                  <Input
+                    value={editingAddress.address_number}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        address_number: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>SubStreet</Label>
+                  <Input
+                    value={editingAddress.subStreet}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        subStreet: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Street</Label>
+                  <Input
+                    value={editingAddress.street}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        street: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Building</Label>
+                  <Input
+                    value={editingAddress.building}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        building: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Subdistrict</Label>
+                  <Input
+                    value={editingAddress.subdistrict}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        subdistrict: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>District</Label>
+                  <Input
+                    value={editingAddress.district}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        district: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Province</Label>
+                  <Input
+                    value={editingAddress.province}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        province: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Postal Code</Label>
+                  <Input
+                    value={editingAddress.postalCode}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        postalCode: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-end">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={editingAddress.isDefault}
+                      onChange={(e) =>
+                        setEditingAddress({
+                          ...editingAddress,
+                          isDefault: e.target.checked
+                        })
+                      }
+                    />
+                    <Label>Set as default</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitEditAddress}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
