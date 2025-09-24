@@ -7,11 +7,22 @@ export interface ProductItem {
     priceMinor: number;
     imageUrl?: string | undefined;
 }
+export interface ProductImages {
+  id: number
+  uuid: string
+  productId: number
+  url: string
+  blobName: string
+  fileName: string
+  isMain: boolean
+  sortOrder: number
+}
 export interface Product {
   id: number
   uuid: string
   name: string
   description: string
+  images: ProductImages[]
   items: [
     ProductItem
   ]
@@ -19,8 +30,17 @@ export interface Product {
   category: Category
 }
 
+export interface StoreProduct {
+  id: number
+  storeName: string
+  logoUrl: string
+  description: string
+  products: Product[]
+}
+
 export interface Store {
   id: number
+  uuuid: string
   storeName: string
   logoUrl: string
   description: string
