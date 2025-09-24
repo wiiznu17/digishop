@@ -44,7 +44,7 @@ const REFRESH_PUBLIC  = toPublicKey ("JWT_REFRESH_PUBLIC_KEY",  "JWT_REFRESH_PUB
 // ---- options ----
 const baseAccessSign: SignOptions = {
   algorithm: "RS256",
-  expiresIn: "10M",
+  expiresIn: "1M",
   issuer: ISS,
   audience: AUD,
 };

@@ -12,11 +12,11 @@ const RTK_NAME = process.env.JWT_COOKIE_NAME || "rtk";
 const COOKIE_OPTS = { httpOnly: true, sameSite: "lax" as const, secure: false, path: "/" };
 
 export const login = async (req: Request, res: Response) => {
-  console.log("ip: ", req.ip)
-  console.log("headers: ", req.headers["user-agent"])
+  // console.log("ip: ", req.ip)
+  // console.log("headers: ", req.headers["user-agent"])
   const { email, password } = (req.body ?? {}) as { email?: string; password?: string };
-  console.log("login with email: ", email)
-  console.log("login with password: ", password)
+  // console.log("login with email: ", email)
+  // console.log("login with password: ", password)
   if (!email || !password) return res.status(400).json({ error: "EMAIL_PASSWORD_REQUIRED" });
 
   const user = await AdminUser.findOne({ where: { email } as any });
@@ -50,6 +50,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const refresh = async (req: Request, res: Response) => {
   const token = (req as any).cookies?.[RTK_NAME];
+  console.log("refreshing token")
   if (!token) return res.status(401).json({ error: "NO_REFRESH" });
 
   try {
@@ -136,10 +137,10 @@ export const access = async (req: Request, res: Response) => {
     }
   }
   const permissionSlugs = Array.from(permSet);
-  console.log("rturn access: ", user.id)
-  console.log("rturn access: ", user.email)
+  // console.log("rturn access: ", user.id)
+  // console.log("rturn access: ", user.email)
   console.log("rturn access: ", roleSlugs)
-  console.log("rturn access: ", permissionSlugs)
+  // console.log("rturn access: ", permissionSlugs)
   return res.json({
     id: (user as any).id,
     email: (user as any).email,
