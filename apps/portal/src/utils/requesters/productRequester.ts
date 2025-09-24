@@ -1,60 +1,13 @@
-// apps/portal/src/utils/requestUtils/requestAdminProductUtils.ts
 import axios from "@/lib/axios"
-
-export type AdminCategoryDto = {
-  uuid: string
-  name: string
-  parentUuid?: string | null
-}
-
-export type AdminProductListItem = {
-  uuid: string
-  name: string
-  description?: string | null
-  category?: { uuid: string; name: string } | null
-  store?: {
-    uuid: string
-    storeName: string
-  } | null
-  status: "ACTIVE" | "INACTIVE"
-  reqStatus: "PENDING" | "APPROVED" | "REJECT"
-  rejectReason?: string | null
-  minPriceMinor: number | null
-  totalStock: number
-  totalImageCount?: number
-  images?: { url: string; isMain?: boolean }[]
-  createdAt?: string
-  updatedAt?: string
-}
-
-export type AdminFetchProductsParams = {
-  q?: string
-  categoryUuid?: string
-  reqStatus?: "PENDING" | "APPROVED" | "REJECT"
-  status?: "ACTIVE" | "INACTIVE"
-  inStock?: boolean
-  sortBy?: "createdAt" | "updatedAt" | "name" | "price"
-  sortDir?: "asc" | "desc"
-  page?: number
-  pageSize?: number
-}
-
-export type AdminProductListResponse = {
-  data: AdminProductListItem[]
-  meta: { page: number; pageSize: number; total: number; totalPages: number }
-}
-
-export type AdminSuggestResponse = {
-  products: Array<{
-    uuid: string
-    name: string
-    imageUrl?: string | null
-    categoryName?: string | null
-    storeName?: string | null
-  }>
-}
-
-// ====== requesters ======
+import type {
+  AdminCategoryDto,
+  AdminProductListItem,
+  AdminFetchProductsParams,
+  AdminProductListResponse,
+  AdminSuggestResponse,
+  AdminProductDetail,
+  AdminModeratePayload
+} from "@/types/admin/catalog"
 
 export async function fetchAdminCategoriesRequester(): Promise<
   AdminCategoryDto[]
@@ -105,12 +58,14 @@ export async function fetchAdminProductSuggestionsRequester(
   }
 }
 
-export async function fetchAdminProductDetailRequester(uuid: string) {
+export async function fetchAdminProductDetailRequester(
+  uuid: string
+): Promise<AdminProductDetail | null> {
   try {
     const res = await axios.get(`/api/admin/products/${uuid}`, {
       withCredentials: true
     })
-    return res.data
+    return res.data as AdminProductDetail
   } catch (e) {
     console.error("fetchAdminProductDetailRequester error:", e)
     return null
@@ -119,7 +74,7 @@ export async function fetchAdminProductDetailRequester(uuid: string) {
 
 export async function adminModerateProductRequester(
   uuid: string,
-  payload: { reqStatus: "APPROVED" | "REJECT"; rejectReason?: string | null }
+  payload: AdminModeratePayload
 ) {
   try {
     const res = await axios.patch(
@@ -127,7 +82,7 @@ export async function adminModerateProductRequester(
       payload,
       { withCredentials: true }
     )
-    return res.data
+    return res.data as { ok: true }
   } catch (e) {
     console.error("adminModerateProductRequester error:", e)
     return null
