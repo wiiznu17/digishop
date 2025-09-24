@@ -12,6 +12,7 @@ export interface ProfileMerchantImage {
   url: string
   fileName: string
 }
+
 export interface AuthContextType {
   user: UserAuth | null
   login: (email: string, password: string) => Promise<boolean>
@@ -37,6 +38,22 @@ export interface RegisterData {
   addressZip: string
 }
 
+export interface MerchantAddressForm {
+  id: number
+  ownerName: string
+  phone: string
+  address_number: string
+  street: string
+  building: string
+  subStreet: string
+  subdistrict: string
+  district: string
+  province: string
+  addressType: AddressType
+  postalCode: string
+  isDefault: boolean
+}
+
 export interface MerchantProfileFormValues {
   id: number
   role: string
@@ -48,27 +65,20 @@ export interface MerchantProfileFormValues {
     businessType: string
     website: string
     description: string
-    profileImages: ProfileMerchantImage[]
+    profileImages: ProfileMerchantImage[] | ProfileMerchantImage | null
     status: string
-    addresses: {
-      id: number
-      ownerName: string
-      address_number: string
-      street: string
-      building: string
-      subStreet: string
-      subdistrict: string
-      district: string
-      province: string
-      addressType: AddressType
-      postalCode: string
-      isDefault: boolean
-    }[]
+    addresses: MerchantAddressForm[]
     bankAccount: {
       id: string
       bankName: string
       accountNumber: string
       accountName: string
+    }
+    metrics?: {
+      memberSince: string // ISO string
+      totalProducts: number
+      totalOrders: number
+      rating: number | null
     }
   }
 }
@@ -93,14 +103,14 @@ export const defaultMerchant: MerchantProfileFormValues = {
       {
         id: 0,
         ownerName: "",
-        address_number: "12",
-        street: "12",
-        building: "12",
-        subStreet: "12",
-        subdistrict: "12",
-        district: "12",
-        province: "12",
-        postalCode: "12",
+        address_number: "",
+        street: "",
+        building: "",
+        subStreet: "",
+        subdistrict: "",
+        district: "",
+        province: "",
+        postalCode: "",
         addressType: AddressType.HOME,
         isDefault: true
       }
@@ -110,6 +120,12 @@ export const defaultMerchant: MerchantProfileFormValues = {
       bankName: "",
       accountNumber: "",
       accountName: ""
+    },
+    metrics: {
+      memberSince: "",
+      totalProducts: 0,
+      totalOrders: 0,
+      rating: null
     }
   }
 }

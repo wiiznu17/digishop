@@ -1,6 +1,7 @@
 "use client"
 
 import { AdminSidebar } from "@/components/app-sidebar"
+import AuthGuard from "@/components/AuthGuard"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { useEffect } from "react"
 
@@ -9,7 +10,6 @@ export default function ClientBody({
 }: {
   children: React.ReactNode
 }) {
-  // Remove any extension-added classes during hydration
   useEffect(() => {
     // This runs only on the client after hydration
     document.body.className = "antialiased"
@@ -17,10 +17,12 @@ export default function ClientBody({
 
   return (
     <div className="antialiased">
-      <SidebarProvider>
-        <AdminSidebar />
-        <SidebarInset>{children}</SidebarInset>
-      </SidebarProvider>
+      <AuthGuard>
+        <SidebarProvider>
+          <AdminSidebar />
+          <SidebarInset>{children}</SidebarInset>
+        </SidebarProvider>
+      </AuthGuard>
     </div>
   )
 }
