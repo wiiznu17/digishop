@@ -40,13 +40,15 @@ import { Eye, Package, Search } from "lucide-react"
 import {
   fetchAdminProductsRequester,
   fetchAdminCategoriesRequester,
-  fetchAdminProductSuggestionsRequester,
-  type AdminFetchProductsParams,
-  type AdminProductListItem,
-  type AdminCategoryDto,
-  type AdminSuggestResponse
+  fetchAdminProductSuggestionsRequester
 } from "@/utils/requesters/productRequester"
 import { DashboardHeader } from "@/components/dashboard-header"
+import {
+  AdminCategoryDto,
+  AdminFetchProductsParams,
+  AdminProductListItem,
+  AdminSuggestResponse
+} from "@/types/admin/catalog"
 
 // ========= helpers =========
 const fmtTHB = (minor?: number | null) =>
