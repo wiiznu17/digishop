@@ -40,7 +40,7 @@ export interface StoreProduct {
 
 export interface Store {
   id: number
-  uuuid: string
+  uuid: string
   storeName: string
   logoUrl: string
   description: string

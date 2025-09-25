@@ -92,12 +92,12 @@ export default function ProductDetailPage() {
       alert("Item successfully added to cart");
     }
   };
-  console.log(product);
+  console.log(product)
   return product ? (
     <div className="flex justify-center">
       <div className="p-6">
         <div className="grid grid-cols-2 mb-6 gap-4 ">
-          <div className="w-[610px] h-[550px] bg-pink-200 text-center">
+          <div className="w-full h-full bg-pink-200 text-center">
             picture
           </div>
           <div className="mx-3 flex flex-col justify-between">
@@ -119,7 +119,7 @@ export default function ProductDetailPage() {
             {selected && (
               <div className="flex items-center justify-center text-8xl">
                 <div>
-                  ฿{" "}
+                  ฿ 
                   {(selected.priceMinor / 100)
                     .toString()
                     .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
@@ -186,7 +186,11 @@ export default function ProductDetailPage() {
             <h2 className="text-2xl w-fit border-b">Description</h2>
             <h2 className="ml-5 my-5">{product.description}</h2>
           </div>
-          <div className="flex p-6 rounded-2xl w-2xl bg-gray-200 border-b">
+          <button className="flex p-6 rounded-2xl w-2xl bg-gray-200 border-b cursor-pointer" onClick={() =>
+                        router.push(
+                          `http://localhost:3000/digishop/store/${product.store.uuid}`
+                        )
+                      }>
             <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
             <div className="px-4">
               <h1 className="text-2xl font-extrabold">
@@ -194,7 +198,7 @@ export default function ProductDetailPage() {
               </h1>
               <h6 className="mt-4">{product.store.description}</h6>
             </div>
-          </div>
+          </button>
         </div>
       </div>
     </div>

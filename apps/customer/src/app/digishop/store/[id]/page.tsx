@@ -16,7 +16,7 @@ export default function StorePage() {
       if (!query.trim()) return;
       console.log(query)
       if(!products) return
-      const filterProduct = products.products.filter((product => product.name.includes(query)))
+      const filterProduct = products.products.filter((product => product.name.toLowerCase().includes(query.toLowerCase())))
       setShowProduct(filterProduct)
     };
     const clearSearch = () => {

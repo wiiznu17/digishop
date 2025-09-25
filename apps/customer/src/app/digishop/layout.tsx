@@ -46,6 +46,11 @@ export default function MainLayout({
         </div>
       </header>
       <div className={`min-h-screen bg-white text-black ${notoSanLoop.className}`}>{children}</div>
+      <footer className="bg-white text-black py-5 border border-t border-gray-300">
+        <div className="max-w-7xl mx-auto text-center">
+          <p>&copy; 2025 Digishop. All rights reserved.</p>
+        </div>
+      </footer>
     </AuthProvider>
   );
 }
