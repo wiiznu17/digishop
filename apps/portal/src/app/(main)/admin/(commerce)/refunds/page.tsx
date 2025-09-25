@@ -1,7 +1,6 @@
-// apps/portal/src/app/(main)/admin/refunds/page.tsx
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Card,
@@ -28,188 +27,326 @@ import {
   SelectItem
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import {
+  fetchAdminRefundListRequester,
+  fetchAdminOrderSuggestByCode,
+  AdminRefundLite
+} from "@/utils/requesters/refundRequester"
+import { Pager } from "@/components/common/Pager"
 
-type Refund = {
-  id: number
-  orderCode: string
-  reason: string
-  amountMinor: number
-  status: "REQUESTED" | "APPROVED" | "PROCESSING" | "SUCCESS" | "FAIL"
-  requestedAt: string
-}
-
-const MOCK: Refund[] = Array.from({ length: 52 }).map((_, i) => ({
-  id: 9000 + i,
-  orderCode: `ORD-${(6500 + i).toString(36).toUpperCase()}`,
-  reason: ["Customer cancel", "Wrong item", "Damaged"][i % 3],
-  amountMinor: 29900 + (i % 4) * 5000,
-  status: (
-    [
-      "REQUESTED",
-      "APPROVED",
-      "PROCESSING",
-      "SUCCESS",
-      "FAIL"
-    ] as Refund["status"][]
-  )[i % 5],
-  requestedAt: new Date(Date.now() - i * 7200000).toISOString()
-}))
 const formatTHB = (m: number) =>
   (m / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
 
-function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  return (
-    <div className="flex items-center justify-between py-3">
-      <div className="text-sm text-muted-foreground">{total} refunds</div>
-      <div className="flex items-center gap-2">
-        <Select
-          value={String(pageSize)}
-          onValueChange={(v) => onPageSize(Number(v))}
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[10, 20, 50, 100].map((s) => (
-              <SelectItem key={s} value={String(s)}>
-                {s} / page
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          variant="outline"
-          onClick={() => onPage(Math.max(1, page - 1))}
-          disabled={page <= 1}
-        >
-          Prev
-        </Button>
-        <div className="text-sm">
-          {page} / {totalPages}
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => onPage(Math.min(totalPages, page + 1))}
-          disabled={page >= totalPages}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
-  )
-}
+// interface PagerProps {
+//   page: number
+//   pageSize: number
+//   total: number
+//   onPage: (page: number) => void
+//   onPageSize: (size: number) => void
+// }
+
+// function Pager({ page, pageSize, total, onPage, onPageSize }: PagerProps) {
+//   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+//   return (
+//     <div className="flex items-center justify-between py-3">
+//       <div className="text-sm text-muted-foreground">{total} refunds</div>
+//       <div className="flex items-center gap-2">
+//         <Select
+//           value={String(pageSize)}
+//           onValueChange={(v) => onPageSize(Number(v))}
+//         >
+//           <SelectTrigger className="w-[120px]">
+//             <SelectValue />
+//           </SelectTrigger>
+//           <SelectContent>
+//             {[10, 20, 50, 100].map((s) => (
+//               <SelectItem key={s} value={String(s)}>
+//                 {s} / page
+//               </SelectItem>
+//             ))}
+//           </SelectContent>
+//         </Select>
+//         <Button
+//           variant="outline"
+//           onClick={() => onPage(Math.max(1, page - 1))}
+//           disabled={page <= 1}
+//         >
+//           Prev
+//         </Button>
+//         <div className="text-sm">
+//           {page} / {totalPages}
+//         </div>
+//         <Button
+//           variant="outline"
+//           onClick={() => onPage(Math.min(totalPages, page + 1))}
+//           disabled={page >= totalPages}
+//         >
+//           Next
+//         </Button>
+//       </div>
+//     </div>
+//   )
+// }
 
 export default function AdminRefundsPage() {
   const router = useRouter()
-  const [q, setQ] = useState("")
-  const [status, setStatus] = useState<Refund["status"] | "ALL">("ALL")
+
+  // Filters
+  const [status, setStatus] = useState<string>("ALL")
+  const [dateFrom, setDateFrom] = useState<string>("")
+  const [dateTo, setDateTo] = useState<string>("")
+  // Search (order id / customer name)
+  const [q, setQ] = useState<string>("")
+  // Suggest (order_code)
+  const [orderCode, setOrderCode] = useState<string>("")
+  const [suggests, setSuggests] = useState<
+    Array<{ id: number; orderCode: string }>
+  >([])
+
+  // Paging
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
-  const filtered = useMemo(() => {
-    let base = MOCK
-    const t = q.toLowerCase().trim()
-    if (t)
-      base = base.filter(
-        (r) =>
-          r.orderCode.toLowerCase().includes(t) ||
-          r.reason.toLowerCase().includes(t)
-      )
-    if (status !== "ALL") base = base.filter((r) => r.status === status)
-    return base
-  }, [q, status])
+  // Data
+  const [rows, setRows] = useState<AdminRefundLite[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(false)
 
-  const total = filtered.length
-  const rows = useMemo(() => {
-    const s = (page - 1) * pageSize
-    return filtered.slice(s, s + pageSize)
-  }, [filtered, page, pageSize])
+  // Load list
+  const load = async () => {
+    setLoading(true)
+    const response = await fetchAdminRefundListRequester({
+      q,
+      orderCode,
+      status,
+      dateFrom,
+      dateTo,
+      page,
+      pageSize,
+      sortBy: "createdAt",
+      sortDir: "desc"
+    })
+    if (response) {
+      setRows(response.data)
+      setTotal(response.meta.total)
+    } else {
+      setRows([])
+      setTotal(0)
+    }
+    setLoading(false)
+  }
+
+  // Search button
+  const doSearch = () => {
+    setPage(1)
+    void load()
+  }
+
+  useEffect(() => {
+    void load()
+  }, [page, pageSize])
+
+  // Suggest (debounce 250ms แบบง่าย)
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const q = orderCode.trim()
+      if (!q) {
+        setSuggests([])
+        return
+      }
+      const s = await fetchAdminOrderSuggestByCode(q)
+      const uniq = Array.from(
+        new Map(s.map((r) => [r.orderCode, r])).values()
+      ).slice(0, 8)
+      setSuggests(uniq)
+    }, 250)
+    return () => clearTimeout(t)
+  }, [orderCode])
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(total / pageSize)),
+    [total, pageSize]
+  )
 
   return (
     <div className="p-4 space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Refunds</CardTitle>
-          <CardDescription>Refund requests & results (mock)</CardDescription>
+          <CardDescription>Refund requests & results</CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-2">
-              <label className="block text-sm mb-1">Search</label>
+          {/* Filters */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+            {/* Suggest: order_code */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm mb-1">Order Code</label>
+              <div className="relative">
+                <Input
+                  list="orderCodeList"
+                  placeholder="e.g. DS12345678"
+                  value={orderCode}
+                  onChange={(e) => setOrderCode(e.target.value)}
+                />
+                <datalist id="orderCodeList">
+                  {suggests.map((s) => (
+                    <option key={s.orderCode} value={s.orderCode} />
+                  ))}
+                </datalist>
+                {!!orderCode && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="absolute right-1 top-1 h-7 px-2"
+                    onClick={() => setOrderCode("")}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Search: order id / customer name */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm mb-1">Customer name</label>
               <Input
-                placeholder="Order / reason"
+                placeholder="e.g. Alice"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
             </div>
+
+            {/* Status */}
             <div>
               <label className="block text-sm mb-1">Status</label>
-              <Select
-                value={status}
-                onValueChange={(v) => {
-                  setStatus(v as any)
-                  setPage(1)
-                }}
-              >
+              <Select value={status} onValueChange={(v) => setStatus(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="REQUESTED">REQUESTED</SelectItem>
-                  <SelectItem value="APPROVED">APPROVED</SelectItem>
-                  <SelectItem value="PROCESSING">PROCESSING</SelectItem>
-                  <SelectItem value="SUCCESS">SUCCESS</SelectItem>
-                  <SelectItem value="FAIL">FAIL</SelectItem>
+                  {[
+                    "ALL",
+                    "REQUESTED",
+                    "APPROVED",
+                    "SUCCESS",
+                    "FAIL",
+                    "CANCELED"
+                  ].map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Date range */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm mb-1">From</label>
+              <Input
+                type="datetime-local"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="lg:col-span-2">
+              <label className="block text-sm mb-1">To</label>
+              <Input
+                type="datetime-local"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+
+            {/* Search btn */}
+            <div className="flex items-end">
+              <Button className="w-full" onClick={doSearch}>
+                Search
+              </Button>
+            </div>
           </div>
 
+          {/* Table */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Order</TableHead>
-                  <TableHead>Reason</TableHead>
+                  <TableHead>Customer</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Requested at</TableHead>
+                  <TableHead>Requested / Created</TableHead>
                   <TableHead className="text-right">Detail</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.orderCode}</TableCell>
-                    <TableCell>{r.reason}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span>{r.orderCode}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Order ID: {r.orderId}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{r.customerName ?? "—"}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {r.customerEmail ?? ""}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{r.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatTHB(r.amountMinor)}
+                      {formatTHB(r.amountMinor)} {r.currencyCode}
                     </TableCell>
                     <TableCell>
-                      {new Date(r.requestedAt).toLocaleString()}
+                      <div className="flex flex-col">
+                        <span className="text-xs">
+                          Req:{" "}
+                          {r.requestedAt
+                            ? new Date(r.requestedAt).toLocaleString()
+                            : "—"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Created: {new Date(r.createdAt).toLocaleString()}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
                         size="sm"
-                        onClick={() => router.push(`/admin/refunds/${r.id}`)}
+                        onClick={() =>
+                          router.push(`/admin/orders/${r.orderId}`)
+                        }
                       >
                         Detail
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
-                {rows.length === 0 && (
+                {rows.length === 0 && !loading && (
                   <TableRow>
                     <TableCell
                       colSpan={6}
                       className="py-10 text-center text-sm text-muted-foreground"
                     >
                       No data
+                    </TableCell>
+                  </TableRow>
+                )}
+                {loading && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="py-10 text-center text-sm text-muted-foreground"
+                    >
+                      Loading…
                     </TableCell>
                   </TableRow>
                 )}
@@ -221,12 +358,19 @@ export default function AdminRefundsPage() {
             page={page}
             pageSize={pageSize}
             total={total}
-            onPage={setPage}
+            onPage={(p: number) => {
+              setPage(p)
+            }}
             onPageSize={(s: number) => {
               setPageSize(s)
               setPage(1)
             }}
           />
+
+          {/* Quick info */}
+          <div className="text-xs text-muted-foreground">
+            Page {page} / {totalPages}. Filters apply to Refund created_at.
+          </div>
         </CardContent>
       </Card>
     </div>

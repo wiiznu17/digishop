@@ -1,4 +1,3 @@
-// apps/portal/src/components/common/Pager.tsx
 "use client"
 
 import {

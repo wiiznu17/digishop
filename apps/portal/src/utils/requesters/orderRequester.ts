@@ -41,7 +41,6 @@ export async function fetchAdminOrderSuggestRequester(
   q: string
 ): Promise<AdminOrderSuggestResponse> {
   try {
-    console.log("fetchAdminOrderSuggestRequester q=", q)
     const res = await axios.get("/api/admin/orders/suggest", {
       params: { q },
       withCredentials: true

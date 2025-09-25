@@ -94,7 +94,7 @@ export async function adminListOrders(req: Request, res: Response) {
       required: false,
     };
 
-    // ✅ ถ้ามี q ให้ filter ที่ CHECKOUT โดยตรง และตั้ง required: true เพื่อใช้ index
+    // ถ้ามี q ให้ filter ที่ CHECKOUT โดยตรง และตั้ง required: true เพื่อใช้ index
     if (q && q.trim()) {
       const likeStart = `${q.trim().replace(/[%_]/g, "\\$&")}%`;
       checkoutInclude.required = true;
