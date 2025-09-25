@@ -72,7 +72,7 @@ export default function SearchResult({
     }
   }, [filter, products, rawProduct]);
 
-  return !rawProduct || rawProduct?.length == 0 || !stores || stores?.length == 0  ? (
+  return (!rawProduct && !stores ) || ( rawProduct?.length == 0 && stores?.length == 0 ) ? (
     <NotFound props={query} />
   ) : (
     <div className=" pt-3">
