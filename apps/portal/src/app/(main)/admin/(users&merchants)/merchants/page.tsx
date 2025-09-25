@@ -1,7 +1,7 @@
-// apps/portal/src/app/(main)/admin/merchants/page.tsx
+// apps/portal/src/app/(main)/admin/(users&merchants)/merchants/page.tsx
 "use client"
 
-import { useMemo, useState, useEffect, useRef } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Card,
@@ -28,145 +28,135 @@ import {
   SelectContent,
   SelectItem
 } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Search, Eye } from "lucide-react"
+import { Search } from "lucide-react"
 
-type Merchant = {
-  id: number
-  storeName: string
-  owner: string
-  email: string
-  status: "ACTIVE" | "SUSPENDED" | "PENDING"
-  products: number
-  createdAt: string
-}
+import type { AdminStoreLite } from "@/types/admin/stores"
+import {
+  fetchAdminStoreListRequester,
+  fetchAdminStoreSuggest
+} from "@/utils/requesters/userMerchantRequester"
+import { Pager } from "@/components/common/Pager"
 
-const MOCK: Merchant[] = Array.from({ length: 64 }).map((_, i) => ({
-  id: 2000 + i,
-  storeName: `Store ${i + 1}`,
-  owner: ["Anan", "Bee", "Chan", "Dao"][i % 4],
-  email: `shop${i}@mail.com`,
-  status: (["ACTIVE", "SUSPENDED", "PENDING"] as Merchant["status"][])[i % 3],
-  products: 20 + (i % 17),
-  createdAt: new Date(Date.now() - i * 86400000).toISOString()
-}))
-
-function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  return (
-    <div className="flex items-center justify-between py-3">
-      <div className="text-sm text-muted-foreground">{total} merchants</div>
-      <div className="flex items-center gap-2">
-        <Select
-          value={String(pageSize)}
-          onValueChange={(v) => onPageSize(Number(v))}
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[10, 20, 50, 100].map((s) => (
-              <SelectItem key={s} value={String(s)}>
-                {s} / page
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          variant="outline"
-          onClick={() => onPage(Math.max(1, page - 1))}
-          disabled={page <= 1}
-        >
-          Prev
-        </Button>
-        <div className="text-sm">
-          {page} / {totalPages}
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => onPage(Math.min(totalPages, page + 1))}
-          disabled={page >= totalPages}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
-  )
-}
-function useDebounce<T>(v: T, ms = 300) {
-  const [s, setS] = useState(v)
-  useEffect(() => {
-    const t = setTimeout(() => setS(v), ms)
-    return () => clearTimeout(t)
-  }, [v, ms])
-  return s
-}
+// function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
+//   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+//   return (
+//     <div className="flex items-center justify-between py-3">
+//       <div className="text-sm text-muted-foreground">{total} stores</div>
+//       <div className="flex items-center gap-2">
+//         <Select
+//           value={String(pageSize)}
+//           onValueChange={(v) => onPageSize(Number(v))}
+//         >
+//           <SelectTrigger className="w-[120px]">
+//             <SelectValue />
+//           </SelectTrigger>
+//           <SelectContent>
+//             {[10, 20, 50, 100].map((s) => (
+//               <SelectItem key={s} value={String(s)}>
+//                 {s} / page
+//               </SelectItem>
+//             ))}
+//           </SelectContent>
+//         </Select>
+//         <Button
+//           variant="outline"
+//           onClick={() => onPage(Math.max(1, page - 1))}
+//           disabled={page <= 1}
+//         >
+//           Prev
+//         </Button>
+//         <div className="text-sm">
+//           {page} / {totalPages}
+//         </div>
+//         <Button
+//           variant="outline"
+//           onClick={() => onPage(Math.min(totalPages, page + 1))}
+//           disabled={page >= totalPages}
+//         >
+//           Next
+//         </Button>
+//       </div>
+//     </div>
+//   )
+// }
 
 export default function AdminMerchantsPage() {
   const router = useRouter()
-  const [q, setQ] = useState("")
-  const [status, setStatus] = useState<Merchant["status"] | "ALL">("ALL")
+
+  // input states (ยังไม่ยิงค้นหา)
+  const [qInput, setQInput] = useState("")
+  const [statusInput, setStatusInput] = useState<string | "ALL">("ALL")
+  const [openSuggest, setOpenSuggest] = useState(false)
+  const [suggest, setSuggest] = useState<
+    Array<{ id: number; storeName: string }>
+  >([])
+
+  // applied filters (ค่าที่กด Search แล้ว)
+  const [applied, setApplied] = useState<{ q?: string; status?: string }>({})
+
+  // paging
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
-  const [openSuggest, setOpenSuggest] = useState(false)
-  const [loadingSuggest, setLoadingSuggest] = useState(false)
-  const debounceQ = useDebounce(q, 300)
-  const timer = useRef<number | null>(null)
-  const [suggest, setSuggest] = useState<Merchant[]>([])
+  // data
+  const [loading, setLoading] = useState(false)
+  const [rows, setRows] = useState<AdminStoreLite[]>([])
+  const [total, setTotal] = useState(0)
 
+  // โหลด list: ใช้เฉพาะตอน applied หรือ page/pageSize เปลี่ยน
+  async function load() {
+    setLoading(true)
+    try {
+      const { data, meta } = await fetchAdminStoreListRequester({
+        q: applied.q,
+        status: applied.status,
+        page,
+        pageSize,
+        sortBy: "createdAt",
+        sortDir: "desc"
+      })
+      setRows(data)
+      setTotal(meta.total)
+    } finally {
+      setLoading(false)
+    }
+  }
   useEffect(() => {
-    if (!debounceQ.trim()) {
-      setOpenSuggest(false)
-      setSuggest([])
-      return
-    }
-    setLoadingSuggest(true)
-    if (timer.current) window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => {
-      const t = debounceQ.toLowerCase()
-      setSuggest(
-        MOCK.filter(
-          (m) =>
-            m.storeName.toLowerCase().includes(t) ||
-            m.email.toLowerCase().includes(t)
-        ).slice(0, 8)
-      )
-      setLoadingSuggest(false)
+    void load()
+  }, [applied, page, pageSize])
+
+  // suggest: ยิงได้อิสระ (ไม่ใช่ตัว list requester)
+  useEffect(() => {
+    let alive = true
+    const t = setTimeout(async () => {
+      const q = qInput.trim()
+      if (!q) {
+        setOpenSuggest(false)
+        setSuggest([])
+        return
+      }
+      const s = await fetchAdminStoreSuggest(q)
+      if (!alive) return
+      setSuggest(s.slice(0, 8))
       setOpenSuggest(true)
-    }, 220)
+    }, 240)
     return () => {
-      if (timer.current) window.clearTimeout(timer.current)
+      alive = false
+      clearTimeout(t)
     }
-  }, [debounceQ])
+  }, [qInput])
 
-  const filtered = useMemo(() => {
-    let base = MOCK
-    const t = q.toLowerCase().trim()
-    if (t)
-      base = base.filter(
-        (m) =>
-          m.storeName.toLowerCase().includes(t) ||
-          m.email.toLowerCase().includes(t)
-      )
-    if (status !== "ALL") base = base.filter((m) => m.status === status)
-    return base
-  }, [q, status])
+  const pageRows = useMemo(() => rows, [rows])
 
-  const total = filtered.length
-  const pageRows = useMemo(() => {
-    const s = (page - 1) * pageSize
-    return filtered.slice(s, s + pageSize)
-  }, [filtered, page, pageSize])
-
-  const [openQV, setOpenQV] = useState(false)
-  const [current, setCurrent] = useState<Merchant | null>(null)
+  const onSearch = () => {
+    setApplied({
+      q: qInput.trim() || undefined,
+      status: statusInput === "ALL" ? undefined : statusInput
+    })
+    setPage(1)
+    setOpenSuggest(false)
+  }
 
   return (
     <div className="p-4 space-y-4">
@@ -184,18 +174,17 @@ export default function AdminMerchantsPage() {
                   <div className="flex gap-2">
                     <Input
                       placeholder="Store / email"
-                      value={q}
-                      onChange={(e) => setQ(e.target.value)}
+                      value={qInput}
+                      onChange={(e) => setQInput(e.target.value)}
                       onFocus={() => {
-                        if (q.trim()) setOpenSuggest(true)
+                        if (qInput.trim()) setOpenSuggest(true)
                       }}
                       onBlur={() =>
                         setTimeout(() => setOpenSuggest(false), 120)
                       }
                     />
-                    <Button onClick={() => setOpenSuggest(false)}>
-                      <Search className="h-4 w-4 mr-2" />
-                      Search
+                    <Button onClick={onSearch}>
+                      <Search className="h-4 w-4 mr-2" /> Search
                     </Button>
                   </div>
                 </PopoverAnchor>
@@ -205,11 +194,7 @@ export default function AdminMerchantsPage() {
                   onOpenAutoFocus={(e) => e.preventDefault()}
                 >
                   <div className="max-h-80 overflow-auto">
-                    {loadingSuggest ? (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">
-                        Searching...
-                      </div>
-                    ) : suggest.length === 0 ? (
+                    {suggest.length === 0 ? (
                       <div className="px-3 py-2 text-sm text-muted-foreground">
                         No suggestions
                       </div>
@@ -219,15 +204,12 @@ export default function AdminMerchantsPage() {
                           key={s.id}
                           className="w-full text-left px-3 py-2 hover:bg-accent"
                           onClick={() => {
-                            setQ(s.storeName)
+                            setQInput(s.storeName)
                             setOpenSuggest(false)
                           }}
                         >
                           <div className="text-sm font-medium">
                             {s.storeName}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {s.email} · {s.status}
                           </div>
                         </button>
                       ))
@@ -239,11 +221,8 @@ export default function AdminMerchantsPage() {
             <div>
               <label className="block text-sm mb-1">Status</label>
               <Select
-                value={status}
-                onValueChange={(v) => {
-                  setStatus(v as any)
-                  setPage(1)
-                }}
+                value={statusInput}
+                onValueChange={(v) => setStatusInput(v as string)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -263,48 +242,58 @@ export default function AdminMerchantsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Store</TableHead>
-                  <TableHead>Owner</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Owner</TableHead>
                   <TableHead>Products</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pageRows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.storeName}</TableCell>
-                    <TableCell>{r.owner}</TableCell>
-                    <TableCell>{r.email}</TableCell>
-                    <TableCell>{r.products}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{r.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mr-2"
-                        onClick={() => {
-                          setCurrent(r)
-                          setOpenQV(true)
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => router.push(`/admin/merchants/${r.id}`)}
-                      >
-                        Detail
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {pageRows.length === 0 && (
+                {loading && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!loading &&
+                  pageRows.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">
+                        {r.storeName}
+                      </TableCell>
+                      <TableCell>{r.email}</TableCell>
+                      <TableCell>
+                        {r.ownerName} ({r.ownerEmail})
+                      </TableCell>
+                      <TableCell>{r.productCount}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{r.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(r.createdAt).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/admin/merchants/${r.id}`)
+                          }
+                        >
+                          Detail
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {!loading && pageRows.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
                       className="py-10 text-center text-sm text-muted-foreground"
                     >
                       No data
@@ -327,43 +316,6 @@ export default function AdminMerchantsPage() {
           />
         </CardContent>
       </Card>
-
-      <Dialog open={openQV} onOpenChange={setOpenQV}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Merchant Quick View</DialogTitle>
-          </DialogHeader>
-          {current && (
-            <div className="text-sm space-y-1">
-              <div>
-                <span className="text-muted-foreground">Store: </span>
-                {current.storeName}
-              </div>
-              <div>
-                <span className="text-muted-foreground">Owner: </span>
-                {current.owner}
-              </div>
-              <div>
-                <span className="text-muted-foreground">Email: </span>
-                {current.email}
-              </div>
-              <div>
-                <span className="text-muted-foreground">Status: </span>
-                {current.status}
-              </div>
-              <Button
-                className="mt-2"
-                onClick={() => {
-                  setOpenQV(false)
-                  router.push(`/admin/merchants/${current.id}`)
-                }}
-              >
-                Open detail
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
