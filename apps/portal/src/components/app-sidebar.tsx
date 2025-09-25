@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "./ui/button"
 import { logout } from "@/utils/requesters/authRequester"
-import { useAuth } from "@/lib/authClient"
+import { useAuth } from "@/components/AuthGuard"
 
 type NavItem = {
   title: string
@@ -74,8 +74,8 @@ const groups: NavGroup[] = [
       { title: "Orders*", url: "/admin/orders", icon: ShoppingCart },
       { title: "Refunds", url: "/admin/refunds", icon: RotateCcw },
       // { title: "Disputes", url: "/admin/disputes", icon: Gavel },
-      { title: "Payments", url: "/admin/payments", icon: CreditCard },
-      { title: "Payouts", url: "/admin/payouts", icon: Wallet }
+      // { title: "Payments", url: "/admin/payments", icon: CreditCard },
+      // { title: "Payouts", url: "/admin/payouts", icon: Wallet }
     ]
   },
   {
@@ -142,7 +142,7 @@ export function AdminSidebar() {
             href="/"
             className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition"
           >
-            {/* วางไฟล์โลโก้ไว้ที่ /public/logo.svg หรือเปลี่ยน path ได้ */}
+            {/* วางไฟล์โลโก้ไว้ที่ /public/logo.svg */}
             <Image
               src="/logo.svg"
               alt="DigiShop"

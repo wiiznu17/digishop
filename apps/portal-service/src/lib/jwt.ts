@@ -50,7 +50,7 @@ const baseAccessSign: SignOptions = {
 };
 const baseRefreshSign: SignOptions = {
   algorithm: "RS256",
-  expiresIn: "30D",
+  expiresIn: "1H",
   issuer: ISS,
   audience: AUD,
 };
