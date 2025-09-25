@@ -7,14 +7,23 @@ import { Store } from "@digishop/db/src/models/Store";
 import { ProductStatus, StoreStatus } from "@digishop/db/src/types/enum";
 import { ProductItem } from "@digishop/db/src/models/ProductItem";
 import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
+import sequelize from "@digishop/db";
 
 export const searchProduct = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { query } = req.query;
+  const { query , page } = req.query;
   try {
+    const productCount = await Product.count({
+       where: {
+        [Op.and]: [
+        { name: {[Op.like]: `%${query}%`}},
+        { status: ProductStatus.ACTIVE}
+        ]
+      }
+    })
     const searchProduct = await Product.findAll({
       where: {
         [Op.and]: [
@@ -22,6 +31,8 @@ export const searchProduct = async (
         { status: ProductStatus.ACTIVE}
         ]
       },
+      limit: 10,
+      offset: 10 * (Number(page) - 1),
       attributes: ['id','uuid','name'],
       include: [
         {
@@ -42,30 +53,7 @@ export const searchProduct = async (
         }
       ]
     });
-    const searchCategory = await Product.findAll({
-      where:
-        { status: ProductStatus.ACTIVE},
-      attributes: ['id','uuid','name'],
-      include: [
-        {
-          model: Category,
-          as: 'category',
-          where: { name: `%${query}%` }
-        },
-        {
-          model: ProductImage,
-          as: 'images'
-        },
-        {
-          model: ProductItem,
-          as: 'items',
-        },
-        {
-          model: Store,
-          as: 'store',
-        }
-      ]
-    });
+    
     const searchStore = await Store.findAll({
       where: {
         storeName: {
@@ -76,7 +64,8 @@ export const searchProduct = async (
     if (!searchProduct) {
       return res.status(404).json({ error: `${query} not found` });
     }
-    return res.json({ product: searchProduct.concat(searchCategory) ,store: searchStore });
+
+    return res.json({ product: searchProduct , productCount: productCount , store: searchStore });
   } catch (error) {
     return res.status(500).json({ error: error });
   }
@@ -108,7 +97,7 @@ export const getProduct = async (
           model: Store,
           as: "store",
           where: { status: StoreStatus.APPROVED },
-          attributes: ["id", "storeName", "logoUrl", "description"],
+          attributes: ["id", "storeName", "logoUrl", "description","uuid"],
         },
         {
           model: Category,

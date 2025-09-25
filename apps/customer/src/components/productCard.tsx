@@ -19,12 +19,12 @@ export const Card = ( {data}: cardProp ) => {
       const [shownPic, setShownPic] = useState(findMain(data.images)[0])
       return (
         <div>
-          <button className="relative max-w-md inline-block text-black bg-white hover:shadow-2xs hover:scale-110 cursor-pointer border">
+          <button className="relative text-black bg-white cursor-pointer border hover:scale-105 duration-120 rounded-b-2xl">
             {/* <Image src={data.images[0].url} alt={data.images[0].blobName} width={100} height={100} /> */}
             <img
               src={shownPic.url}
               alt={shownPic.fileName}
-              className="h-full w-full object-cover"
+              className="object-cover w-fit"
             /> 
             <div className="flex">
               {data.images.map((image,index) => (
@@ -47,7 +47,7 @@ export const CardStore = ( {data}: cardProp ) => {
    const [shownPic, setShownPic] = useState(findMain(data.images)[0])
       return (
         <div>
-          <button className="relative max-w-md inline-block text-black bg-white hover:shadow-2xs hover:scale-105 cursor-pointer border">
+          <button className="relative text-black bg-white cursor-pointer border hover:scale-105 duration-120 rounded-b-2xl">
             {/* <Image src={data.images[0].url} alt={data.images[0].blobName} width={100} height={100} /> */}
             <img
               src={shownPic.url}
@@ -63,9 +63,7 @@ export const CardStore = ( {data}: cardProp ) => {
             </div>
             <div className="px-5 text-start mb-3">
               <h3 className="text-[27px] mb-2">{data.name}</h3>
-              <div className="flex justify-between gap-4 text-[21px] ">
-              <p className="absolute bottom-2 right-2 text-3xl font-bold">฿ { minPrice(data.items)}</p>
-              </div>
+              <p className="flex justify-end items-end text-3xl font-bold">฿ { minPrice(data.items)}</p>
             </div>  
           </button>
         </div>

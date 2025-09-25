@@ -268,7 +268,7 @@ const UserProfilePage = () => {
           </div>
         </div>
       </main>
-      <div className="flex justify-end mx-3">
+      <div className="flex justify-end mx-3 pb-2">
         <Button onClick={handleLogout} color="bg-red-300">
           Log Out
         </Button>

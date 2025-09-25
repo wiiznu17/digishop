@@ -73,7 +73,7 @@ export default function OrderDetailPage({ order }: orderDetailInterface) {
                           x {String(items.quantity)}
                         </div>
                         <div className="absolute bottom-5 right-0  text-gray-500 ">
-                          {(items.unitPriceMinor / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} {order.currency_code}
+                          ฿ {(items.unitPriceMinor / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 
                         </div>
                       </div>
                     </div>
@@ -83,7 +83,7 @@ export default function OrderDetailPage({ order }: orderDetailInterface) {
             </div>
               <div className="flex justify-between border-t py-2">
                 <div>total</div>
-                <div>{(sumPriceProduct/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} {order.currency_code}</div>
+                <div>฿ {(sumPriceProduct/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} </div>
               </div>
           </div>
         <div className="bg-amber-50 rounded-2xl p-4 mb-2">
@@ -107,7 +107,7 @@ export default function OrderDetailPage({ order }: orderDetailInterface) {
                   <span className="font-medium">{(order.shippingInfo.shippingType.price/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
                 </div>
                 <div className="border-t border-gray-400 pt-2 flex justify-end items-center">
-                  <span className="text-lg font-semibold">{(order.grand_total_minor/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
+                  <span className="text-lg font-semibold">฿ {(order.grand_total_minor/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
                 </div>
               </div>
             </div>
