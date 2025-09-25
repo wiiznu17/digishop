@@ -34,7 +34,7 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
     // ตรวจ session jti ใน DB (optional แต่แนะนำ)
     const sess = await AdminSession.findOne({ where: { jti: req.sessionJti, adminId: req.adminId, revokedAt: null } as any });
     if (!sess) return res.status(401).json({ error: 'SESSION_REVOKED' });
-
+    console.log("Authen Pass")
     next();
   } catch {
     return res.status(401).json({ error: 'INVALID_TOKEN' });

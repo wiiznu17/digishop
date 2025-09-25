@@ -1,4 +1,3 @@
-// apps/portal-service/src/controllers/adminProductController.ts
 import { Request, Response } from "express"
 import { Op, sequelize } from "@digishop/db/src/db"
 import {

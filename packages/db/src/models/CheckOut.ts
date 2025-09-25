@@ -70,6 +70,11 @@ export class CheckOut
                     modelName: "CheckOut",
                     paranoid: true,
                     deletedAt: "deleted_at",
+                    indexes: [
+                        { name: "uq_checkout_order_code", fields: ["order_code"], unique: true },
+                        { name: "ix_checkout_customer", fields: ["customer_id"] },
+                        { name: "ix_checkout_created_at", fields: ["created_at"] },
+                    ],
                 }
             );
             return CheckOut

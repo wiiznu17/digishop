@@ -3,6 +3,7 @@ import sequelize from '@digishop/db'
 // import userRouter from './routes/userRouter'
 import categoryRouter from './routes/categoryRouter'
 import productRouter from './routes/productRouter'
+import orderRouter from './routes/orderRouter'
 import authRouter from './routes/authRouter';
 import { authenticateAdmin, requirePerms } from './middlewares/auth';
 
@@ -22,8 +23,9 @@ router.get('/', async (_req, res) => {
 router.use('/admin', authenticateAdmin);
 
 router.use('/admin/categories', categoryRouter);
-
 router.use('/admin/products', productRouter);
+router.use('/admin/orders', orderRouter);
+
 router.use('/auth', authRouter);
 
 export default router
