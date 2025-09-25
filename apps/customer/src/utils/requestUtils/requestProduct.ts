@@ -1,9 +1,9 @@
 import axios from "@/lib/axios"
 const endpoint = 'http://localhost:4003'
-export const searchProduct = async (query: string) => {
+export const searchProduct = async (query: string, page: number) => {
     return await new Promise((resolve,reject) => {
         axios
-            .get(`${endpoint}/api/product/search?query=${query}`)
+            .get(`${endpoint}/api/product/search?query=${query}&page=${page}`)
             .then((res) => {
                 resolve(res.data)
             })
