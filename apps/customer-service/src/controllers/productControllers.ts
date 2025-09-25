@@ -1,17 +1,20 @@
-import { Product } from '@digishop/db/src/models/Product'
-import { Op } from 'sequelize'
-import { NextFunction, Request, Response } from 'express'
-import { Category } from '@digishop/db/src/models/Category'
-import { ProductImage } from '@digishop/db/src/models/ProductImage'
-import { Store } from '@digishop/db/src/models/Store'
-import { ProductStatus, StoreStatus } from '@digishop/db/src/types/enum'
-import { ProductItem } from '@digishop/db/src/models/ProductItem'
+import { Product } from "@digishop/db/src/models/Product";
+import { Op } from "sequelize";
+import { NextFunction, Request, Response } from "express";
+import { Category } from "@digishop/db/src/models/Category";
+import { ProductImage } from "@digishop/db/src/models/ProductImage";
+import { Store } from "@digishop/db/src/models/Store";
+import { ProductStatus, StoreStatus } from "@digishop/db/src/types/enum";
+import { ProductItem } from "@digishop/db/src/models/ProductItem";
+import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
 
-
-export const searchProduct = async(req: Request , res: Response , next: NextFunction) => {
-    const { query } = req.query
-    try {
-      
+export const searchProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { query } = req.query;
+  try {
     const searchProduct = await Product.findAll({
       where: {
         [Op.and]: [
@@ -22,85 +25,170 @@ export const searchProduct = async(req: Request , res: Response , next: NextFunc
       attributes: ['id','uuid','name'],
       include: [
         {
+          model: Category,
+          as: 'category',
+        },
+        {
+          model: ProductImage,
+          as: 'images'
+        },
+        {
           model: ProductItem,
           as: 'items',
         },
         {
           model: Store,
           as: 'store',
-          attributes: ['id','storeName']
         }
       ]
+    });
+    const searchCategory = await Product.findAll({
+      where:
+        { status: ProductStatus.ACTIVE},
+      attributes: ['id','uuid','name'],
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          where: { name: `%${query}%` }
+        },
+        {
+          model: ProductImage,
+          as: 'images'
+        },
+        {
+          model: ProductItem,
+          as: 'items',
+        },
+        {
+          model: Store,
+          as: 'store',
+        }
+      ]
+    });
+    const searchStore = await Store.findAll({
+      where: {
+        storeName: {
+          [Op.like]: `%${query}%`, 
+        },
+      },
     });
     if (!searchProduct) {
       return res.status(404).json({ error: `${query} not found` });
     }
-    return res.json({ data: searchProduct});
+    return res.json({ product: searchProduct.concat(searchCategory) ,store: searchStore });
   } catch (error) {
     return res.status(500).json({ error: error });
-  }  
-}
+  }
+};
 
-export const getProduct = async(req: Request , res: Response,  next: NextFunction) => {
-  const id  = req.params.id
+export const getProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const id = req.params.id;
   try {
     const productDetail = await Product.findOne({
       where: {
-        [Op.and]: [
-        { uuid: id},
-        { status: ProductStatus.ACTIVE}
-        ]
+        [Op.and]: [{ uuid: id }, { status: ProductStatus.ACTIVE }],
       },
       include: [
         {
           model: ProductItem,
-          as: 'items',
+          as: "items",
+          include: [
+            {
+              model: ProductItemImage,
+              as: "productItemImage",
+            },
+          ],
         },
         {
           model: Store,
-          as: 'store',
-          where: {status: StoreStatus.APPROVED },
-          attributes: ['id','storeName','logoUrl','description'] 
-
+          as: "store",
+          where: { status: StoreStatus.APPROVED },
+          attributes: ["id", "storeName", "logoUrl", "description"],
         },
         {
           model: Category,
-          as: 'category',
-          attributes: ['id','name']
-        }
+          as: "category",
+          attributes: ["id", "name"],
+        },
       ],
-      attributes: ['id', 'name','description']
+      attributes: ["id", "name", "description"],
     });
-    if(!productDetail){
+    if (!productDetail) {
       return res.status(404).json({ error: `${id} not found` });
     }
-    return res.json({data: productDetail})
-  }catch (error){
-    return res.status(500).json({ error: error})
+    return res.json({ data: productDetail });
+  } catch (error) {
+    return res.status(500).json({ error: error });
   }
-}
-export const getAllProduct = async(req: Request , res: Response) => {
-  
+};
+export const getAllProduct = async (req: Request, res: Response) => {
   try {
-    const product = await Product.findAll(
-      { include: [
-      {
-        model: ProductItem,
-        as: "items"
-      }
-    ]}
-    )
-    if(!product){
+    const product = await Product.findAll({
+      include: [
+        {
+          model: ProductItem,
+          as: "items",
+        },
+      ],
+    });
+    if (!product) {
       return res.status(404).json({ error: `not found` });
     }
-    return res.json({data: product})
-  }catch (error){
-    return res.status(500).json({ error: "Internal server error"})
+    return res.json({ data: product });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
-export const getProductDetail = async(req: Request , res: Response,  next: NextFunction) => {
-  const productData = await Product.findAll(
-    
-  )
+export const getProductDetail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const productData = await Product.findAll();
+};
+
+export const getStoreProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const id = req.params.id
+  try {
+    const productData = await Store.findOne(
+      { where : { uuid: id},
+       include: [
+        {
+          model: Product,
+          as: "products",
+          include: [
+            {
+            model: ProductItem,
+            as: "items",
+            include: [{
+                model: ProductItemImage,
+                as: "productItemImage",
+              },]
+            },
+            {
+            model: Category,
+            as: 'category',
+          },
+          {
+            model: ProductImage,
+            as: 'images'
+          },
+          ],
+        },
+      ]}
+    )
+    res.json({data: productData })
+  } catch (error) {
+    res.json({ error: error})
+  }
 }

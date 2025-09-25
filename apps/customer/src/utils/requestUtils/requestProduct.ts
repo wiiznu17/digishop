@@ -25,3 +25,16 @@ export const getProduct = async ( id: string ) => {
             })
     })
 }
+export const getStoreProduct = async(id: string) => {
+    console.log('id in util', id)
+    return await new Promise((resolve, reject) => {
+        axios
+            .get(`${endpoint}/api/product/store/${id}`)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+}
