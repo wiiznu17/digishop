@@ -12,21 +12,15 @@ const rubik = Rubik({
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, ] = useState(false);
+  const router = useRouter()
   const handleSearch = (query = searchQuery) => {
     if (!query.trim()) return;
-    setHasSearched(true);
+    router.push(`/digishop/search?query=${query}`)
   };
-
   const clearSearch = () => {
     setSearchQuery('');
-    setHasSearched(false);
   };
-  const router = useRouter()
-  if(hasSearched){
-    router.push(`/digishop/search?query=${searchQuery}`)
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-[#C2D1F4]">
       {/* Main Content */}
