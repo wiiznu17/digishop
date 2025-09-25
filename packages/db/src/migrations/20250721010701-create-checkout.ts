@@ -29,8 +29,14 @@ export = {
         charset: 'utf8mb4',
         collate: 'utf8mb4_unicode_ci',
         }
-    )},
+    )
+    await queryInterface.addIndex("CHECKOUT", ["order_code"], {
+      name: "ix_checkout_order_code",
+      unique: true,
+    });
+    },
     async down(queryInterface: QueryInterface): Promise<void> {
+    await queryInterface.removeIndex("CHECKOUT", "ix_checkout_order_code");
     await queryInterface.dropTable('CHECKOUT')
   },
 }

@@ -70,6 +70,9 @@ export class CheckOut
                     modelName: "CheckOut",
                     paranoid: true,
                     deletedAt: "deleted_at",
+                    indexes: [
+                        { name: "ix_checkout_order_code", fields: ["order_code"] },
+                    ],
                 }
             );
             return CheckOut
