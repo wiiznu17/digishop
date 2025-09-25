@@ -68,13 +68,7 @@ const SearchPage = () => {
             </div>
           </div>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white text-black py-8 mt-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p>&copy; 2025 Digishop. All rights reserved.</p>
-        </div>
-      </footer>
+      
     </div>
   );
 };

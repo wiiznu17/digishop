@@ -4,18 +4,28 @@ import { use } from "react";
 import { searchProduct } from "@/utils/requestUtils/requestProduct";
 import NotFound from "@/components/notFound";
 import { useRouter } from "next/navigation";
-import {Card} from "@/components/productCard";
-import { Search, X } from "lucide-react";
-import { Product, Store } from "@/types/props/productProp";
+import { Card } from "@/components/productCard";
+import {
+  Search,
+  X,
+  ChevronRight,
+  ChevronLeft,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { Product, ProductItem, Store } from "@/types/props/productProp";
 
 export default function SearchResult({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string }>;
 }) {
-  const [products, setProduct] = useState<Product[] >();
+  const [rawProduct, setRawProduct] = useState<Product[]>();
+  const [products, setProduct] = useState<Product[]>();
   const [stores, setStore] = useState<Store[]>();
-  // const [stores, setStore] = useState<Store[]>();
+  const [count, setCount] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [filter, setFilter] = useState("ASC");
   const { query } = use(searchParams);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState(query);
@@ -26,21 +36,47 @@ export default function SearchResult({
   const clearSearch = () => {
     setSearchQuery("");
   };
+  const minPrice = (data: [ProductItem]) => {
+    const price = data.map((item) => item.priceMinor);
+    console.log(price);
+    const minPrice = Math.min(...price);
+    return minPrice;
+  };
   useEffect(() => {
     const fetchProduct = async () => {
-      const res = await searchProduct(query);
-      setProduct(res.product);
+      const res = await searchProduct(query, page);
+      setRawProduct(res.product);
       setStore(res.store);
+      setCount(res.productCount);
     };
     fetchProduct();
-  }, [query]);
-  console.log('products',products)
-  console.log('store',stores)
-  return !products && !stores ? (
+  }, [query, page]);
+  useEffect(() => {
+    if (stores?.length && !rawProduct?.length) {
+      setCount(1);
+    }
+  }, [stores, rawProduct]);
+  useEffect(() => {
+    if (!rawProduct) return;
+    if (filter == "ASC") {
+      const sorted = rawProduct?.sort(
+        (a, b) => minPrice(a.items) - minPrice(b.items)
+      );
+      console.log(sorted);
+      setProduct(sorted);
+      console.log("products", products);
+    } else if (filter == "DESC") {
+      setProduct((rawProduct) =>
+        rawProduct?.sort((a, b) => minPrice(b.items) - minPrice(a.items))
+      );
+    }
+  }, [filter, products, rawProduct]);
+
+  return !rawProduct || rawProduct?.length == 0 || !stores || stores?.length == 0  ? (
     <NotFound props={query} />
   ) : (
-    <div className="pt-3">
-      <div className="flex justify-center mb-10 ">
+    <div className=" pt-3">
+      <div className="flex justify-center mb-3 ">
         <div className="relative w-1/2">
           <input
             type="text"
@@ -69,35 +105,93 @@ export default function SearchResult({
           </div>
         </div>
       </div>
-      <div className=" flex justify-center items-center px-[100px]">
-        <div className="grid grid-cols-2 gap-2 ">
-          {stores &&
-            stores.map((store, index) => (
-              <button key={index} onClick={() => router.push(`http://localhost:3000/digishop/store/${store.uuid}`)}>
-                <div className="flex p-6 rounded-2xl bg-gray-200 border-b ">
-                  <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
-                  <div className="px-4">
-                    <h1 className="text-2xl font-extrabold">
-                      {store.storeName}
-                    </h1>
-                    <h6 className="mt-4">{store.description}</h6>
-                  </div>
-                </div>
-              </button>
-            ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[60px]">
-          {
-            products && products.map((item: Product, index: number) => (
-              <div
-                key={index}
-                onClick={() =>
-                  router.push(`/digishop/product/${String(item.uuid)}`)
-                }
-              >
-                <Card data={item} />
+      <div className="flex justify-center items-center">
+        <div className="w-3/4">
+          {products?.length && (
+            <div className="flex justify-end items-center mb-2">
+              <div className="flex mx-3">
+                <div className="mx-3">price</div>
+                {filter == "ASC" ? (
+                  <button
+                    onClick={() => setFilter("DESC")}
+                    className="bg-gray-200 p-1 hover:cursor-pointer"
+                  >
+                    <ArrowDown />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setFilter("ASC")}
+                    className="bg-gray-200 p-1 hover:cursor-pointer"
+                  >
+                    <ArrowUp />
+                  </button>
+                )}
               </div>
-            ))}
+              <div className="">
+                <div>
+                  {(page - 1) * 10 + products.length} / {count}
+                </div>
+              </div>
+            </div>
+          )}
+          <div className=" flex justify-center items-center">
+            <div>
+              <div className="grid grid-cols-2 gap-2 mb-6 ">
+                {stores &&
+                  stores.map((store, index) => (
+                    <button
+                      key={index}
+                      onClick={() =>
+                        router.push(
+                          `http://localhost:3000/digishop/store/${store.uuid}`
+                        )
+                      }
+                    >
+                      <div className="flex p-6 rounded-2xl bg-gray-200 border-b ">
+                        <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
+                        <div className="px-4">
+                          <h1 className="text-2xl font-extrabold">
+                            {store.storeName}
+                          </h1>
+                          <h6 className="mt-4">{store.description}</h6>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {products &&
+                  products.map((item: Product, index: number) => (
+                    <div
+                      key={index}
+                      onClick={() =>
+                        router.push(`/digishop/product/${String(item.uuid)}`)
+                      }
+                    >
+                      <Card data={item} />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+          <div className=" flex justify-center items-center mt-15 border-t py-5">
+            <button
+              onClick={() => setPage(page + 1)}
+              className={`${page == 1 ? "opacity-0" : "opacity-100"}`}
+            >
+              <ChevronLeft />
+            </button>
+            <div className="mx-5">
+              {page} / {Math.ceil(count / 10)}
+            </div>
+            <button
+              onClick={() => setPage(page + 1)}
+              className={`${page == Math.ceil(count / 10) ? "opacity-0" : "opacity-100"}`}
+            >
+              <ChevronRight />
+            </button>
+          </div>
         </div>
       </div>
     </div>
