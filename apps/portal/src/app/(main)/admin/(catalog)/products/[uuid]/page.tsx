@@ -1,4 +1,3 @@
-// apps/portal/src/app/(main)/admin/(catalog)/products/[uuid]/page.tsx
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
@@ -24,6 +23,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { AdminProductDetail } from "@/types/admin/catalog"
 
 const fmtTHB = (minor?: number | null) =>
   minor == null
@@ -45,7 +45,7 @@ const formatDate = (v: unknown) => {
 export default function AdminProductDetailPage() {
   const { uuid } = useParams<{ uuid: string }>()
   const router = useRouter()
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<AdminProductDetail | null>(null)
   const [loading, setLoading] = useState(false)
 
   // preview
@@ -81,15 +81,12 @@ export default function AdminProductDetailPage() {
 
   const mainImage = useMemo(() => {
     const imgs = data?.images ?? []
-    return imgs.find((i: any) => i.isMain) ?? imgs[0] ?? null
+    return imgs.find((i) => i.isMain) ?? imgs[0] ?? null
   }, [data])
 
   const totalStock = useMemo(
     () =>
-      (data?.items ?? []).reduce(
-        (sum: number, it: any) => sum + (it.stockQuantity ?? 0),
-        0
-      ),
+      (data?.items ?? []).reduce((sum, it) => sum + (it.stockQuantity ?? 0), 0),
     [data]
   )
   const minPriceMinor = useMemo(() => {

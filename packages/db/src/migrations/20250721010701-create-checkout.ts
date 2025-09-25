@@ -29,8 +29,19 @@ export = {
         charset: 'utf8mb4',
         collate: 'utf8mb4_unicode_ci',
         }
-    )},
+    )
+    await queryInterface.addIndex("CHECKOUT", {
+      name: "uq_checkout_order_code",
+      fields: ["order_code"],
+      unique: true,
+    });
+    await queryInterface.addIndex("CHECKOUT", { name: "ix_checkout_customer", fields: ["customer_id"] });
+    await queryInterface.addIndex("CHECKOUT", { name: "ix_checkout_created_at", fields: ["created_at"] });
+    },
     async down(queryInterface: QueryInterface): Promise<void> {
+    await queryInterface.removeIndex("CHECKOUT", "uq_checkout_order_code").catch(() => {});
+    await queryInterface.removeIndex("CHECKOUT", "ix_checkout_customer").catch(() => {});
+    await queryInterface.removeIndex("CHECKOUT", "ix_checkout_created_at").catch(() => {});
     await queryInterface.dropTable('CHECKOUT')
   },
 }

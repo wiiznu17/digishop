@@ -1,4 +1,3 @@
-// apps/portal-service/src/routes/productRouter.ts
 import { Router } from "express";
 import {
   adminListProducts,
@@ -8,29 +7,39 @@ import {
   adminBulkModerateProducts,
   adminListCategories,
 } from "../controllers/productController";
-import { authenticateAdmin, requirePerms } from "../middlewares/auth";
+import { requirePerms } from "../middlewares/auth";
 
 const router = Router();
 
 router.get("/list",
   requirePerms("PRODUCT.READ"),
-  adminListProducts);
+  adminListProducts
+);
+
 router.get("/suggest",
   requirePerms("PRODUCT.READ"),
-  adminSuggestProducts);
+  adminSuggestProducts
+);
+
 router.get("/:uuid",
   requirePerms("PRODUCT.READ"),
-  adminGetProductDetail);
+  adminGetProductDetail
+);
+
 router.patch("/:uuid/moderate",
   requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
-  adminModerateProduct);
+  adminModerateProduct
+);
+
 router.post("/bulk/moderate",
   requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
-  adminBulkModerateProducts);
+  adminBulkModerateProducts
+);
 
 // Categories (flat)
 router.get("/categories/list",
   requirePerms("CATEGORY.MANAGE"),
-  adminListCategories);
+  adminListCategories
+);
 
 export default router;
