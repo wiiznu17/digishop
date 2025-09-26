@@ -21,7 +21,6 @@ import {
   Image as ImageIcon,
   ShieldCheck,
   Shield,
-  SlidersHorizontal,
   Settings,
   User,
   ChevronUp,
@@ -112,8 +111,13 @@ const groups: NavGroup[] = [
     label: "System",
     items: [
       {
-        title: "Admin Users & Roles",
+        title: "Admin Users",
         url: "/admin/admins",
+        icon: Shield
+      },
+      {
+        title: "Roles",
+        url: "/admin/roles",
         icon: Shield
       },
       {

@@ -1,7 +1,6 @@
-// apps/portal/src/app/(main)/admin/system/audit-logs/page.tsx
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Card,
   CardContent,
@@ -35,35 +34,12 @@ import {
 } from "@/components/ui/dialog"
 import { CalendarDays, Search, Eye } from "lucide-react"
 import Link from "next/link"
-
-type LogRow = {
-  id: number
-  actor: string // email
-  actorName: string
-  action: "LOGIN" | "LOGOUT" | "CREATE" | "UPDATE" | "DELETE" | "ASSIGN_ROLE"
-  resource: string // PATH or entity
-  ip: string
-  createdAt: string
-  meta?: Record<string, any>
-}
-
-const MOCK_LOGS: LogRow[] = Array.from({ length: 120 }).map((_, i) => ({
-  id: 10000 + i,
-  actor: `admin${(i % 22) + 1}@digishop.local`,
-  actorName: `Admin ${(i % 22) + 1}`,
-  action: (
-    ["LOGIN", "CREATE", "UPDATE", "ASSIGN_ROLE", "DELETE", "LOGOUT"] as const
-  )[i % 6],
-  resource: [
-    "/admin/system/admins",
-    "/admin/products",
-    "/admin/orders",
-    "/admin/payouts"
-  ][i % 4],
-  ip: `10.0.0.${i % 255}`,
-  createdAt: new Date(Date.now() - i * 3600_000).toISOString(),
-  meta: { id: i, note: "mock" }
-}))
+import {
+  fetchAuditLogs,
+  fetchAuditLogSuggest
+} from "@/utils/requesters/auditLogRequester"
+import type { AdminAuditLogItem } from "@/types/admin/audit"
+import { Pager } from "@/components/common/Pager"
 
 function useDebounce<T>(v: T, ms = 300) {
   const [s, setS] = useState(v)
@@ -73,16 +49,84 @@ function useDebounce<T>(v: T, ms = 300) {
   }, [v, ms])
   return s
 }
+// function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
+//   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+//   return (
+//     <div className="flex items-center justify-between gap-3 py-3">
+//       <div className="text-sm text-muted-foreground">
+//         Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)}{" "}
+//         of {total}
+//       </div>
+//       <div className="flex items-center gap-2">
+//         <Select
+//           value={String(pageSize)}
+//           onValueChange={(v) => onPageSize(Number(v))}
+//         >
+//           <SelectTrigger className="w-[120px]">
+//             <SelectValue />
+//           </SelectTrigger>
+//           <SelectContent>
+//             {[10, 20, 50, 100].map((s) => (
+//               <SelectItem key={s} value={String(s)}>
+//                 {s} / page
+//               </SelectItem>
+//             ))}
+//           </SelectContent>
+//         </Select>
+//         <Button
+//           variant="outline"
+//           onClick={() => onPage(Math.max(1, page - 1))}
+//           disabled={page <= 1}
+//         >
+//           Prev
+//         </Button>
+//         <Button
+//           variant="outline"
+//           onClick={() => onPage(Math.min(totalPages, page + 1))}
+//           disabled={page >= totalPages}
+//         >
+//           Next
+//         </Button>
+//       </div>
+//     </div>
+//   )
+// }
 
 export default function AuditLogsPage() {
-  // search + suggest (actor/email/path)
+  // filters (draft)
+  const [qDraft, setQDraft] = useState("")
+  const [actionDraft, setActionDraft] = useState<
+    "ALL" | AdminAuditLogItem["action"]
+  >("ALL")
+  const [fromDraft, setFromDraft] = useState(() =>
+    new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+  )
+  const [toDraft, setToDraft] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  )
+
+  // submitted
   const [q, setQ] = useState("")
-  const dq = useDebounce(q, 250)
+  const [action, setAction] = useState<"ALL" | AdminAuditLogItem["action"]>(
+    "ALL"
+  )
+  const [from, setFrom] = useState(fromDraft)
+  const [to, setTo] = useState(toDraft)
+
+  // list state
+  const [rows, setRows] = useState<AdminAuditLogItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+
+  // suggestion
   const [openSuggest, setOpenSuggest] = useState(false)
   const [loadingSuggest, setLoadingSuggest] = useState(false)
   const [suggest, setSuggest] = useState<
     Array<{ label: string; value: string }>
   >([])
+  const dq = useDebounce(qDraft, 250)
   const timer = useRef<number | null>(null)
 
   useEffect(() => {
@@ -93,70 +137,80 @@ export default function AuditLogsPage() {
     }
     setLoadingSuggest(true)
     if (timer.current) window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => {
-      const t = dq.toLowerCase()
-      const actors = Array.from(
-        new Set(MOCK_LOGS.map((l) => `${l.actorName} <${l.actor}>`))
-      )
-        .filter((s) => s.toLowerCase().includes(t))
-        .slice(0, 5)
-        .map((s) => ({ label: s, value: s }))
-      const paths = Array.from(new Set(MOCK_LOGS.map((l) => l.resource)))
-        .filter((p) => p.toLowerCase().includes(t))
-        .slice(0, 5)
-        .map((p) => ({ label: p, value: p }))
-      setSuggest([...actors, ...paths])
-      setLoadingSuggest(false)
-      setOpenSuggest(true)
+    timer.current = window.setTimeout(async () => {
+      try {
+        const items = await fetchAuditLogSuggest(dq.trim())
+        setSuggest(items.slice(0, 10))
+        setOpenSuggest(true)
+      } finally {
+        setLoadingSuggest(false)
+      }
     }, 200)
     return () => {
       if (timer.current) window.clearTimeout(timer.current)
     }
   }, [dq])
 
-  // filters
-  const [action, setAction] = useState<"ALL" | LogRow["action"]>("ALL")
-  const [from, setFrom] = useState(() =>
-    new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+  const params = useMemo(
+    () => ({
+      q: q || undefined,
+      action: action === "ALL" ? undefined : action,
+      dateFrom: from || undefined,
+      dateTo: to || undefined,
+      sortBy: "createdAt" as const,
+      sortDir: "desc" as const,
+      page,
+      pageSize
+    }),
+    [q, action, from, to, page, pageSize]
   )
-  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10))
 
-  // list
-  const rows = useMemo(() => {
-    let f = MOCK_LOGS
-    if (q.trim()) {
-      const t = q.toLowerCase()
-      f = f.filter(
-        (l) =>
-          l.actor.toLowerCase().includes(t) ||
-          l.actorName.toLowerCase().includes(t) ||
-          l.resource.toLowerCase().includes(t)
-      )
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetchAuditLogs(params)
+      setRows(res.data)
+      setTotal(res.meta.total)
+    } finally {
+      setLoading(false)
     }
-    if (action !== "ALL") f = f.filter((l) => l.action === action)
-    // date filter
-    const fd = new Date(from)
-    const td = new Date(to)
-    td.setHours(23, 59, 59, 999)
-    f = f.filter((l) => {
-      const d = new Date(l.createdAt).getTime()
-      return d >= fd.getTime() && d <= td.getTime()
-    })
-    return f
-  }, [q, action, from, to])
+  }, [params])
 
-  // paging
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
-  const total = rows.length
-  const pageRows = useMemo(() => {
-    const s = (page - 1) * pageSize
-    return rows.slice(s, s + pageSize)
-  }, [rows, page, pageSize])
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  const onSearch = useCallback(() => {
+    setQ(qDraft.trim())
+    setAction(actionDraft)
+    setFrom(fromDraft)
+    setTo(toDraft)
+    setPage(1)
+    setOpenSuggest(false)
+    setTimeout(() => void load(), 0)
+  }, [qDraft, actionDraft, fromDraft, toDraft, load])
+
+  const onClear = useCallback(() => {
+    const defFrom = new Date(Date.now() - 7 * 86400000)
+      .toISOString()
+      .slice(0, 10)
+    const defTo = new Date().toISOString().slice(0, 10)
+    setQDraft("")
+    setActionDraft("ALL")
+    setFromDraft(defFrom)
+    setToDraft(defTo)
+    setQ("")
+    setAction("ALL")
+    setFrom(defFrom)
+    setTo(defTo)
+    setPage(1)
+    setOpenSuggest(false)
+    setTimeout(() => void load(), 0)
+  }, [load])
 
   // quick view
   const [openQV, setOpenQV] = useState(false)
-  const [current, setCurrent] = useState<LogRow | null>(null)
+  const [current, setCurrent] = useState<AdminAuditLogItem | null>(null)
 
   return (
     <div className="p-4 space-y-4">
@@ -165,30 +219,26 @@ export default function AuditLogsPage() {
           <CardTitle>Audit Logs</CardTitle>
           <CardDescription>ติดตามกิจกรรมสำคัญในระบบ</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="md:col-span-2">
+        <CardContent className="grid grid-cols-1 md:grid-cols-6 gap-3">
+          <div className="md:col-span-3">
             <label className="block text-sm mb-1">Search</label>
             <Popover open={openSuggest} onOpenChange={setOpenSuggest}>
               <PopoverAnchor asChild>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="actor / email / path"
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="actor / email / entity / ip / correlation"
+                    value={qDraft}
+                    onChange={(e) => setQDraft(e.target.value)}
                     onFocus={() => {
-                      if (q.trim()) setOpenSuggest(true)
+                      if (qDraft.trim()) setOpenSuggest(true)
                     }}
                     onBlur={() => {
                       setTimeout(() => setOpenSuggest(false), 120)
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") setOpenSuggest(false)
+                      if (e.key === "Enter") onSearch()
                     }}
                   />
-                  <Button onClick={() => setOpenSuggest(false)}>
-                    <Search className="h-4 w-4 mr-2" />
-                    Search
-                  </Button>
                 </div>
               </PopoverAnchor>
               <PopoverContent
@@ -211,7 +261,7 @@ export default function AuditLogsPage() {
                         key={`${s.value}-${idx}`}
                         className="w-full text-left px-3 py-2 hover:bg-accent"
                         onClick={() => {
-                          setQ(s.value)
+                          setQDraft(s.value)
                           setOpenSuggest(false)
                         }}
                       >
@@ -227,11 +277,10 @@ export default function AuditLogsPage() {
           <div>
             <label className="block text-sm mb-1">Action</label>
             <Select
-              value={action}
-              onValueChange={(v: any) => {
-                setAction(v)
-                setPage(1)
-              }}
+              value={actionDraft}
+              onValueChange={(v: AdminAuditLogItem["action"]) =>
+                setActionDraft(v)
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -255,8 +304,8 @@ export default function AuditLogsPage() {
                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
                 <Input
                   type="date"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
+                  value={fromDraft}
+                  onChange={(e) => setFromDraft(e.target.value)}
                 />
               </div>
             </div>
@@ -266,11 +315,22 @@ export default function AuditLogsPage() {
                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
                 <Input
                   type="date"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
+                  value={toDraft}
+                  onChange={(e) => setToDraft(e.target.value)}
                 />
               </div>
             </div>
+          </div>
+
+          {/* ปุ่มชิดขวา */}
+          <div className="md:col-span-6 flex justify-end gap-2">
+            <Button onClick={onSearch} className="gap-2">
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
+            <Button variant="outline" onClick={onClear}>
+              Clear filter
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -278,7 +338,7 @@ export default function AuditLogsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Logs</CardTitle>
-          <CardDescription>แสดงเฉพาะรายการในช่วงที่เลือก</CardDescription>
+          <CardDescription>แสดงเฉพาะช่วงและเงื่อนไขที่เลือก</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-hidden">
@@ -295,44 +355,58 @@ export default function AuditLogsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pageRows.map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell>#{l.id}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{l.actorName}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {l.actor}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{l.action}</TableCell>
-                    <TableCell>{l.resource}</TableCell>
-                    <TableCell>{l.ip}</TableCell>
-                    <TableCell>
-                      {new Date(l.createdAt).toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mr-2"
-                        onClick={() => {
-                          setCurrent(l)
-                          setOpenQV(true)
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" asChild>
-                        <Link href={`/admin/system/audit-logs/${l.id}`}>
-                          Detail
-                        </Link>
-                      </Button>
+                {loading && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
+                      Loading...
                     </TableCell>
                   </TableRow>
-                ))}
-                {pageRows.length === 0 && (
+                )}
+                {!loading &&
+                  rows.map((l) => (
+                    <TableRow key={l.id}>
+                      <TableCell>#{l.id}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {l.actorName || "-"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {l.actorEmail || "-"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{l.action}</TableCell>
+                      <TableCell>
+                        {l.resource}
+                        {l.targetId ? `#${l.targetId}` : ""}
+                      </TableCell>
+                      <TableCell>{l.ip ?? "-"}</TableCell>
+                      <TableCell>
+                        {new Date(l.createdAt).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mr-2"
+                          onClick={() => {
+                            setCurrent(l)
+                            setOpenQV(true)
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" asChild>
+                          <Link href={`/admin/audit-logs/${l.id}`}>Detail</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {!loading && rows.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={7}
@@ -346,50 +420,20 @@ export default function AuditLogsPage() {
             </Table>
           </div>
 
-          {/* pager */}
-          <div className="flex items-center justify-between gap-3 py-3">
-            <div className="text-sm text-muted-foreground">
-              Showing {(page - 1) * pageSize + 1}-
-              {Math.min(page * pageSize, total)} of {total}
-            </div>
-            <div className="flex items-center gap-2">
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => {
-                  const s = Number(v)
-                  setPageSize(s)
-                  setPage(1)
-                }}
-              >
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[10, 20, 50, 100].map((s) => (
-                    <SelectItem key={s} value={String(s)}>
-                      {s} / page
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page <= 1}
-              >
-                Prev
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  setPage(Math.min(Math.ceil(total / pageSize), page + 1))
-                }
-                disabled={page >= Math.ceil(total / pageSize)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <Pager
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPage={(p: number) => {
+              setPage(p)
+              setTimeout(() => void load(), 0)
+            }}
+            onPageSize={(s: number) => {
+              setPageSize(s)
+              setPage(1)
+              setTimeout(() => void load(), 0)
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -403,14 +447,24 @@ export default function AuditLogsPage() {
             <div className="text-sm space-y-2">
               <div>ID: #{current.id}</div>
               <div>
-                Actor: {current.actorName} &lt;{current.actor}&gt;
+                Actor: {current.actorName || "-"} &lt;
+                {current.actorEmail || "-"}&gt;
               </div>
               <div>Action: {current.action}</div>
-              <div>Resource: {current.resource}</div>
-              <div>IP: {current.ip}</div>
+              <div>
+                Resource: {current.resource}
+                {current.targetId ? `#${current.targetId}` : ""}
+              </div>
+              <div>IP: {current.ip || "-"}</div>
               <div>Date: {new Date(current.createdAt).toLocaleString()}</div>
+              {current.correlationId && (
+                <div>Correlation: {current.correlationId}</div>
+              )}
               <div className="text-xs text-muted-foreground">
-                Meta (mock): {JSON.stringify(current.meta)}
+                Meta:{" "}
+                <pre className="whitespace-pre-wrap break-words">
+                  {JSON.stringify(current.meta ?? {}, null, 2)}
+                </pre>
               </div>
             </div>
           )}
