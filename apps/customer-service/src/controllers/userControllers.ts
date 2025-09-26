@@ -3,6 +3,7 @@ import { Address } from "@digishop/db/src/models/Address";
 import { AddressType, UserRole } from "@digishop/db/src/types/enum";
 import { Request, Response } from "express";
 import { Op } from "@digishop/db/src/db";
+import bcrypt from "bcrypt"
 
 export const createUser = async (req: Request, res: Response) => {
   const {
@@ -33,12 +34,13 @@ export const createUser = async (req: Request, res: Response) => {
         .status(404)
         .json({ error: "This email already have an account" });
     }
+    const passwordHash = await bcrypt.hash(password, 10)
     const newUser = await User.create({
       firstName,
       middleName,
       lastName,
       email,
-      password,
+      password: passwordHash,
       role: UserRole.CUSTOMER,
     });
     await Address.create({

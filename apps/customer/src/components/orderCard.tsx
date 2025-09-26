@@ -1,5 +1,5 @@
 "use client";
-import { OrderDetail } from "@/types/props/orderProp";
+import { OrderDetail, CancelRefundProps } from "@/types/props/orderProp";
 import Link from "next/link";
 import Button from "./button";
 import { CancelOrder, RefundOrder } from "./orderCancelCard";
@@ -9,45 +9,52 @@ import OrderStatusConfig from "../master/statusOrderDetail.json";
 import CancelReasonMaster from "../master/cancelReason.json";
 import { updateOrderStatus } from "@/utils/requestUtils/requestOrderUtils";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 
 interface OrderCard {
   item: OrderDetail;
   handleShowDetail: (item: OrderDetail) => void;
   selectShowDetail: OrderDetail | undefined;
-  isShowCancel:boolean
-  setIsShowCancel:React.Dispatch<SetStateAction<boolean>>;
-  isShowRefund:boolean
-  setIsShowRefund:React.Dispatch<SetStateAction<boolean>>;
+  setIsShowCancel: React.Dispatch<SetStateAction<CancelRefundProps>>;
+  setIsShowRefund: React.Dispatch<SetStateAction<CancelRefundProps>>;
+  isShowCancel:CancelRefundProps
+  isShowRefund:CancelRefundProps
 }
+
 
 export default function OrderCard({
   item,
   handleShowDetail,
   selectShowDetail,
   isShowCancel,
-  setIsShowCancel,
   isShowRefund,
-  setIsShowRefund
+  setIsShowCancel,
+  setIsShowRefund,
+
 }: OrderCard) {
   const router = useRouter()
-  const [reason, setReason] = useState<string>(
-    CancelReasonMaster["CC01"].label
-  );
+  const {user} = useAuth()
+  const [reasonCancel, setReasonCancel] = useState<string>("CC01");
+  const [reasonRefund, setReasonRefund] = useState<string>("RF01");
   const [detail, setDetail] = useState<string>("");
   const handleOnCancel = () => {
-    setIsShowCancel(false);
-    setIsShowRefund(false);
-    setReason("");
+    setIsShowCancel({shown: false, id: undefined});
+    setIsShowRefund({shown: false, id: undefined});
+    setReasonCancel("CC01");
+    setReasonRefund("RF01")
     setDetail("");
   };
+  console.log(isShowRefund)
   const handleConfirmed = async() => {
     const data = await updateOrderStatus(item.id)
     if(data.data){
       window.location.reload()
     }
   }
+  if(!user)return
   return (
     <div className=" px-4 py-2 mb-5 border w-md rounded-2xl ">
+      <div>{item.id}</div>
       <div>
         { item.items[0].productItem&& 
           <button className="flex items-center mb-3 hover:cursor-pointer w-full" onClick={() => router.push(`http://localhost:3000/digishop/store/${item.items[0].productItem.product.store.uuid}`)}>
@@ -104,8 +111,8 @@ export default function OrderCard({
           <>
             <Button
               color="bg-red-300"
-              hidden={isShowCancel}
-              onClick={() => setIsShowCancel(true)}
+              hidden={isShowCancel.shown}
+              onClick={() => setIsShowCancel({ shown: true , id: item.id})}
             >
               Cancel
             </Button>
@@ -115,37 +122,45 @@ export default function OrderCard({
           <>
             <Button
               color="bg-red-300"
-              hidden={isShowRefund}
-              onClick={() => setIsShowRefund(true)}
+              hidden={isShowRefund.shown}
+              onClick={() => setIsShowRefund({ shown: true , id: item.id})}
             >
               Refund
             </Button>
-            <Button color="bg-green-300" hidden={isShowRefund} className="ml-4" onClick={handleConfirmed}>
+            <Button color="bg-green-300" hidden={isShowRefund.shown} className="ml-4" onClick={handleConfirmed}>
               Confirmed
             </Button>
           </>
         )}
       </div>
-      <CancelOrder
-        isShowCancel={isShowCancel}
-        order={item}
-        setIsShowCancel={setIsShowCancel}
-        reason={reason}
-        setReason={setReason}
-        detail={detail}
-        setDetail={setDetail}
-        handleOnCancel={handleOnCancel}
-      />
-      <RefundOrder
-        isShowRefund={isShowRefund}
-        order={item}
-        setIsShowRefund={setIsShowRefund}
-        reason={reason}
-        setReason={setReason}
-        detail={detail}
-        setDetail={setDetail}
-        handleOnCancel={handleOnCancel}
-      />
+      {
+        (item.id === isShowCancel.id || item.id === isShowRefund.id) && (
+          <div>
+            <RefundOrder
+              isShowRefund={isShowRefund}
+              setIsShowRefund={setIsShowRefund}
+              email={user.email}
+              order={item}
+              reason={reasonRefund}
+              setReason={setReasonRefund}
+              detail={detail}
+              setDetail={setDetail}
+              handleOnCancel={handleOnCancel}
+            />
+            <CancelOrder
+              isShowCancel={isShowCancel}
+              email={user.email}
+              order={item}
+              setIsShowCancel={setIsShowCancel}
+              reason={reasonCancel}
+              setReason={setReasonCancel}
+              detail={detail}
+              setDetail={setDetail}
+              handleOnCancel={handleOnCancel}
+            />
+          </div>
+        )
+      }
     </div>
   );
 }
