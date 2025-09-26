@@ -1,7 +1,7 @@
 import { Router } from "express"
 import {
   adminListStores, adminSuggestStores, adminGetStoreDetail
-} from "../controllers/userStoreController"
+} from "../controllers/storeController"
 
 const router = Router()
 

@@ -12,6 +12,16 @@ export type AdminOrderStatus =
   | "REFUND_PROCESSING"
   | "REFUND_SUCCESS"
   | "REFUND_FAIL"
+  | "CUSTOMER_CANCELED"
+  | "REFUND_REJECTED"
+  | "AWAITING_RETURN"
+  | "RECEIVE_RETURN"
+  | "RETURN_VERIFIED"
+  | "RETURN_FAIL"
+  | "REFUND_APPROVED"
+  | "REFUND_RERY"
+  | "TRANSIT_LACK"
+  | "RE_TRANSIT"
 
 export type AdminFetchOrdersParams = {
   q?: string
