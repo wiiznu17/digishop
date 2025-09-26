@@ -42,7 +42,6 @@ export default function AdminOrdersPage() {
   const router = useRouter()
   const sp = useSearchParams()
 
-  /** ---------- Draft (UI) state: เปลี่ยนค่าได้ แต่ยังไม่ยิง API จนกด Search ---------- */
   const [qDraft, setQDraft] = useState(sp.get("q") ?? "")
   const [statusDraft, setStatusDraft] = useState<AdminOrderStatus | "ALL">(
     (sp.get("status") as AdminOrderStatus) ?? "ALL"
@@ -50,7 +49,6 @@ export default function AdminOrdersPage() {
   const [dateFromDraft, setDateFromDraft] = useState(sp.get("dateFrom") ?? "")
   const [dateToDraft, setDateToDraft] = useState(sp.get("dateTo") ?? "")
 
-  /** ---------- Submitted state: ค่าที่ใช้ยิง API จริง ---------- */
   const [q, setQ] = useState(sp.get("q") ?? "")
   const [status, setStatus] = useState<AdminOrderStatus | "ALL">(
     (sp.get("status") as AdminOrderStatus) ?? "ALL"
@@ -62,7 +60,6 @@ export default function AdminOrdersPage() {
     Number(sp.get("pageSize") ?? 20)
   )
 
-  /** ---------- Data ---------- */
   const [rows, setRows] = useState<AdminOrderListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)

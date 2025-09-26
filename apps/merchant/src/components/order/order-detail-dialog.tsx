@@ -110,6 +110,29 @@ export function OrderDetailDialog({
             </div>
           </div>
 
+          {/* Status Management */}
+          <OrderStatusManager
+            currentStatus={order.status}
+            statusHistory={order.statusHistory ?? []}
+            orderId={order.id}
+            trackingNumber={order.trackingNumber ?? undefined}
+            onStatusChange={onStatusChange}
+            onTrackingNumberUpdate={onTrackingNumberUpdate}
+            /** ส่ง handler hand over ลงไป */
+            onHandedOver={onHandedOver}
+          />
+
+          {/* Notes */}
+          {order.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm bg-muted p-3 rounded-lg">{order.notes}</p>
+              </CardContent>
+            </Card>
+          )}
           {/* Customer Information and Shipping */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -267,30 +290,6 @@ export function OrderDetailDialog({
               </div>
             </CardContent>
           </Card>
-
-          {/* Status Management */}
-          <OrderStatusManager
-            currentStatus={order.status}
-            statusHistory={order.statusHistory ?? []}
-            orderId={order.id}
-            trackingNumber={order.trackingNumber ?? undefined}
-            onStatusChange={onStatusChange}
-            onTrackingNumberUpdate={onTrackingNumberUpdate}
-            /** ส่ง handler hand over ลงไป */
-            onHandedOver={onHandedOver}
-          />
-
-          {/* Notes */}
-          {order.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm bg-muted p-3 rounded-lg">{order.notes}</p>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </DialogContent>
     </Dialog>
