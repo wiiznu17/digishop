@@ -97,9 +97,11 @@ export default function AdminUserDetailPage() {
             {/* ลิ้งค์ดูออเดอร์ทั้งหมดของลูกค้าคนนี้ */}
             {!!data && (
               <Button
-                onClick={() =>
-                  router.push(`/admin/orders?customerId=${data.id}`)
-                }
+                onClick={() => {
+                  const emailToParams = encodeURIComponent(data.email)
+                  // customerEmail=alice%40example.com
+                  router.push(`/admin/orders?customerEmail=${emailToParams}`)
+                }}
               >
                 View all orders
               </Button>

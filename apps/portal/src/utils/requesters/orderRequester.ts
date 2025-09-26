@@ -3,7 +3,8 @@ import {
   AdminFetchOrdersParams,
   AdminOrderListResponse,
   AdminOrderDetail,
-  AdminOrderSuggestResponse
+  AdminOrderSuggestResponse,
+  AdminCustomerEmailSuggestItem
 } from "@/types/commerce/orders"
 
 export async function fetchAdminOrdersRequester(
@@ -49,6 +50,21 @@ export async function fetchAdminOrderSuggestRequester(
     return res.data as AdminOrderSuggestResponse
   } catch (e) {
     console.error("fetchAdminOrderSuggestRequester error:", e)
+    return []
+  }
+}
+
+export async function fetchAdminCustomerEmailSuggestRequester(
+  q: string
+): Promise<AdminCustomerEmailSuggestItem[]> {
+  try {
+    const res = await axios.get("/api/admin/orders/customer-suggest", {
+      params: { q },
+      withCredentials: true
+    })
+    return res.data as AdminCustomerEmailSuggestItem[]
+  } catch (e) {
+    console.error("fetchAdminCustomerEmailSuggestRequester error:", e)
     return []
   }
 }
