@@ -6,6 +6,20 @@ export interface ProductItem {
     stockQuantity: number;
     priceMinor: number;
     imageUrl?: string | undefined;
+    configuration: 
+}
+export interface Configurations {
+  id: number
+  uuid: string
+  productItemId: number
+  variationOptionId: number
+  variationOption: {
+    id: number
+    variationId: number
+    value: string
+    sortOrder: number
+    variation: Variations
+  }
 }
 export interface ProductImages {
   id: number
@@ -28,6 +42,25 @@ export interface Product {
   ]
   store: Store
   category: Category
+}
+
+export interface Choices {
+  id: number
+  variations: Variations[]
+}
+
+export interface Variations {
+  id: number
+  uuid: string
+  productId: number
+  name: string
+  options: Options[]
+}
+export interface Options {
+  id: number
+  variationId: number
+  value: string
+  sortOrder: number
 }
 
 export interface StoreProduct {
