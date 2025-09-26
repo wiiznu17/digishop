@@ -33,64 +33,37 @@ import type { AdminUserLite } from "@/types/admin/users"
 import {
   fetchAdminUserListRequester,
   fetchAdminUserSuggest
-} from "@/utils/requesters/userMerchantRequester"
+} from "@/utils/requesters/userRequester"
 import { Pager } from "@/components/common/Pager"
 
-// function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
-//   const totalPages = Math.max(1, Math.ceil(total / pageSize))
-//   return (
-//     <div className="flex items-center justify-between gap-3 py-3">
-//       <div className="text-sm text-muted-foreground">{total} users</div>
-//       <div className="flex items-center gap-2">
-//         <Select
-//           value={String(pageSize)}
-//           onValueChange={(v) => onPageSize(Number(v))}
-//         >
-//           <SelectTrigger className="w-[120px]">
-//             <SelectValue />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {[10, 20, 50, 100].map((s) => (
-//               <SelectItem key={s} value={String(s)}>
-//                 {s} / page
-//               </SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-//         <Button
-//           variant="outline"
-//           onClick={() => onPage(Math.max(1, page - 1))}
-//           disabled={page <= 1}
-//         >
-//           Prev
-//         </Button>
-//         <div className="text-sm">
-//           {page} / {totalPages}
-//         </div>
-//         <Button
-//           variant="outline"
-//           onClick={() => onPage(Math.min(totalPages, page + 1))}
-//           disabled={page >= totalPages}
-//         >
-//           Next
-//         </Button>
-//       </div>
-//     </div>
-//   )
-// }
+function formatTHBMinor(minor: number) {
+  const v = (minor ?? 0) / 100
+  return v.toLocaleString("th-TH", { style: "currency", currency: "THB" })
+}
 
 export default function AdminCustomersPage() {
   const router = useRouter()
 
   // input states (ยังไม่ยิงค้นหา)
   const [qInput, setQInput] = useState("")
+  const [dateFromInput, setDateFromInput] = useState<string>("")
+  const [dateToInput, setDateToInput] = useState<string>("")
+  const [spentMinInput, setSpentMinInput] = useState<string>("")
+  const [spentMaxInput, setSpentMaxInput] = useState<string>("")
+
   const [openSuggest, setOpenSuggest] = useState(false)
   const [suggest, setSuggest] = useState<
     Array<{ id: number; name: string; email: string }>
   >([])
 
   // applied filters (ค่าที่กด Search แล้ว)
-  const [applied, setApplied] = useState<{ q?: string }>({})
+  const [applied, setApplied] = useState<{
+    q?: string
+    dateFrom?: string
+    dateTo?: string
+    spentMin?: number
+    spentMax?: number
+  }>({})
 
   // paging
   const [page, setPage] = useState(1)
@@ -107,6 +80,10 @@ export default function AdminCustomersPage() {
     try {
       const { data, meta } = await fetchAdminUserListRequester({
         q: applied.q,
+        dateFrom: applied.dateFrom,
+        dateTo: applied.dateTo,
+        spentMin: applied.spentMin,
+        spentMax: applied.spentMax,
         page,
         pageSize,
         sortBy: "createdAt",
@@ -122,7 +99,7 @@ export default function AdminCustomersPage() {
     void load()
   }, [applied, page, pageSize])
 
-  // suggest: อนุญาตยิงได้ตามปกติ (ไม่ใช่ตัว list requester)
+  // suggest
   useEffect(() => {
     let alive = true
     const t = setTimeout(async () => {
@@ -146,7 +123,28 @@ export default function AdminCustomersPage() {
   const pageRows = useMemo(() => rows, [rows])
 
   const onSearch = () => {
-    setApplied({ q: qInput.trim() || undefined })
+    const toNum = (s: string) => {
+      const n = Number(s)
+      return Number.isFinite(n) && n >= 0 ? n : undefined
+    }
+    setApplied({
+      q: qInput.trim() || undefined,
+      dateFrom: dateFromInput || undefined,
+      dateTo: dateToInput || undefined,
+      spentMin: toNum(spentMinInput),
+      spentMax: toNum(spentMaxInput)
+    })
+    setPage(1)
+    setOpenSuggest(false)
+  }
+
+  const onClear = () => {
+    setQInput("")
+    setDateFromInput("")
+    setDateToInput("")
+    setSpentMinInput("")
+    setSpentMaxInput("")
+    setApplied({})
     setPage(1)
     setOpenSuggest(false)
   }
@@ -156,12 +154,16 @@ export default function AdminCustomersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription>Browse users (no tier / no status)</CardDescription>
+          <CardDescription>
+            Browse users (filters by date & spent)
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-2">
+          {/* ── Filters */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+            {/* Search */}
+            <div className="lg:col-span-5">
               <label className="block text-sm mb-1">Search</label>
               <Popover open={openSuggest} onOpenChange={setOpenSuggest}>
                 <PopoverAnchor asChild>
@@ -213,8 +215,56 @@ export default function AdminCustomersPage() {
                 </PopoverContent>
               </Popover>
             </div>
+
+            {/* Date range */}
+            <div className="lg:col-span-3">
+              <label className="block text-sm mb-1">Created from</label>
+              <Input
+                type="date"
+                value={dateFromInput}
+                onChange={(e) => setDateFromInput(e.target.value)}
+              />
+            </div>
+            <div className="lg:col-span-3">
+              <label className="block text-sm mb-1">Created to</label>
+              <Input
+                type="date"
+                value={dateToInput}
+                onChange={(e) => setDateToInput(e.target.value)}
+              />
+            </div>
+
+            {/* Clear */}
+            <div className="lg:col-span-1 flex items-end justify-end">
+              <Button variant="outline" onClick={onClear}>
+                Clear
+              </Button>
+            </div>
           </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+            {/* Spent range (THB) */}
+            <div className="lg:col-span-3">
+              <label className="block text-sm mb-1">Spent min (THB)</label>
+              <Input
+                inputMode="decimal"
+                placeholder="e.g. 1000"
+                value={spentMinInput}
+                onChange={(e) => setSpentMinInput(e.target.value)}
+              />
+            </div>
+            <div className="lg:col-span-3">
+              <label className="block text-sm mb-1">Spent max (THB)</label>
+              <Input
+                inputMode="decimal"
+                placeholder="e.g. 50000"
+                value={spentMaxInput}
+                onChange={(e) => setSpentMaxInput(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* ── Table */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -223,6 +273,7 @@ export default function AdminCustomersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Store</TableHead>
+                  <TableHead className="text-right">Spent</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -230,7 +281,7 @@ export default function AdminCustomersPage() {
                 {loading && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="py-8 text-center text-sm text-muted-foreground"
                     >
                       Loading...
@@ -260,6 +311,12 @@ export default function AdminCustomersPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
+                        {formatTHBMinor(r.orderTotalMinor)}{" "}
+                        <span className="text-xs text-muted-foreground">
+                          ({r.orderCount})
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
                         <Button
                           variant="outline"
                           size="sm"
@@ -284,7 +341,7 @@ export default function AdminCustomersPage() {
                 {!loading && pageRows.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="py-10 text-center text-sm text-muted-foreground"
                     >
                       No data
