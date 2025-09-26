@@ -8,6 +8,9 @@ import authRouter from './routes/authRouter';
 import refundRouter from './routes/refundRouter';
 import userRouter from './routes/userRouter';
 import storeRouter from './routes/storeRouter';
+import adminUserRouter from './routes/adminUserRouter';
+import rolesRouter from './routes/adminRoleRouter';
+import auditLogRouter from './routes/auditLogRouter';
 
 import { authenticateAdmin, requirePerms } from './middlewares/auth';
 
@@ -32,6 +35,9 @@ router.use('/admin/orders', orderRouter);
 router.use('/admin/refunds', refundRouter);
 router.use('/admin/users', userRouter);
 router.use('/admin/stores', storeRouter);
+router.use('/admin/admins', adminUserRouter);
+router.use('/admin/roles', rolesRouter);
+router.use('/admin/audit-logs', auditLogRouter);
 
 router.use('/auth', authRouter);
 
