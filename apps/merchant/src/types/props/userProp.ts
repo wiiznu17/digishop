@@ -26,7 +26,7 @@ export interface RegisterData {
   email: string
   phone: string
   businessType: string
-  website: string
+  website?: string
   description: string
   addressNumber: string
   addressStreet: string
@@ -112,7 +112,8 @@ export const defaultMerchant: MerchantProfileFormValues = {
         province: "",
         postalCode: "",
         addressType: AddressType.HOME,
-        isDefault: true
+        isDefault: true,
+        phone: ""
       }
     ],
     bankAccount: {

@@ -34,8 +34,15 @@ export default function OrdersPage() {
   const [total, setTotal] = useState<number>(0)
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
+
+  // ค่าที่ “ยืนยันแล้ว” (จะเอาไปยิงจริงเมื่อกด Search)
   const [statusFilter, setStatusFilter] = useState<string>("ALL")
   const [searchTerm, setSearchTerm] = useState<string>("")
+
+  // ตัวคุม “จังหวะยิง” manual search / initial load
+  const [queryTick, setQueryTick] = useState(0)
+  const bumpQuery = () => setQueryTick((v) => v + 1)
+
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,23 +54,25 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false)
 
-  // helpers from hook
   const { getStatusIcon, getStatusBadgeColor, getStatusText } = useOrderStatus()
   const { toast } = useToast()
 
-  // debounce search (250ms)
-  const debouncedQ = useDebouncedValue<string>(searchTerm, 250)
-
-  // keep selectedOrder in sync after list reload
+  // --- Initial load ครั้งเดียวแม้มี StrictMode ---
+  const didInit = useRef(false)
   useEffect(() => {
-    if (!selectedOrder) return
-    const fresh = orders.find((o) => o.id === selectedOrder.id)
-    if (fresh) setSelectedOrder(fresh)
-  }, [orders, selectedOrder?.id])
+    if (didInit.current) return
+    didInit.current = true
+    bumpQuery() // ยิงครั้งแรก
+  }, [])
 
-  // fetch list
+  // --- Fetch list: ยิงเมื่อ queryTick เปลี่ยน หรือ page/pageSize เปลี่ยน ---
   useEffect(() => {
+    if (queryTick === 0) return // ยังไม่สั่งยิง
     const ac = new AbortController()
+    let aborted = false
+    ac.signal.addEventListener("abort", () => {
+      aborted = true
+    })
 
     const run = async () => {
       setLoading(true)
@@ -73,41 +82,48 @@ export default function OrdersPage() {
           page,
           pageSize,
           status: statusFilter,
-          q: debouncedQ,
+          q: searchTerm, // ใช้ค่าที่ถูก “ยืนยันแล้ว”
           sortBy: "created_at",
           sortDir: "DESC",
           signal: ac.signal
         }
         const res: ListOrdersResponse = await listOrdersRequester(params)
+        if (aborted) return
         setOrders(res.data)
         setTotal(res.meta.total)
-      } catch (e: unknown) {
+      } catch (e) {
         if (!isAbortError(e)) {
+          if (aborted) return
           setError("Failed to load orders")
           setOrders([])
           setTotal(0)
         }
       } finally {
-        setLoading(false)
+        if (!aborted) setLoading(false)
       }
     }
 
     run()
     return () => ac.abort()
-  }, [page, pageSize, statusFilter, debouncedQ])
+  }, [queryTick, page, pageSize, statusFilter, searchTerm])
 
+  // summary คงเดิม
   useEffect(() => {
     const ac = new AbortController()
+    let aborted = false
+    ac.signal.addEventListener("abort", () => {
+      aborted = true
+    })
     const run = async () => {
       setSummaryLoading(true)
       try {
         const s = await fetchOrderSummary({ signal: ac.signal })
-        setSummary(s)
+        if (!aborted) setSummary(s)
       } catch (e) {
         if (!isAbortError(e)) console.error("Failed to load summary", e)
-        setSummary(null)
+        if (!aborted) setSummary(null)
       } finally {
-        setSummaryLoading(false)
+        if (!aborted) setSummaryLoading(false)
       }
     }
     run()
@@ -310,6 +326,7 @@ export default function OrdersPage() {
           orders={orders}
           searchTerm={searchTerm}
           statusFilter={statusFilter}
+          // เปลี่ยนเป็น “ยืนยันค่าแล้วค่อยยิง”
           onSearchChange={(v) => {
             setPage(1)
             setSearchTerm(v)
@@ -318,17 +335,29 @@ export default function OrdersPage() {
             setPage(1)
             setStatusFilter(v)
           }}
+          // ปุ่ม Search: สั่งยิง
+          onTriggerSearch={() => {
+            setPage(1)
+            bumpQuery()
+          }}
+          // pagination: เปลี่ยนแล้วยิงทันที
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={(p) => {
+            setPage(p)
+            bumpQuery()
+          }}
+          onPageSizeChange={(s) => {
+            setPageSize(s)
+            setPage(1)
+            bumpQuery()
+          }}
+          loading={loading}
           onViewDetails={viewOrderDetails}
           getStatusIcon={getStatusIcon}
           getStatusBadgeColor={getStatusBadgeColor}
           getStatusText={getStatusText}
-          // pagination
-          page={page}
-          pageSize={pageSize}
-          total={total}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          loading={loading}
         />
       </div>
 
@@ -360,24 +389,12 @@ function useDebouncedValue<T>(value: T, delay = 250): T {
 }
 
 function isAbortError(err: unknown): boolean {
-  if (!err) return false
-  if (
-    typeof err === "object" &&
-    "name" in err &&
-    (err as { name?: string }).name === "CanceledError"
+  if (!err || typeof err !== "object") return false
+  const e = err as { code?: string; name?: string; message?: string }
+  return (
+    e?.code === "ERR_CANCELED" ||
+    e?.name === "CanceledError" ||
+    e?.name === "AbortError" ||
+    (typeof e?.message === "string" && e.message.toLowerCase() === "canceled")
   )
-    return true
-  if (
-    typeof err === "object" &&
-    "message" in err &&
-    (err as { message?: string }).message === "canceled"
-  )
-    return true
-  if (
-    typeof err === "object" &&
-    "name" in err &&
-    (err as { name?: string }).name === "AbortError"
-  )
-    return true
-  return false
 }

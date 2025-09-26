@@ -41,7 +41,7 @@ export function OrdersSearchBox({
   const [isPendingUI, startTransition] = useTransition()
 
   // รอหยุดพิมพ์ 2 วิ ค่อยยิง suggest
-  const debounced = useDebounce(value, 2000)
+  const debounced = useDebounce(value, 200)
 
   useEffect(() => {
     const term = debounced.trim()
