@@ -8,8 +8,34 @@ export type AdminStoreLite = {
   ownerEmail: string
   productCount: number
   createdAt: string
+  /** เพิ่มสำหรับ list */
+  orderTotalMinor: number
+  orderCount: number
 }
 
 export type AdminStoreDetail = AdminStoreLite & {
-  // for future: shipping configs, bank accounts, etc.
+  orders: {
+    summary: {
+      totalOrders: number
+      totalSalesMinor: number
+      averageOrderMinor: number
+      lastOrderAt: string | null
+    }
+    monthly: Array<{
+      month: string // "YYYY-MM"
+      totalSalesMinor: number
+      orderCount: number
+    }>
+    latest: Array<{
+      id: number
+      reference: string
+      orderCode: string
+      status: string
+      grandTotalMinor: number
+      currencyCode: string
+      createdAt: string
+      customer: { id: number; name: string; email: string }
+      items: Array<{ productId: number; productName: string }>
+    }>
+  }
 }

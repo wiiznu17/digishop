@@ -35,65 +35,43 @@ import type { AdminStoreLite } from "@/types/admin/stores"
 import {
   fetchAdminStoreListRequester,
   fetchAdminStoreSuggest
-} from "@/utils/requesters/userMerchantRequester"
+} from "@/utils/requesters/merchantRequester"
 import { Pager } from "@/components/common/Pager"
 
-// function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
-//   const totalPages = Math.max(1, Math.ceil(total / pageSize))
-//   return (
-//     <div className="flex items-center justify-between py-3">
-//       <div className="text-sm text-muted-foreground">{total} stores</div>
-//       <div className="flex items-center gap-2">
-//         <Select
-//           value={String(pageSize)}
-//           onValueChange={(v) => onPageSize(Number(v))}
-//         >
-//           <SelectTrigger className="w-[120px]">
-//             <SelectValue />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {[10, 20, 50, 100].map((s) => (
-//               <SelectItem key={s} value={String(s)}>
-//                 {s} / page
-//               </SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-//         <Button
-//           variant="outline"
-//           onClick={() => onPage(Math.max(1, page - 1))}
-//           disabled={page <= 1}
-//         >
-//           Prev
-//         </Button>
-//         <div className="text-sm">
-//           {page} / {totalPages}
-//         </div>
-//         <Button
-//           variant="outline"
-//           onClick={() => onPage(Math.min(totalPages, page + 1))}
-//           disabled={page >= totalPages}
-//         >
-//           Next
-//         </Button>
-//       </div>
-//     </div>
-//   )
-// }
+function formatMoneyMinor(minor?: number) {
+  const n = Number(minor ?? 0)
+  return (n / 100).toLocaleString()
+}
 
 export default function AdminMerchantsPage() {
   const router = useRouter()
 
-  // input states (ยังไม่ยิงค้นหา)
+  // input states
   const [qInput, setQInput] = useState("")
   const [statusInput, setStatusInput] = useState<string | "ALL">("ALL")
+  const [dateFromInput, setDateFromInput] = useState<string>("")
+  const [dateToInput, setDateToInput] = useState<string>("")
+  const [salesMinInput, setSalesMinInput] = useState<string>("")
+  const [salesMaxInput, setSalesMaxInput] = useState<string>("")
+  const [orderCountMinInput, setOrderCountMinInput] = useState<string>("")
+  const [orderCountMaxInput, setOrderCountMaxInput] = useState<string>("")
+
   const [openSuggest, setOpenSuggest] = useState(false)
   const [suggest, setSuggest] = useState<
     Array<{ id: number; storeName: string }>
   >([])
 
-  // applied filters (ค่าที่กด Search แล้ว)
-  const [applied, setApplied] = useState<{ q?: string; status?: string }>({})
+  // applied filters
+  const [applied, setApplied] = useState<{
+    q?: string
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    salesMin?: number
+    salesMax?: number
+    orderCountMin?: number
+    orderCountMax?: number
+  }>({})
 
   // paging
   const [page, setPage] = useState(1)
@@ -104,13 +82,19 @@ export default function AdminMerchantsPage() {
   const [rows, setRows] = useState<AdminStoreLite[]>([])
   const [total, setTotal] = useState(0)
 
-  // โหลด list: ใช้เฉพาะตอน applied หรือ page/pageSize เปลี่ยน
+  // โหลด list
   async function load() {
     setLoading(true)
     try {
       const { data, meta } = await fetchAdminStoreListRequester({
         q: applied.q,
         status: applied.status,
+        dateFrom: applied.dateFrom,
+        dateTo: applied.dateTo,
+        salesMin: applied.salesMin,
+        salesMax: applied.salesMax,
+        orderCountMin: applied.orderCountMin,
+        orderCountMax: applied.orderCountMax,
         page,
         pageSize,
         sortBy: "createdAt",
@@ -126,7 +110,7 @@ export default function AdminMerchantsPage() {
     void load()
   }, [applied, page, pageSize])
 
-  // suggest: ยิงได้อิสระ (ไม่ใช่ตัว list requester)
+  // suggest
   useEffect(() => {
     let alive = true
     const t = setTimeout(async () => {
@@ -152,8 +136,30 @@ export default function AdminMerchantsPage() {
   const onSearch = () => {
     setApplied({
       q: qInput.trim() || undefined,
-      status: statusInput === "ALL" ? undefined : statusInput
+      status: statusInput === "ALL" ? undefined : statusInput,
+      dateFrom: dateFromInput || undefined,
+      dateTo: dateToInput || undefined,
+      salesMin: salesMinInput ? Number(salesMinInput) : undefined,
+      salesMax: salesMaxInput ? Number(salesMaxInput) : undefined,
+      orderCountMin: orderCountMinInput
+        ? Number(orderCountMinInput)
+        : undefined,
+      orderCountMax: orderCountMaxInput ? Number(orderCountMaxInput) : undefined
     })
+    setPage(1)
+    setOpenSuggest(false)
+  }
+
+  const onClear = () => {
+    setQInput("")
+    setStatusInput("ALL")
+    setDateFromInput("")
+    setDateToInput("")
+    setSalesMinInput("")
+    setSalesMaxInput("")
+    setOrderCountMinInput("")
+    setOrderCountMaxInput("")
+    setApplied({})
     setPage(1)
     setOpenSuggest(false)
   }
@@ -162,12 +168,22 @@ export default function AdminMerchantsPage() {
     <div className="p-4 space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Merchants</CardTitle>
-          <CardDescription>All merchant stores</CardDescription>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle>Merchants</CardTitle>
+              <CardDescription>All merchant stores</CardDescription>
+            </div>
+            {/* <Button variant="outline" onClick={onClear}>
+              Clear filters
+            </Button> */}
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-2">
+
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+            {/* Search */}
+            <div className="lg:col-span-2">
               <label className="block text-sm mb-1">Search</label>
               <Popover open={openSuggest} onOpenChange={setOpenSuggest}>
                 <PopoverAnchor asChild>
@@ -183,9 +199,9 @@ export default function AdminMerchantsPage() {
                         setTimeout(() => setOpenSuggest(false), 120)
                       }
                     />
-                    <Button onClick={onSearch}>
+                    {/* <Button onClick={onSearch}>
                       <Search className="h-4 w-4 mr-2" /> Search
-                    </Button>
+                    </Button> */}
                   </div>
                 </PopoverAnchor>
                 <PopoverContent
@@ -218,6 +234,8 @@ export default function AdminMerchantsPage() {
                 </PopoverContent>
               </Popover>
             </div>
+
+            {/* Status */}
             <div>
               <label className="block text-sm mb-1">Status</label>
               <Select
@@ -235,8 +253,91 @@ export default function AdminMerchantsPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Date range */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-sm mb-1">Created from</label>
+                <Input
+                  type="date"
+                  value={dateFromInput}
+                  onChange={(e) => setDateFromInput(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Created to</label>
+                <Input
+                  type="date"
+                  value={dateToInput}
+                  onChange={(e) => setDateToInput(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Sales range */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-sm mb-1">Sales min</label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0.00"
+                  value={salesMinInput}
+                  onChange={(e) => setSalesMinInput(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Sales max</label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="100000.00"
+                  value={salesMaxInput}
+                  onChange={(e) => setSalesMaxInput(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Order count range */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-sm mb-1">Orders min</label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={orderCountMinInput}
+                  onChange={(e) => setOrderCountMinInput(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Orders max</label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="9999"
+                  value={orderCountMaxInput}
+                  onChange={(e) => setOrderCountMaxInput(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-sm mb-1">search</label>
+                <Button onClick={onSearch}>
+                  <Search className="h-4 w-4 mr-2" /> Search
+                </Button>
+              </div>
+              <div className="grid grid-rows-2">
+                <label className="block text-sm mb-1">clear</label>
+                <Button variant="outline" onClick={onClear}>
+                  Clear filters
+                </Button>
+              </div>
+            </div>
           </div>
 
+          {/* Table */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -245,6 +346,8 @@ export default function AdminMerchantsPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead>Products</TableHead>
+                  <TableHead>Sales</TableHead>
+                  <TableHead>Orders</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -254,7 +357,7 @@ export default function AdminMerchantsPage() {
                 {loading && (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={9}
                       className="py-8 text-center text-sm text-muted-foreground"
                     >
                       Loading...
@@ -272,6 +375,10 @@ export default function AdminMerchantsPage() {
                         {r.ownerName} ({r.ownerEmail})
                       </TableCell>
                       <TableCell>{r.productCount}</TableCell>
+                      <TableCell>
+                        ฿{formatMoneyMinor(r.orderTotalMinor)}
+                      </TableCell>
+                      <TableCell>{r.orderCount}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{r.status}</Badge>
                       </TableCell>
@@ -293,7 +400,7 @@ export default function AdminMerchantsPage() {
                 {!loading && pageRows.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={9}
                       className="py-10 text-center text-sm text-muted-foreground"
                     >
                       No data
