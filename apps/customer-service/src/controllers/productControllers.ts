@@ -8,6 +8,9 @@ import { ProductStatus, StoreStatus } from "@digishop/db/src/types/enum";
 import { ProductItem } from "@digishop/db/src/models/ProductItem";
 import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
 import sequelize from "@digishop/db";
+import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
+import { VariationOption } from "@digishop/db/src/models/VariationOption";
+import { Variation } from "@digishop/db/src/models/Variation";
 
 export const searchProduct = async (
   req: Request,
@@ -88,6 +91,22 @@ export const getProduct = async (
           as: "items",
           include: [
             {
+              model: ProductConfiguration,
+              as:'configurations',
+              include: [
+                {
+                  model: VariationOption,
+                  as: 'variationOption',
+                  include: [
+                    {
+                      model: Variation,
+                      as: 'variation'
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               model: ProductItemImage,
               as: "productItemImage",
             },
@@ -107,10 +126,30 @@ export const getProduct = async (
       ],
       attributes: ["id", "name", "description"],
     });
+    const optionProduct = await Product.findOne({
+      where: {
+        [Op.and]: [{ uuid: id }, { status: ProductStatus.ACTIVE }],
+      },
+      attributes: ["id"],
+      include: [
+        {
+          model: Variation,
+          as: 'variations',
+          attributes: ["id","uuid","productId","name"],
+          include: [
+            {
+              model: VariationOption,
+              as: 'options',
+              attributes: ["id","variationId","value","sortOrder"]
+            }
+          ]
+        }
+      ]
+    })
     if (!productDetail) {
       return res.status(404).json({ error: `${id} not found` });
     }
-    return res.json({ data: productDetail });
+    return res.json({ data: productDetail , choices: optionProduct });
   } catch (error) {
     return res.status(500).json({ error: error });
   }
