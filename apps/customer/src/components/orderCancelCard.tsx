@@ -7,41 +7,53 @@ import { Home } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
 import { Noto_Sans_Thai_Looped, Rubik } from "next/font/google";
 import Button from "./button";
-import { OrderDetail } from "@/types/props/orderProp";
+import { CancelProp, CancelRefundProps, OrderDetail } from "@/types/props/orderProp";
 import CancelReasonMaster from "../master/cancelReason.json";
 import RefundReasonMaster from "../master/refundReason.json"
+import { cancelOrder } from "@/utils/requestUtils/requestOrderUtils";
+import { describe } from "node:test";
+
 interface CancelOrderProps {
-  isShowCancel: boolean;
+  isShowCancel: CancelRefundProps;
+  email: string
   order: OrderDetail;
   reason: string;
   setReason: React.Dispatch<SetStateAction<string>>;
   detail: string;
   setDetail: React.Dispatch<SetStateAction<string>>;
-  setIsShowCancel: React.Dispatch<SetStateAction<boolean>>;
+  setIsShowCancel: React.Dispatch<SetStateAction<CancelRefundProps>>;
   handleOnCancel: () => void;
 }
 
-interface CancelProp {
-  reason: string;
-  description?: string;
-}
 export const CancelOrder = ({
   isShowCancel,
   order,
-  setIsShowCancel,
+  email,
   reason,
   setReason,
   detail,
   setDetail,
+  setIsShowCancel,
   handleOnCancel,
 }: CancelOrderProps) => {
-  const [cancelData, setCancelData] = useState<CancelProp>();
-  const handleOnConfirm = () => {
-    if (!reason) return;
+  useEffect(() => {
     setCancelData({
-      reason: CancelReasonMaster[reason].label,
-      description: detail,
+        reason: CancelReasonMaster[reason].label,
+        description: detail,
+        email: email
     });
+  },[reason, detail, email])
+  const [cancelData, setCancelData] = useState<CancelProp>();
+  const handleOnConfirm = async() => {
+    if (!reason) return;
+    console.log(cancelData)
+    setIsShowCancel({...isShowCancel, ['shown']: false})
+      if(cancelData){
+        const updateCancelOrder = await cancelOrder(order.id , cancelData)
+        if(updateCancelOrder.data){
+            window.location.reload()
+          }
+      }
   };
 
   const handleSelectReson = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -50,7 +62,7 @@ export const CancelOrder = ({
   const handleInputDetail = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDetail(e.target.value);
   };
-  if (isShowCancel)
+  if (isShowCancel.shown)
     return (
       <div>
         <div className=" m-1 pt-2 bg-white border-t">
@@ -84,7 +96,7 @@ export const CancelOrder = ({
             </option>
           </select>
           <div
-            className={`my-3 rounded-md bg-white ${reason == "CC00" ? "opacity-100" : "opacity-0"}`}
+            className={`my-3 rounded-md bg-white`}
           >
             <div className="">
               <InputField
@@ -114,32 +126,46 @@ export const CancelOrder = ({
     );
 };
 interface RefundOrderProps {
-  isShowRefund: boolean;
+  isShowRefund: CancelRefundProps;
+  setIsShowRefund: React.Dispatch<SetStateAction<CancelRefundProps>>;
+  email: string,
   order: OrderDetail;
   reason: string;
   setReason: React.Dispatch<SetStateAction<string>>;
   detail: string;
   setDetail: React.Dispatch<SetStateAction<string>>;
-  setIsShowRefund: React.Dispatch<SetStateAction<boolean>>;
   handleOnCancel: () => void;
 }
 export const RefundOrder = ({
   isShowRefund,
-  order,
   setIsShowRefund,
+  order,
+  email,
   reason,
   setReason,
   detail,
   setDetail,
-  handleOnCancel,
+  handleOnCancel
 }: RefundOrderProps) => {
+  console.log('shown')
   const [refundData, setRefundData] = useState<CancelProp>();
-  const handleOnConfirm = () => {
-    if (!reason) return
+  useEffect(() => {
     setRefundData({
       reason: RefundReasonMaster[reason].label,
       description: detail,
+      email: email
     });
+  },[reason, detail,email])
+  const handleOnConfirm = async() => {
+    if (!reason) return
+    console.log(refundData)
+    setIsShowRefund({ ...isShowRefund, ['shown']: false})
+      if(refundData){
+          const updateCancelOrder = await cancelOrder(order.id , refundData)
+          if(updateCancelOrder.data){
+              window.location.reload()
+            }
+        }
   };
 
   const handleSelectReson = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -148,7 +174,7 @@ export const RefundOrder = ({
   const handleInputDetail = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDetail(e.target.value);
   };
-  if (isShowRefund)
+  if(isShowRefund.shown)
     return (
       <div>
         <div className=" m-1 pt-2 bg-white border-t">
@@ -185,7 +211,7 @@ export const RefundOrder = ({
             </option>
           </select>
           <div
-            className={`my-3 rounded-md bg-white ${reason == "RF00" ? "opacity-100" : "opacity-0"}`}
+            className={`my-3 rounded-md bg-white }`}
           >
             <div className="">
               <InputField
@@ -193,7 +219,6 @@ export const RefundOrder = ({
                 placeholder="refund reason detail"
                 name="detail"
                 value={detail}
-                className="h-auto"
                 onChange={handleInputDetail}
               />
             </div>

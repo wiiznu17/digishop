@@ -7,7 +7,7 @@ export const getUserDetail = async(id:number) => {
     }
     return await new Promise((resolve, reject) => {
         axios
-            .get(`${endpoint}/api/customer/detail/${id}`)
+            .get(`/api/customer/detail/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -20,7 +20,7 @@ export const getUserDetail = async(id:number) => {
 export const createAddress = async(data: Address) => {
     return await new Promise((resolve, reject) => {
         axios
-            .post(`${endpoint}/api/customer/address`,data)
+            .post(`/api/customer/address`,data)
             .then((res) => {
                 resolve(res.data)
             })
@@ -35,7 +35,7 @@ export const getAddress = async(id:number|undefined ) => {
     }
     return await new Promise((resolve, reject) => {
         axios
-            .get(`${endpoint}/api/customer/address/${id}`)
+            .get(`/api/customer/address/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -48,7 +48,7 @@ export const getAddress = async(id:number|undefined ) => {
 export const updateAddress = async(userId: number | undefined, data: Address) => {
     return await new Promise((resolve, reject) => {
         axios
-            .patch(`${endpoint}/api/customer/address/${userId}`,data)
+            .patch(`/api/customer/address/${userId}`,data)
             .then((res) => {
                 resolve(res.data)
             })
@@ -61,7 +61,7 @@ export const updateAddress = async(userId: number | undefined, data: Address) =>
 export const deleteAddress = async(id: number| undefined) => {
     return await new Promise((resolve, reject) => {
         axios
-            .delete(`${endpoint}/api/customer/address/${id}`)
+            .delete(`/api/customer/address/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -74,7 +74,7 @@ export const deleteAddress = async(id: number| undefined) => {
 export const updateUserName = async(id: number, data: {firstName: string, lastName: string , middleName: string}) => {
     return await new Promise((resolve, reject) => {
         axios
-            .patch(`${endpoint}/api/customer/name/${id}`,data)
+            .patch(`/api/customer/name/${id}`,data)
             .then((res) => {
                 resolve(res.data)
             })

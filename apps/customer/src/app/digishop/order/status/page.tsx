@@ -4,7 +4,7 @@ import Button from "@/components/button";
 import OrderCard from "@/components/orderCard";
 import OrderDetailPage from "@/components/orderDetail";
 import { useAuth } from "@/contexts/auth-context";
-import { Order, OrderDetail, Orders } from "@/types/props/orderProp";
+import { CancelRefundProps, Order, OrderDetail, Orders } from "@/types/props/orderProp";
 import {CancelOrder} from "@/components/orderCancelCard";
 import {
   fetchOrders,
@@ -21,9 +21,9 @@ const rubik = Rubik({
 export default function OrderStatus() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<OrderDetail[]>();
-  const [isShowCancel, setIsShowCancel] = useState<boolean>(false);
-  const [isShowRefund, setIsShowRefund] = useState<boolean>(false);
   const [count, setCount] = useState<number>();
+   const [isShowCancel, setIsShowCancel] = useState<CancelRefundProps>({shown: false, id: undefined });
+  const [isShowRefund, setIsShowRefund] = useState<CancelRefundProps>({shown: false, id: undefined });
   const [selectShowDetail, setSelectShowDetail] = useState<
     OrderDetail | undefined
   >();
@@ -49,10 +49,10 @@ export default function OrderStatus() {
   };
   const filterOrder = getFilterOrder();
   const handleChangeState = (state: string) => {
+    setIsShowCancel({shown: false, id: undefined})
+    setIsShowRefund({shown: false, id: undefined})
     setSelectStatus(state);
     setSelectShowDetail(undefined);
-    setIsShowCancel(false)
-    setIsShowRefund(false)
   };
   const handleShowDetail = (order: OrderDetail) => {
     setSelectShowDetail(order);
@@ -78,8 +78,7 @@ export default function OrderStatus() {
                 filterOrder.map((order, index: number) => (
                     <div key={index} 
                     >
-                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} isShowCancel={isShowCancel} setIsShowCancel={setIsShowCancel}
-                    isShowRefund={isShowRefund} setIsShowRefund={setIsShowRefund}/>
+                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} setIsShowCancel={setIsShowCancel} setIsShowRefund={setIsShowRefund} isShowCancel={isShowCancel} isShowRefund={isShowRefund} />
                     </div>
                 ))
                 ) : (

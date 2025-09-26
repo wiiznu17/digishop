@@ -19,6 +19,7 @@ import {
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
+  RefundStatus,
   ShippingStatus,
 } from "@digishop/db/src/types/enum";
 import axios from "axios";
@@ -26,6 +27,9 @@ import { count } from "console";
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 import { Op, where } from "sequelize";
+import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
+import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
+import { RefundImage } from "@digishop/db/src/models/RefundImage";
 const signKey =
   process.env.MERCHANRT_SIGN_KEY ??
   "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
@@ -706,7 +710,8 @@ export const createCart = async (
   }
 };
 
-export const updateOrderStatus = async( req: Request,
+export const updateOrderStatus = async( 
+  req: Request,
   res: Response,
   next: NextFunction) => {
     const id = req.params.id
@@ -729,3 +734,70 @@ export const updateOrderStatus = async( req: Request,
       res.json({error: error})
     }
   }
+
+export const cancelOrder = async(
+  req: Request,
+  res: Response,
+  next: NextFunction) => {
+  const id = req.params.id
+  const { reason , description, contactEmail , url} = req.body
+  const findOrder = await Order.findByPk(id)
+  const findPayment = await Payment.findOne({
+    where: { checkoutId: findOrder?.checkoutId }
+  })
+  console.log(req.body ,req.params.id)
+  if(findOrder && ( findOrder.status === OrderStatus.PAID || findOrder.status === OrderStatus.DELIVERED) && findPayment ){
+    try {
+      const cancelRequest = await RefundOrder.create({
+        orderId: Number(id),
+        paymentId: findPayment.id,
+        reason,
+        status: RefundStatus.REQUESTED,
+        amountMinor: findOrder.grandTotalMinor,
+        currencyCode: findOrder.currencyCode,
+        description,
+        contactEmail,
+        requestedBy: "CUSTOMER" 
+      })
+      await RefundStatusHistory.create({
+        refundOrderId: cancelRequest.id,
+        toStatus: RefundStatus.REQUESTED,
+        reason,
+        changedByType: ActorType.CUSTOMER ,
+        source: "WEBSITE"
+      })
+      // if(url){
+        // await RefundImage.create({
+          //   refundOrderId: cancelRequest.id,
+          //   url,
+          //   blobName,
+          //   filename,
+          //   isMain,
+          //   sortOrder
+          // })
+      // }
+        await OrderStatusHistory.create({
+          orderId: findOrder.id,
+          fromStatus: findOrder.status,
+          toStatus: OrderStatus.REFUND_REQUEST,
+          changedByType: ActorType.CUSTOMER,
+          source: "WEB",
+        })
+        await PaymentGatewayEvent.update({
+          refundOrderId: cancelRequest.id,
+        }, { where: {
+          [Op.and] : {
+            checkoutId: findOrder.checkoutId,
+            paymentId: findPayment.id
+          }
+        }
+      })
+      await Order.update({
+        status: OrderStatus.REFUND_PROCESSING
+      },{ where: {id: id}})
+      res.json({ data: 'success'})
+    } catch (error) {
+      res.json({ error: error})
+    }
+    }
+}

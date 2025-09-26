@@ -170,3 +170,20 @@ export interface Payment {
   updated_at: string
 }
 //order before paid
+
+export interface CancelProp {
+  reason: string;
+  description?: string;
+  url?: string
+  email: string
+}
+export interface OrderCard {
+  item: OrderDetail;
+  handleShowDetail: (item: OrderDetail) => void;
+  selectShowDetail: OrderDetail | undefined;
+}
+
+export interface CancelRefundProps {
+  shown : boolean
+  id: number|undefined
+}
