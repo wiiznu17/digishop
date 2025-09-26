@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/order/pagination"
 import { Eye, RotateCcw } from "lucide-react"
 import { Order, OrderStatus } from "@/types/props/orderProp"
+import { useEffect, useState } from "react"
 
 interface OrdersTableProps {
   // data
@@ -37,25 +38,23 @@ interface OrdersTableProps {
   pageSize: number
   loading?: boolean
 
-  // filters (controlled by parent)
   searchTerm: string
   statusFilter: string
   onSearchChange: (value: string) => void
   onStatusFilterChange: (value: string) => void
 
+  onTriggerSearch?: () => void
+
   // pagination controls
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
 
-  // row actions
+  // row actions + helpers...
   onViewDetails: (order: Order) => void
-
-  // helpers
   getStatusIcon: (status: OrderStatus) => React.ReactNode
   getStatusBadgeColor: (status: OrderStatus) => string
   getStatusText: (status: OrderStatus) => string
 }
-
 export function OrdersTable({
   orders,
   total,
@@ -66,6 +65,7 @@ export function OrdersTable({
   statusFilter,
   onSearchChange,
   onStatusFilterChange,
+  onTriggerSearch,
   onPageChange,
   onPageSizeChange,
   onViewDetails,
@@ -73,6 +73,17 @@ export function OrdersTable({
   getStatusBadgeColor,
   getStatusText
 }: OrdersTableProps) {
+  // --- local draft ---
+  const [localSearch, setLocalSearch] = useState(searchTerm)
+  const [localStatus, setLocalStatus] = useState(statusFilter)
+
+  useEffect(() => {
+    setLocalSearch(searchTerm)
+  }, [searchTerm])
+  useEffect(() => {
+    setLocalStatus(statusFilter)
+  }, [statusFilter])
+
   const statusOptions = [
     { value: "ALL", label: "All Statuses" },
     { value: "PENDING", label: "Pending Payment" },
@@ -100,10 +111,20 @@ export function OrdersTable({
 
   const hasActiveFilters = Boolean(searchTerm) || statusFilter !== "ALL"
 
+  const submitSearch = () => {
+    onSearchChange(localSearch)
+    onStatusFilterChange(localStatus)
+    onPageChange(1)
+    onTriggerSearch?.()
+  }
+
   const clearFilters = () => {
+    setLocalSearch("")
+    setLocalStatus("ALL")
     onSearchChange("")
     onStatusFilterChange("ALL")
     onPageChange(1)
+    onTriggerSearch?.()
   }
 
   // formatters
@@ -154,24 +175,17 @@ export function OrdersTable({
 
         {/* Filters */}
         <div className="flex flex-col gap-4 pt-4 sm:flex-row">
-          <div className="flex-1">
+          <div className="flex-1 flex gap-2">
             <Input
               placeholder="Search by order ID, customer name, or email..."
-              value={searchTerm}
-              onChange={(e) => {
-                onSearchChange(e.target.value)
-                onPageChange(1)
-              }}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
               className="w-full"
             />
+            <Button onClick={submitSearch}>Search</Button>
           </div>
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => {
-              onStatusFilterChange(v)
-              onPageChange(1)
-            }}
-          >
+
+          <Select value={localStatus} onValueChange={(v) => setLocalStatus(v)}>
             <SelectTrigger className="w-full sm:w-[250px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
