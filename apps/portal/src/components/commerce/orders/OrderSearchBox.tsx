@@ -32,7 +32,6 @@ export function OrdersSearchBox({
   value: string
   onChange: (v: string) => void
   // onSubmit: () => void
-  /** เลือกจาก suggest แล้ว submit เลย (ค่าเริ่มต้น: true) */
   // autoSubmitOnPick?: boolean
 }) {
   const [openSuggest, setOpenSuggest] = useState(false)
@@ -82,7 +81,7 @@ export function OrdersSearchBox({
       <PopoverAnchor asChild>
         <div className="flex gap-2">
           <Input
-            placeholder="Order code / Order ID / Customer / Email"
+            placeholder="Order code eg. DSG1234567890"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => {

@@ -32,6 +32,7 @@ export type AdminFetchOrdersParams = {
   sortDir?: "asc" | "desc"
   page?: number
   pageSize?: number
+  customerEmail?: string
 }
 
 export type AdminOrderListItem = {
@@ -165,3 +166,10 @@ export type AdminOrderSuggestItem = {
 }
 
 export type AdminOrderSuggestResponse = AdminOrderSuggestItem[]
+
+export type AdminCustomerEmailSuggestItem = {
+  customerEmail: string
+  customerName?: string | null
+  orderCount?: number
+  lastOrderedAt?: string
+}

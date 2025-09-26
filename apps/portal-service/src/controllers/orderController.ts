@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Op, col, where as sqWhere } from "sequelize";
+import { Op, col, fn, where as sqWhere } from "sequelize";
 import { Order } from "@digishop/db/src/models/Order";
 import { OrderItem } from "@digishop/db/src/models/OrderItem";
 import { CheckOut } from "@digishop/db/src/models/CheckOut";
@@ -66,16 +66,46 @@ export async function adminSuggestOrders(req: Request, res: Response) {
   }
 }
 
+export async function adminSuggestCustomerEmails(req: Request, res: Response) {
+  try {
+    const raw = String(req.query.q || "").trim();
+    if (!raw) return res.json([]);
+
+    // ใช้ prefix ให้ index ทำงาน และ escape % _
+    const likeStart = `${raw.replace(/[%_]/g, "\\$&")}%`;
+
+    const rows = await Order.findAll({
+      where: { customerEmailSnapshot: { [Op.like]: likeStart } },
+      attributes: [
+        ["customer_email_snapshot", "customerEmail"],
+        [fn("MAX", col("customer_name_snapshot")), "customerName"],
+        [fn("COUNT", col("Order.id")), "orderCount"],
+        [fn("MAX", col("created_at")), "lastOrderedAt"],
+      ],
+      group: [col("Order.customer_email_snapshot")],
+      order: [[fn("MAX", col("created_at")), "DESC"]],
+      limit: 8,
+      raw: true,
+      subQuery: false,
+    });
+
+    return res.json(rows);
+  } catch (e) {
+    console.error("adminSuggestCustomerEmails error:", e);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 export async function adminListOrders(req: Request, res: Response) {
   try {
     const {
       q, status, dateFrom, dateTo, sortBy = "createdAt", sortDir = "desc",
+      customerEmail,
     } = req.query as Record<string, string | undefined>;
 
     const page = Math.max(asInt(req.query.page, 1), 1);
     const pageSize = Math.min(Math.max(asInt(req.query.pageSize, 20), 1), 100);
     const offset = (page - 1) * pageSize;
-    const limit = pageSize;
 
     const whereOrder: any = {};
     if (status) whereOrder.status = status;
@@ -86,15 +116,19 @@ export async function adminListOrders(req: Request, res: Response) {
     else if (from) whereOrder.createdAt = { [Op.gte]: from };
     else if (to) whereOrder.createdAt = { [Op.lte]: to };
 
-    // base include
+    // ถ้ามี customerEmail → filter ที่ Order (snapshot) โดยตรง (prefix match)
+    if (customerEmail && customerEmail.trim()) {
+      const likeStart = `${customerEmail.trim().replace(/[%_]/g, "\\$&")}%`;
+      whereOrder.customerEmailSnapshot = { [Op.like]: likeStart };
+    }
+
+    // include checkout สำหรับ q (order code)
     const checkoutInclude: any = {
       model: CheckOut,
       as: "checkout",
       attributes: ["id", ["order_code", "orderCode"], ["customer_id", "customerId"]],
       required: false,
     };
-
-    // ถ้ามี q ให้ filter ที่ CHECKOUT โดยตรง และตั้ง required: true เพื่อใช้ index
     if (q && q.trim()) {
       const likeStart = `${q.trim().replace(/[%_]/g, "\\$&")}%`;
       checkoutInclude.required = true;
@@ -102,11 +136,6 @@ export async function adminListOrders(req: Request, res: Response) {
     }
 
     const include: any[] = [checkoutInclude];
-
-    include.push({
-      model: Review, as: "orderReviews", attributes: [], required: false,
-      where: { orderId: col("Order.id") },
-    });
 
     const dir = String(sortDir).toUpperCase() === "ASC" ? "ASC" : "DESC";
     const orderBy: any[] = [];
@@ -136,7 +165,7 @@ export async function adminListOrders(req: Request, res: Response) {
       group,
       order: orderBy,
       offset,
-      limit,
+      limit: pageSize,
       distinct: true,
       subQuery: false,
     });
@@ -151,6 +180,7 @@ export async function adminListOrders(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
 
 export async function adminGetOrderDetail(req: Request, res: Response) {
   try {

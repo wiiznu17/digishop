@@ -32,6 +32,7 @@ import {
 } from "@/types/commerce/orders"
 
 import { fetchAdminOrdersRequester } from "@/utils/requesters/orderRequester"
+import { CustomerEmailSearchBox } from "@/components/commerce/orders/CustomerEmailSearchBox"
 
 const THB = (n?: number | null) =>
   n == null
@@ -63,6 +64,12 @@ export default function AdminOrdersPage() {
   const [rows, setRows] = useState<AdminOrderListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)
+  const [customerEmailDraft, setCustomerEmailDraft] = useState(
+    sp.get("customerEmail") ?? ""
+  )
+  const [customerEmail, setCustomerEmail] = useState(
+    sp.get("customerEmail") ?? ""
+  )
 
   const params: AdminFetchOrdersParams = useMemo(
     () => ({
@@ -70,12 +77,13 @@ export default function AdminOrdersPage() {
       status: status === "ALL" ? undefined : status,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
+      customerEmail: customerEmail || undefined,
       sortBy: "createdAt",
       sortDir: "desc",
       page,
       pageSize
     }),
-    [q, status, dateFrom, dateTo, page, pageSize]
+    [q, status, dateFrom, dateTo, customerEmail, page, pageSize]
   )
 
   const fetchList = useCallback(async () => {
@@ -91,34 +99,35 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     void fetchList()
   }, [fetchList])
-
-  // Sync URL ตาม submitted state + page
   useEffect(() => {
     const next = new URLSearchParams()
     if (q) next.set("q", q)
     if (status !== "ALL") next.set("status", status)
     if (dateFrom) next.set("dateFrom", dateFrom)
     if (dateTo) next.set("dateTo", dateTo)
+    if (customerEmail) next.set("customerEmail", customerEmail) // ⬅️ sync URL
     if (page !== 1) next.set("page", String(page))
     if (pageSize !== 20) next.set("pageSize", String(pageSize))
-    const query = next.toString()
-    router.push(`/admin/orders${query ? `?${query}` : ""}`)
-  }, [router, q, status, dateFrom, dateTo, page, pageSize])
+    router.push(`/admin/orders${next.toString() ? `?${next.toString()}` : ""}`)
+  }, [router, q, status, dateFrom, dateTo, customerEmail, page, pageSize])
 
-  // กดปุ่ม Search -> ย้ายค่าจาก Draft -> Submitted แล้วรีเซ็ต page
   const handleSubmitSearch = useCallback(() => {
     setQ(qDraft.trim())
     setStatus(statusDraft)
     setDateFrom(dateFromDraft)
     setDateTo(dateToDraft)
+    setCustomerEmail(customerEmailDraft.trim())
     setPage(1)
-    // แล้วค่อยยิง
-    // setTimeout(() => {
     void fetchList()
-    // }, 0)
-  }, [qDraft, statusDraft, dateFromDraft, dateToDraft, fetchList])
-
-  // เปลี่ยนหน้า/ PageSize → ยิงทันที (หลังจากมีผลการค้นหาแล้ว)
+  }, [
+    qDraft,
+    statusDraft,
+    dateFromDraft,
+    dateToDraft,
+    customerEmailDraft,
+    fetchList
+  ])
+  // เปลี่ยนหน้า/ PageSize ยิงทันที (หลังจากมีผลการค้นหาแล้ว)
   const handlePage = useCallback(
     (p: number) => {
       setPage(p)
@@ -138,6 +147,29 @@ export default function AdminOrdersPage() {
     },
     [fetchList]
   )
+  const handleClearFilters = useCallback(() => {
+    // ล้างค่า draft
+    setQDraft("")
+    setStatusDraft("ALL")
+    setDateFromDraft("")
+    setDateToDraft("")
+    setCustomerEmailDraft("")
+
+    // ล้างค่า submitted
+    setQ("")
+    setStatus("ALL")
+    setDateFrom("")
+    setDateTo("")
+    setCustomerEmail("")
+
+    // รีเซ็ตหน้า
+    setPage(1)
+
+    // ยิงโหลดใหม่หลัง state set แล้ว
+    setTimeout(() => {
+      void fetchList()
+    }, 0)
+  }, [fetchList])
 
   // Handlers สำหรับตาราง
   const [openQV, setOpenQV] = useState(false)
@@ -166,14 +198,19 @@ export default function AdminOrdersPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {/* Search + Filters (Draft only) */}
             <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+              {/* Order code */}
               <div className="md:col-span-2">
-                <label className="block text-sm mb-1">Search</label>
-                <OrdersSearchBox
-                  value={qDraft}
-                  onChange={setQDraft}
-                  // onSubmit={handleSubmitSearch}
+                <label className="block text-sm mb-1">Order code</label>
+                <OrdersSearchBox value={qDraft} onChange={setQDraft} />
+              </div>
+
+              {/* Customer email */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-1">Customer email</label>
+                <CustomerEmailSearchBox
+                  value={customerEmailDraft}
+                  onChange={setCustomerEmailDraft}
                 />
               </div>
 
@@ -186,12 +223,19 @@ export default function AdminOrdersPage() {
                 onDateToChange={setDateToDraft}
               />
 
-              {/* ปุ่ม Search อีกจุด (ถ้าอยากให้มีปุ่มรวม) */}
-              {/* <div className="md:col-span-6 flex md:justify-end"> */}
-              <Button onClick={handleSubmitSearch} className="mt-2 md:mt-6">
-                Search
-              </Button>
-              {/* </div> */}
+              {/* ปุ่มชิดขวา ขวาสุด = Clear */}
+              <div className="flex items-end justify-end gap-2">
+                <Button onClick={handleSubmitSearch} className="mt-2 md:mt-6">
+                  Search
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleClearFilters}
+                  className="mt-2 md:mt-6"
+                >
+                  Clear filter
+                </Button>
+              </div>
             </div>
 
             {/* Table */}
