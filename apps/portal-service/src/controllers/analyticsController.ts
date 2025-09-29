@@ -8,7 +8,6 @@ import { Store } from "@digishop/db/src/models/Store"
 import { RefundOrder } from "@digishop/db/src/models/RefundOrder"
 import { CheckOut } from "@digishop/db/src/models/CheckOut"
 
-type Num = number
 type MaybeDate = string | undefined
 
 const asDate = (v?: MaybeDate) => (v && !Number.isNaN(new Date(v).getTime()) ? new Date(v) : null)
@@ -42,7 +41,7 @@ export async function anaKpis(req: Request, res: Response) {
         [fn("SUM", col("grand_total_minor")), "gmvMinor"],
         [fn("COUNT", col("id")), "orders"],
         // [fn("COUNT", fn("DISTINCT", col("user_id"))), "distinctUsers"],
-        // paid-ish (สะท้อนว่าขายสำเร็จ)
+        // paid orders = PAID + PROCESSING + SHIPPED + DELIVERED
         [fn("SUM", literal("CASE WHEN `Order`.`status` IN ('PAID','PROCESSING','SHIPPED','DELIVERED') THEN 1 ELSE 0 END")), "paidOrders"],
         [fn("SUM", literal("CASE WHEN `Order`.`status`='CANCELLED' THEN 1 ELSE 0 END")), "cancelOrders"],
       ],
@@ -208,7 +207,7 @@ export async function anaStoreLeaderboard(req: Request, res: Response) {
       [fn("COALESCE", col("store.id"), literal("NULL")), "storeId"]
     ] as const
 
-    // นับทั้งหมด (เพื่อทำ paging) — ใช้ซับคิวรีแบบง่าย
+    // นับทั้งหมด (เพื่อทำ paging)
     const allRows = await Order.findAll({
       attributes: [...attributes],
       include: [{ model: Store, as: "store", required: false, attributes: [] }],
