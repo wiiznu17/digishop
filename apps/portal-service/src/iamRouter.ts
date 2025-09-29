@@ -12,6 +12,7 @@ import adminUserRouter from './routes/adminUserRouter';
 import rolesRouter from './routes/adminRoleRouter';
 import auditLogRouter from './routes/auditLogRouter';
 import dashboardRouter from './routes/dashBoardRouter';
+import analyticsRouter from './routes/analyticsRouter';
 
 import { authenticateAdmin, requirePerms } from './middlewares/auth';
 
@@ -40,6 +41,7 @@ router.use('/admin/admins', adminUserRouter);
 router.use('/admin/roles', rolesRouter);
 router.use('/admin/audit-logs', auditLogRouter);
 router.use('/admin/dashboards', dashboardRouter);
+router.use('/admin/analytics', analyticsRouter);
 
 router.use('/auth', authRouter);
 

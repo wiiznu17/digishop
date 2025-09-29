@@ -1,8 +1,3 @@
-// Lightweight Redis cache helper (ioredis)
-// - cacheGet<T>(key): Promise<T | null>
-// - cacheSet(key, value, ttlSec): Promise<void>
-// - weakEtag(value): string
-
 import Redis from "ioredis"
 import crypto from "crypto"
 
