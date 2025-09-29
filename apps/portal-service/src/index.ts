@@ -7,6 +7,7 @@ import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
+import { ensureRedis } from './lib/redis';
 const cookieParser = require('cookie-parser');
  
 const PORT = Number(process.env.PORT) || 4001;
@@ -15,7 +16,7 @@ async function main() {
   try {
 
     await checkDatabaseConnection();
-
+    await ensureRedis();
     const app = express();
     app.disable('x-powered-by');
     app.use(helmet({ crossOriginResourcePolicy: false }));
@@ -23,15 +24,9 @@ async function main() {
     app.use(cookieParser());
 
     app.use(cors({
-      origin: ["http://localhost:3002"], // TODO: เปลี่ยนเป็น admin domain จริง
+      origin: ["http://localhost:3002"],
       credentials: true
     }));
-
-    // brute-force limit เฉพาะ endpoint auth
-    // const loginLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
-    // app.use('/api/auth/login', loginLimiter);
-    // app.use('/api/auth/mfa', loginLimiter);
-    // app.use('/api/auth/refresh', rateLimit({ windowMs: 10 * 60 * 1000, max: 120 }));
 
     initModels(sequelize);
     app.use('/api', router);
