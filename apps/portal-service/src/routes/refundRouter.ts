@@ -5,7 +5,7 @@ import { requirePerms } from "../middlewares/auth";
 const router = Router();
 
 router.get("/list",
-  requirePerms("ORDER.READ"),
+  requirePerms("REFUNDS_READ"),
   adminListRefunds
 );
 

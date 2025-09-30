@@ -240,7 +240,7 @@ export default function AdminStoreDetailPage() {
                                 key={`${o.id}-${it.productId}`}
                                 className="text-primary hover:underline"
                                 onClick={() =>
-                                  router.push(`/admin/products/${it.productId}`)
+                                  router.push(`/admin/products/${it.uuid}`)
                                 }
                               >
                                 {it.productName}
