@@ -16,7 +16,11 @@ export default {
         onUpdate: 'CASCADE',
       },
 
-      store_name: { type: DataTypes.STRING(191), allowNull: false },
+      store_name: {
+        type: DataTypes.STRING(191),
+        allowNull: false,
+        unique: true,
+      },
       email: { type: DataTypes.STRING(191), allowNull: false },
       phone: { type: DataTypes.STRING(191), allowNull: true },
       business_type: { type: DataTypes.STRING(191), allowNull: false },
