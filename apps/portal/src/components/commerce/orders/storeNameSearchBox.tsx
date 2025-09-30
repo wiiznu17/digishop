@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useTransition } from "react"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import { fetchAdminCustomerEmailSuggestRequester } from "@/utils/requesters/orderRequester"
-import type { AdminCustomerEmailSuggestItem } from "@/types/commerce/orders"
+import { fetchAdminStoreNameSuggestRequester } from "@/utils/requesters/orderRequester"
+import type { AdminStoreNameSuggestItem } from "@/types/commerce/orders"
 
 function useDebounce<T>(val: T, ms = 250) {
   const [v, setV] = useState(val)
@@ -15,10 +15,10 @@ function useDebounce<T>(val: T, ms = 250) {
   return v
 }
 
-export function CustomerEmailSearchBox({
+export function StoreNameSearchBox({
   value,
   onChange,
-  placeholder = "Customer email eg. user@example.com"
+  placeholder = "Store name eg. My Store"
 }: {
   value: string
   onChange: (v: string) => void
@@ -26,7 +26,7 @@ export function CustomerEmailSearchBox({
 }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [items, setItems] = useState<AdminCustomerEmailSuggestItem[]>([])
+  const [items, setItems] = useState<AdminStoreNameSuggestItem[]>([])
   const [isPending, startTransition] = useTransition()
 
   const debounced = useDebounce(value, 250)
@@ -40,7 +40,7 @@ export function CustomerEmailSearchBox({
       return
     }
     setLoading(true)
-    fetchAdminCustomerEmailSuggestRequester(term)
+    fetchAdminStoreNameSuggestRequester(term)
       .then((rows) => {
         if (cancelled) return
         startTransition(() => {
@@ -87,24 +87,16 @@ export function CustomerEmailSearchBox({
           ) : (
             items.map((s) => (
               <button
-                key={s.currentEmail}
+                key={s.currentStoreName}
                 className="w-full text-left px-3 py-2 hover:bg-accent"
                 onClick={() => {
-                  onChange(s.currentEmail)
+                  onChange(String(s.currentStoreName))
                   setOpen(false)
                 }}
               >
-                <div className="text-sm font-medium">{s.currentEmail}</div>
-                <div className="text-xs font-small cols-2">
-                  <div className="text-muted-foreground">early email : </div>
-                  <div>{s.snapshotsEmail[0]}</div>
-                </div>
+                <div className="text-sm font-medium">{s.currentStoreName}</div>
                 <div className="text-xs text-muted-foreground">
-                  {s.customerName ?? "-"} · {s.snapshotStats.orderCount ?? 0}{" "}
-                  orders
-                  {s.lastOrderedAt
-                    ? ` · ${new Date(s.lastOrderedAt).toLocaleString()}`
-                    : ""}
+                  {s.storeNameSnapshot ?? "-"} · {s.orderCount ?? 0} orders
                 </div>
               </button>
             ))

@@ -169,8 +169,23 @@ export type AdminOrderSuggestItem = {
 export type AdminOrderSuggestResponse = AdminOrderSuggestItem[]
 
 export type AdminCustomerEmailSuggestItem = {
-  customerEmail: string
-  customerName?: string | null
-  orderCount?: number
-  lastOrderedAt?: string
+  customerId: number
+  currentEmail: string
+  customerName: string
+  snapshotsEmail: string[]
+  snapshotStats: {
+    email: string
+    orderCount: string
+    lastOrderedAt: string
+  }
+  totalOrderCount: number
+  lastOrderedAt: string
+}
+
+export type AdminStoreNameSuggestItem = {
+  storeNameSnapshot: string
+  currentStoreName: string | null
+  orderCount: number
+  lastOrderedAt: string
+  storeId: number
 }

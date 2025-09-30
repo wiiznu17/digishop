@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import type { AdminUserDetail, MonthlySpend } from "@/types/admin/users"
 import { fetchAdminUserDetail } from "@/utils/requesters/userRequester"
 
-// ⬇️ กราฟ (recharts)
+// กราฟ (recharts)
 import {
   ResponsiveContainer,
   AreaChart,
