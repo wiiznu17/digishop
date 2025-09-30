@@ -138,8 +138,6 @@ export const access = async (req: Request, res: Response) => {
     }
   }
   const permissionSlugs = Array.from(permSet);
-  console.log("rturn access: ", roleSlugs)
-  console.log("rturn access: ", permissionSlugs)
   return res.json({
     id: (user as any).id,
     email: (user as any).email,

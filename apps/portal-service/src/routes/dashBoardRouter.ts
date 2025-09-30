@@ -9,21 +9,20 @@ import {
 
 const router = Router()
 
-// ทุก endpoint ต้องมีสิทธิ์ REPORT.READ
 router.get("/kpis",
-  // requirePerms("REPORT.READ"),
+  requirePerms("DASHBOARD_VIEW"),
   adminDashboardKpis
 )
 router.get("/series",
-  // requirePerms("REPORT.READ"),
+  requirePerms("DASHBOARD_VIEW"),
   adminDashboardSeries
 )
 router.get("/status-dist",
-  // requirePerms("REPORT.READ"),
+  requirePerms("DASHBOARD_VIEW"),
   adminDashboardStatusDist
 )
 router.get("/top-stores",
-  // requirePerms("REPORT.READ"),
+  requirePerms("DASHBOARD_VIEW"),
   adminDashboardTopStores
 )
 

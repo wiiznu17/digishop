@@ -421,7 +421,7 @@ export async function adminBulkModerateProducts(req: Request, res: Response) {
 export async function adminListCategories(req: Request, res: Response) {
   try {
     const { mode = "flat" } = (req.query ?? {}) as { mode?: "flat" | "tree" }
-
+    console.log("mode=", mode)
     const rows = await Category.findAll({
       attributes: ["id", "uuid", "name", "parentId"],
       include: [{ model: Category, as: "parent", attributes: ["uuid"], required: false }],

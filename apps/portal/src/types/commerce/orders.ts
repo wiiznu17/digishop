@@ -118,6 +118,7 @@ export type AdminOrderDetail = {
     trackingNumber?: string | null
     carrier?: string | null
     shippingTypeName: string
+    shippingStatus: string
     shippingPriceMinor: number
     shippedAt?: string | null
     addressSnapshot: Record<string, unknown>

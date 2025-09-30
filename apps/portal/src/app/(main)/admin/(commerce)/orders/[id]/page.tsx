@@ -96,7 +96,7 @@ export default function AdminOrderDetailPage() {
 
             <ShippingSection
               data={data}
-              shippingTimeline={shippingTimeline}
+              // shippingTimeline={shippingTimeline}
               THB={THB}
             />
 

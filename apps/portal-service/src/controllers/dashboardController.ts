@@ -80,28 +80,38 @@ function parseRange(req: Request): { from: string; to: string } {
 }
 
 function whereBetweenCreatedAt(r: { from: string; to: string }): WhereOptions {
-  // ใช้ createdAt (mapped → created_at ใน DB ตาม model)
-  return { createdAt: { [Op.between]: [new Date(r.from), new Date(r.to)] } }
+  const startDate = new Date(r.from);
+  
+  // ตั้งเวลาเริ่มต้นของวัน from
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(r.to);
+  
+  // ตั้งเวลาสิ้นสุดของวัน to
+  endDate.setHours(23, 59, 59, 999); 
+
+  return {
+    createdAt: { [Op.between]: [startDate, endDate] }
+  };
 }
 
 function cacheKey(prefix: string, r: { from: string; to: string }): string {
   return `${prefix}:${r.from}:${r.to}`
 }
 
-/* ---- order typing constants (แก้ TS ของ sequelize Order type) ---- */
 const ORDER_BY_DAY_ASC: SequelizeOrderType = [[literal("day"), "ASC"]]
 const ORDER_BY_DATE_ASC: SequelizeOrderType = [[fn("DATE", col("Order.created_at")), "ASC"]]
 const ORDER_BY_SUM_GMV_DESC: SequelizeOrderType = [[fn("SUM", col("Order.grand_total_minor")), "DESC"]]
 
-/* ========== 1) KPIs ========== */
-
+// KPI
 export async function adminDashboardKpis(req: Request, res: Response) {
   try {
     const range = parseRange(req)
+    console.log("KPI range: ", range)
     const key = cacheKey("dash:kpis", range)
     const cached = await cacheGet<DashboardKpis>(key)
     if (cached) { res.setHeader("ETag", weakEtag(cached)); return res.json(cached) }
-
+    console.log("No cache for kpis")
     const where = whereBetweenCreatedAt(range)
 
     const rows = (await Order.findAll({
@@ -113,7 +123,7 @@ export async function adminDashboardKpis(req: Request, res: Response) {
       where,
       raw: true
     })) as unknown as Array<{ gmvMinor: string | number; orders: string | number; activeStores: string | number }>
-
+    console.log("KPI rows: ", rows)
     const r0 = rows[0]
     const kpis: DashboardKpis = {
       gmvMinor: toNum(r0?.gmvMinor),
@@ -121,7 +131,7 @@ export async function adminDashboardKpis(req: Request, res: Response) {
       activeStores: toNum(r0?.activeStores),
       newUsers: await User.count({ where: whereBetweenCreatedAt(range) })
     }
-
+    console.log("Kpis: ", kpis)
     await cacheSet(key, kpis, 60)
     res.setHeader("ETag", weakEtag(kpis))
     res.json(kpis)
@@ -130,9 +140,7 @@ export async function adminDashboardKpis(req: Request, res: Response) {
     res.status(400).json({ error: "Bad request" })
   }
 }
-
-/* ========== 2) Series (daily GMV & Orders + daily status) ========== */
-
+// GMV, orders
 export async function adminDashboardSeries(req: Request, res: Response) {
   try {
     const range = parseRange(req)
@@ -226,9 +234,7 @@ export async function adminDashboardSeries(req: Request, res: Response) {
     res.status(400).json({ error: "Bad request" })
   }
 }
-
-/* ========== 3) Status distribution (whole range) ========== */
-
+// สถานะ order
 export async function adminDashboardStatusDist(req: Request, res: Response) {
   try {
     const range = parseRange(req)
@@ -285,9 +291,7 @@ export async function adminDashboardStatusDist(req: Request, res: Response) {
     res.status(400).json({ error: "Bad request" })
   }
 }
-
-/* ========== 4) Top stores by GMV (whole range) ========== */
-
+// top stores
 export async function adminDashboardTopStores(req: Request, res: Response) {
   try {
     const range = parseRange(req)
