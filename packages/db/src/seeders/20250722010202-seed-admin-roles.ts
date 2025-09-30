@@ -1,20 +1,39 @@
-import { QueryInterface } from "sequelize";
+import type { QueryInterface } from "sequelize";
 
-export default {
-  async up(q: QueryInterface) {
-    await q.bulkInsert("ADMIN_ROLES", [
-      { slug: "super_admin", name: "Super Admin", is_system: true, created_at: new Date(), updated_at: new Date() },
-      { slug: "ops_manager", name: "Ops Manager", is_system: true, created_at: new Date(), updated_at: new Date() },
-      { slug: "cs_admin", name: "Customer Support", is_system: true, created_at: new Date(), updated_at: new Date() },
-      { slug: "merchant_manager", name: "Merchant Manager", is_system: true, created_at: new Date(), updated_at: new Date() },
-      { slug: "marketing_admin", name: "Marketing Admin", is_system: true, created_at: new Date(), updated_at: new Date() },
-      { slug: "auditor", name: "Auditor (Read-only)", is_system: true, created_at: new Date(), updated_at: new Date() },
-      { slug: "api_bot", name: "API Bot/Developer", is_system: true, created_at: new Date(), updated_at: new Date() },
-    ]);
+type RoleSeed = { slug: string; name: string; description?: string | null; is_system: boolean };
+
+const ROLES: RoleSeed[] = [
+  { slug: "SUPER_ADMIN", name: "Super Admin", description: "Full access", is_system: true },
+  { slug: "PLATFORM_ADMIN", name: "Platform Admin", description: "Ops across modules (no RBAC)", is_system: true },
+  { slug: "RBAC_ADMIN", name: "RBAC Admin", description: "Manage admin users/roles/permissions", is_system: true },
+  { slug: "OPERATIONS_MANAGER", name: "Operations Manager", description: "Orders/Refunds ops", is_system: false },
+  { slug: "CATALOG_MANAGER", name: "Catalog Manager", description: "Products/Categories owner", is_system: false },
+  { slug: "MERCHANT_OPERATIONS", name: "Merchant Ops", description: "Merchant KYC/approve/suspend", is_system: false },
+  { slug: "SUPPORT_AGENT", name: "Support Agent", description: "Read-only + limited actions", is_system: false },
+  { slug: "ANALYST", name: "Analyst", description: "Analytics view/export", is_system: false },
+  { slug: "READONLY_AUDITOR", name: "Read-only Auditor", description: "Wide read + audit logs", is_system: false },
+];
+
+export = {
+  async up(queryInterface: QueryInterface) {
+    const now = new Date();
+    await queryInterface.bulkInsert(
+      "ADMIN_ROLES",
+      ROLES.map((r) => ({
+        uuid: null,
+        slug: r.slug,
+        name: r.name,
+        description: r.description ?? null,
+        is_system: r.is_system,
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+      })),
+      {}
+    );
   },
-  async down(q: QueryInterface) {
-    await q.bulkDelete("ADMIN_ROLES", {
-      slug: ["super_admin", "ops_manager", "cs_admin", "merchant_manager", "marketing_admin", "auditor", "api_bot"],
-    });
+
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.bulkDelete("ADMIN_ROLES", {}, {});
   },
 };
