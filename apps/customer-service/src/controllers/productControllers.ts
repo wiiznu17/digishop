@@ -20,54 +20,69 @@ export const searchProduct = async (
   const { query , page } = req.query;
   try {
     const productCount = await Product.count({
-       where: {
+      where: {
         [Op.and]: [
-        { name: {[Op.like]: `%${query}%`}},
-        { status: ProductStatus.ACTIVE}
+          { name: {[Op.like]: `%${query}%`}},
+          { status: ProductStatus.ACTIVE}
         ]
       }
     })
-    const searchProduct = await Product.findAll({
-      where: {
-        [Op.and]: [
-        { name: {[Op.like]: `%${query}%`}},
-        { status: ProductStatus.ACTIVE}
+    let searchProduct
+    if(page){
+      searchProduct = await Product.findAll({
+        where: {
+          [Op.and]: [
+          { name: {[Op.like]: `%${query}%`}},
+          { status: ProductStatus.ACTIVE}
+          ]
+        },
+        limit: 10,
+        offset: 10 * (Number(page) - 1),
+        attributes: ['id','uuid','name'],
+        include: [
+          {
+            model: Category,
+            as: 'category',
+          },
+          {
+            model: ProductImage,
+            as: 'images'
+          },
+          {
+            model: ProductItem,
+            as: 'items',
+          },
+          {
+            model: Store,
+            as: 'store',
+          }
         ]
-      },
-      limit: 10,
-      offset: 10 * (Number(page) - 1),
-      attributes: ['id','uuid','name'],
-      include: [
-        {
-          model: Category,
-          as: 'category',
+      });
+    }
+    // engine search
+    if(!page){
+      searchProduct = await Product.findAll({
+        where: {
+          [Op.and]: [
+          { name: {[Op.like]: `%${query}%`}},
+          { status: ProductStatus.ACTIVE}
+          ]
         },
-        {
-          model: ProductImage,
-          as: 'images'
-        },
-        {
-          model: ProductItem,
-          as: 'items',
-        },
-        {
-          model: Store,
-          as: 'store',
-        }
-      ]
-    });
-    
+        limit: 10,
+        attributes: ['name'],
+      });
+    }
     const searchStore = await Store.findAll({
       where: {
         storeName: {
           [Op.like]: `%${query}%`, 
         },
       },
+      limit: 5
     });
     if (!searchProduct) {
       return res.status(404).json({ error: `${query} not found` });
     }
-
     return res.json({ product: searchProduct , productCount: productCount , store: searchStore });
   } catch (error) {
     return res.status(500).json({ error: error });

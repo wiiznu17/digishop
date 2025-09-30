@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getProduct } from "@/utils/requestUtils/requestProduct";
-import { Product, ProductItem } from "@/types/props/productProp";
+import { Choices, Configurations, Product, ProductItem } from "@/types/props/productProp";
 import { useRouter } from "next/navigation";
 import Button from "@/components/button";
 import {
@@ -20,23 +20,30 @@ export default function ProductDetailPage() {
   const productId = String(id);
   const router = useRouter();
   const [product, setProduct] = useState<Product>();
+  const [choices, setChoices] = useState<Choices>();
   const [wishList, setWishList] = useState<ShoppingCartProps>();
   const [data, setData] = useState<OrderIdProp>({
     customerId: 0,
     orderData: [],
   });
+  const [options, setOptions] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<ProductItem>();
+  const [filter, setFilter] = useState<Product>()
+  const [datu, setDatu] = useState<Product>({})
   const [amount, setAmount] = useState(1);
   useEffect(() => {
     const fetchData = async () => {
       const res = await getProduct(productId);
       setProduct(res.data);
+      setChoices(res.choices)
+      setFilter(res.data)
     };
     fetchData();
   }, [productId]);
-  useEffect(() => {
-    setSelected(product?.items[0]);
-  }, [product]);
+  console.log(product)
+  // useEffect(() => {
+  //   setSelected(product?.items[0]);
+  // }, [product]);
   useEffect(() => {
     if (!user || !product || !selected) return;
     setData({
@@ -53,6 +60,7 @@ export default function ProductDetailPage() {
             sku: selected.sku,
             stockQuantity: selected.stockQuantity,
             priceMinor: selected.priceMinor,
+            configurations: selected.configurations,
             product: {
               id: product.id,
               uuid: product.uuid,
@@ -71,8 +79,28 @@ export default function ProductDetailPage() {
       quantity: amount,
     });
   }, [user, product, amount, selected]);
-  const handleSelected = (item: ProductItem) => {
-    setSelected(item);
+  const handleOption = (name: string ,value: string) => {
+    setOptions({...options, [name]: value})
+  }
+
+  const filterOption = (items: ProductItem[] ) => { 
+    const data = items.filter(item => item.stockQuantity > 0).map(item => item.configurations.map(config => config.variationOption.value)) 
+    return data
+  }
+  useEffect(() => {
+    const isFilter = (choices: string[]) => {
+       return Object.values(options).every(option => choices.includes(option))
+    }
+    if(!product || !Object.values(options)) return
+   const filterChoice = filterOption(product.items)
+    const productIndex = filterChoice.findIndex(option => isFilter(option));
+    const filterChoices = filterChoice.filter(option => isFilter(option))
+   console.log('product index',productIndex)
+   console.log('filter',filterChoices)
+    setSelected(product.items[productIndex])
+  },[options, product]) 
+  const handleSelected = (items:ProductItem) => {
+    if(!product) return
     setAmount(1);
   };
   const handleBuy = async () => {
@@ -92,7 +120,7 @@ export default function ProductDetailPage() {
       alert("Item successfully added to cart");
     }
   };
-  console.log(product)
+  console.log('selected', selected)
   return product ? (
     <div className="flex justify-center">
       <div className="p-6">
@@ -106,7 +134,7 @@ export default function ProductDetailPage() {
               <p className="text-gray-500 mb-2 border-b p-1">
                 category: {product.category.name}
               </p>
-              {product.items.map((item, index) => (
+              {/* {product.items.map((item, index) => (
                 <button
                   key={index}
                   className={` ${selected == item ? "border-black text-black" : "border-gray-400 text-gray-400"} border-1 rounded-md p-3 m-3`}
@@ -114,73 +142,109 @@ export default function ProductDetailPage() {
                 >
                   {item.sku}
                 </button>
-              ))}
+              ))} */}
+              {
+                choices?.variations.map((choice,index) => (
+                  <div key={index}>
+                    <div >{choice.name}</div>
+                    <div>
+                      {
+                        choice.options.map((option, index) => (
+                          <button
+                            key={index}
+                            className={`${option.value === options[choice.name]? 'border-black': 'border-gray-300 text-gray-300'} border-1 rounded-md p-3 m-3 `}
+                            onClick={() => handleOption(choice.name, option.value)}
+                          >
+                            {option.value}
+                            <div></div>
+                          </button>
+                        ))
+                      }
+                    </div>
+
+                  </div>
+                ))
+              }
             </div>
-            {selected && (
-              <div className="flex items-center justify-center text-8xl">
-                <div>
-                  ฿ 
-                  {(selected.priceMinor / 100)
-                    .toString()
-                    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
-                </div>
+            {selected &&  (
+              <div className={`${Object.values(options).length === choices?.variations.length ? 'opacity-100':'opacity-0'}`}>
+                {
+                  selected.stockQuantity === 0 && (
+                    <div>
+                      Prodict out of stock
+                    </div>
+                  )
+                }
+                {
+                  selected.stockQuantity > 0 && (
+                    <div>
+                      <div className="flex items-center justify-center text-8xl">
+                        <div>
+                          ฿ 
+                          {(selected.priceMinor / 100)
+                            .toString()
+                            .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
+                        </div>
+                      </div>
+                      <div>
+                          <div className="flex items-center justify-center mb-5">
+                            <div>
+                              <div className="flex my-4 ">
+                                <button
+                                  disabled={amount == 1}
+                                  onClick={() => setAmount(amount - 1)}
+                                  className={`p-2 rounded-xs  bg-red-400 ${amount == 1 ? "opacity-0" : "opacity-100"}`}
+                                >
+                                  <Minus className="w-7 h-7" />
+                                </button>
+
+                                <span className="w-20 text-2xl bg-gray-200 text-center font-medium text-gray-900">
+                                  {amount}
+                                </span>
+
+                                <button
+                                  disabled={amount == selected.stockQuantity}
+                                  className={`p-2 rounded-xs bg-green-300 ${amount == selected.stockQuantity ? "opacity-0" : "opacity-100"}`}
+                                  onClick={() => setAmount(amount + 1)}
+                                >
+                                  <Plus className="w-7 h-7" />
+                                </button>
+                              </div>
+                              {/* <div className="flex text-gray-400 text-[16px] items-end justify-end">
+                              stock: {selected.stock_quantity}
+                            </div> */}
+                            </div>
+                          </div>
+                        
+
+                        <div className="flex items-center justify-center">
+                          <Button
+                            size="lg"
+                            onClick={handleAddShoppingCart}
+                            color="border-gray-500"
+                            className="w-[200px]"
+                            disabled={
+                              selected?.stockQuantity !== undefined &&
+                              selected.stockQuantity < 0
+                            }
+                          >
+                            Add
+                          </Button>
+                          <Button
+                            size="lg"
+                            onClick={handleBuy}
+                            color="bg-green-500"
+                            className="w-[200px] ml-10"
+                          >
+                            Buy
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
               </div>
             )}
-            <div>
-              {selected && (
-                <div className="flex items-center justify-center mb-5">
-                  <div>
-                    <div className="flex my-4 ">
-                      <button
-                        disabled={amount == 1}
-                        onClick={() => setAmount(amount - 1)}
-                        className={`p-2 rounded-xs  bg-red-400 ${amount == 1 ? "opacity-0" : "opacity-100"}`}
-                      >
-                        <Minus className="w-7 h-7" />
-                      </button>
-
-                      <span className="w-20 text-2xl bg-gray-200 text-center font-medium text-gray-900">
-                        {amount}
-                      </span>
-
-                      <button
-                        disabled={amount == selected.stockQuantity}
-                        className={`p-2 rounded-xs bg-green-300 ${amount == selected.stockQuantity ? "opacity-0" : "opacity-100"}`}
-                        onClick={() => setAmount(amount + 1)}
-                      >
-                        <Plus className="w-7 h-7" />
-                      </button>
-                    </div>
-                    {/* <div className="flex text-gray-400 text-[16px] items-end justify-end">
-                    stock: {selected.stock_quantity}
-                  </div> */}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center justify-center">
-                <Button
-                  size="lg"
-                  onClick={handleAddShoppingCart}
-                  color="border-gray-500"
-                  className="w-[200px]"
-                  disabled={
-                    selected?.stockQuantity !== undefined &&
-                    selected.stockQuantity < 0
-                  }
-                >
-                  Add
-                </Button>
-                <Button
-                  size="lg"
-                  onClick={handleBuy}
-                  color="bg-green-500"
-                  className="w-[200px] ml-10"
-                >
-                  Buy
-                </Button>
-              </div>
-            </div>
           </div>
           <div className="border p-4 rounded-2xl">
             <h2 className="text-2xl w-fit border-b">Description</h2>

@@ -24,6 +24,7 @@ export const getNotify = async (req: Request, res: Response) => {
     bank_reference,
     authorize_token,
   } = req.body;
+  console.log('status',status)
   try {
     const findPaymentId = await Payment.findOne({
       where: { providerRef: reference },
@@ -126,7 +127,7 @@ export const getNotify = async (req: Request, res: Response) => {
         type: "NOTIFY",
         amountMinor: amount*100,
         provider: "DIGIPAY",
-        status: "FAILED",
+        status: "CANCELED",
         reqJson: req.body,
         resJson: {},
       });

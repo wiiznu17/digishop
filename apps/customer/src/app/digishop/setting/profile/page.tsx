@@ -152,6 +152,7 @@ const UserProfilePage = () => {
               <div className="space-y-6">
                 {currentUser && (
                   <>
+                    <div className="border-b py-2 ">Customer Profile</div>
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                         <User size={18} className="text-gray-600" />
@@ -249,6 +250,19 @@ const UserProfilePage = () => {
                     </div>
                   </>
                 )}
+                <div>
+                  <div className="border-b py-2 ">Merchant Profile</div>
+                  {
+                    currentUser?.role === 'CUSTOMER' && (
+                      <Button className="mt-3">create merchant profile</Button>
+                    )
+                  }
+                </div>
+                  {
+                    currentUser?.role === 'MERCHANT' && (
+                      <Button className="mt-3">switch to merchant profile</Button>
+                    )
+                  }
               </div>
             </div>
             <div className="px-8 py-6">

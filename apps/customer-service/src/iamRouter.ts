@@ -18,9 +18,9 @@ router.get('/', async (req: Request, res: Response) => {
 })
 
 router.use('/customer', userRouter)
-router.use('/product', productRouter)
-router.use('/order', orderRouter)
-router.use('/payment', paymentRouter)
+router.use('/customer/product', productRouter)
+router.use('/customer/order', orderRouter)
+router.use('/customer/payment', paymentRouter)
 
 export default router
 

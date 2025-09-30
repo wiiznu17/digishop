@@ -3,7 +3,7 @@ import {
     PaymentMethod
 } from "../../../../../packages/db/src/types/enum";
 import { Address } from "./addressProp";
-import { Store } from "./productProp";
+import { Configurations, Store } from "./productProp";
 //ข้อมูลการจ่ายเงิน ที่อยู่จัดส่ง ก่อนจ่ายเงิน
 export interface OrderDetail {
   id: number;
@@ -126,6 +126,7 @@ export interface ProductItemProps {
   stockQuantity: number;
   priceMinor: number;
   image_url?: string | undefined;
+  configurations: Configurations[]
   product: {
     id: number;
     uuid: string;

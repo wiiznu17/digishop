@@ -34,7 +34,7 @@ export const DialogSelectAddress = ({
     }
     return (
             <div>
-              <Dialog open={isShown} onClose={() => setIsShown(false)} className="relative z-100">
+              <Dialog open={isShown} onClose={() => setIsShown(false)} className="relative ">
                 <DialogBackdrop
                   transition
                   className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"

@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/button";
 import { Minus, Plus } from "lucide-react";
 import Link from "next/link";
+import { Configurations } from "@/types/props/productProp";
+import { formatSku } from "@/lib/function";
 
 export default function ShoppingCart() {
   const [data, setData] = useState<ShoppingDetail[]>();
@@ -142,7 +144,9 @@ export default function ShoppingCart() {
                           </Link>
                           <div className="flex justify-between items-center">
                             <div className="text-xs text-gray-500">
-                              {value.productItem.sku}
+                              {
+                                formatSku(value.productItem.configurations)
+                              }
                             </div>
                               <div className="flex gap-2 items-center absolute right-0 bottom-9">
                                 <button
