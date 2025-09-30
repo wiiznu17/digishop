@@ -20,6 +20,7 @@ import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
 import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
 import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
 import { ProductImage } from "@digishop/db/src/models/ProductImage";
+import { ShippingStatus } from "@digishop/db/src/types/enum";
 
 const asInt = (v: any, d: number) => {
   const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d;
@@ -279,6 +280,7 @@ export async function adminGetOrderDetail(req: Request, res: Response) {
             "trackingNumber",
             "carrier",
             "shippedAt",
+            "shippingStatus",
             ["shipping_type_name_snapshot","shippingTypeNameSnapshot"],
             ["shipping_price_minor_snapshot","shippingPriceMinorSnapshot"],
             ["address_snapshot","addressSnapshot"],
@@ -383,6 +385,7 @@ export async function adminGetOrderDetail(req: Request, res: Response) {
             trackingNumber: shippingInfo.get("trackingNumber") as string | null,
             carrier: shippingInfo.get("carrier") as string | null,
             shippingTypeName: shippingInfo.get("shippingTypeNameSnapshot") as string,
+            shippingStatus: shippingInfo.get("shippingStatus") as string,
             shippingPriceMinor: shippingInfo.get("shippingPriceMinorSnapshot") as number,
             shippedAt: shippingInfo.get("shippedAt") as Date | string | null,
             addressSnapshot: shippingInfo.get("addressSnapshot") || {},

@@ -32,7 +32,7 @@ export function VerticalTimeline({
           <div className="relative">
             <div className="mt-1 h-3 w-3 rounded-full bg-primary" />
             {idx < items.length - 1 && (
-              <div className="absolute left-[8px] top-4 bottom-[-10px] w-px bg-muted" />
+              <div className="absolute left-[5px] top-4 bottom-[-10px] w-px bg-muted" />
             )}
           </div>
 

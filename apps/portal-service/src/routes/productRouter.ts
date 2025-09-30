@@ -5,7 +5,7 @@ import {
   adminGetProductDetail,
   adminModerateProduct,
   adminBulkModerateProducts,
-  adminListCategories,
+  // adminListCategories,
 } from "../controllers/productController";
 import { requirePerms } from "../middlewares/auth";
 
@@ -37,9 +37,9 @@ router.post("/bulk/moderate",
 );
 
 // Categories (flat)
-router.get("/categories/list",
-  requirePerms("CATEGORIES_READ, PRODUCTS_READ"),
-  adminListCategories
-);
+// router.get("/categories/list",
+//   requirePerms("CATEGORIES_READ, PRODUCTS_READ"),
+//   adminListCategories
+// );
 
 export default router;
