@@ -23,13 +23,14 @@ import {
   YAxis,
   Tooltip
 } from "recharts"
+import AuthGuard from "@/components/AuthGuard"
 
 function formatTHBMinor(minor: number) {
   const v = (minor ?? 0) / 100
   return v.toLocaleString("th-TH", { style: "currency", currency: "THB" })
 }
 
-export default function AdminUserDetailPage() {
+function AdminUserDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [data, setData] = useState<AdminUserDetail | null>(null)
@@ -359,5 +360,18 @@ export default function AdminUserDetailPage() {
         </>
       )}
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["CUSTOMERS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminUserDetailPage />
+    </Guard>
   )
 }

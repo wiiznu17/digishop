@@ -16,13 +16,14 @@ import {
   VerticalTimeline,
   TimelineItem
 } from "@/components/commerce/orders/orderDetail/VerticalTimeline"
+import AuthGuard from "@/components/AuthGuard"
 
 const THB = (n?: number | null) =>
   n == null
     ? "-"
     : (n / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
 
-export default function AdminOrderDetailPage() {
+function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [data, setData] = useState<AdminOrderDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -119,5 +120,18 @@ export default function AdminOrderDetailPage() {
         )}
       </div>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["ORDERS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminOrderDetailPage />
+    </Guard>
   )
 }

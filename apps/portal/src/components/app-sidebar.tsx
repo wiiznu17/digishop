@@ -6,25 +6,14 @@ import {
   Home,
   ShoppingCart,
   RotateCcw,
-  Gavel,
-  CreditCard,
-  Wallet,
   Package,
   FolderTree,
   Users,
-  Store,
   UserCog,
-  MessageSquareWarning,
-  Star,
-  BadgePercent,
-  Truck,
-  Image as ImageIcon,
   ShieldCheck,
   Shield,
-  Settings,
   User,
-  ChevronUp,
-  BarChart3
+  ChevronUp
 } from "lucide-react"
 
 import {
@@ -47,96 +36,127 @@ import {
 import { Button } from "./ui/button"
 import { logout } from "@/utils/requesters/authRequester"
 import { useAuth } from "@/components/AuthGuard"
+import { useMemo } from "react"
 
 type NavItem = {
   title: string
   url: string
   icon: React.ComponentType<{ className?: string }>
+  perms?: string[] // สิทธิ์ที่ต้องมีทั้งหมดเพื่อแสดงเมนูนี้ (AND)
 }
 
-type NavGroup = {
-  label: string
-  items: NavItem[]
-}
+type NavGroup = { label: string; items: NavItem[] }
 
+// กำหนดสิทธิ์ของแต่ละเมนู
 const groups: NavGroup[] = [
   {
     label: "Platform Overview",
     items: [
-      { title: "Dashboard", url: "/admin/dashboards", icon: Home } // ,
-      // { title: "Analytics", url: "/admin/analytics", icon: BarChart3 }
+      {
+        title: "Dashboard",
+        url: "/admin/dashboards",
+        icon: Home,
+        perms: ["DASHBOARD_VIEW"]
+      }
     ]
   },
   {
     label: "Commerce",
     items: [
-      { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
-      { title: "Refunds", url: "/admin/refunds", icon: RotateCcw }
-      // { title: "Disputes", url: "/admin/disputes", icon: Gavel },
-      // { title: "Payments", url: "/admin/payments", icon: CreditCard },
-      // { title: "Payouts", url: "/admin/payouts", icon: Wallet }
+      {
+        title: "Orders",
+        url: "/admin/orders",
+        icon: ShoppingCart,
+        perms: ["ORDERS_READ"]
+      },
+      {
+        title: "Refunds",
+        url: "/admin/refunds",
+        icon: RotateCcw,
+        perms: ["REFUNDS_READ"]
+      }
     ]
   },
   {
     label: "Catalog",
     items: [
-      { title: "Products", url: "/admin/products", icon: Package },
-      { title: "Categories", url: "/admin/categories", icon: FolderTree }
+      {
+        title: "Products",
+        url: "/admin/products",
+        icon: Package,
+        perms: ["PRODUCTS_READ"]
+      },
+      {
+        title: "Categories",
+        url: "/admin/categories",
+        icon: FolderTree,
+        perms: ["CATEGORIES_READ"]
+      }
     ]
   },
   {
     label: "Users & Merchants",
     items: [
-      { title: "Customers", url: "/admin/customers", icon: Users },
-      // { title: "Stores", url: "/admin/stores", icon: Store },
-      { title: "Merchants", url: "/admin/merchants", icon: UserCog }
+      {
+        title: "Customers",
+        url: "/admin/customers",
+        icon: Users,
+        perms: ["CUSTOMERS_READ"]
+      },
+      {
+        title: "Merchants",
+        url: "/admin/merchants",
+        icon: UserCog,
+        perms: ["MERCHANTS_READ"]
+      }
     ]
   },
-  // {
-  //   label: "Moderation",
-  //   items: [
-  //     { title: "Reviews", url: "/admin/reviews", icon: Star },
-  //     { title: "Reports", url: "/admin/reports", icon: MessageSquareWarning }
-  //   ]
-  // },
-  // {
-  //   label: "Growth & Ops",
-  //   items: [
-  //     { title: "Promotions", url: "/admin/promotions", icon: BadgePercent },
-  //     { title: "Logistics", url: "/admin/logistics", icon: Truck },
-  //     { title: "Banners / CMS", url: "/admin/cms", icon: ImageIcon }
-  //   ]
-  // },
   {
     label: "System",
     items: [
       {
         title: "Admin Users",
         url: "/admin/admins",
-        icon: Shield
+        icon: Shield,
+        perms: ["ADMIN_USERS_READ"]
       },
       {
         title: "Roles",
         url: "/admin/roles",
-        icon: Shield
+        icon: Shield,
+        perms: ["ROLES_READ"]
       },
       {
         title: "Audit Logs",
         url: "/admin/audit-logs",
-        icon: ShieldCheck
-      } // ,
-      // {
-      //   title: "Feature Flags",
-      //   url: "/admin/system/feature-flags",
-      //   icon: SlidersHorizontal
-      // },
-      // { title: "Settings", url: "/admin/system/settings", icon: Settings }
+        icon: ShieldCheck,
+        perms: ["AUDIT_LOGS_READ"]
+      }
     ]
   }
 ]
 
 export function AdminSidebar() {
-  // const { loading } = useAuth()
+  const { me, loading } = useAuth()
+
+  // เช็คสิทธิ์แบบ AND: ต้องมีครบทุก perm ในรายการถึงจะแสดง
+  const hasPerms = (need?: string[]) => {
+    if (!need || need.length === 0) return true
+    if (!me) return false
+    const set = new Set(me.permissions || [])
+    return need.every((p) => set.has(p))
+  }
+
+  // กรองเมนูตามสิทธิ์ (ซ่อนทั้ง item และ group ที่ว่าง)
+  const visibleGroups = useMemo(() => {
+    return groups
+      .map((g) => ({
+        ...g,
+        items: g.items.filter((it) => hasPerms(it.perms))
+      }))
+      .filter((g) => g.items.length > 0)
+  }, [me])
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -146,7 +166,6 @@ export function AdminSidebar() {
             href="/"
             className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition"
           >
-            {/* วางไฟล์โลโก้ไว้ที่ /public/logo.svg */}
             <Image
               src="/logo.svg"
               alt="DigiShop"
@@ -161,25 +180,30 @@ export function AdminSidebar() {
           </Link>
         </div>
 
-        {groups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {/* Loading state: กัน layout shift */}
+        {loading ? (
+          <div className="p-3 text-xs text-muted-foreground">Loading menu…</div>
+        ) : (
+          visibleGroups.map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <Link href={item.url}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))
+        )}
       </SidebarContent>
 
       <SidebarFooter>
@@ -196,9 +220,6 @@ export function AdminSidebar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/admin/account">Account Settings</Link>
-                </DropdownMenuItem> */}
                 <DropdownMenuItem asChild>
                   <Link href="/admin/system/admins">Team & Roles</Link>
                 </DropdownMenuItem>
@@ -210,12 +231,12 @@ export function AdminSidebar() {
                     variant="destructive"
                     size="sm"
                     className="w-full"
-                    // disabled={loading}
+                    disabled={loading}
                     onClick={async () => {
                       try {
                         await logout()
                       } finally {
-                        // ไม่ต้องทำอะไรต่อ AuthGuard จะพาออกเอง
+                        // AuthGuard จะพาออกเองเมื่อ token หาย
                       }
                     }}
                   >
