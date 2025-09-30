@@ -30,6 +30,9 @@ import { Op, where } from "sequelize";
 import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
 import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
 import { RefundImage } from "@digishop/db/src/models/RefundImage";
+import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
+import { VariationOption } from "@digishop/db/src/models/VariationOption";
+import { Variation } from "@digishop/db/src/models/Variation";
 const signKey =
   process.env.MERCHANRT_SIGN_KEY ??
   "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
@@ -115,6 +118,22 @@ export const findOrder = async (
               as: "productItem",
               include: [
                 {
+                  model: ProductConfiguration,
+                  as:'configurations',
+                  include: [
+                    {
+                      model: VariationOption,
+                      as: 'variationOption',
+                      include: [
+                        {
+                          model: Variation,
+                          as: 'variation'
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
                   model: Product,
                   as: "product",
                   include: [
@@ -163,6 +182,22 @@ export const findUserOrder = async (
             model: ProductItem,
             as: "productItem",
             include: [
+              {
+                model: ProductConfiguration,
+                as:'configurations',
+                include: [
+                  {
+                    model: VariationOption,
+                    as: 'variationOption',
+                    include: [
+                      {
+                        model: Variation,
+                        as: 'variation'
+                      }
+                    ]
+                  }
+                ]
+              },
               {
                 model: Product,
                 as: "product",
@@ -310,6 +345,22 @@ export const findUserCart = async (
             model: ProductItem,
             as: "productItem",
             include: [
+              {
+              model: ProductConfiguration,
+              as:'configurations',
+              include: [
+                {
+                  model: VariationOption,
+                  as: 'variationOption',
+                  include: [
+                    {
+                      model: Variation,
+                      as: 'variation'
+                    }
+                  ]
+                }
+              ]
+            },
               {
                 model: Product,
                 as: "product",
@@ -500,8 +551,8 @@ export const createOrder = async (
         // description: productName,
         amount: grandTotalMinor / 100,
         expiry: 15,
-        url_redirect: "http://localhost:4003/api/payment/callback",
-        url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+        url_redirect: "http://localhost:4000/api/customer/payment/callback",
+        url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
       });
       const responseCardPayment = await axios.request({
         method: "post",
@@ -512,8 +563,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4000/api/customer/payment/callback",
+          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         },
         headers: {
           "X-API-ID": apiId,
@@ -548,8 +599,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4000/api/customer/payment/callback",
+          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         },
         resJson: responseCardPayment.data,
       });
@@ -563,8 +614,8 @@ export const createOrder = async (
         // description: productName,
         amount: grandTotalMinor / 100,
         expiry: 15,
-        url_redirect: "http://localhost:4003/api/payment/callback",
-        url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+        url_redirect: "http://localhost:4000/api/customer/payment/callback",
+        url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         qrcode: {
           biller_reference_1: `REF${orderId}`,
         },
@@ -578,8 +629,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4000/api/customer/payment/callback",
+          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
           qrcode: {
             biller_reference_1: `REF${orderId}`,
           },
@@ -617,8 +668,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4005/api/customer/payment/callback",
+          url_notify: "http://localhost:4005/api/customer/payment/notify", //web เรา
           qrcode: {
             biller_reference_1: `REF${orderCode}`,
           },

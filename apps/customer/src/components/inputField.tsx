@@ -14,6 +14,7 @@ interface InputFieldProps {
   error?: string;
   maxLength?: number;
   minLength?: number
+  height?: string
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -27,7 +28,8 @@ const InputField: React.FC<InputFieldProps> = ({
   className = '',
   maxLength,
   minLength,
-  error
+  error,
+  height
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = type === 'password' && showPassword ? 'text' : type;
@@ -52,7 +54,7 @@ const InputField: React.FC<InputFieldProps> = ({
           required={required}
           maxLength={maxLength}
           minLength={minLength}
-          className={`w-full p-4  border rounded-lg shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+          className={`w-full ${height}  p-4  border rounded-lg  text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
             error ? 'border-red-300' : 'border-gray-300'
           }`}
         />

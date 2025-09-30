@@ -10,7 +10,6 @@ interface cardProp {
 
 const minPrice = (data: [ProductItem]) => {
   const price = data.map(item => item.priceMinor )
-  console.log(price)
   const minPrice = Math.min(...price)
   return (minPrice/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }

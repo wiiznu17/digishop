@@ -3,7 +3,7 @@ import { FormRegister } from "@/types/props/userProp"
 export const createUser = async (data: FormRegister) => {
   return await new Promise((resolve, reject) => {
     axios
-      .post(`http://localhost:4000/api/customer/register`, data)
+      .post(`/api/customer/register`, data)
       .then((res) => {
         resolve(res.data)
       })

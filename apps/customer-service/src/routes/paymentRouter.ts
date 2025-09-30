@@ -4,5 +4,4 @@ const router = Router()
 
 router.post('/callback',getCallBack)
 router.post('/notify',getNotify)
-router.get('/test',testRes )
 export default router

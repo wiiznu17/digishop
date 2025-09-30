@@ -10,6 +10,8 @@ import CancelReasonMaster from "../master/cancelReason.json";
 import { updateOrderStatus } from "@/utils/requestUtils/requestOrderUtils";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { Configurations } from "@/types/props/productProp";
+import { formatSku } from "@/lib/function";
 
 interface OrderCard {
   item: OrderDetail;
@@ -44,7 +46,6 @@ export default function OrderCard({
     setReasonRefund("RF01")
     setDetail("");
   };
-  console.log(isShowRefund)
   const handleConfirmed = async() => {
     const data = await updateOrderStatus(item.id)
     if(data.data){
@@ -54,7 +55,6 @@ export default function OrderCard({
   if(!user)return
   return (
     <div className=" px-4 py-2 mb-5 border w-md rounded-2xl ">
-      <div>{item.id}</div>
       <div>
         { item.items[0].productItem&& 
           <button className="flex items-center mb-3 hover:cursor-pointer w-full" onClick={() => router.push(`http://localhost:3000/digishop/store/${item.items[0].productItem.product.store.uuid}`)}>
@@ -73,9 +73,11 @@ export default function OrderCard({
                   <div className="w-[100px] h-[100px] bg-amber-700"></div>
                   <div>
                     <div className="flex-1">
-                      <div >{items.productItem.product.name}</div>
-                      <div className="text-xs text-gray-500 ">
-                        {items.productItem.sku}
+                      <div className="flex justify-start mb-1">{items.productItem.product.name}</div>
+                      <div className="flex justify-start text-xs text-gray-500 ">
+                        {
+                          formatSku(items.productItem.configurations)
+                        }
                       </div>
                       <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
                         x {String(items.quantity)}
