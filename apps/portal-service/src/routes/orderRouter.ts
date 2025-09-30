@@ -5,22 +5,22 @@ import { adminListOrders, adminGetOrderDetail, adminSuggestOrders, adminSuggestC
 const router = Router();
 
 router.get("/list",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminListOrders
 );
 
 router.get("/:id/detail",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminGetOrderDetail
 );
 
 router.get("/suggest",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminSuggestOrders 
 );
 
 router.get("/customer-suggest",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminSuggestCustomerEmails
 );
 

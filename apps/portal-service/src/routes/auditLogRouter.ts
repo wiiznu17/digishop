@@ -5,11 +5,23 @@ import {
   adminSuggestAuditLogs,
 } from "../controllers/auditLogController"
 import { requireSuperAdmin } from "../middlewares/requireSuperAdmin"
+import { requirePerms } from "../middlewares/auth"
 
 const router = Router()
 
-router.get("/list", adminListAuditLogs)
-router.get("/suggest", adminSuggestAuditLogs)
-router.get("/:id/detail", adminGetAuditLogDetail)
+router.get("/list",
+  requirePerms("AUDIT_LOGS_READ"),
+  adminListAuditLogs
+)
+
+router.get("/suggest",
+  requirePerms("AUDIT_LOGS_READ"),
+  adminSuggestAuditLogs
+)
+
+router.get("/:id/detail",
+  requirePerms("AUDIT_LOGS_READ"),
+  adminGetAuditLogDetail
+)
 
 export default router

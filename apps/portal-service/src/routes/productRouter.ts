@@ -12,33 +12,33 @@ import { requirePerms } from "../middlewares/auth";
 const router = Router();
 
 router.get("/list",
-  requirePerms("PRODUCT.READ"),
+  requirePerms("PRODUCTS_READ"),
   adminListProducts
 );
 
 router.get("/suggest",
-  requirePerms("PRODUCT.READ"),
+  requirePerms("PRODUCTS_READ"),
   adminSuggestProducts
 );
 
 router.get("/:uuid",
-  requirePerms("PRODUCT.READ"),
+  requirePerms("PRODUCTS_READ"),
   adminGetProductDetail
 );
 
 router.patch("/:uuid/moderate",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("PRODUCTS_UPDATE"),
   adminModerateProduct
 );
 
 router.post("/bulk/moderate",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("PRODUCTS_UPDATE"),
   adminBulkModerateProducts
 );
 
 // Categories (flat)
 router.get("/categories/list",
-  requirePerms("CATEGORY.MANAGE"),
+  requirePerms("CATEGORIES_READ, PRODUCTS_READ"),
   adminListCategories
 );
 

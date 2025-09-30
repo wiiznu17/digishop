@@ -212,7 +212,17 @@ export async function adminGetStoreDetail(req: Request, res: Response) {
       include: [
         { model: User, as: "owner", required: false, attributes: [[col("first_name"), "firstName"], [col("last_name"), "lastName"], ["email", "email"]] },
         { model: Product, as: "products", attributes: [], required: false },
-        { model: Order, as: "storeOrders", attributes: [], required: false },
+        { model: Order, as: "storeOrders",
+          attributes: [],
+          required: false,
+          // include: [{
+          //   model: OrderItem, as: "items",
+          //   attributes: [
+          //     "productId", "productName", "uuid"
+          //   ],
+          //   required: false
+          // }]
+        },
       ],
       attributes: [
         "id",
@@ -307,23 +317,30 @@ export async function adminGetStoreDetail(req: Request, res: Response) {
       limit: 10,
     })
 
-    // ดึง items แยกเพื่อ map เข้าออเดอร์ (เลี่ยง literal/group_concat)
+    // ดึง items แยกเพื่อ map เข้าออเดอร์
     const recentOrderIds = recentOrders.map((o: any) => o.get("id"))
     const recentItems = await OrderItem.findAll({
       where: { orderId: recentOrderIds },
       include: [
-        { model: Product, as: "product", required: false, attributes: ["id", "name"] },
+        {
+          model: Product, as: "product",
+            required: false,
+            attributes: ["id", "uuid", "name"]
+        },
       ],
       attributes: ["orderId"],
-      limit: 200, // เผื่อพอสมควร
+      limit: 200, // เผื่อ
     })
 
-    const itemsByOrder = new Map<number, Array<{ productId: number; productName: string }>>()
+    const itemsByOrder = new Map<number, Array<{ productId: number; productName: string; uuid: string }>>()
     for (const it of recentItems as any[]) {
       const oid = Number(it.get("orderId"))
       const list = itemsByOrder.get(oid) ?? []
       if (it.product) {
-        list.push({ productId: it.product.get("id"), productName: it.product.get("name") })
+        list.push({
+          productId: it.product.get("id"),
+          productName: it.product.get("name"),
+          uuid: it.product.get("uuid")})
       }
       itemsByOrder.set(oid, list)
     }
