@@ -103,6 +103,30 @@ export default function AdminStoreDetailPage() {
             >
               Back
             </Button>
+            {!!data && (
+              <Button
+                variant="default"
+                onClick={() => {
+                  const storeNameQuery = encodeURIComponent(data.storeName)
+                  router.push(
+                    `/admin/products?q=${storeNameQuery}&reqStatus=__ALL__&sortBy=createdAt&sortDir=desc&page=1`
+                  )
+                }}
+              >
+                View all products
+              </Button>
+            )}
+            {data && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const storeNameQuery = encodeURIComponent(data.storeName)
+                  router.push(`/admin/orders?storeName=${storeNameQuery}`)
+                }}
+              >
+                View all orders
+              </Button>
+            )}
           </div>
         </CardHeader>
 

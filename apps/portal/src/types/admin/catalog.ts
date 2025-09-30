@@ -1,4 +1,3 @@
-// apps/portal/src/types/admin/catalog.ts
 export type Uuid = string
 export type MinorBaht = number // integer (สตางค์)
 

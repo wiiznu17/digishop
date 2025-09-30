@@ -33,6 +33,8 @@ import {
 
 import { fetchAdminOrdersRequester } from "@/utils/requesters/orderRequester"
 import { CustomerEmailSearchBox } from "@/components/commerce/orders/CustomerEmailSearchBox"
+import { Store } from "lucide-react"
+import { StoreNameSearchBox } from "@/components/commerce/orders/storeNameSearchBox"
 
 const THB = (n?: number | null) =>
   n == null
@@ -70,6 +72,10 @@ export default function AdminOrdersPage() {
   const [customerEmail, setCustomerEmail] = useState(
     sp.get("customerEmail") ?? ""
   )
+  const [storeNameDraft, setStoreNameDraft] = useState(
+    sp.get("storeName") ?? ""
+  )
+  const [storeName, setStoreName] = useState(sp.get("storeName") ?? "")
 
   const params: AdminFetchOrdersParams = useMemo(
     () => ({
@@ -78,12 +84,13 @@ export default function AdminOrdersPage() {
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
       customerEmail: customerEmail || undefined,
+      storeName: storeName || undefined,
       sortBy: "createdAt",
       sortDir: "desc",
       page,
       pageSize
     }),
-    [q, status, dateFrom, dateTo, customerEmail, page, pageSize]
+    [q, status, dateFrom, dateTo, customerEmail, storeName, page, pageSize]
   )
 
   const fetchList = useCallback(async () => {
@@ -105,11 +112,22 @@ export default function AdminOrdersPage() {
     if (status !== "ALL") next.set("status", status)
     if (dateFrom) next.set("dateFrom", dateFrom)
     if (dateTo) next.set("dateTo", dateTo)
-    if (customerEmail) next.set("customerEmail", customerEmail) // ⬅️ sync URL
+    if (customerEmail) next.set("customerEmail", customerEmail)
+    if (storeName) next.set("storeName", storeName)
     if (page !== 1) next.set("page", String(page))
     if (pageSize !== 20) next.set("pageSize", String(pageSize))
     router.push(`/admin/orders${next.toString() ? `?${next.toString()}` : ""}`)
-  }, [router, q, status, dateFrom, dateTo, customerEmail, page, pageSize])
+  }, [
+    router,
+    q,
+    status,
+    dateFrom,
+    dateTo,
+    customerEmail,
+    storeName,
+    page,
+    pageSize
+  ])
 
   const handleSubmitSearch = useCallback(() => {
     setQ(qDraft.trim())
@@ -117,6 +135,7 @@ export default function AdminOrdersPage() {
     setDateFrom(dateFromDraft)
     setDateTo(dateToDraft)
     setCustomerEmail(customerEmailDraft.trim())
+    setStoreName(storeNameDraft.trim())
     setPage(1)
     void fetchList()
   }, [
@@ -125,6 +144,7 @@ export default function AdminOrdersPage() {
     dateFromDraft,
     dateToDraft,
     customerEmailDraft,
+    storeNameDraft,
     fetchList
   ])
   // เปลี่ยนหน้า/ PageSize ยิงทันที (หลังจากมีผลการค้นหาแล้ว)
@@ -154,6 +174,7 @@ export default function AdminOrdersPage() {
     setDateFromDraft("")
     setDateToDraft("")
     setCustomerEmailDraft("")
+    setStoreNameDraft("")
 
     // ล้างค่า submitted
     setQ("")
@@ -161,6 +182,7 @@ export default function AdminOrdersPage() {
     setDateFrom("")
     setDateTo("")
     setCustomerEmail("")
+    setStoreName("")
 
     // รีเซ็ตหน้า
     setPage(1)
@@ -211,6 +233,14 @@ export default function AdminOrdersPage() {
                 <CustomerEmailSearchBox
                   value={customerEmailDraft}
                   onChange={setCustomerEmailDraft}
+                />
+              </div>
+              {/* Store name */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-1">Store name</label>
+                <StoreNameSearchBox
+                  value={storeNameDraft}
+                  onChange={setStoreNameDraft}
                 />
               </div>
 

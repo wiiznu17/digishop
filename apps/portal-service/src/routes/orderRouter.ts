@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requirePerms } from "../middlewares/auth";
-import { adminListOrders, adminGetOrderDetail, adminSuggestOrders, adminSuggestCustomerEmails } from "../controllers/orderController";
+import { adminListOrders, adminGetOrderDetail, adminSuggestOrders, adminSuggestCustomerEmails, adminSuggestStoreName } from "../controllers/orderController";
 
 const router = Router();
 
@@ -22,6 +22,11 @@ router.get("/suggest",
 router.get("/customer-suggest",
   requirePerms("ORDERS_READ"),
   adminSuggestCustomerEmails
+);
+
+router.get("/store-name-suggest",
+  requirePerms("ORDERS_READ"),
+  adminSuggestStoreName
 );
 
 
