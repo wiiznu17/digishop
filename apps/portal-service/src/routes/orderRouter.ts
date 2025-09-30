@@ -1,27 +1,32 @@
 import { Router } from "express";
 import { requirePerms } from "../middlewares/auth";
-import { adminListOrders, adminGetOrderDetail, adminSuggestOrders, adminSuggestCustomerEmails } from "../controllers/orderController";
+import { adminListOrders, adminGetOrderDetail, adminSuggestOrders, adminSuggestCustomerEmails, adminSuggestStoreName } from "../controllers/orderController";
 
 const router = Router();
 
 router.get("/list",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminListOrders
 );
 
 router.get("/:id/detail",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminGetOrderDetail
 );
 
 router.get("/suggest",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminSuggestOrders 
 );
 
 router.get("/customer-suggest",
-  requirePerms("ORDER.READ"),
+  requirePerms("ORDERS_READ"),
   adminSuggestCustomerEmails
+);
+
+router.get("/store-name-suggest",
+  requirePerms("ORDERS_READ"),
+  adminSuggestStoreName
 );
 
 

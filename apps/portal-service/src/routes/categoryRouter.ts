@@ -6,37 +6,37 @@ import { requirePerms } from "../middlewares/auth"
 const router = Router()
 
 router.get("/list",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("CATEGORIES_READ"),
   ctrl.listCategories
 )
 
 router.get("/suggest",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("CATEGORIES_READ"),
   ctrl.suggestCategories
 )
 
 router.get("/:uuid",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("CATEGORIES_READ"),
   ctrl.getCategoryDetail
 )
 
 router.post("/",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("CATEGORIES_CREATE"),
   ctrl.createCategory
 )
 
 router.patch("/:uuid",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("CATEGORIES_UPDATE"),
   ctrl.updateCategory
 )
 
 router.delete("/:uuid", 
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("CATEGORIES_DELETE"),
   ctrl.deleteCategory
 )
 
 router.post("/:uuid/move-products",
-  requirePerms("PRODUCT.APPROVE","PRODUCT.UPDATE"),
+  requirePerms("CATEGORIES_UPDATE, PRODUCTS_UPDATE"),
   ctrl.moveProducts
 )
 

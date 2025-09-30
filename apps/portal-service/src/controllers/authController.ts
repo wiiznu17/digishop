@@ -12,16 +12,13 @@ const RTK_NAME = process.env.JWT_COOKIE_NAME || "rtk";
 const COOKIE_OPTS = { httpOnly: true, sameSite: "lax" as const, secure: false, path: "/" };
 
 export const login = async (req: Request, res: Response) => {
-  // console.log("ip: ", req.ip)
-  // console.log("headers: ", req.headers["user-agent"])
+  console.log("ip: ", req.ip)
   const { email, password } = (req.body ?? {}) as { email?: string; password?: string };
-  // console.log("login with email: ", email)
-  // console.log("login with password: ", password)
   if (!email || !password) return res.status(400).json({ error: "EMAIL_PASSWORD_REQUIRED" });
 
   const user = await AdminUser.findOne({ where: { email } as any });
   if (!user) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
-  console.log("found user: ", user)
+  console.log("found user: ", user.dataValues.name)
   if ((user as any).status === "SUSPENDED") {
     return res.status(403).json({ error: "ACCOUNT_SUSPENDED" });
   }
@@ -32,10 +29,8 @@ export const login = async (req: Request, res: Response) => {
   const jti = uuidv4();
   console.log("jti: ", jti)
   const access = signAccess({ sub: (user as any).id, jti });
-  // console.log("access token: ", access)
   const refresh = signRefresh({ sub: (user as any).id, jti });
-  // console.log("refresh token: ", refresh)
-
+  
   await AdminSession.create({
     adminId: (user as any).id,
     jti,
@@ -44,7 +39,13 @@ export const login = async (req: Request, res: Response) => {
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 วัน
   } as any);
   console.log("seesion is created")
-  res.cookie(RTK_NAME, refresh, { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 });
+  res.cookie(
+    RTK_NAME,
+    refresh, 
+    { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 });
+    console.log("set cookie: ", RTK_NAME)
+    console.log("refresh: ", refresh)
+    console.log("opts: ", { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 })
   return res.json({ accessToken: access });
 };
 
@@ -137,10 +138,6 @@ export const access = async (req: Request, res: Response) => {
     }
   }
   const permissionSlugs = Array.from(permSet);
-  // console.log("rturn access: ", user.id)
-  // console.log("rturn access: ", user.email)
-  console.log("rturn access: ", roleSlugs)
-  // console.log("rturn access: ", permissionSlugs)
   return res.json({
     id: (user as any).id,
     email: (user as any).email,

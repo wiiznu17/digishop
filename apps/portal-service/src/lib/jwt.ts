@@ -35,7 +35,6 @@ function toPublicKey(envPemName: string, envB64Name?: string): KeyObject {
 }
 
 // ---- keys (รองรับทั้ง *_KEY และ *_KEY_B64) ----
-// ช่วง dev จะง่ายถ้าใช้ชุดเดียวกันสำหรับ access/refresh ก็ได้
 const ACCESS_PRIVATE = toPrivateKey("JWT_ACCESS_PRIVATE_KEY", "JWT_ACCESS_PRIVATE_KEY_B64");
 const ACCESS_PUBLIC  = toPublicKey ("JWT_ACCESS_PUBLIC_KEY",  "JWT_ACCESS_PUBLIC_KEY_B64");
 const REFRESH_PRIVATE = toPrivateKey("JWT_REFRESH_PRIVATE_KEY", "JWT_REFRESH_PRIVATE_KEY_B64");

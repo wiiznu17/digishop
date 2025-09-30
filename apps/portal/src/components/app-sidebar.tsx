@@ -63,8 +63,8 @@ const groups: NavGroup[] = [
   {
     label: "Platform Overview",
     items: [
-      { title: "Dashboard", url: "/", icon: Home },
-      { title: "Analytics", url: "/admin/analytics", icon: BarChart3 }
+      { title: "Dashboard", url: "/admin/dashboards", icon: Home } // ,
+      // { title: "Analytics", url: "/admin/analytics", icon: BarChart3 }
     ]
   },
   {

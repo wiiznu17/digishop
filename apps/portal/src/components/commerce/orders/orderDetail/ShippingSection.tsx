@@ -7,40 +7,62 @@ import {
   CardDescription,
   CardContent
 } from "@/components/ui/card"
-import { VerticalTimeline, TimelineItem } from "./VerticalTimeline"
+// import { VerticalTimeline, TimelineItem } from "./VerticalTimeline"
 import type {
-  AdminOrderDetail,
-  AdminOrderStatus
+  AdminOrderDetail
+  // AdminOrderStatus
 } from "@/types/commerce/orders"
+import { SHIPPING_STATUS_CLASS, StatusBadge } from "./StatusBadge"
 
 export function ShippingSection({
   data,
-  shippingTimeline,
+  // shippingTimeline,
   THB
 }: {
   data: AdminOrderDetail
-  shippingTimeline: {
-    id: number
-    toStatus: AdminOrderStatus
-    createdAt: string | Date
-    reason?: string | null
-    source?: string | null
-  }[]
+  // shippingTimeline: {
+  //   id: number
+  //   toStatus: AdminOrderStatus
+  //   createdAt: string | Date
+  //   reason?: string | null
+  //   source?: string | null
+  // }[]
   THB: (n?: number | null) => string
 }) {
-  const items: TimelineItem[] = shippingTimeline.map((t) => ({
-    id: t.id,
-    title: t.toStatus,
-    time: new Date(t.createdAt).toLocaleString(),
-    description: t.reason || undefined,
-    footer: t.source ? `via ${t.source}` : undefined
-  }))
+  // const items: TimelineItem[] = shippingTimeline.map((t) => ({
+  //   id: t.id,
+  //   // title: t.toStatus,
+  //   time: new Date(t.createdAt).toLocaleString(),
+  //   description: t.reason || undefined,
+  //   footer: t.source ? `via ${t.source}` : undefined
+  // }))
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Shipping</CardTitle>
         <CardDescription>Info &amp; timeline</CardDescription>
+        <div className="rounded-lg border p-3">
+          <div className="text-xs text-muted-foreground">Shipping status</div>
+          <div className="text-sm">
+            {data.shipping ? (
+              <div className="flex items-center gap-2">
+                <StatusBadge
+                  text={data.shipping.shippingStatus}
+                  className={
+                    SHIPPING_STATUS_CLASS[data.shipping.shippingStatus] ??
+                    "bg-muted text-foreground"
+                  }
+                />
+                <span className="text-xs text-muted-foreground">
+                  {data.shipping.carrier}
+                </span>
+              </div>
+            ) : (
+              "—"
+            )}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {!data.shipping && (
@@ -49,10 +71,10 @@ export function ShippingSection({
 
         {!!data.shipping && (
           <div className="space-y-2 text-sm">
-            <div>
+            {/* <div>
               <span className="text-muted-foreground">Carrier:</span>{" "}
               {data.shipping.carrier ?? "—"}
-            </div>
+            </div> */}
             <div>
               <span className="text-muted-foreground">Tracking:</span>{" "}
               {data.shipping.trackingNumber ?? "—"}
@@ -71,10 +93,10 @@ export function ShippingSection({
           </div>
         )}
 
-        <div>
+        {/* <div>
           <div className="font-medium mb-2">Shipping Timeline</div>
           <VerticalTimeline items={items} emptyText="No shipping events" />
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   )

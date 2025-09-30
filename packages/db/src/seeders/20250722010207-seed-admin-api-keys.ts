@@ -13,7 +13,7 @@ export default {
     await q.bulkInsert("ADMIN_API_KEYS", [{
       admin_id: adminId,
       name: "Seed Admin Key",
-      // ใช้ค่า hash placeholder; โปรดแทนด้วย hash จริงตอนสร้างคีย์
+      // ใช้ค่า hash placeholder; แทนด้วย hash จริงตอนสร้างคีย์
       key_hash: "seed_admin_api_key_hash_placeholder",
       scopes_json: JSON.stringify(["REPORT.EXPORT"]),
       last_used_at: null,
