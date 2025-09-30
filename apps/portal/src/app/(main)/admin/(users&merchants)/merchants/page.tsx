@@ -1,4 +1,3 @@
-// apps/portal/src/app/(main)/admin/(users&merchants)/merchants/page.tsx
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
@@ -37,13 +36,14 @@ import {
   fetchAdminStoreSuggest
 } from "@/utils/requesters/merchantRequester"
 import { Pager } from "@/components/common/Pager"
+import AuthGuard from "@/components/AuthGuard"
 
 function formatMoneyMinor(minor?: number) {
   const n = Number(minor ?? 0)
   return (n / 100).toLocaleString()
 }
 
-export default function AdminMerchantsPage() {
+function AdminMerchantsPage() {
   const router = useRouter()
 
   // input states
@@ -424,5 +424,18 @@ export default function AdminMerchantsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["MERCHANTS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminMerchantsPage />
+    </Guard>
   )
 }

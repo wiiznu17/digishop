@@ -24,13 +24,14 @@ import BlockGmvOverTime from "@/components/overview/dashboard/block/BlockGmvOver
 import BlockOrdersOverTime from "@/components/overview/dashboard/block/BlockOrdersOverTime"
 import BlockStatusPie from "@/components/overview/dashboard/block/BlockStatusPie"
 import BlockTopStores from "@/components/overview/dashboard/block/BlockTopStores"
+import AuthGuard from "@/components/AuthGuard"
 
 const startOfMonth = (d = new Date()) =>
   new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
 const endOfMonth = (d = new Date()) =>
   new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
 
-export default function AdminDashboardPage() {
+function AdminDashboardPage() {
   const [period, setPeriod] = useState<
     "THIS_MONTH" | "LAST_7" | "LAST_30" | "CUSTOM"
   >("THIS_MONTH")
@@ -195,5 +196,18 @@ export default function AdminDashboardPage() {
         />
       </motion.div>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["DASHBOARD_VIEW"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminDashboardPage />
+    </Guard>
   )
 }

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { AdminProductDetail } from "@/types/admin/catalog"
+import AuthGuard from "@/components/AuthGuard"
 
 const fmtTHB = (minor?: number | null) =>
   minor == null
@@ -42,7 +43,7 @@ const formatDate = (v: unknown) => {
   return "-"
 }
 
-export default function AdminProductDetailPage() {
+function AdminProductDetailPage() {
   const { uuid } = useParams<{ uuid: string }>()
   const router = useRouter()
   const [data, setData] = useState<AdminProductDetail | null>(null)
@@ -471,5 +472,18 @@ export default function AdminProductDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["PRODUCTS_READ"]}>{children}</AuthGuard>
+}
+
+export default function DeatailPage() {
+  return (
+    <Guard>
+      <AdminProductDetailPage />
+    </Guard>
   )
 }

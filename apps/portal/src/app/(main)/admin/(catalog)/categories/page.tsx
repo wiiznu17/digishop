@@ -1,4 +1,3 @@
-// apps/portal/src/app/(main)/admin/categories/page.tsx
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -37,6 +36,7 @@ import { CategoryFormDialog } from "@/components/admin/categories/category-form"
 // import { ConfirmHideDialog } from "@/components/admin/categories/confirm-hide"
 import { DeleteOrMoveDialog } from "@/components/admin/categories/delete-or-move"
 import { DashboardHeader } from "@/components/dashboard-header"
+import AuthGuard from "@/components/AuthGuard"
 
 // ——— URL query helpers ———
 function useQueryState() {
@@ -61,7 +61,7 @@ function useQueryState() {
   return { parentUuid, q, status, page, pageSize, push }
 }
 
-export default function AdminCategoriesPage() {
+function AdminCategoriesPage() {
   const { parentUuid, q, status, page, pageSize, push } = useQueryState()
 
   // data
@@ -329,5 +329,18 @@ export default function AdminCategoriesPage() {
         />
       </div>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["CATEGORIES_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminCategoriesPage />
+    </Guard>
   )
 }

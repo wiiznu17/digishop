@@ -24,13 +24,14 @@ import {
   CartesianGrid,
   Tooltip
 } from "recharts"
+import AuthGuard from "@/components/AuthGuard"
 
 function formatMoneyMinor(minor?: number) {
   const n = Number(minor ?? 0)
   return (n / 100).toLocaleString()
 }
 
-export default function AdminStoreDetailPage() {
+function AdminStoreDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [data, setData] = useState<AdminStoreDetail | null>(null)
@@ -298,5 +299,18 @@ export default function AdminStoreDetailPage() {
         </Card>
       )}
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["MERCHANTS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminStoreDetailPage />
+    </Guard>
   )
 }

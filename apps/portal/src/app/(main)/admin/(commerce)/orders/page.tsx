@@ -1,4 +1,3 @@
-// apps/portal/src/app/(main)/admin/(commerce)/orders/page.tsx
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useState } from "react"
@@ -35,13 +34,14 @@ import { fetchAdminOrdersRequester } from "@/utils/requesters/orderRequester"
 import { CustomerEmailSearchBox } from "@/components/commerce/orders/CustomerEmailSearchBox"
 import { Store } from "lucide-react"
 import { StoreNameSearchBox } from "@/components/commerce/orders/storeNameSearchBox"
+import AuthGuard from "@/components/AuthGuard"
 
 const THB = (n?: number | null) =>
   n == null
     ? "-"
     : (n / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
 
-export default function AdminOrdersPage() {
+function AdminOrdersPage() {
   const router = useRouter()
   const sp = useSearchParams()
 
@@ -327,5 +327,18 @@ export default function AdminOrdersPage() {
         </Dialog>
       </div>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["ORDERS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminOrdersPage />
+    </Guard>
   )
 }

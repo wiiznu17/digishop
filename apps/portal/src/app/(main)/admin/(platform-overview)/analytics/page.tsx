@@ -23,13 +23,14 @@ import BlockKpis from "@/components/overview/analytic/blocks/BlockKpis"
 import BlockTrends from "@/components/overview/analytic/blocks/BlockTrends"
 import BlockStatusPie from "@/components/overview/analytic/blocks/BlockStatusPie"
 import BlockStoreLeaderboard from "@/components/overview/analytic/blocks/BlockStoreLeaderboard"
+import AuthGuard from "@/components/AuthGuard"
 
 const startOfMonth = (d = new Date()) =>
   new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
 const endOfMonth = (d = new Date()) =>
   new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
 
-export default function AnalyticsPage() {
+function AnalyticsPage() {
   const [period, setPeriod] = useState<"THIS_MONTH" | "LAST_30" | "CUSTOM">(
     "THIS_MONTH"
   )
@@ -160,5 +161,18 @@ export default function AnalyticsPage() {
         refreshKey={refreshKey}
       />
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["ANALYTICS_VIEW"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AnalyticsPage />
+    </Guard>
   )
 }
