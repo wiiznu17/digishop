@@ -1,4 +1,3 @@
-// apps/portal/src/components/commerce/orders/StatusBadge.tsx
 "use client"
 
 import React from "react"
@@ -18,7 +17,17 @@ const ORDER_STATUS_CLASS: Record<AdminOrderStatus, string> = {
   REFUND_REQUEST: "bg-amber-100 text-amber-800 border-amber-300",
   REFUND_PROCESSING: "bg-yellow-100 text-yellow-800 border-yellow-300",
   REFUND_SUCCESS: "bg-teal-100 text-teal-800 border-teal-300",
-  REFUND_FAIL: "bg-red-100 text-red-800 border-red-300"
+  REFUND_FAIL: "bg-red-100 text-red-800 border-red-300",
+  CUSTOMER_CANCELED: "bg-rose-100 text-rose-800 border-rose-300",
+  REFUND_REJECTED: "bg-rose-100 text-rose-800 border-rose-300",
+  AWAITING_RETURN: "bg-purple-100 text-purple-800 border-purple-300",
+  RECEIVE_RETURN: "bg-purple-200 text-purple-900 border-purple-300",
+  RETURN_VERIFIED: "bg-purple-200 text-purple-900 border-purple-300",
+  RETURN_FAIL: "bg-red-100 text-red-800 border-red-300",
+  REFUND_APPROVED: "bg-blue-100 text-blue-800 border-blue-300",
+  REFUND_RERY: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  TRANSIT_LACK: "bg-red-100 text-red-800 border-red-300",
+  RE_TRANSIT: "bg-yellow-100 text-yellow-800 border-yellow-300"
 }
 
 export const StatusBadge = React.memo(function StatusBadge({

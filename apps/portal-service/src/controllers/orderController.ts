@@ -20,6 +20,8 @@ import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
 import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
 import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
 import { ProductImage } from "@digishop/db/src/models/ProductImage";
+import { ShippingStatus } from "@digishop/db/src/types/enum";
+import { User } from "@digishop/db/src/models/User";
 
 const asInt = (v: any, d: number) => {
   const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d;
@@ -66,32 +68,204 @@ export async function adminSuggestOrders(req: Request, res: Response) {
   }
 }
 
+function escapeLike(s: string) {
+  return s.replace(/[%_]/g, "\\$&")
+}
+
+type SnapshotStat = { email: string; orderCount: number; lastOrderedAt: Date | null }
+type SuggestEmail = {
+  customerId: number
+  currentEmail: string
+  customerName: string | null
+  snapshotsEmail: string[]                      // all distinct snapshot emails for this user
+  snapshotStats: SnapshotStat[]            // same but with counts & last time used
+  totalOrderCount: number
+  lastOrderedAt: Date | null
+}
+
 export async function adminSuggestCustomerEmails(req: Request, res: Response) {
+  try {
+    const raw = String(req.query.q || "").trim()
+    if (!raw) return res.json([])
+
+    const likeStart = `${escapeLike(raw)}%`
+    const LIMIT = 8
+
+    // 1) Match current emails
+    const users = await User.findAll({
+      where: { email: { [Op.like]: likeStart } }, // Postgres? use Op.iLike
+      attributes: [
+        // ["id", "customerId"],
+        "id",
+        ["email", "currentEmail"],
+        "firstName",
+        "middleName",
+        "lastName",
+        ["updated_at", "updatedAt"]
+      ],
+      order: [["updated_at", "DESC"]],
+      limit: LIMIT,
+      raw: true
+    })
+    console.log("user match : ", users)
+
+    if (!users.length) return res.json([])
+
+    const userIds = users.map(u => Number(u.id))
+    console.log("userIDs: ", userIds)
+    // 2) Aggregate ALL snapshot emails for these users (no per-user limit)
+    const perEmailAgg = await Order.findAll({
+      attributes: [
+        [col("checkout.customer_id"), "customerId"],
+        ["customer_email_snapshot", "email"],
+        [fn("COUNT", col("Order.id")), "orderCount"],
+        [fn("MAX", col("Order.created_at")), "lastOrderedAt"]
+      ],
+      include: [
+        {
+          model: CheckOut,
+          as: "checkout",
+          attributes: [],
+          required: true,
+          where: { customerId: { [Op.in]: userIds } }
+        }
+      ],
+      group: [col("checkout.customer_id"), col("Order.customer_email_snapshot")],
+      raw: true
+    })
+    console.log("Per email agg: ", perEmailAgg)
+    // 3) Also compute totals per user
+    const perUserTotals = await Order.findAll({
+      attributes: [
+        [col("checkout.customer_id"), "customerId"],
+        [fn("COUNT", col("Order.id")), "totalOrderCount"],
+        [fn("MAX", col("Order.created_at")), "lastOrderedAt"]
+      ],
+      include: [
+        {
+          model: CheckOut,
+          as: "checkout",
+          attributes: [],
+          required: true,
+          where: { customerId: { [Op.in]: userIds } }
+        }
+      ],
+      group: [col("checkout.customer_id")],
+      raw: true
+    })
+    console.log("Per user total: ", perUserTotals)
+    const totalsMap = new Map<number, { totalOrderCount: number; lastOrderedAt: Date | null }>(
+      perUserTotals.map((t: any) => [Number(t.customerId), {
+        totalOrderCount: Number(t.totalOrderCount ?? 0),
+        lastOrderedAt: (t.lastOrderedAt as Date) ?? null
+      }])
+    )
+    console.log("total map: ", totalsMap)
+
+    // 4) Build map: userId -> snapshot stats[]
+    const statsMap = new Map<number, SnapshotStat[]>()
+    for (const r of perEmailAgg as any[]) {
+      const cid = Number(r.customerId)
+      const arr = statsMap.get(cid) ?? []
+      arr.push({
+        email: String(r.email),
+        orderCount: Number(r.orderCount ?? 0),
+        lastOrderedAt: (r.lastOrderedAt as Date) ?? null
+      })
+      statsMap.set(cid, arr)
+    }
+
+    console.log("stats map: ", statsMap)
+
+    // 5) Shape response
+    const result: SuggestEmail[] = (users as any[]).map(u => {
+      const cid = Number(u.id)
+      const stats = (statsMap.get(cid) ?? []).sort((a, b) => {
+        const ta = a.lastOrderedAt ? new Date(a.lastOrderedAt).getTime() : 0
+        const tb = b.lastOrderedAt ? new Date(b.lastOrderedAt).getTime() : 0
+        return tb - ta
+      })
+      const totals = totalsMap.get(cid) ?? { totalOrderCount: 0, lastOrderedAt: null }
+      return {
+        customerId: cid,
+        currentEmail: String(u.currentEmail),
+        customerName: [u.firstName, u.middleName, u.lastName].filter(Boolean).join(" ") || null,
+        snapshotsEmail: stats.map(s => s.email),        // all distinct snapshot emails
+        snapshotStats: stats,                      // with counts + last used
+        totalOrderCount: totals.totalOrderCount,
+        lastOrderedAt: totals.lastOrderedAt
+      }
+    })
+    console.log("result before sort: ", result)
+    // Optional: sort by lastOrderedAt desc so most active users appear first
+    result.sort((a, b) => {
+      const ta = a.lastOrderedAt ? new Date(a.lastOrderedAt).getTime() : 0
+      const tb = b.lastOrderedAt ? new Date(b.lastOrderedAt).getTime() : 0
+      return tb - ta
+    })
+    console.log("suggest email: ", result)
+    return res.json(result)
+  } catch (e) {
+    console.error("adminSuggestCustomerEmails error:", e)
+    return res.status(500).json({ error: "Internal server error" })
+  }
+}
+
+
+export async function adminSuggestStoreName(req: Request, res: Response) {
   try {
     const raw = String(req.query.q || "").trim();
     if (!raw) return res.json([]);
 
-    // ใช้ prefix ให้ index ทำงาน และ escape % _
+    // Prefix match for store name
     const likeStart = `${raw.replace(/[%_]/g, "\\$&")}%`;
 
-    const rows = await Order.findAll({
-      where: { customerEmailSnapshot: { [Op.like]: likeStart } },
+    // 1. Find matching stores
+    const stores = await Store.findAll({
+      where: { storeName: { [Op.like]: likeStart } },
       attributes: [
-        ["customer_email_snapshot", "customerEmail"],
-        [fn("MAX", col("customer_name_snapshot")), "customerName"],
-        [fn("COUNT", col("Order.id")), "orderCount"],
-        [fn("MAX", col("created_at")), "lastOrderedAt"],
+        "id",
+        ["store_name", "currentStoreName"]
       ],
-      group: [col("Order.customer_email_snapshot")],
-      order: [[fn("MAX", col("created_at")), "DESC"]],
+      limit: 16,
+      raw: true,
+    });
+    if (!stores.length) return res.json([]);
+
+    const storeIds = stores.map((s: any) => s.id);
+
+    // 2. Find orders for those stores
+    const rows = await Order.findAll({
+      where: { storeId: { [Op.in]: storeIds } },
+      attributes: [
+        "storeNameSnapshot",
+        [fn("COUNT", col("Order.id")), "orderCount"],
+        [fn("MAX", col("Order.created_at")), "lastOrderedAt"],
+        "storeId",
+      ],
+      group: [
+        col("Order.store_name_snapshot"),
+        col("Order.store_id"),
+      ],
+      order: [[fn("MAX", col("Order.created_at")), "DESC"]],
       limit: 8,
       raw: true,
       subQuery: false,
     });
 
-    return res.json(rows);
+    // 3. Map store name from Store table
+    const storeMap = new Map(stores.map((s: any) => [s.id, s.currentStoreName]));
+    const result = rows.map((row: any) => ({
+      storeNameSnapshot: row.storeNameSnapshot,
+      orderCount: row.orderCount,
+      lastOrderedAt: row.lastOrderedAt,
+      storeId: row.storeId,
+      currentStoreName: storeMap.get(row.storeId) ?? null,
+    }));
+    console.log("adminSuggestStoreName result=", result);
+    return res.json(result);
   } catch (e) {
-    console.error("adminSuggestCustomerEmails error:", e);
+    console.error("adminSuggestStoreName error:", e);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -99,8 +273,14 @@ export async function adminSuggestCustomerEmails(req: Request, res: Response) {
 export async function adminListOrders(req: Request, res: Response) {
   try {
     const {
-      q, status, dateFrom, dateTo, sortBy = "createdAt", sortDir = "desc",
+      q,
+      status,
+      dateFrom,
+      dateTo,
+      sortBy = "createdAt",
+      sortDir = "desc",
       customerEmail,
+      storeName,
     } = req.query as Record<string, string | undefined>;
 
     const page = Math.max(asInt(req.query.page, 1), 1);
@@ -116,13 +296,51 @@ export async function adminListOrders(req: Request, res: Response) {
     else if (from) whereOrder.createdAt = { [Op.gte]: from };
     else if (to) whereOrder.createdAt = { [Op.lte]: to };
 
-    // ถ้ามี customerEmail → filter ที่ Order (snapshot) โดยตรง (prefix match)
+    // ถ้ามี customerEmail → หา user id ก่อน แล้วหา checkout.id แล้วใช้ id หา order
+    let checkoutIds: number[] | null = null;
     if (customerEmail && customerEmail.trim()) {
       const likeStart = `${customerEmail.trim().replace(/[%_]/g, "\\$&")}%`;
-      whereOrder.customerEmailSnapshot = { [Op.like]: likeStart };
+      const users = await User.findAll({
+        where: { email: { [Op.like]: likeStart } },
+        attributes: ["id"],
+        raw: true,
+      });
+      const userIds = users.map((u: any) => u.id);
+      if (userIds.length) {
+        const checkouts = await CheckOut.findAll({
+          where: { customerId: { [Op.in]: userIds } },
+          attributes: ["id"],
+          raw: true,
+        });
+        checkoutIds = checkouts.map((c: any) => c.id);
+        if (!checkoutIds.length) {
+          // ถ้าไม่เจอ checkout เลย ให้ return ว่าง
+          return res.json({ data: [], meta: { page, pageSize, total: 0, totalPages: 0 } });
+        }
+      } else {
+        // ถ้าไม่เจอ user เลย ให้ return ว่าง
+        return res.json({ data: [], meta: { page, pageSize, total: 0, totalPages: 0 } });
+      }
     }
 
-    // include checkout สำหรับ q (order code)
+    // ถ้ามี storeName → หา store id ก่อน แล้วใช้ id หา order
+    if (storeName && storeName.trim()) {
+      const likeStart = `${storeName.trim().replace(/[%_]/g, "\\$&")}%`;
+      const stores = await Store.findAll({
+        where: { storeName: { [Op.like]: likeStart } },
+        attributes: ["id"],
+        raw: true,
+      });
+      const storeIds = stores.map((s: any) => s.id);
+      if (storeIds.length) {
+        whereOrder.storeId = { [Op.in]: storeIds };
+      } else {
+        // ถ้าไม่เจอ store เลย ให้ return ว่าง
+        return res.json({ data: [], meta: { page, pageSize, total: 0, totalPages: 0 } });
+      }
+    }
+
+    // include checkout สำหรับ q (order code) หรือ customerEmail
     const checkoutInclude: any = {
       model: CheckOut,
       as: "checkout",
@@ -133,6 +351,14 @@ export async function adminListOrders(req: Request, res: Response) {
       const likeStart = `${q.trim().replace(/[%_]/g, "\\$&")}%`;
       checkoutInclude.required = true;
       checkoutInclude.where = { order_code: { [Op.like]: likeStart } };
+    }
+    // ถ้ามี customerEmail ให้ filter ด้วย checkout.id
+    if (checkoutIds && checkoutIds.length) {
+      checkoutInclude.required = true;
+      checkoutInclude.where = {
+        ...(checkoutInclude.where || {}),
+        id: { [Op.in]: checkoutIds }
+      };
     }
 
     const include: any[] = [checkoutInclude];
@@ -180,7 +406,6 @@ export async function adminListOrders(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error" });
   }
 }
-
 
 export async function adminGetOrderDetail(req: Request, res: Response) {
   try {
@@ -279,6 +504,7 @@ export async function adminGetOrderDetail(req: Request, res: Response) {
             "trackingNumber",
             "carrier",
             "shippedAt",
+            "shippingStatus",
             ["shipping_type_name_snapshot","shippingTypeNameSnapshot"],
             ["shipping_price_minor_snapshot","shippingPriceMinorSnapshot"],
             ["address_snapshot","addressSnapshot"],
@@ -383,6 +609,7 @@ export async function adminGetOrderDetail(req: Request, res: Response) {
             trackingNumber: shippingInfo.get("trackingNumber") as string | null,
             carrier: shippingInfo.get("carrier") as string | null,
             shippingTypeName: shippingInfo.get("shippingTypeNameSnapshot") as string,
+            shippingStatus: shippingInfo.get("shippingStatus") as string,
             shippingPriceMinor: shippingInfo.get("shippingPriceMinorSnapshot") as number,
             shippedAt: shippingInfo.get("shippedAt") as Date | string | null,
             addressSnapshot: shippingInfo.get("addressSnapshot") || {},

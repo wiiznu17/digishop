@@ -87,16 +87,21 @@ export function CustomerEmailSearchBox({
           ) : (
             items.map((s) => (
               <button
-                key={s.customerEmail}
+                key={s.currentEmail}
                 className="w-full text-left px-3 py-2 hover:bg-accent"
                 onClick={() => {
-                  onChange(s.customerEmail)
+                  onChange(s.currentEmail)
                   setOpen(false)
                 }}
               >
-                <div className="text-sm font-medium">{s.customerEmail}</div>
+                <div className="text-sm font-medium">{s.currentEmail}</div>
+                <div className="text-xs font-small cols-2">
+                  <div className="text-muted-foreground">early email : </div>
+                  <div>{s.snapshotsEmail[0]}</div>
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  {s.customerName ?? "-"} · {s.orderCount ?? 0} orders
+                  {s.customerName ?? "-"} · {s.snapshotStats.orderCount ?? 0}{" "}
+                  orders
                   {s.lastOrderedAt
                     ? ` · ${new Date(s.lastOrderedAt).toLocaleString()}`
                     : ""}

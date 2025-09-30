@@ -57,9 +57,10 @@ export class Store extends Model<StoreAttributes, StoreCreationAttributes> imple
           unique: true,
           field: 'user_id',
         },
-        storeName: {
+        storeName: { 
           type: DataTypes.STRING(191),
           allowNull: false,
+          unique: true,
           field: 'store_name',
         },
         email: {
@@ -126,6 +127,7 @@ export class Store extends Model<StoreAttributes, StoreCreationAttributes> imple
           { name: 'uq_stores_user_id', fields: ['user_id'], unique: true },
           { name: 'ix_stores_status', fields: ['status'] },
           { name: 'ix_stores_created_at', fields: ['created_at'] },
+          { name: 'uq_stores_store_name', fields: ['store_name'], unique: true },
         ],
       }
     );

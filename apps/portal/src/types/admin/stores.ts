@@ -35,7 +35,11 @@ export type AdminStoreDetail = AdminStoreLite & {
       currencyCode: string
       createdAt: string
       customer: { id: number; name: string; email: string }
-      items: Array<{ productId: number; productName: string }>
+      items: Array<{
+        productId: number
+        productName: string
+        uuid: string
+      }>
     }>
   }
 }

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { login } from "@/utils/requesters/authRequester"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("seed-admin@example.com")
+  const [email, setEmail] = useState("superadmin@example.com")
   const [password, setPassword] = useState("1234")
   const [errorMsg, setErrorMsg] = useState<string>("")
   const [submitting, setSubmitting] = useState(false)
@@ -59,7 +59,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder="your@example.com"
           />
         </label>
 
