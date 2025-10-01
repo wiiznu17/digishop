@@ -24,7 +24,6 @@ export default {
         tracking_number: {
           type: DataTypes.STRING(100),
           allowNull: true,
-          // ถ้าต้องการ unique ให้เปิดบรรทัดถัดไป (และแก้ seeder ไม่ให้ชน)
           // unique: true,
         },
 
@@ -59,8 +58,16 @@ export default {
           type: DataTypes.DATE,
           allowNull: true,
         },
+        delivered_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
+        returned_to_sender_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
 
-        // ⬇️ Snapshot fields
+        // Snapshots
         shipping_type_name_snapshot: {
           type: DataTypes.STRING(80),
           allowNull: false,
@@ -109,6 +116,8 @@ export default {
     await queryInterface.addIndex("SHIPPING_INFO", ["shipping_status"]);
     await queryInterface.addIndex("SHIPPING_INFO", ["tracking_number"]);
     await queryInterface.addIndex("SHIPPING_INFO", ["created_at"]);
+    await queryInterface.addIndex("SHIPPING_INFO", ["delivered_at"]);
+    await queryInterface.addIndex("SHIPPING_INFO", ["returned_to_sender_at"]);
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
