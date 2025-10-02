@@ -24,14 +24,18 @@ export type OrderStatus =
   | "REFUND_PROCESSING"
   | "REFUND_SUCCESS"
   | "REFUND_FAIL"
-  | "REFUND_RETRY" // NEW
+  | "REFUND_RETRY"
 
-// จาก back-end (mapping enum เดิมของระบบขนส่ง)
+// ✅ อิง enum ล่าสุดจากฝั่ง BE
 export type ShippingStatus =
   | "PENDING"
-  | "RECIEVE_PARCEL"
+  | "READY_TO_SHIP"
   | "IN_TRANSIT"
+  | "OUT_FOR_DELIVERY"
   | "DELIVERED"
+  | "DELIVERY_FAILED"
+  | "RETURN_TO_SENDER_IN_TRANSIT"
+  | "RETURNED_TO_SENDER"
   | "TRANSIT_ISSUE"
   | "RE_TRANSIT"
 
@@ -70,14 +74,13 @@ export interface PaymentSummary {
   pgwStatus?: string
   paidAt?: string
   authorized?: number
-  captured?: number
+  captured: number
   refunded?: number
 }
 
 export interface Order {
   id: string
-
-  // customer snapshot-first
+  orderCode: string
   customerName?: string
   customerEmail?: string
   customerPhone?: string
@@ -98,12 +101,15 @@ export interface Order {
   statusHistory?: OrderStatus[]
 
   paymentMethod?: string
-  payment?: PaymentSummary
+  payment: PaymentSummary
 
+  // shipping snapshot-first
   shippingType?: ShippingType
   trackingNumber?: string | null
   carrier?: string
   shippedAt?: string | null
+  deliveredAt?: string | null
+  returnedToSenderAt?: string | null
   shippingStatus?: ShippingStatus
 
   orderItems?: OrderItem[]

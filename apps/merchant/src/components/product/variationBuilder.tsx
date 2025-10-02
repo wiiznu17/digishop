@@ -1,4 +1,3 @@
-// apps/merchant/src/components/product/variationBuilder.tsx
 "use client"
 
 import { useEffect, useMemo } from "react"

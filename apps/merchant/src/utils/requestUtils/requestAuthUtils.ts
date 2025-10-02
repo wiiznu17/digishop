@@ -1,4 +1,4 @@
-import { RegisterData, UserAuth } from "@/types/props/userProp"
+import { RegisterData, StoreStatus, UserAuth } from "@/types/props/userProp"
 import axios from "@/lib/axios"
 
 export const createMerchant = async (data: RegisterData) => {
@@ -46,5 +46,17 @@ export async function logoutUser(): Promise<void> {
     await axios.post("/api/auth/logout", null, { withCredentials: true })
   } catch (error) {
     console.error("Logout error:", error)
+  }
+}
+
+export async function fetchStoreStatus(): Promise<StoreStatus | null> {
+  try {
+    const res = await axios.get("/api/merchant/store/status", {
+      withCredentials: true
+    })
+    return (res.data?.status ?? null) as StoreStatus | null
+  } catch (error) {
+    console.error("Error fetching store status:", error)
+    return null
   }
 }

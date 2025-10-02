@@ -226,10 +226,16 @@ export function OrdersTable({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[140px]">Order no.</TableHead>
                   <TableHead className="w-[140px]">Order ID</TableHead>
                   <TableHead className="min-w-[200px]">Customer</TableHead>
                   <TableHead className="w-[160px]">Date</TableHead>
-                  <TableHead className="w-[120px] text-right">Total</TableHead>
+                  <TableHead className="w-[120px] text-right">
+                    Total check out
+                  </TableHead>
+                  <TableHead className="w-[120px] text-right">
+                    Total of order
+                  </TableHead>
                   <TableHead className="min-w-[180px]">Status</TableHead>
                   <TableHead className="w-[140px]">Actions</TableHead>
                 </TableRow>
@@ -237,13 +243,13 @@ export function OrdersTable({
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center">
+                    <TableCell colSpan={7} className="h-32 text-center">
                       Loading orders…
                     </TableCell>
                   </TableRow>
                 ) : orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center">
+                    <TableCell colSpan={7} className="h-32 text-center">
                       <div className="flex flex-col items-center gap-3 text-muted-foreground">
                         <div className="text-sm">
                           {hasActiveFilters
@@ -275,10 +281,18 @@ export function OrdersTable({
                       >
                         <TableCell className="font-mono font-medium">
                           <div className="flex flex-col">
-                            <span className="text-sm">{order.id}</span>
+                            <span className="text-sm">{order.orderCode}</span>
                             <span className="text-xs text-muted-foreground">
                               #{globalIndex}
                             </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono font-medium">
+                          <div className="flex flex-col">
+                            <span className="text-sm">{order.id}</span>
+                            {/* <span className="text-xs text-muted-foreground">
+                              #{globalIndex}
+                            </span> */}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -299,6 +313,11 @@ export function OrdersTable({
                             <div className="text-xs text-muted-foreground">
                               {fmtTime(order.createdAt)}
                             </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          <div className="text-sm">
+                            {fmtTHB(order.payment.captured)}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">
