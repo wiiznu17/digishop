@@ -33,6 +33,7 @@ import {
   AdminRefundLite
 } from "@/utils/requesters/refundRequester"
 import { Pager } from "@/components/common/Pager"
+import AuthGuard from "@/components/AuthGuard"
 
 const formatTHB = (m: number) =>
   (m / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
@@ -88,7 +89,7 @@ const formatTHB = (m: number) =>
 //   )
 // }
 
-export default function AdminRefundsPage() {
+function AdminRefundsPage() {
   const router = useRouter()
 
   // Filters
@@ -374,5 +375,18 @@ export default function AdminRefundsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["REFUNDS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminRefundsPage />
+    </Guard>
   )
 }

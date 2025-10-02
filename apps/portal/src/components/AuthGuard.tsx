@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { fetchAuth } from "@/utils/requesters/authRequester"
 import { subscribe, getAccessToken } from "@/lib/tokenStore"
 
-// -------- Types --------
 export type Me = {
   id: number
   email: string
@@ -14,32 +13,21 @@ export type Me = {
   permissions: string[]
 }
 
-// -------- useAuth: โหลดข้อมูลผู้ใช้จาก /api/auth/access --------
-// - ไม่เรียก API ถ้ายังไม่มี access token
-// - กัน StrictMode และการ unmount ด้วย request-id (sequence)
 export function useAuth() {
   const [me, setMe] = useState<Me | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setErr] = useState<Error | null>(null)
 
-  // ใช้ useRef เพื่อเก็บ state ที่ไม่ทำให้ re-render
+  // refs สำหรับควบคุมลำดับ/สถานะที่ไม่ทำให้ re-render
   const didRunRef = useRef(false)
   const seqRef = useRef(0)
   const activeRef = useRef(0)
-  const mountedRef = useRef(true) // เพิ่ม: track component mount status
+  const mountedRef = useRef(true) // track ว่ายัง mounted อยู่
 
   async function loadMe() {
-    console.log("🔄 useAuth: loadMe called")
-
     const token = getAccessToken()
-    console.log("🔑 useAuth: token check", {
-      hasToken: !!token,
-      tokenLength: token?.length || 0
-    })
-
     if (token == null) {
-      console.log("❌ useAuth: No token, clearing state")
-      // ไม่ต้อง update sequence ถ้าไม่มี token
+      // ไม่มี token → เคลียร์ state
       if (mountedRef.current) {
         setMe(null)
         setErr(null)
@@ -50,7 +38,6 @@ export function useAuth() {
 
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
-    console.log(`🚀 useAuth: Starting request (seq: ${mySeq})`)
 
     if (mountedRef.current) {
       setLoading(true)
@@ -59,39 +46,25 @@ export function useAuth() {
 
     try {
       const m = await fetchAuth()
-      console.log("✅ useAuth: fetchAuth success", m)
-
-      // เช็คทั้ง sequence และ mounted status
-      if (activeRef.current !== mySeq) {
-        console.log(
-          `⚠️ useAuth: Request outdated (current: ${activeRef.current}, mine: ${mySeq})`
-        )
-        return
-      }
-
-      if (!mountedRef.current) {
-        console.log("⚠️ useAuth: Component unmounted, ignoring response")
-        return
-      }
-
+      // ถ้า response เก่าหรือ component unmounted ให้ทิ้ง
+      if (activeRef.current !== mySeq || !mountedRef.current) return
       setMe(m)
     } catch (e: unknown) {
-      console.error("❌ useAuth: fetchAuth failed", e)
+      // log สำคัญ: โหลด session ล้มเหลว
+      console.error("[useAuth] fetchAuth failed", e)
       if (activeRef.current !== mySeq || !mountedRef.current) return
       setErr(e instanceof Error ? e : new Error("fetchAuth failed"))
     } finally {
       if (activeRef.current === mySeq && mountedRef.current) {
-        console.log(`🏁 useAuth: Setting loading=false (seq: ${mySeq})`)
         setLoading(false)
       }
     }
   }
 
   useEffect(() => {
-    console.log("🔧 useAuth: useEffect triggered")
     mountedRef.current = true
 
-    // ใน development: เรียกครั้งเดียวต่อ component instance
+    // dev: ให้รันครั้งเดียวต่อ component instance
     if (process.env.NODE_ENV !== "production") {
       if (!didRunRef.current) {
         didRunRef.current = true
@@ -101,13 +74,12 @@ export function useAuth() {
       void loadMe()
     }
 
+    // เมื่อ token เปลี่ยน → reload me
     const unsub = subscribe(() => {
-      console.log("🔔 useAuth: Token changed, reloading")
       void loadMe()
     })
 
     return () => {
-      console.log("🧹 useAuth: Cleanup")
       mountedRef.current = false
       unsub()
     }
@@ -116,7 +88,6 @@ export function useAuth() {
   return { me, loading, error }
 }
 
-// -------- RBAC helper: ตรวจสิทธิ์จาก perms --------
 export function useCan(perms: string[], me: Me | null) {
   const need = perms ?? []
   return useMemo(() => {
@@ -127,7 +98,6 @@ export function useCan(perms: string[], me: Me | null) {
   }, [me, need.join("|")])
 }
 
-// -------- AuthGuard: ครอบหน้าที่ต้องล็อกอิน/มีสิทธิ์ --------
 export default function AuthGuard({
   children,
   requiredPerms,
@@ -147,17 +117,15 @@ export default function AuthGuard({
   useEffect(() => {
     if (loading || redirectedRef.current) return
 
-    // ยังไม่ล็อกอิน
+    // ยังไม่ล็อกอิน → ไปหน้า login
     if (!me) {
-      console.log("Not login")
       redirectedRef.current = true
       router.replace(redirectTo)
       return
     }
 
-    // ล็อกอินแล้ว แต่สิทธิ์ไม่พอ
+    // ล็อกอินแล้วแต่สิทธิ์ไม่พอ → 403
     if (!allowed) {
-      console.log("already login but Do not access")
       redirectedRef.current = true
       router.replace("/403")
       return

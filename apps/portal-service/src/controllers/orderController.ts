@@ -20,8 +20,11 @@ import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
 import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
 import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
 import { ProductImage } from "@digishop/db/src/models/ProductImage";
-import { ShippingStatus } from "@digishop/db/src/types/enum";
+import { ReturnShipmentStatus, ShippingStatus } from "@digishop/db/src/types/enum";
 import { User } from "@digishop/db/src/models/User";
+import { ShipmentEvent } from "@digishop/db/src/models/ShipmentEvent";
+import { ReturnShipment } from "@digishop/db/src/models/ReturnShipment";
+import { ReturnShipmentEvent } from "@digishop/db/src/models/ReturnShipmentEvent";
 
 const asInt = (v: any, d: number) => {
   const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d;
@@ -504,6 +507,8 @@ export async function adminGetOrderDetail(req: Request, res: Response) {
             "trackingNumber",
             "carrier",
             "shippedAt",
+            "deliveredAt",
+            "returnedToSenderAt", 
             "shippingStatus",
             ["shipping_type_name_snapshot","shippingTypeNameSnapshot"],
             ["shipping_price_minor_snapshot","shippingPriceMinorSnapshot"],
@@ -512,9 +517,51 @@ export async function adminGetOrderDetail(req: Request, res: Response) {
           include: [
             { model: ShippingType, as: "shippingType", attributes: ["id","name"], required: false },
             { model: Address, as: "address", attributes: ["id"], required: false },
+            {
+              model: ShipmentEvent, as: "events", required: false, separate: true,
+              attributes: [
+                "id",
+                ["from_status","fromStatus"],
+                ["to_status","toStatus"],
+                "description","location",
+                ["occurred_at","occurredAt"],
+                ["created_at","createdAt"],
+              ],
+              order: [["occurred_at","ASC"],["id","ASC"]],
+            }
           ],
           required: false,
         },
+        {
+          model: ReturnShipment, as: "returnShipments", required: false,
+          attributes: [
+            "id",
+            "status",
+            "carrier",
+            "trackingNumber",
+            "shippedAt",
+            "deliveredBackAt",
+            ["from_address_snapshot","fromAddressSnapshot"],
+            ["to_address_snapshot","toAddressSnapshot"],
+            ["created_at","createdAt"],
+            ["updated_at","updatedAt"],
+          ],
+          include: [
+            {
+              model: ReturnShipmentEvent, as: "events", required: false, separate: true,
+              attributes: [
+                "id",
+                ["from_status","fromStatus"],
+                ["to_status","toStatus"],
+                "description","location",
+                ["occurred_at","occurredAt"],
+                ["created_at","createdAt"],
+              ],
+              order: [["occurred_at","ASC"],["id","ASC"]],
+            },
+          ],
+        },
+
         {
           model: OrderStatusHistory, as: "statusHistory",
           required: false, separate: true,
@@ -605,16 +652,55 @@ export async function adminGetOrderDetail(req: Request, res: Response) {
       store: store ? { uuid: store.get("uuid"), name: store.get("storeName") } : null,
 
       shipping: shippingInfo
-        ? {
-            trackingNumber: shippingInfo.get("trackingNumber") as string | null,
-            carrier: shippingInfo.get("carrier") as string | null,
-            shippingTypeName: shippingInfo.get("shippingTypeNameSnapshot") as string,
-            shippingStatus: shippingInfo.get("shippingStatus") as string,
-            shippingPriceMinor: shippingInfo.get("shippingPriceMinorSnapshot") as number,
-            shippedAt: shippingInfo.get("shippedAt") as Date | string | null,
-            addressSnapshot: shippingInfo.get("addressSnapshot") || {},
-          }
-        : null,
+    ? {
+        trackingNumber: shippingInfo.get("trackingNumber") as string | null,
+        carrier: shippingInfo.get("carrier") as string | null,
+        shippingTypeName: shippingInfo.get("shippingTypeNameSnapshot") as string,
+        shippingStatus: shippingInfo.get("shippingStatus") as string,
+        shippingPriceMinor: shippingInfo.get("shippingPriceMinorSnapshot") as number,
+        shippedAt: shippingInfo.get("shippedAt") as Date | string | null,
+        deliveredAt: shippingInfo.get("deliveredAt") as Date | string | null,                 // ✅ ใหม่
+        returnedToSenderAt: shippingInfo.get("returnedToSenderAt") as Date | string | null,   // ✅ ใหม่
+        addressSnapshot: shippingInfo.get("addressSnapshot") || {},
+        events: Array.isArray(shippingInfo.events)
+          ? shippingInfo.events.map((e: any) => ({
+              id: e.id as number,
+              fromStatus: e.fromStatus as string | null,
+              toStatus: e.toStatus as string,
+              description: e.description as string | null,
+              location: e.location as string | null,
+              occurredAt: e.occurredAt as Date | string,
+              createdAt: e.createdAt as Date | string,
+            }))
+          : []
+      }
+    : null,
+    // frontend ต้องไปแก้ type
+      returnShipments: Array.isArray((order as any).returnShipments)
+        ? (order as any).returnShipments.map((rs: any) => ({
+            id: rs.id as number,
+            status: rs.status as ReturnShipmentStatus,
+            carrier: rs.carrier as string | null,
+            trackingNumber: rs.trackingNumber as string | null,
+            shippedAt: rs.shippedAt as Date | string | null,
+            deliveredBackAt: rs.deliveredBackAt as Date | string | null,
+            fromAddressSnapshot: rs.fromAddressSnapshot ?? null,
+            toAddressSnapshot: rs.toAddressSnapshot ?? null,
+            createdAt: rs.createdAt as Date | string,
+            updatedAt: rs.updatedAt as Date | string,
+            events: Array.isArray(rs.events)
+              ? rs.events.map((e: any) => ({
+                  id: e.id as number,
+                  fromStatus: e.fromStatus as string | null,
+                  toStatus: e.toStatus as string,
+                  description: e.description as string | null,
+                  location: e.location as string | null,
+                  occurredAt: e.occurredAt as Date | string,
+                  createdAt: e.createdAt as Date | string,
+                }))
+              : []
+          }))
+        : [],
 
       payment: checkout?.payment
         ? {

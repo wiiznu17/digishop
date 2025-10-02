@@ -1,4 +1,3 @@
-// src/models/enums.ts
 export enum UserRole {
   CUSTOMER = 'CUSTOMER',
   MERCHANT = 'MERCHANT',
@@ -28,10 +27,16 @@ export enum UserStatus {
   BANNED = 'BANNED',
 }
 
+/**
+ * NOTE:
+ * - เดิมโค้ดกำหนดค่าไม่ตรงชื่อคีย์ (APPROVED='VERIFIED', BANNED='FAILED')
+ * - แก้ให้ค่าตรงคีย์ก่อน (ลด breaking change)
+ * - แนะนำในอนาคตพิจารณาเปลี่ยนชื่อคีย์เป็น VERIFIED/FAILED ให้สื่อความหมายกว่า
+ */
 export enum BankAccountStatus {
   PENDING = 'PENDING',
-  APPROVED = 'VERIFIED',
-  BANNED = 'FAILED',
+  VERIFIED = 'VERIFIED',
+  FAILED = 'FAILED'
 }
 
 export enum ShippingType {
@@ -39,45 +44,65 @@ export enum ShippingType {
   EXPRESS = 'EXPRESS',
 }
 
-export enum ProductStatus { // สำหรับให้ร้านค้าเลือกว่าสินค้านี้ยังขายอยู่ไหม ส่วน status ที่เกี่ยวกับการขอลงขายสินค้ายังไม่มี
+export enum ProductStatus {
+  // สำหรับสภาวะ "ขาย/ไม่ขาย" ของสินค้า
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE'
 }
 
-export enum ProductReqStatus { // สำหรับให้ร้านค้าเลือกว่าสินค้านี้ยังขายอยู่ไหม ส่วน status ที่เกี่ยวกับการขอลงขายสินค้ายังไม่มี
+export enum ProductReqStatus {
+  // แก้ไข/เพิ่มสินค้า ต้องรอ admin approve
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
-  REJECT = 'REJECT'
+  REJECT = 'REJECT' // REJECTED soon
 }
+
 export enum OrderStatus {
-  PENDING = "PENDING",                  // รอการชำระเงิน (ลูกค้ายังไม่ได้จ่าย)
-  CUSTOMER_CANCELED = "CUSTOMER_CANCELED", // ลูกค้ายกเลิกเองก่อนจ่าย
-  PAID = "PAID",                        // ชำระเงินแล้ว (prepaid)
-  MERCHANT_CANCELED = "MERCHANT_CANCELED", // ร้านค้าปฏิเสธ/ยกเลิกหลังชำระ
-  PROCESSING = "PROCESSING",            // ร้านค้ากำลังเตรียมสินค้า
-  READY_TO_SHIP = "READY_TO_SHIP",      // ร้านค้าเตรียมเสร็จ พร้อมส่ง
-  HANDED_OVER = "HANDED_OVER",          // ร้านค้าส่งมอบพัสดุให้ขนส่งแล้ว
-  SHIPPED = "SHIPPED",                  // บริษัทขนส่งรับของ / แสกนครั้งแรก
-  DELIVERED = "DELIVERED",              // ลูกค้าได้รับสินค้า
-  COMPLETE = "COMPLETE",                // ออเดอร์เสร็จสมบูรณ์ (ลูกค้ายืนยันแล้ว)
+  PENDING = 'PENDING',                   // ลูกค้ายังไม่จ่าย
+  CUSTOMER_CANCELED = 'CUSTOMER_CANCELED',
+  PAID = 'PAID',                         // จ่ายแล้ว (prepaid)
+  MERCHANT_CANCELED = 'MERCHANT_CANCELED',
 
-  TRANSIT_LACK = "TRANSIT_LACK",        // ปัญหาระหว่างขนส่ง
-  RE_TRANSIT = "RE_TRANSIT",            // ส่งใหม่อีกครั้ง
+  PROCESSING = 'PROCESSING',             // ร้านเตรียมสินค้า
+  READY_TO_SHIP = 'READY_TO_SHIP',       // พร้อมส่ง
+  HANDED_OVER = 'HANDED_OVER',           // ส่งมอบให้ขนส่งแล้ว ShippingStatus.READY_TO_SHIP
+  SHIPPED = 'SHIPPED',                   // ขนส่งรับของ ShippingStatus.IN_TRANSIT
+  DELIVERED = 'DELIVERED',               // ลูกค้าได้รับแล้ว ShippingStatus.DELIVERED
+  COMPLETE = 'COMPLETE',                // ออเดอร์จบ (ยืนยันแล้ว)
 
-  REFUND_REQUEST = "REFUND_REQUEST",    // ลูกค้าขอคืนเงิน
-  REFUND_REJECTED = "REFUND_REJECTED",    // ร้านค้าปฏิเสธการคืนเงิน
-  AWAITING_RETURN = "AWAITING_RETURN",  // รอการส่งสินค้าคืน
-  RECEIVE_RETURN = "RECEIVE_RETURN",    // ร้านค้าได้รับสินค้าคืน
-  RETURN_VERIFIED = "RETURN_VERIFIED",  // ร้านค้าตรวจสอบสินค้าคืนแล้ว
-  RETURN_FAIL = "RETURN_FAIL",          // การคืนสินค้าล้มเหลว
+  TRANSIT_LACK = 'TRANSIT_LACK',         // ปัญหาระหว่างขนส่ง ShippingStatus.TRANSIT_ISSUE
+  RE_TRANSIT = 'RE_TRANSIT',             // ส่งใหม่ ShippingStatus.RE_TRANSIT
 
-  REFUND_APPROVED = "REFUND_APPROVED",  // ร้านค้าอนุมัติการคืนเงิน
-  REFUND_PROCESSING = "REFUND_PROCESSING", // กำลังคืนเงิน (อยู่ระหว่างดำเนินการ)
-  REFUND_SUCCESS = "REFUND_SUCCESS",    // คืนเงินสำเร็จ (API provider success)
-  REFUND_FAIL = "REFUND_FAIL",          // คืนเงินล้มเหลว (API provider fail)
-  REFUND_RERY = "REFUND_RETRY"
+  // Return/Refund lifecycle (ตามนโยบายตอนนี้ยังไม่ทำ partial)
+  REFUND_REQUEST = 'REFUND_REQUEST',
+  REFUND_REJECTED = 'REFUND_REJECTED',
+  AWAITING_RETURN = 'AWAITING_RETURN', // ShippingStatus.RETURN_TO_SENDER_IN_TRANSIT
+  RECEIVE_RETURN = 'RECEIVE_RETURN', // ShippingStatus.RETURNED_TO_SENDER
+  RETURN_VERIFIED = 'RETURN_VERIFIED',
+  RETURN_FAIL = 'RETURN_FAIL', // ShippingStatus.DELIVERY_FAILED
+
+  REFUND_APPROVED = 'REFUND_APPROVED',
+  REFUND_PROCESSING = 'REFUND_PROCESSING',
+  REFUND_SUCCESS = 'REFUND_SUCCESS',
+  REFUND_FAIL = 'REFUND_FAIL',
+  REFUND_RETRY = 'REFUND_RETRY',
 }
 
+export enum ShippingStatus {
+  PENDING = 'PENDING',                                   // ยังไม่ส่ง
+  READY_TO_SHIP = 'READY_TO_SHIP',                       // พร้อมส่ง
+  IN_TRANSIT = 'IN_TRANSIT',                             // ระหว่างขนส่ง
+  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',                 // กำลังออกไปส่ง
+  DELIVERED = 'DELIVERED',                               // ส่งสำเร็จ
+
+  DELIVERY_FAILED = 'DELIVERY_FAILED',                   // ส่งไม่สำเร็จ (เช่น ไม่พบผู้รับ)
+  RETURN_TO_SENDER_IN_TRANSIT = 'RETURN_TO_SENDER_IN_TRANSIT', // ตีกลับระหว่างทาง
+  RETURNED_TO_SENDER = 'RETURNED_TO_SENDER',             // กลับถึงผู้ส่งแล้ว
+
+  TRANSIT_ISSUE = 'TRANSIT_ISSUE',                       // ปัญหาระหว่างขนส่ง (จับทุกกรณี)
+  RE_TRANSIT = 'RE_TRANSIT',                             // ส่งใหม่ (ถ้าต้องเริ่มรอบใหม่)
+  // CUSTOMER_REJECT
+}
 
 export enum PaymentStatus {
   SUCCESS = 'SUCCESS',
@@ -86,28 +111,18 @@ export enum PaymentStatus {
 }
 
 export enum RefundStatus {
-  REQUESTED = "REQUESTED",
-  APPROVED  = "APPROVED",
-  SUCCESS   = "SUCCESS",
-  FAIL      = "FAIL",
-  CANCELED  = "CANCELED",
+  REQUESTED = 'REQUESTED',
+  APPROVED = 'APPROVED',
+  SUCCESS = 'SUCCESS',
+  FAIL = 'FAIL',
+  CANCELED = 'CANCELED',
 }
 
 export enum PaymentType {
   FULL = 'FULL',
   INSTALLMENT = 'INSTALLMENT',
   QR_PP_TAG30 = 'QR_PP_TAG30',
-  QR_CS = 'QR_CS'
-}
-
-export enum ShippingStatus {
-  PENDING = 'PENDING',
-  RECIEVE_PARCEL = 'RECIEVE_PARCEL',
-  IN_TRANSIT = 'IN_TRANSIT',
-  CUSTOMER_REJECT = 'CUSTOMER_REJECT',
-  TRANSIT_ISSUE = 'TRANSIT_ISSUE',
-  RE_TRANSIT = 'RE_TRANSIT',
-  DELIVERED = 'DELIVERED',
+  QR_CS = 'QR_CS',
 }
 
 export enum AdminRole {
@@ -120,9 +135,17 @@ export enum DisputeStatus {
   RESOLVED = 'RESOLVED',
   REJECTED = 'REJECTED',
 }
+
 export enum PaymentMethod {
   CREDIT_CARD = 'CREDIT_CARD',
   QR = 'QR',
   PROMPTPAY = 'PROMPTPAY',
   // CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
+}
+
+export enum ReturnShipmentStatus {
+  AWAITING_DROP = 'AWAITING_DROP',             // รอลูกค้าส่งของคืน/รอรับเข้าระบบขากลับ
+  RETURN_IN_TRANSIT = 'RETURN_IN_TRANSIT',     // ระหว่างขนส่งขากลับ
+  DELIVERED_BACK = 'DELIVERED_BACK',           // คืนถึงร้าน/คลังแล้ว
+  RETURN_FAILED = 'RETURN_FAILED',             // ขากลับล้มเหลว
 }

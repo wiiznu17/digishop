@@ -1,7 +1,8 @@
 // apps/merchant-service/src/controllers/orderController.ts
 import { Request, Response } from "express"
 import axios from "axios"
-import { IncludeOptions, literal, Op, WhereOptions } from "sequelize"
+import crypto from "crypto"
+import { IncludeOptions, Op, WhereOptions, literal, Transaction } from "sequelize"
 
 import { Order } from "@digishop/db/src/models/Order"
 import { OrderItem } from "@digishop/db/src/models/OrderItem"
@@ -12,8 +13,19 @@ import { ShippingInfo } from "@digishop/db/src/models/ShippingInfo"
 import { User } from "@digishop/db/src/models/User"
 import { RefundOrder } from "@digishop/db/src/models/RefundOrder"
 import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory"
-import { ShippingStatus } from "@digishop/db/src/types/enum"
 import { CheckOut } from "@digishop/db/src/models/CheckOut"
+import { ShipmentEvent } from "@digishop/db/src/models/ShipmentEvent"
+import { ReturnShipment } from "@digishop/db/src/models/ReturnShipment"
+import { ReturnShipmentEvent } from "@digishop/db/src/models/ReturnShipmentEvent"
+import { PaymentGatewayEvent } from "@digishop/db/src/models/PaymentGatewayEvent"
+
+import {
+  ReturnShipmentStatus,
+  ShippingStatus,
+  OrderStatus,
+  RefundStatus,
+} from "@digishop/db/src/types/enum"
+import sequelize from "@digishop/db"
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -117,14 +129,18 @@ function decidePgwAction(detailStatus: string): "VOID" | "REFUND" | "NONE" {
   return "NONE"
 }
 
+function genRequestId() {
+  return typeof (crypto as any).randomUUID === "function" ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex")
+}
+
 // ───────────────────────────────────────────────────────────────────────────────
-// Includes — ใช้ snapshot เป็นหลัก, include live เท่าที่จำเป็น (customer + payment ผ่าน checkout)
+// Includes — snapshot-first
 
 const CHECKOUT_INCLUDE_BASE: IncludeOptions = {
   model: CheckOut,
   as: "checkout",
   attributes: ["id", "orderCode", "customerId"],
-  paranoid: false, // กันเคสไม่มีคอลัมน์ deleted_at
+  paranoid: false,
   include: [
     {
       model: User,
@@ -135,6 +151,7 @@ const CHECKOUT_INCLUDE_BASE: IncludeOptions = {
       model: Payment,
       as: "payment",
       attributes: [
+        "id",
         "paymentMethod",
         "status",
         "provider",
@@ -157,16 +174,57 @@ const ORDER_BASE_INCLUDES: IncludeOptions[] = [
     model: ShippingInfo,
     as: "shippingInfo",
     attributes: [
+      "id",
       "trackingNumber",
       "carrier",
       "shippingStatus",
       "shippedAt",
+      "deliveredAt",
+      "returnedToSenderAt",
       "createdAt",
       "updatedAt",
       "shipping_type_name_snapshot",
       "shipping_price_minor_snapshot",
       "address_snapshot",
     ],
+    include: [
+      {
+        model: ShipmentEvent,
+        as: "events",
+        attributes: ["id", "fromStatus", "toStatus", "description", "location", "occurredAt", "createdAt"],
+        separate: true,
+        order: [["occurredAt", "ASC"], ["id", "ASC"]],
+        required: false,
+      },
+    ],
+    required: false,
+  },
+  {
+    model: ReturnShipment,
+    as: "returnShipments",
+    attributes: [
+      "id",
+      "status",
+      "carrier",
+      "trackingNumber",
+      "shippedAt",
+      "deliveredBackAt",
+      "fromAddressSnapshot",
+      "toAddressSnapshot",
+      "createdAt",
+      "updatedAt",
+    ],
+    include: [
+      {
+        model: ReturnShipmentEvent,
+        as: "events",
+        attributes: ["id", "fromStatus", "toStatus", "description", "location", "occurredAt", "createdAt"],
+        separate: true,
+        order: [["occurredAt", "ASC"], ["id", "ASC"]],
+        required: false,
+      },
+    ],
+    required: false,
   },
   {
     model: OrderItem,
@@ -182,13 +240,15 @@ const ORDER_BASE_INCLUDES: IncludeOptions[] = [
       "product_snapshot",
     ],
     include: [{ model: Product, as: "product", attributes: ["id", "name"] }],
+    required: false,
   },
   {
     model: OrderStatusHistory,
     as: "statusHistory",
-    attributes: ["fromStatus", "toStatus", "reason", "createdAt"],
+    attributes: ["id", "fromStatus", "toStatus", "reason", "createdAt"],
     separate: true,
     order: [["createdAt", "ASC"]],
+    required: false,
   },
   {
     model: RefundOrder,
@@ -204,10 +264,13 @@ const ORDER_BASE_INCLUDES: IncludeOptions[] = [
       "approvedAt",
       "refundedAt",
     ],
+    required: false,
   },
 ]
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Serializers
+
 function serializeOrder(order: any) {
   const checkout = order.checkout
   const customer = checkout?.customer
@@ -215,10 +278,7 @@ function serializeOrder(order: any) {
   const pay = checkout?.payment
   const items = (order.items ?? []) as Array<any>
   const histories = (order.statusHistory ?? []) as Array<any>
-  const refund =
-    (order as any).refundOrder as
-      | undefined
-      | { reason?: string | null; amountMinor?: number | null; currencyCode?: string | null }
+  const refundOrders = (order.refundOrders ?? []) as Array<any>
 
   const grandMinor = read<number>(order, "grand_total_minor", "grandTotalMinor") ?? 0
   const shippingSnap = read<number>(ship, "shipping_price_minor_snapshot", "shippingPriceMinorSnapshot")
@@ -238,16 +298,16 @@ function serializeOrder(order: any) {
 
   const shippingAddress = addrSnap
     ? {
-        recipientName: addrSnap.recipientName ?? "",
+        recipientName: addrSnap.recipientName ?? addrSnap.recipient_name ?? "",
         phone: addrSnap.phone ?? "",
-        addressNumber: addrSnap.addressNumber ?? undefined,
+        addressNumber: addrSnap.addressNumber ?? addrSnap.address_number ?? undefined,
         building: addrSnap.building ?? undefined,
-        subStreet: addrSnap.subStreet ?? undefined,
+        subStreet: addrSnap.subStreet ?? addrSnap.sub_street ?? undefined,
         street: addrSnap.street ?? "",
-        subdistrict: addrSnap.subdistrict ?? undefined,
+        subdistrict: addrSnap.subdistrict ?? addrSnap.sub_district ?? undefined,
         district: addrSnap.district ?? "",
         province: addrSnap.province ?? "",
-        postalCode: addrSnap.postalCode ?? "",
+        postalCode: addrSnap.postalCode ?? addrSnap.postal_code ?? "",
         country: addrSnap.country ?? "TH",
       }
     : {
@@ -274,6 +334,7 @@ function serializeOrder(order: any) {
 
   return {
     id: String(order.id),
+    orderCode: order.checkout.orderCode,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
 
@@ -306,18 +367,73 @@ function serializeOrder(order: any) {
     trackingNumber: read<string>(ship, "tracking_number", "trackingNumber"),
     carrier: read<string>(ship, "carrier", "carrier"),
     shippedAt: read<Date>(ship, "shipped_at", "shippedAt"),
+    deliveredAt: read<Date>(ship, "delivered_at", "deliveredAt"),
+    returnedToSenderAt: read<Date>(ship, "returned_to_sender_at", "returnedToSenderAt"),
     shippingStatus: read<string>(ship, "shipping_status", "shippingStatus"),
+    shippingAddress,
+
+    // Outbound timeline
+    shipping: ship
+      ? {
+          events: Array.isArray(ship.events)
+            ? ship.events.map((e: any) => ({
+                id: e.id,
+                fromStatus: e.fromStatus ?? null,
+                toStatus: e.toStatus,
+                description: e.description ?? null,
+                location: e.location ?? null,
+                occurredAt: e.occurredAt,
+                createdAt: e.createdAt,
+              }))
+            : [],
+        }
+      : undefined,
+
+    // Return logistics
+    returnShipments: Array.isArray(order.returnShipments)
+      ? order.returnShipments.map((rs: any) => ({
+          id: rs.id,
+          status: rs.status as ReturnShipmentStatus,
+          carrier: rs.carrier ?? null,
+          trackingNumber: rs.trackingNumber ?? null,
+          shippedAt: rs.shippedAt ?? null,
+          deliveredBackAt: rs.deliveredBackAt ?? null,
+          fromAddressSnapshot: rs.fromAddressSnapshot ?? null,
+          toAddressSnapshot: rs.toAddressSnapshot ?? null,
+          events: Array.isArray(rs.events)
+            ? rs.events.map((e: any) => ({
+                id: e.id,
+                fromStatus: e.fromStatus ?? null,
+                toStatus: e.toStatus,
+                description: e.description ?? null,
+                location: e.location ?? null,
+                occurredAt: e.occurredAt,
+                createdAt: e.createdAt,
+              }))
+            : [],
+        }))
+      : [],
 
     customerName,
     customerEmail,
-    customerPhone: addrSnap?.phone ?? "",
+    customerPhone: shippingAddress.phone ?? "",
 
     orderItems,
 
+    // Note แสดงได้จาก snapshot แต่จะไม่แก้ใน endpoint updateOrder
     notes: read<string>(order, "order_note", "orderNote") ?? undefined,
 
-    refundReason: read<string>(refund, "reason", "reason") ?? undefined,
-    refundAmount: refund?.amountMinor != null ? minorTo(refund.amountMinor, 2) : undefined,
+    refunds: refundOrders.map((r: any) => ({
+      id: r.id,
+      status: r.status,
+      amountMinor: r.amountMinor,
+      currencyCode: r.currencyCode,
+      reason: r.reason,
+      requestedBy: r.requestedBy,
+      requestedAt: r.requestedAt,
+      approvedAt: r.approvedAt,
+      refundedAt: r.refundedAt,
+    })),
   }
 }
 
@@ -425,6 +541,7 @@ export async function getOrdersSummary(req: Request, res: Response) {
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /orders
+// ค้นหาได้เฉพาะ orderId (ตัวเลข) หรือ orderCode (prefix)
 
 export async function listOrders(req: Request, res: Response) {
   try {
@@ -440,17 +557,15 @@ export async function listOrders(req: Request, res: Response) {
       sortDir = "DESC",
     } = req.query as Record<string, string>
 
-    const limit = toInt(pageSize, 20)
+    const limit = toInt(page, 1) > 0 ? toInt(pageSize, 20) : 20
     const offset = (toInt(page, 1) - 1) * limit
 
     const orderField = SORT_WHITELIST.has(sortBy as any) ? (sortBy as any) : "createdAt"
     const orderDir = String(sortDir).toUpperCase() === "ASC" ? "ASC" : "DESC"
 
     const whereOrder: WhereOptions = {}
-
     if (status && status !== "ALL") Object.assign(whereOrder, { status })
     if (storeId) Object.assign(whereOrder, { storeId })
-
     if (startDate || endDate) {
       Object.assign(whereOrder, {
         createdAt: {
@@ -460,41 +575,27 @@ export async function listOrders(req: Request, res: Response) {
       })
     }
 
-    const orOnOrder: WhereOptions[] = []
-    if (q?.trim() && !isNaN(Number(q))) orOnOrder.push({ id: Number(q) })
+    const isNumericQ = q?.trim() && !isNaN(Number(q))
+    const escapeLike = (s: string) => s.replace(/[%_]/g, "\\$&")
+    const orderOr: WhereOptions[] = []
+    if (isNumericQ) orderOr.push({ id: Number(q) })
 
-    const finalWhere: WhereOptions = { ...whereOrder, ...(orOnOrder.length ? { [Op.or]: orOnOrder } : {}) }
-
-    const hasTextQuery = q?.trim() && isNaN(Number(q))
-    const term = `%${q?.trim()}%`
-
-    // include checkout แบบไดนามิก (ค้นหาด้วยชื่อ/อีเมล)
     const checkoutInclude: IncludeOptions = {
       model: CheckOut,
       as: "checkout",
       attributes: ["id", "orderCode", "customerId"],
       paranoid: false,
-      required: !!hasTextQuery,
+      required: !!(q && q.trim() && !isNumericQ),
+      where:
+        q && q.trim() && !isNumericQ
+          ? { orderCode: { [Op.like]: `${escapeLike(q.trim())}%` } }
+          : undefined,
       include: [
-        {
-          model: User,
-          as: "customer",
-          attributes: ["id", "email", "firstName", "lastName"],
-          required: !!hasTextQuery,
-          where: hasTextQuery
-            ? {
-                [Op.or]: [
-                  { firstName: { [Op.like]: term } },
-                  { lastName: { [Op.like]: term } },
-                  { email: { [Op.like]: term } },
-                ],
-              }
-            : undefined,
-        },
         {
           model: Payment,
           as: "payment",
           attributes: [
+            "id",
             "paymentMethod",
             "status",
             "provider",
@@ -511,7 +612,8 @@ export async function listOrders(req: Request, res: Response) {
       ],
     }
 
-    const includes: IncludeOptions[] = [checkoutInclude, ...ORDER_BASE_INCLUDES.filter((i) => i.as !== "checkout")]
+    const finalWhere: WhereOptions = { ...whereOrder, ...(orderOr.length ? { [Op.or]: orderOr } : {}) }
+    const includes: IncludeOptions[] = [checkoutInclude, ...ORDER_BASE_INCLUDES.filter(i => i.as !== "checkout")]
 
     const { rows, count } = await Order.findAndCountAll({
       where: finalWhere,
@@ -523,11 +625,7 @@ export async function listOrders(req: Request, res: Response) {
     })
 
     const data = rows.map(serializeOrder)
-
-    return res.json({
-      data,
-      meta: { page: toInt(page, 1), pageSize: limit, total: count },
-    })
+    return res.json({ data, meta: { page: toInt(page, 1), pageSize: limit, total: count } })
   } catch (err) {
     console.error(err)
     return res.status(500).json({ error: "Failed to fetch orders" })
@@ -536,7 +634,10 @@ export async function listOrders(req: Request, res: Response) {
 
 // ───────────────────────────────────────────────────────────────────────────────
 // PATCH /orders/:orderId
-
+//
+// Side-effects: เขียน OrderStatusHistory / sync ShippingInfo(+ShipmentEvent) / RefundOrder
+// และถ้ามีการยิง PGW จะบันทึก PaymentGatewayEvent + RefundStatusHistory ให้ด้วย
+//
 export async function updateOrder(req: Request, res: Response) {
   const { orderId } = req.params
 
@@ -545,28 +646,29 @@ export async function updateOrder(req: Request, res: Response) {
     trackingNumber,
     carrier,
     reason,
-    orderNote,
+    // orderNote —> ถูกเมินใน endpoint นี้แล้ว
   }: {
-    status?: string
+    status?: OrderStatus | string
     trackingNumber?: string
     carrier?: string
     reason?: string
-    orderNote?: string
   } = req.body || {}
 
   if (!orderId) return res.status(400).json({ error: "Missing order id" })
-  const nothingToUpdate = !nextStatus && !trackingNumber && !carrier && typeof orderNote !== "string"
+  const nothingToUpdate = !nextStatus && !trackingNumber && !carrier
   if (nothingToUpdate) return res.status(400).json({ error: "Nothing to update" })
 
   const mapShipping: Record<string, ShippingStatus | undefined> = {
-    HANDED_OVER: ShippingStatus.RECIEVE_PARCEL,
+    HANDED_OVER: ShippingStatus.READY_TO_SHIP,
     SHIPPED: ShippingStatus.IN_TRANSIT,
     DELIVERED: ShippingStatus.DELIVERED,
+    AWAITING_RETURN: ShippingStatus.RETURN_TO_SENDER_IN_TRANSIT,
+    RECEIVE_RETURN:  ShippingStatus.RETURNED_TO_SENDER,
+    RETURN_FAIL:     ShippingStatus.DELIVERY_FAILED,
     TRANSIT_LACK: ShippingStatus.TRANSIT_ISSUE,
-    RE_TRANSIT: ShippingStatus.IN_TRANSIT,
+    RE_TRANSIT:   ShippingStatus.IN_TRANSIT,
   }
 
-  // ✅ อัปเดต ALLOWED NEXT ให้รองรับ REFUND_RETRY
   const ALLOWED_NEXT: Record<string, string[]> = {
     PENDING: ["CUSTOMER_CANCELED", "PAID"],
     PAID: ["PROCESSING", "MERCHANT_CANCELED", "REFUND_REQUEST"],
@@ -589,15 +691,14 @@ export async function updateOrder(req: Request, res: Response) {
     REFUND_APPROVED: ["REFUND_PROCESSING", "REFUND_FAIL"],
     REFUND_PROCESSING: ["REFUND_SUCCESS"],
     REFUND_SUCCESS: [],
-    REFUND_FAIL: ["REFUND_RETRY", "REFUND_PROCESSING"], // ← retry ได้ (สองแบบ: รุ่นเก่า/ใหม่)
-    REFUND_RETRY: [], // ระบบจะเป็นคนเปลี่ยนต่อเป็น PROCESSING/FAIL เอง
+    REFUND_FAIL: ["REFUND_RETRY", "REFUND_PROCESSING"],
+    REFUND_RETRY: [],
   }
 
   const TERMINAL = new Set<string>(["COMPLETE", "CUSTOMER_CANCELED", "REFUND_SUCCESS", "RETURN_FAIL"])
 
-  const t = await Order.sequelize!.transaction()
+  const t = await sequelize.transaction()
   let postCommit: null | (() => Promise<void>) = null
-  let willTouchPGW = false
 
   try {
     const order = await Order.findByPk(orderId, { include: ORDER_BASE_INCLUDES, transaction: t })
@@ -606,35 +707,26 @@ export async function updateOrder(req: Request, res: Response) {
       return res.status(404).json({ error: "Order not found" })
     }
 
-    if (typeof orderNote === "string") {
-      ;(order as any).set("order_note", orderNote)
-      await (order as any).save({ transaction: t })
-    }
+    // (ตัด logic อัปเดต order_note ออก)
 
+    // tracking/carrier
     if (trackingNumber || carrier) {
       let ship: any = (order as any).shippingInfo
       if (!ship) {
         ship = await ShippingInfo.create(
-          {
-            orderId: Number((order as any).id),
-            trackingNumber: trackingNumber ?? null,
-            carrier: carrier ?? null,
-          } as any,
+          { orderId: Number(order.id), trackingNumber: trackingNumber ?? null, carrier: carrier ?? null } as any,
           { transaction: t }
         )
         ;(order as any).shippingInfo = ship
       } else {
         await ship.update(
-          {
-            ...(trackingNumber ? { trackingNumber } : {}),
-            ...(carrier ? { carrier } : {}),
-          },
+          { ...(trackingNumber ? { trackingNumber } : {}), ...(carrier ? { carrier } : {}) },
           { transaction: t }
         )
       }
     }
 
-    const current = (order as any).status as string
+    const current = order.status as string
 
     if (!nextStatus) {
       await order.reload({ include: ORDER_BASE_INCLUDES, transaction: t })
@@ -654,8 +746,7 @@ export async function updateOrder(req: Request, res: Response) {
       return res.status(400).json({ error: `Invalid transition: ${current} -> ${nextStatus}`, allowedNext: allowed })
     }
 
-    ;(order as any).set("status", nextStatus)
-    await (order as any).save({ transaction: t })
+    await order.update({ status: nextStatus } as any, { transaction: t })
 
     const changedById = (req as any)?.user?.sub ?? (req as any)?.user?.id ?? null
     const correlationId =
@@ -665,9 +756,9 @@ export async function updateOrder(req: Request, res: Response) {
 
     await OrderStatusHistory.create(
       {
-        orderId: Number((order as any).id),
-        fromStatus: current,
-        toStatus: nextStatus,
+        orderId: Number(order.id),
+        fromStatus: current as OrderStatus,
+        toStatus: nextStatus as OrderStatus,
         changedByType: "MERCHANT",
         changedById,
         reason: reason ?? null,
@@ -678,33 +769,59 @@ export async function updateOrder(req: Request, res: Response) {
       { transaction: t }
     )
 
+    // ── Sync shipping + ShipmentEvent
     const ship: any = (order as any).shippingInfo
     const newShipStatus = mapShipping[nextStatus]
     if (ship && newShipStatus) {
-      await ship.update(
+      const now = new Date()
+      const lastEvent = await ShipmentEvent.findOne({
+        where: { shippingInfoId: ship.id },
+        order: [["occurredAt", "DESC"], ["id", "DESC"]],
+        transaction: t,
+      })
+      const fromStatus = (lastEvent?.get("toStatus") as ShippingStatus | undefined) ?? ship.shippingStatus ?? null
+
+      const patch: any = { shippingStatus: newShipStatus }
+      if (nextStatus === "SHIPPED" && !ship.shippedAt) patch.shippedAt = now
+      if (nextStatus === "DELIVERED" && !ship.deliveredAt) patch.deliveredAt = now
+      if (nextStatus === "RECEIVE_RETURN" && !ship.returnedToSenderAt) patch.returnedToSenderAt = now
+
+      await ship.update(patch, { transaction: t })
+
+      await ShipmentEvent.create(
         {
-          shippingStatus: newShipStatus,
-          ...(nextStatus === "SHIPPED" && !ship.shippedAt ? { shippedAt: new Date() } : {}),
-        },
+          shippingInfoId: ship.id,
+          fromStatus,
+          toStatus: newShipStatus,
+          description: `Order status changed to ${nextStatus} by MERCHANT`,
+          location: null,
+          rawPayload: null,
+          occurredAt: now,
+        } as any,
         { transaction: t }
       )
     }
 
-    // Reflect RefundOrder row (สร้างครั้งแรก)
+    // ── Reflect RefundOrder (+ RefundStatusHistory ภายในทรานแซกชัน)
     if (
-      ["REFUND_REQUEST", "REFUND_APPROVED", "MERCHANT_CANCELED", "REFUND_SUCCESS", "REFUND_FAIL", "REFUND_RETRY"].includes(
-        nextStatus
-      )
+      [
+        OrderStatus.REFUND_REQUEST,
+        OrderStatus.REFUND_APPROVED,
+        OrderStatus.MERCHANT_CANCELED,
+        OrderStatus.REFUND_SUCCESS,
+        OrderStatus.REFUND_FAIL,
+        OrderStatus.REFUND_RETRY,
+      ].includes(nextStatus as OrderStatus)
     ) {
-      let refund = await RefundOrder.findOne({ where: { orderId: (order as any).id }, transaction: t })
-
+      let refund = await RefundOrder.findOne({ where: { orderId: order.id }, transaction: t })
+      const beforeRefundStatus = refund?.status as RefundStatus | undefined
       const orderGrandMinor = read<number>(order, "grand_total_minor", "grandTotalMinor") ?? 0
       const currency = read<string>(order, "currency_code", "currencyCode") ?? "THB"
 
       if (!refund && (nextStatus === "REFUND_REQUEST" || nextStatus === "MERCHANT_CANCELED")) {
         refund = await RefundOrder.create(
           {
-            orderId: (order as any).id,
+            orderId: order.id,
             reason: reason ?? null,
             amountMinor: orderGrandMinor,
             currencyCode: currency,
@@ -716,129 +833,241 @@ export async function updateOrder(req: Request, res: Response) {
           } as any,
           { transaction: t }
         )
-      }
-
-      if (refund) {
-        if (nextStatus === "REFUND_APPROVED") {
+        // history: CREATED -> REQUESTED/APPROVED
+        await RefundStatusHistory.create(
+          {
+            refundOrderId: Number(refund.id),
+            fromStatus: null,
+            toStatus: refund.status as RefundStatus,
+            reason: reason ?? null,
+            changedByType: "MERCHANT",
+            changedById,
+            source: "WEB",
+            correlationId,
+            metadata: {},
+          } as any,
+          { transaction: t }
+        )
+      } else if (refund) {
+        if (nextStatus === "REFUND_APPROVED" && refund.status !== "APPROVED") {
           await refund.update({ status: "APPROVED", approvedAt: new Date() } as any, { transaction: t })
-        } else if (nextStatus === "REFUND_SUCCESS") {
+          await RefundStatusHistory.create(
+            {
+              refundOrderId: Number(refund.id),
+              fromStatus: (beforeRefundStatus ?? null) as any,
+              toStatus: "APPROVED",
+              reason: reason ?? null,
+              changedByType: "MERCHANT",
+              changedById,
+              source: "WEB",
+              correlationId,
+              metadata: {},
+            } as any,
+            { transaction: t }
+          )
+        } else if (nextStatus === "REFUND_SUCCESS" && refund.status !== "SUCCESS") {
           await refund.update({ status: "SUCCESS", refundedAt: new Date() } as any, { transaction: t })
-        } else if (nextStatus === "REFUND_FAIL") {
+          await RefundStatusHistory.create(
+            {
+              refundOrderId: Number(refund.id),
+              fromStatus: (beforeRefundStatus ?? null) as any,
+              toStatus: "SUCCESS",
+              reason: reason ?? null,
+              changedByType: "MERCHANT",
+              changedById,
+              source: "WEB",
+              correlationId,
+              metadata: {},
+            } as any,
+            { transaction: t }
+          )
+        } else if (nextStatus === "REFUND_FAIL" && refund.status !== "FAIL") {
           await refund.update({ status: "FAIL" } as any, { transaction: t })
+          await RefundStatusHistory.create(
+            {
+              refundOrderId: Number(refund.id),
+              fromStatus: (beforeRefundStatus ?? null) as any,
+              toStatus: "FAIL",
+              reason: reason ?? null,
+              changedByType: "MERCHANT",
+              changedById,
+              source: "WEB",
+              correlationId,
+              metadata: {},
+            } as any,
+            { transaction: t }
+          )
         }
-        // REFUND_RETRY ไม่ต้องแก้ status ในตาราง refund โดยตรง ปล่อยให้ history สะท้อน
       }
-    }
 
-    // Trigger PGW เมื่อ APPROVED / MERCHANT_CANCELED / RETRY
-    if (nextStatus === "REFUND_APPROVED" || nextStatus === "MERCHANT_CANCELED" || nextStatus === "REFUND_RETRY") {
-      willTouchPGW = true
-      console.log("next status: ", nextStatus)
-      const pay = (order as any).checkout?.payment
-      const providerRef = read<string>(pay, "provider_ref", "providerRef")
-      const orderRef = read<string>(order, "reference", "reference")
-      const reference = orderRef || providerRef
+      // ── PGW (do after commit)
+      if ([OrderStatus.REFUND_APPROVED, OrderStatus.MERCHANT_CANCELED, OrderStatus.REFUND_RETRY].includes(nextStatus as OrderStatus)) {
+        const pay = (order as any).checkout?.payment
+        const paymentId = pay?.id as number | undefined
+        const providerRef = read<string>(pay, "provider_ref", "providerRef")
+        const orderRef = read<string>(order, "reference", "reference")
+        const reference = orderRef || providerRef
+        const refundRow = refund ?? (await RefundOrder.findOne({ where: { orderId: order.id }, transaction: t }))
+        const refundOrderId: number | undefined = refundRow?.get("id") as any
+        const prev = nextStatus as OrderStatus
+        const requestId = genRequestId()
 
-      const refundOrderRow = await RefundOrder.findOne({ where: { orderId: (order as any).id }, transaction: t })
-      const refundOrderId: number | undefined = (refundOrderRow?.get("id") as any)
-
-      postCommit = async () => {
-        if (!reference) {
-          console.warn(`[refund] skip: order ${orderId} has no provider_ref/reference`)
-          await Order.update({ status: "REFUND_FAIL" } as any, { where: { id: orderId } })
-          return
-        }
-
-        try {
-          const detail = await pgwGetDetail(reference, correlationId ?? undefined)
-          const action = decidePgwAction(detail?.status ?? "")
-          if (action === "NONE") {
-            await Order.update({ status: "REFUND_FAIL" } as any, { where: { id: orderId } })
+        postCommit = async () => {
+          if (!reference || !paymentId) {
+            await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } })
             if (refundOrderId) {
               await RefundStatusHistory.create({
                 refundOrderId,
                 fromStatus: "APPROVED",
                 toStatus: "FAIL",
-                reason: `Unsupported PGW status: ${detail?.status ?? "unknown"}`,
+                reason: "Missing payment reference",
                 changedByType: "SYSTEM",
                 changedById: 0,
                 source: "PAYMENT_GATEWAY",
                 correlationId,
-                metadata: { detail },
+                metadata: {},
               } as any)
             }
             return
           }
 
-          const payloadReason =
-            reason ?? (nextStatus === "MERCHANT_CANCELED" ? "Merchant canceled" : "Refund approved / retry")
+          const amountMinor =
+            (read<number>(pay, "amount_captured_minor", "amountCapturedMinor") ?? 0) ||
+            (read<number>(pay, "amount_authorized_minor", "amountAuthorizedMinor") ?? 0) ||
+            (read<number>(order, "grand_total_minor", "grandTotalMinor") ?? 0)
 
-          const resp =
-            action === "VOID"
-              ? await pgwVoid(reference, payloadReason, correlationId ?? undefined)
-              : await pgwRefund(reference, payloadReason, correlationId ?? undefined)
+          try {
+            // 1) detail
+            const detail = await pgwGetDetail(reference, correlationId ?? undefined)
+            const action = decidePgwAction(detail?.status ?? "")
+            if (action === "NONE") {
+              await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } })
+              if (refundOrderId) {
+                await RefundStatusHistory.create({
+                  refundOrderId,
+                  fromStatus: "APPROVED",
+                  toStatus: "FAIL",
+                  reason: `Unsupported PGW status: ${detail?.status ?? "unknown"}`,
+                  changedByType: "SYSTEM",
+                  changedById: 0,
+                  source: "PAYMENT_GATEWAY",
+                  correlationId,
+                  metadata: { detail },
+                } as any)
+              }
+              await PaymentGatewayEvent.create({
+                checkoutId: (order as any).checkout?.id ?? null,
+                paymentId,
+                refundOrderId: refundOrderId ?? null,
+                type: action,
+                amountMinor,
+                provider: pay?.provider ?? "UNKNOWN",
+                providerRef: providerRef ?? null,
+                status: "FAILED",
+                requestId,
+                reqJson: { step: "decide", detail },
+                resJson: { reason: "UNSUPPORTED_STATUS" },
+              } as any)
+              return
+            }
 
-          const ok = resp?.res_code === "0000"
+            // 2) call VOID/REFUND
+            const payloadReason =
+              reason ?? (nextStatus === "MERCHANT_CANCELED" ? "Merchant canceled" : "Refund approved / retry")
 
-          if (refundOrderId) {
-            await RefundStatusHistory.create({
-              refundOrderId,
-              fromStatus: "APPROVED",
-              toStatus: ok ? "APPROVED" : "FAIL",
-              reason: ok
-                ? `${action} accepted by PGW${nextStatus === "REFUND_RETRY" ? " (retry)" : ""}`
-                : `${action} fail: ${resp?.res_desc ?? "unknown"}`,
-              changedByType: "SYSTEM",
-              changedById: 0,
-              source: "PAYMENT_GATEWAY",
-              correlationId,
-              metadata: { response: resp, action, detail, retry: nextStatus === "REFUND_RETRY" },
+            const reqBody = { action, reason: payloadReason }
+            const resp =
+              action === "VOID"
+                ? await pgwVoid(reference, payloadReason, correlationId ?? undefined)
+                : await pgwRefund(reference, payloadReason, correlationId ?? undefined)
+
+            const ok = resp?.res_code === "0000"
+
+            await PaymentGatewayEvent.create({
+              checkoutId: (order as any).checkout?.id ?? null,
+              paymentId,
+              refundOrderId: refundOrderId ?? null,
+              type: action,
+              amountMinor,
+              provider: pay?.provider ?? "UNKNOWN",
+              providerRef: providerRef ?? null,
+              status: ok ? "SUCCESS" : "FAILED",
+              requestId,
+              reqJson: reqBody,
+              resJson: resp,
+            } as any)
+
+            if (refundOrderId) {
+              await RefundStatusHistory.create({
+                refundOrderId,
+                fromStatus: "APPROVED",
+                toStatus: ok ? "APPROVED" : "FAIL",
+                reason: ok ? `${action} accepted by PGW` : `${action} failed: ${resp?.res_desc ?? "unknown"}`,
+                changedByType: "SYSTEM",
+                changedById: 0,
+                source: "PAYMENT_GATEWAY",
+                correlationId,
+                metadata: { response: resp, action, retry: nextStatus === OrderStatus.REFUND_RETRY },
+              } as any)
+            }
+
+            const prevStatus = prev
+            if (ok) {
+              await Order.update({ status: OrderStatus.REFUND_PROCESSING } as any, { where: { id: orderId } })
+              await OrderStatusHistory.create({
+                orderId: Number(orderId),
+                fromStatus: prevStatus,
+                toStatus: OrderStatus.REFUND_PROCESSING,
+                changedByType: "SYSTEM",
+                changedById: 0,
+                reason: `${action} accepted by PGW`,
+                source: "PAYMENT_GATEWAY",
+                correlationId,
+                metadata: { response: resp, retry: nextStatus === OrderStatus.REFUND_RETRY },
+              } as any)
+            } else {
+              await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } })
+              await OrderStatusHistory.create({
+                orderId: Number(orderId),
+                fromStatus: prevStatus,
+                toStatus: OrderStatus.REFUND_FAIL,
+                changedByType: "SYSTEM",
+                changedById: 0,
+                reason: `${action} failed: ${resp?.res_desc ?? "unknown"}`,
+                source: "PAYMENT_GATEWAY",
+                correlationId,
+                metadata: { response: resp, retry: nextStatus === OrderStatus.REFUND_RETRY },
+              } as any)
+            }
+          } catch (e: any) {
+            await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } })
+            if (refundOrderId) {
+              await RefundStatusHistory.create({
+                refundOrderId,
+                fromStatus: "APPROVED",
+                toStatus: "FAIL",
+                reason: "PGW API error",
+                changedByType: "SYSTEM",
+                changedById: 0,
+                source: "PAYMENT_GATEWAY",
+                correlationId,
+                metadata: { error: e?.response?.data ?? e?.message, retry: nextStatus === OrderStatus.REFUND_RETRY },
+              } as any)
+            }
+            await PaymentGatewayEvent.create({
+              checkoutId: (order as any).checkout?.id ?? null,
+              paymentId,
+              refundOrderId: refundOrderId ?? null,
+              type: "ERROR",
+              amountMinor,
+              provider: (order as any).checkout?.payment?.provider ?? "UNKNOWN",
+              providerRef: providerRef ?? null,
+              status: "FAILED",
+              requestId,
+              reqJson: { note: "PGW API error" },
+              resJson: e?.response?.data ?? { message: e?.message ?? "unknown" },
             } as any)
           }
-
-          const prev = nextStatus
-          if (ok) {
-            await Order.update({ status: "REFUND_PROCESSING" } as any, { where: { id: orderId } })
-            await OrderStatusHistory.create({
-              orderId: Number(orderId),
-              fromStatus: prev,
-              toStatus: "REFUND_PROCESSING",
-              changedByType: "SYSTEM",
-              changedById: 0,
-              reason: `${action} accepted by PGW`,
-              source: "PAYMENT_GATEWAY",
-              correlationId,
-              metadata: { response: resp, retry: nextStatus === "REFUND_RETRY" },
-            } as any)
-          } else {
-            await Order.update({ status: "REFUND_FAIL" } as any, { where: { id: orderId } })
-            await OrderStatusHistory.create({
-              orderId: Number(orderId),
-              fromStatus: prev,
-              toStatus: "REFUND_FAIL",
-              changedByType: "SYSTEM",
-              changedById: 0,
-              reason: `${action} failed: ${resp?.res_desc ?? "unknown"}`,
-              source: "PAYMENT_GATEWAY",
-              correlationId,
-              metadata: { response: resp, retry: nextStatus === "REFUND_RETRY" },
-            } as any)
-          }
-        } catch (e: any) {
-          console.error("[refund] PGW error:", e?.response?.data ?? e?.message)
-          const prev = nextStatus
-          await Order.update({ status: "REFUND_FAIL" } as any, { where: { id: orderId } })
-          await OrderStatusHistory.create({
-            orderId: Number(orderId),
-            fromStatus: prev,
-            toStatus: "REFUND_FAIL",
-            changedByType: "SYSTEM",
-            changedById: 0,
-            reason: "PGW API error",
-            source: "PAYMENT_GATEWAY",
-            correlationId,
-            metadata: { error: e?.response?.data ?? e?.message, retry: nextStatus === "REFUND_RETRY" },
-          } as any)
         }
       }
     }
@@ -846,16 +1075,171 @@ export async function updateOrder(req: Request, res: Response) {
     await order.reload({ include: ORDER_BASE_INCLUDES, transaction: t })
     await t.commit()
 
-    // ถ้ามียิง PGW ให้รอผล แล้วค่อยส่งสถานะล่าสุดกลับไป (FE จะโชว์ toast ตามผล)
     if (postCommit) await postCommit()
 
     const fresh = await Order.findByPk(orderId, { include: ORDER_BASE_INCLUDES })
     const dto = serializeOrder(fresh ?? order)
-
     return res.json({ data: dto })
   } catch (err) {
     console.error(err)
     await t.rollback()
     return res.status(500).json({ error: "Failed to update order" })
   }
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /webhooks/carriers/:carrier
+
+export async function carrierWebhook(req: Request, res: Response) {
+  try {
+    const carrier = String(req.params.carrier || "").toUpperCase()
+    const raw = req.body ?? {}
+    const rawStr = JSON.stringify(raw)
+
+    // 1) Verify signature (optional in dev)
+    const secret = process.env.CARRIER_WEBHOOK_SECRET || ""
+    const sigHeader = (req.headers["x-signature"] as string) || ""
+    if (secret) {
+      const mac = crypto.createHmac("sha256", secret).update(rawStr).digest("hex")
+      if (!crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(sigHeader || "", "hex"))) {
+        return res.status(401).json({ error: "Bad signature" })
+      }
+    }
+
+    // 2) Normalize fields
+    const tracking = raw.trackingNo || raw.tracking_no || raw.trackingNumber || raw.tracking || ""
+    if (!tracking) return res.status(400).json({ error: "Missing tracking number" })
+
+    const occurredAt = new Date(raw.occurredAt || raw.occurred_at || raw.scanTime || raw.timestamp || Date.now())
+    const toShipStatus = normalizeCarrierStatus(raw, carrier)
+
+    // 3) Find shipping info
+    const ship = await ShippingInfo.findOne({ where: { trackingNumber: tracking } })
+    if (!ship) return res.status(202).json({ ok: true })
+
+    // 4) Upsert shipment event + patch shipping + safe transition
+    await sequelize.transaction(async (t: any) => {
+      const lastEvent = await ShipmentEvent.findOne({
+        where: { shippingInfoId: ship.id },
+        order: [["occurredAt", "DESC"], ["id", "DESC"]],
+        transaction: t,
+      })
+      const fromStatus = (lastEvent?.get("toStatus") as ShippingStatus | undefined) ?? ship.shippingStatus ?? null
+
+      if (lastEvent && lastEvent.get("toStatus") === toShipStatus) {
+        const dt = Math.abs(new Date(lastEvent.get("occurredAt") as any).getTime() - occurredAt.getTime())
+        if (dt < 60_000) return
+      }
+
+      await ShipmentEvent.create(
+        {
+          shippingInfoId: ship.id,
+          fromStatus,
+          toStatus: toShipStatus,
+          description: raw.description || raw.status_text || raw.message || null,
+          location: raw.location || raw.facility || null,
+          rawPayload: raw,
+          occurredAt,
+        } as any,
+        { transaction: t }
+      )
+
+      const patch: any = { shippingStatus: toShipStatus }
+      if (toShipStatus === ShippingStatus.DELIVERED && !ship.deliveredAt) patch.deliveredAt = occurredAt
+      if (toShipStatus === ShippingStatus.RETURNED_TO_SENDER && !ship.returnedToSenderAt) patch.returnedToSenderAt = occurredAt
+      await ship.update(patch, { transaction: t })
+
+      const order = await Order.findByPk(ship.orderId, { transaction: t })
+      if (!order) return
+
+      const cur = order.status as OrderStatus
+      if (toShipStatus === ShippingStatus.IN_TRANSIT && cur === OrderStatus.HANDED_OVER) {
+        await slide(order, cur, OrderStatus.SHIPPED, t, "SYSTEM", `Carrier received parcel (${carrier})`)
+      }
+      if (toShipStatus === ShippingStatus.DELIVERED && (cur === OrderStatus.SHIPPED || cur === OrderStatus.RE_TRANSIT)) {
+        await slide(order, cur, OrderStatus.DELIVERED, t, "SYSTEM", `Delivered by ${carrier}`)
+      }
+
+      if (toShipStatus === ShippingStatus.RETURN_TO_SENDER_IN_TRANSIT) {
+        const hasRefundReq = await OrderStatusHistory.findOne({
+          where: { orderId: order.id, toStatus: OrderStatus.REFUND_REQUEST },
+          transaction: t,
+        })
+        const AUTO_RTS_TO_AWAIT = process.env.AUTO_RTS_TO_AWAIT === "true"
+        if ((hasRefundReq || AUTO_RTS_TO_AWAIT) && cur !== OrderStatus.AWAITING_RETURN) {
+          await slide(order, cur, OrderStatus.AWAITING_RETURN, t, "SYSTEM", `RTS started by ${carrier}`)
+        }
+      }
+
+      if (toShipStatus === ShippingStatus.RETURNED_TO_SENDER) {
+        const hadAwait = await OrderStatusHistory.findOne({
+          where: { orderId: order.id, toStatus: OrderStatus.AWAITING_RETURN },
+          transaction: t,
+        })
+        if (hadAwait && cur !== OrderStatus.RECEIVE_RETURN) {
+          await slide(order, cur, OrderStatus.RECEIVE_RETURN, t, "SYSTEM", `RTS delivered back by ${carrier}`)
+        }
+      }
+    })
+
+    return res.json({ ok: true })
+  } catch (err) {
+    console.error("carrierWebhook error:", err)
+    return res.status(500).json({ error: "Webhook processing failed" })
+  }
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Internal helpers
+
+async function slide(
+  order: any,
+  from: OrderStatus,
+  to: OrderStatus,
+  t: Transaction,
+  by: "SYSTEM" | "MERCHANT" | "CUSTOMER",
+  reason?: string
+) {
+  await order.update({ status: to } as any, { transaction: t })
+  await OrderStatusHistory.create(
+    {
+      orderId: order.id,
+      fromStatus: from,
+      toStatus: to,
+      changedByType: by,
+      changedById: 0,
+      reason: reason ?? null,
+      source: "SYSTEM",
+      correlationId: null,
+      metadata: {},
+    } as any,
+    { transaction: t }
+  )
+}
+
+/** map สถานะจากผู้ให้บริการขนส่ง → ShippingStatus กลางของระบบ */
+function normalizeCarrierStatus(raw: any, carrier: string): ShippingStatus {
+  const text = (raw.status || raw.code || raw.description || raw.status_text || "").toString().toLowerCase()
+
+  if (/out\s*for\s*delivery|กำลังนำจ่าย|courier out/.test(text)) return ShippingStatus.OUT_FOR_DELIVERY
+  if (/delivered|สำเร็จ|รับของแล้ว|signed/i.test(text)) return ShippingStatus.DELIVERED
+  if (/failed|ไม่สำเร็จ|unsuccessful|attempt/i.test(text)) return ShippingStatus.DELIVERY_FAILED
+  if (/return\s*to\s*sender|rts|ตีกลับ/i.test(text)) {
+    if (/delivered|ถึงผู้ส่ง|รับคืนแล้ว/i.test(text)) return ShippingStatus.RETURNED_TO_SENDER
+    return ShippingStatus.RETURN_TO_SENDER_IN_TRANSIT
+  }
+  if (/received|picked\s*up|รับพัสดุ|รับเข้า/i.test(text)) return ShippingStatus.IN_TRANSIT
+  if (/in\s*transit|ศูนย์คัดแยก|hub|arrival|departure/i.test(text)) return ShippingStatus.IN_TRANSIT
+  if (/issue|ปัญหา|hold|exception/i.test(text)) return ShippingStatus.TRANSIT_ISSUE
+
+  return ShippingStatus.IN_TRANSIT
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+
+export default {
+  getOrdersSummary,
+  listOrders,
+  updateOrder,
+  carrierWebhook,
 }

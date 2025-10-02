@@ -8,7 +8,6 @@ import { AdminPermission } from '@digishop/db/src/models/portal/AdminPermission'
 import { AdminRole } from '@digishop/db/src/models/portal/AdminRole';
 import { AdminUserRole } from '@digishop/db/src/models/portal/AdminUserRole';
 import { AdminRolePermission } from '@digishop/db/src/models/portal/AdminRolePermission';
-// ประทับ context ง่ายๆ
 declare global {
   namespace Express {
     interface Request {
@@ -61,6 +60,7 @@ export function requirePerms(...need: string[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.adminId) return res.status(401).json({ error: 'UNAUTHORIZED' });
     if (!req.permCache) req.permCache = await getPerms(req.adminId);
+    console.log("permission: ", req.permCache)
     const ok = need.every(s => req.permCache!.has(s));
     if (!ok) return res.status(403).json({ error: 'FORBIDDEN', required: need });
     next();

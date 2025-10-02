@@ -5,7 +5,7 @@ const configGroup = require('../src/config/config');
 const env = (process.env.NODE_ENV || 'development') as keyof ConfigGroup;
 const config = configGroup[env];
 
-console.log('Loaded DB config:', {
+console.log('Loaded DB from config:', {
   username: config.username,
   password: config.password,
   databaseReal: config.database,
