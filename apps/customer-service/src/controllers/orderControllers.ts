@@ -30,6 +30,9 @@ import { Op, where } from "sequelize";
 import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
 import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
 import { RefundImage } from "@digishop/db/src/models/RefundImage";
+import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
+import { VariationOption } from "@digishop/db/src/models/VariationOption";
+import { Variation } from "@digishop/db/src/models/Variation";
 const signKey =
   process.env.MERCHANRT_SIGN_KEY ??
   "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
@@ -115,6 +118,22 @@ export const findOrder = async (
               as: "productItem",
               include: [
                 {
+                  model: ProductConfiguration,
+                  as:'configurations',
+                  include: [
+                    {
+                      model: VariationOption,
+                      as: 'variationOption',
+                      include: [
+                        {
+                          model: Variation,
+                          as: 'variation'
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
                   model: Product,
                   as: "product",
                   include: [
@@ -153,6 +172,7 @@ export const findUserOrder = async (
         "subtotal_minor",
         "shipping_fee_minor",
         "discount_total_minor",
+        "created_at"
       ],
       include: [
         {
@@ -163,6 +183,22 @@ export const findUserOrder = async (
             model: ProductItem,
             as: "productItem",
             include: [
+              {
+                model: ProductConfiguration,
+                as:'configurations',
+                include: [
+                  {
+                    model: VariationOption,
+                    as: 'variationOption',
+                    include: [
+                      {
+                        model: Variation,
+                        as: 'variation'
+                      }
+                    ]
+                  }
+                ]
+              },
               {
                 model: Product,
                 as: "product",
@@ -220,71 +256,12 @@ export const findUserOrder = async (
             },
           ],
         },
+        {
+          model: RefundOrder,
+          as: "refundOrders",
+        }
       ],
     });
-    // const getUserOrders = await CheckOut.findAndCountAll({
-    //   where: {customerId : id },
-    //
-    //   include: [
-    //     {
-    //       model: Order,
-    //       as: 'orders',
-    //       attributes: [
-    //       "id",
-    //       "reference",
-    //       "status",
-    //       "currency_code",
-    //       "order_note",
-    //       "grand_total_minor",
-    //       ],
-    //       include: [
-    //         {
-    //           model: OrderItem,
-    //           as: "items",
-    //           attributes: [
-    //             "quantity",
-    //             "unit_price_minor",
-    //             "discount_minor",
-    //             "product_name_snapshot",
-    //           ],
-    //           include: [
-    //             {
-    //               model: Product,
-    //               as: "product",
-    //               attributes: ["name"],
-    //               include: [
-    //                 {
-    //                   model: ProductImage,
-    //                   as: "images",
-    //                   attributes: ["url", "blobName", "fileName"],
-    //                 },
-    //               ],
-    //             },
-    //           ],
-    //         },
-    //         {
-    //           model: Store,
-    //           as: "store",
-    //           attributes: ["storeName"],
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       model: Payment,
-    //       as: "payment",
-    //       attributes: [
-    //         "payment_method",
-    //         "status",
-    //         "channel",
-    //         "currency_code",
-    //         "amount_authorized_minor",
-    //         "amount_captured_minor",
-    //         "amount_refunded_minor",
-    //         "pgw_status",
-    //       ],
-    //     },
-    //   ]
-    // });
     return res
       .status(200)
       .json({ body: getUserOrders.rows, count: getUserOrders.count });
@@ -310,6 +287,22 @@ export const findUserCart = async (
             model: ProductItem,
             as: "productItem",
             include: [
+              {
+              model: ProductConfiguration,
+              as:'configurations',
+              include: [
+                {
+                  model: VariationOption,
+                  as: 'variationOption',
+                  include: [
+                    {
+                      model: Variation,
+                      as: 'variation'
+                    }
+                  ]
+                }
+              ]
+            },
               {
                 model: Product,
                 as: "product",
@@ -500,8 +493,8 @@ export const createOrder = async (
         // description: productName,
         amount: grandTotalMinor / 100,
         expiry: 15,
-        url_redirect: "http://localhost:4003/api/payment/callback",
-        url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+        url_redirect: "http://localhost:4000/api/customer/payment/callback",
+        url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
       });
       const responseCardPayment = await axios.request({
         method: "post",
@@ -512,8 +505,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4000/api/customer/payment/callback",
+          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         },
         headers: {
           "X-API-ID": apiId,
@@ -548,8 +541,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4000/api/customer/payment/callback",
+          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         },
         resJson: responseCardPayment.data,
       });
@@ -563,8 +556,8 @@ export const createOrder = async (
         // description: productName,
         amount: grandTotalMinor / 100,
         expiry: 15,
-        url_redirect: "http://localhost:4003/api/payment/callback",
-        url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+        url_redirect: "http://localhost:4000/api/customer/payment/callback",
+        url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         qrcode: {
           biller_reference_1: `REF${orderId}`,
         },
@@ -578,8 +571,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4000/api/customer/payment/callback",
+          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
           qrcode: {
             biller_reference_1: `REF${orderId}`,
           },
@@ -617,8 +610,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4003/api/payment/callback",
-          url_notify: "http://localhost:4003/api/payment/notify", //web เรา
+          url_redirect: "http://localhost:4005/api/customer/payment/callback",
+          url_notify: "http://localhost:4005/api/customer/payment/notify", //web เรา
           qrcode: {
             biller_reference_1: `REF${orderCode}`,
           },
@@ -745,8 +738,8 @@ export const cancelOrder = async(
   const findPayment = await Payment.findOne({
     where: { checkoutId: findOrder?.checkoutId }
   })
-  console.log(req.body ,req.params.id)
   if(findOrder && ( findOrder.status === OrderStatus.PAID || findOrder.status === OrderStatus.DELIVERED) && findPayment ){
+    
     try {
       const cancelRequest = await RefundOrder.create({
         orderId: Number(id),
@@ -766,16 +759,6 @@ export const cancelOrder = async(
         changedByType: ActorType.CUSTOMER ,
         source: "WEBSITE"
       })
-      // if(url){
-        // await RefundImage.create({
-          //   refundOrderId: cancelRequest.id,
-          //   url,
-          //   blobName,
-          //   filename,
-          //   isMain,
-          //   sortOrder
-          // })
-      // }
         await OrderStatusHistory.create({
           orderId: findOrder.id,
           fromStatus: findOrder.status,
@@ -793,11 +776,18 @@ export const cancelOrder = async(
         }
       })
       await Order.update({
-        status: OrderStatus.REFUND_PROCESSING
+        status: OrderStatus.REFUND_REQUEST
       },{ where: {id: id}})
       res.json({ data: 'success'})
     } catch (error) {
       res.json({ error: error})
     }
-    }
+  }
+}
+
+export const revokeCancelOrder = async( req: Request,
+  res: Response,
+  next: NextFunction) => {
+  //check 7 day
+  
 }

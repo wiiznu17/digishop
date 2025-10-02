@@ -27,6 +27,8 @@ import PaymentMethodMaster from "../../../../master/paymentMethod.json";
 import creditMethodLogo from '../../../creaditMethod.png'
 import qrLogo from '../../../qrLogo.png'
 import Image from "next/image";
+import { Configurations } from "@/types/props/productProp";
+import { formatAddress, formatSku } from "@/lib/function";
 export default function OrderPage() {
   const { id } = useParams();
   const orderCode = String(id);
@@ -168,21 +170,6 @@ export default function OrderPage() {
     return sum / 100;
   };
 
-  const formatAddress = (items: Address): string => {
-    return [
-      items.address_number,
-      items.building,
-      items.street,
-      items.subStreet,
-      items.district,
-      items.subdistrict,
-      items.province,
-      items.postalCode,
-      items.country,
-    ]
-      .filter(Boolean)
-      .join(" ");
-  };
   const handleOrder = async () => {
     if (!order) return;
     console.log(order);
@@ -210,6 +197,8 @@ export default function OrderPage() {
     redirect("/digishop", RedirectType.replace);
   }
   console.log("show", showModal);
+  
+
   return !orderDetail[0].checkout.payment ? (
     <div>
       {orderDetail[0].status == "PENDING" && (
@@ -267,7 +256,7 @@ export default function OrderPage() {
                                 <div className="flex-1">
                                   <div>{value.productItem.product.name}</div>
                                   <div className="absolute text-xs text-gray-500">
-                                    {value.productItem.sku}
+                                    { formatSku(value.productItem.configurations)}
                                   </div>
                                   <div className="absolute bottom-5 right-0  text-gray-500 ">
                                     ฿{" "}

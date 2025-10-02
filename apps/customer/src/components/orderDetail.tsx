@@ -2,41 +2,26 @@ import { Address } from "@/types/props/addressProp";
 import { OrderDetail } from "@/types/props/orderProp";
 import OrderStatusConfig from '../master/statusOrderDetail.json'
 import PaymentMethodMaster from '../master/paymentMethod.json'
+import { formatAddress, formatSku, sumprice } from "@/lib/function";
 interface orderDetailInterface {
   order: OrderDetail | undefined;
 }
 export default function OrderDetailPage({ order }: orderDetailInterface) {
-  console.log(order);
-  const formatAddress = (items: Address): string => {
-    return [
-      items.address_number,
-      items.building,
-      items.street,
-      items.subStreet,
-      items.district,
-      items.subdistrict,
-      items.province,
-      items.postalCode,
-      items.country,
-    ]
-    .filter(Boolean)
-    .join(" ");
-  }; 
   
-  const sumprice = (data: OrderDetail|undefined) => {
-    if(!data)return 0
-    let sum = 0;
-      for (let i = 0; i < data.items.length; i++) {
-        sum += (data.items[i].lineTotalMinor)
-        console.log(sum)
-      }
-      return sum
-  }
+  // const sumprice = (data: OrderDetail|undefined) => {
+  //   if(!data)return 0
+  //   let sum = 0;
+  //     for (let i = 0; i < data.items.length; i++) {
+  //       sum += (data.items[i].lineTotalMinor)
+  //       console.log(sum)
+  //     }
+  //     return sum
+  // }
   const sumPriceProduct = sumprice(order)
   return order == undefined ? (
     <></>
   ) : (
-    <div className=" bg-amber-300 rounded-2xl p-4">
+    <div className=" bg-amber-300 rounded-2xl p-4 mb-2">
       <div className=" bg-amber-50 rounded-2xl mb-2 p-4">
         <div className="font-bold flex justify-center">status : {OrderStatusConfig[order.status].label}</div>
       </div>
@@ -67,7 +52,9 @@ export default function OrderDetailPage({ order }: orderDetailInterface) {
                       <div className="">
                         <div>{items.productItem.product.name}</div>
                         <div className="text-xs text-gray-500 ">
-                        {items.productItem.sku}
+                        {
+                          formatSku(items.productItem.configurations)
+                        }
                         </div>
                         <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
                           x {String(items.quantity)}

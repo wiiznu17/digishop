@@ -14,9 +14,9 @@ export default function SettingLayout({
 }: {
     children: React.ReactNode
 }) {
-    return <AuthProvider>
-        <body className={`${rubik.className}`}>
+    return <AuthProvider >
+        
             {children}            
-        </body>
+        
         </AuthProvider>
 }

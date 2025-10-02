@@ -29,16 +29,40 @@ export default function SearchResult({
   const { query } = use(searchParams);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState(query);
+  const [searchResult, setSearchResult] = useState<string[]|undefined>();
+  const [hover, setHover] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false)
   const handleSearch = (query = searchQuery) => {
+    setHover(false)
+    setSearchResult(undefined)
+    setSearchQuery(query)
     if (!query.trim()) return;
     router.push(`/digishop/search?query=${query}`);
   };
+  useEffect(() => {
+      const abort = new AbortController()
+      const query = searchQuery.trim()
+      if(query.length > 0 && loading){
+        const timeOutId = setTimeout(async()=>{
+          const res = await searchProduct(query); 
+          const  productName = res.product.map(product => product.name)
+          const  storeName = res.store.map(store => store.storeName)
+          const resultSearch = productName.concat(storeName)
+          if(resultSearch.length > 0){
+            setSearchResult(resultSearch)
+          }else{
+            setSearchResult(undefined)
+          }
+          setLoading(false)
+        },500)
+        return () => { clearTimeout(timeOutId); abort.abort(); }
+      }
+    },[searchQuery, loading])
   const clearSearch = () => {
     setSearchQuery("");
   };
-  const minPrice = (data: [ProductItem]) => {
+  const minPrice = (data: ProductItem[]) => {
     const price = data.map((item) => item.priceMinor);
-    console.log(price);
     const minPrice = Math.min(...price);
     return minPrice;
   };
@@ -50,7 +74,7 @@ export default function SearchResult({
       setCount(res.productCount);
     };
     fetchProduct();
-  }, [query, page]);
+  }, [query,page]);
   useEffect(() => {
     if (stores?.length && !rawProduct?.length) {
       setCount(1);
@@ -62,31 +86,37 @@ export default function SearchResult({
       const sorted = rawProduct?.sort(
         (a, b) => minPrice(a.items) - minPrice(b.items)
       );
-      console.log(sorted);
       setProduct(sorted);
-      console.log("products", products);
     } else if (filter == "DESC") {
       setProduct((rawProduct) =>
         rawProduct?.sort((a, b) => minPrice(b.items) - minPrice(a.items))
       );
     }
   }, [filter, products, rawProduct]);
-
-  return (!rawProduct && !stores ) || ( rawProduct?.length == 0 && stores?.length == 0 ) ? (
-    <NotFound props={query} />
-  ) : (
-    <div className=" pt-3">
+  return (
+    <div className=" pt-3" >
       <div className="flex justify-center mb-3 ">
         <div className="relative w-1/2">
           <input
             type="text"
             value={searchQuery}
+            onFocus={() =>  setHover(true)}
             onChange={(e) => {
               setSearchQuery(e.target.value);
+              setLoading(true)
             }}
             placeholder="Search for products, brands, or categories..."
-            className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-full focus:border-blue-500 focus:outline-none  text-black bg-white"
+            className={ `w-full px-6 py-4 text-lg border-2 z-50 border-gray-200 ${searchResult && searchQuery  ? 'rounded-t-4xl':'rounded-full' } focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
           />
+          {searchQuery && hover &&(
+                  <div className='absolute right-0 z-100 w-full'>
+                    {
+                      searchResult?.map((result,index) => (
+                          <button key={index} onClick={() => handleSearch(result)} className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 border-gray-200 hover:bg-gray-300 ${index === searchResult.length -1 ? 'rounded-b-4xl':''}`}>{result}</button>
+                      ))
+                    }
+                  </div>
+                )}
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
             {searchQuery && (
               <button
@@ -105,6 +135,10 @@ export default function SearchResult({
           </div>
         </div>
       </div>
+      {
+        (!rawProduct && !stores ) || ( rawProduct?.length == 0 && stores?.length == 0 ) ? (
+          <NotFound props={query} />
+        ) : 
       <div className="flex justify-center items-center">
         <div className="w-3/4">
           {products?.length && (
@@ -193,7 +227,8 @@ export default function SearchResult({
             </button>
           </div>
         </div>
-      </div>
+      </div> 
+      }
     </div>
   );
 }
