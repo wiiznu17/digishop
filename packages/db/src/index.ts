@@ -58,6 +58,9 @@ import { AdminPermission } from "../src/models/portal/AdminPermission";
 import { AdminRolePermission } from "../src/models/portal/AdminRolePermission";
 import { AdminUserRole } from "../src/models/portal/AdminUserRole";
 import { AdminApiKey } from "../src/models/portal/AdminApiKey";
+import { ShipmentEvent } from "../src/models/ShipmentEvent";
+import { ReturnShipment } from "../src/models/ReturnShipment";
+import { ReturnShipmentEvent } from "../src/models/ReturnShipmentEvent";
 
 export function initModels(conn: Sequelize) {
   // ── init (Core)
@@ -95,6 +98,10 @@ export function initModels(conn: Sequelize) {
   Review.initModel(conn);
   Dispute.initModel(conn);
   CheckOut.initModel(conn);
+  ShipmentEvent.initModel(conn);
+  ReturnShipment.initModel(conn);
+  ReturnShipmentEvent.initModel(conn);
+
 
   ProductView.initModel(conn);
   StoreView.initModel(conn);
@@ -254,6 +261,62 @@ export function initModels(conn: Sequelize) {
   ShippingInfo.belongsTo(Address, { as: "address", foreignKey: { name: "shippingAddress", field: "shipping_address" }, targetKey: "id", onDelete: "RESTRICT", onUpdate: "CASCADE" });
   Address.hasMany(ShippingInfo, { as: "shippingInfos", foreignKey: { name: "shippingAddress", field: "shipping_address" }, onDelete: "RESTRICT", onUpdate: "CASCADE" });
 
+  // ShippingInfo ↔ ShipmentEvent (1:N)
+  ShippingInfo.hasMany(ShipmentEvent, {
+    foreignKey: { name: "shippingInfoId", field: "shipping_info_id" },
+    as: "events",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+  ShipmentEvent.belongsTo(ShippingInfo, {
+    foreignKey: { name: "shippingInfoId", field: "shipping_info_id" },
+    as: "shippingInfo",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  // Order ↔ ReturnShipment (1:N)  หนึ่งออเดอร์อาจมีหลายรอบคืน (รอบละ 1 shipment)
+  Order.hasMany(ReturnShipment, {
+    foreignKey: { name: "orderId", field: "order_id" },
+    as: "returnShipments",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+  ReturnShipment.belongsTo(Order, {
+    foreignKey: { name: "orderId", field: "order_id" },
+    as: "order",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  // ReturnShipment ↔ ReturnShipmentEvent (1:N)
+  ReturnShipment.hasMany(ReturnShipmentEvent, {
+    foreignKey: { name: "returnShipmentId", field: "return_shipment_id" },
+    as: "events",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+  ReturnShipmentEvent.belongsTo(ReturnShipment, {
+    foreignKey: { name: "returnShipmentId", field: "return_shipment_id" },
+    as: "returnShipment",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  // ReturnShipment ↔ RefundOrder (N:1) ถ้ามีการผูกกับคำขอเงินคืน
+  ReturnShipment.belongsTo(RefundOrder, {
+    foreignKey: { name: "refundOrderId", field: "refund_order_id" },
+    as: "refundOrder",
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+  });
+  RefundOrder.hasMany(ReturnShipment, {
+    foreignKey: { name: "refundOrderId", field: "refund_order_id" },
+    as: "returnShipments",
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+  });
+
   // PaymentGatewayEvent
   CheckOut.hasOne(PaymentGatewayEvent, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "gatewayEvents", onDelete: "CASCADE", onUpdate: "CASCADE" });
   PaymentGatewayEvent.belongsTo(Order, { foreignKey: { name: "checkoutId", field: "checkout_id" }, as: "order", onDelete: "CASCADE", onUpdate: "CASCADE" });
@@ -339,7 +402,7 @@ export function initModels(conn: Sequelize) {
     ShoppingCart, ShoppingCartItem,
     // Order
     Order, OrderItem, OrderStatusHistory, ShippingType, ShippingInfo, Payment, PaymentGatewayEvent,
-    RefundOrder, RefundImage, RefundStatusHistory, Review, Dispute, CheckOut,
+    RefundOrder, RefundImage, RefundStatusHistory, Review, Dispute, CheckOut, ShipmentEvent, ReturnShipment, ReturnShipmentEvent, 
     // Analytics
     ProductView, StoreView,
     // Admin

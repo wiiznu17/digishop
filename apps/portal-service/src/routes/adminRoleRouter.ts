@@ -12,31 +12,31 @@ import { requirePerms } from "../middlewares/auth"
 const router = Router()
 
 router.get("/list",
-  requireSuperAdmin,
+  // requireSuperAdmin,
   requirePerms("ROLES_READ"),
   adminListRoles
 )
 
 router.get("/:id/detail",
-  requireSuperAdmin,
+  // requireSuperAdmin,
   requirePerms("ROLES_READ"),
   adminGetRoleDetail
 )
 
 router.post("/create",
-  requireSuperAdmin,
+  // requireSuperAdmin,
   requirePerms("ROLES_CREATE"),
   adminCreateRole
 )
 
 router.patch("/:id/meta",
-  requireSuperAdmin,
+  // requireSuperAdmin,
   requirePerms("ROLES_UPDATE"),
   adminUpdateRoleMeta
 )
 
 router.put("/:id/permissions",
-  requireSuperAdmin,
+  // requireSuperAdmin,
   requirePerms("ROLES_ASSIGN"),
   adminReplaceRolePermissions
 )

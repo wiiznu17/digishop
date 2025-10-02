@@ -49,6 +49,7 @@ import {
   AdminProductListItem,
   AdminSuggestResponse
 } from "@/types/admin/catalog"
+import AuthGuard from "@/components/AuthGuard"
 
 // ========= helpers =========
 const fmtTHB = (minor?: number | null) =>
@@ -63,7 +64,6 @@ function cx(...cls: (string | false | null | undefined)[]) {
   return cls.filter(Boolean).join(" ")
 }
 
-// ========= Pagination (reusable) =========
 function Pager({
   currentPage,
   totalPages,
@@ -128,7 +128,6 @@ function Pager({
   )
 }
 
-// ========= Filters component =========
 type SortBy = AdminFetchProductsParams["sortBy"]
 type SortDir = AdminFetchProductsParams["sortDir"]
 type StockFilter = "in" | "out" | "all"
@@ -420,7 +419,7 @@ function AdminProductFilters({
 }
 
 // ========= Page =========
-export default function AdminProductsPage() {
+function AdminProductsPage() {
   const router = useRouter()
   const sp = useSearchParams()
 
@@ -896,5 +895,18 @@ export default function AdminProductsPage() {
         </Dialog>
       </div>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["PRODUCTS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminProductsPage />
+    </Guard>
   )
 }

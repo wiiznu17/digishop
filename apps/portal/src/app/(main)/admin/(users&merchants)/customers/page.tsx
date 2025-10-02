@@ -35,13 +35,14 @@ import {
   fetchAdminUserSuggest
 } from "@/utils/requesters/userRequester"
 import { Pager } from "@/components/common/Pager"
+import AuthGuard from "@/components/AuthGuard"
 
 function formatTHBMinor(minor: number) {
   const v = (minor ?? 0) / 100
   return v.toLocaleString("th-TH", { style: "currency", currency: "THB" })
 }
 
-export default function AdminCustomersPage() {
+function AdminCustomersPage() {
   const router = useRouter()
 
   // input states (ยังไม่ยิงค้นหา)
@@ -365,5 +366,18 @@ export default function AdminCustomersPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function Guard({ children }: { children: React.ReactNode }) {
+  "use client"
+  return <AuthGuard requiredPerms={["CUSTOMERS_READ"]}>{children}</AuthGuard>
+}
+
+export default function Page() {
+  return (
+    <Guard>
+      <AdminCustomersPage />
+    </Guard>
   )
 }

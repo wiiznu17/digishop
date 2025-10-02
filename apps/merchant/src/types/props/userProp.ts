@@ -3,6 +3,9 @@ export interface UserAuth {
   email: string
   role: string
 }
+
+export type StoreStatus = "PENDING" | "BANNED" | "APPROVED"
+
 export enum AddressType {
   HOME = "HOME",
   OFFICE = "OFFICE"
@@ -18,6 +21,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
+  storeStatus: StoreStatus | null
 }
 
 export interface RegisterData {

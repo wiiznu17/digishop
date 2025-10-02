@@ -99,6 +99,9 @@ export function OrderDetailDialog({
               <div className="text-2xl font-bold">
                 ฿{order.grandTotal?.toLocaleString() ?? "0"}
               </div>
+              <div className="text-xl font-bold text-muted-foreground">
+                ฿{order.payment.captured?.toLocaleString() ?? "0"}
+              </div>
               <div className="text-sm text-muted-foreground">
                 {order.paymentMethod ?? "-"}
               </div>

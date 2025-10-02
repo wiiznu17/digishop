@@ -11,7 +11,7 @@ export interface ListOrdersParams {
   storeId?: number
   startDate?: string // ISO
   endDate?: string // ISO
-  sortBy?: string // e.g. "created_at"
+  sortBy?: "id" | "createdAt" | "updatedAt" | "grandTotalMinor" // ⬅️ ให้ตรง whitelist ฝั่ง BE
   sortDir?: SortDir
   signal?: AbortSignal
 }
@@ -33,11 +33,11 @@ export async function listOrdersRequester(
       storeId,
       startDate,
       endDate,
-      sortBy = "created_at",
+      sortBy = "createdAt", // เดิมเป็น created_at
       sortDir = "DESC",
       signal
     } = params
-    console.log("listOrdersRequester", params)
+
     const res = await axios.get<ListOrdersResponse>("/api/merchant/orders", {
       params: {
         page,
@@ -76,15 +76,11 @@ export async function updateOrderRequester(
   signal?: AbortSignal
 ): Promise<UpdateOrderResponse> {
   try {
-    console.log("updateOrderRequester", orderId, payload)
-
     const res = await axios.patch<UpdateOrderResponse>(
       `/api/merchant/orders/${orderId}`,
       payload,
       { signal }
     )
-
-    console.log("✅ updateOrderRequester res", res.data)
     return res.data
   } catch (err) {
     console.error(`❌ updateOrderRequester failed (orderId=${orderId}):`, err)
@@ -99,20 +95,15 @@ export async function handOverOrderRequester(
   carrier?: string,
   signal?: AbortSignal
 ): Promise<UpdateOrderResponse> {
-  try {
-    return await updateOrderRequester(
-      orderId,
-      {
-        status: "HANDED_OVER",
-        trackingNumber,
-        ...(carrier ? { carrier } : {})
-      },
-      signal
-    )
-  } catch (err) {
-    console.error(`❌ handOverOrderRequester failed (orderId=${orderId}):`, err)
-    throw err
-  }
+  return updateOrderRequester(
+    orderId,
+    {
+      status: "HANDED_OVER",
+      trackingNumber,
+      ...(carrier ? { carrier } : {})
+    },
+    signal
+  )
 }
 
 export type OrderSummary = {
@@ -123,7 +114,7 @@ export type OrderSummary = {
   handedOver: number
   refundRequests: number
   totalRevenue: number // หน่วยบาท (major)
-  totalRevenueMinor: number // หน่วยสตางค์ (minor) เผื่อใช้ภายหลัง
+  totalRevenueMinor: number // หน่วยสตางค์ (minor)
   completedToday?: number
 }
 

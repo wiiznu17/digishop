@@ -10,6 +10,8 @@ export interface ShippingInfoAttributes {
   shippingAddress: number; // reference to Address.id
   shippingStatus: ShippingStatus;
   shippedAt?: Date | null;
+  deliveredAt?: Date | null;
+  returnedToSenderAt?: Date | null;
 
   // Snapshot fields
   shippingTypeNameSnapshot: string; // e.g. "Standard Shipping", "Express Delivery"
@@ -29,6 +31,8 @@ export interface ShippingInfoCreationAttributes
     | 'carrier'
     | 'shippingStatus'
     | 'shippedAt'
+    | 'deliveredAt'
+    | 'returnedToSenderAt'
     | 'shippingTypeNameSnapshot'
     | 'shippingPriceMinorSnapshot'
     | 'addressSnapshot'
@@ -49,6 +53,8 @@ export class ShippingInfo
   public shippingAddress!: number;
   public shippingStatus!: ShippingStatus;
   public shippedAt!: Date | null;
+  public deliveredAt!: Date | null;
+  public returnedToSenderAt!: Date | null;
 
   public shippingTypeNameSnapshot!: string;
   public shippingPriceMinorSnapshot!: number;
@@ -95,7 +101,7 @@ export class ShippingInfo
         shippingStatus: {
           type: DataTypes.ENUM(...Object.values(ShippingStatus)),
           allowNull: false,
-          defaultValue: ShippingStatus.PENDING, // 🔁 ให้ตรงกับ seeder/flow
+          defaultValue: ShippingStatus.PENDING,
           field: 'shipping_status',
         },
         shippedAt: {
@@ -103,8 +109,16 @@ export class ShippingInfo
           allowNull: true,
           field: 'shipped_at',
         },
-
-        // ⬇️ Snapshot columns
+        deliveredAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: 'delivered_at',
+        },
+        returnedToSenderAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: 'returned_to_sender_at',
+        },
         shippingTypeNameSnapshot: {
           type: DataTypes.STRING(80),
           allowNull: false,
@@ -157,6 +171,8 @@ export class ShippingInfo
           { fields: ['shipping_status'] },
           { fields: ['tracking_number'] },
           { fields: ['created_at'] },
+          { fields: ['delivered_at'] },
+          { fields: ['returned_to_sender_at'] },
         ],
       }
     );

@@ -4,7 +4,8 @@ import { AdminRole } from "@digishop/db/src/models/portal/AdminRole"
 
 export async function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
   // สมมติ auth ใส่ req.admin.id มาแล้ว (เหมือน requirePerms)
-  const adminId = (req as any)?.admin?.id
+  console.log("req: ", req.adminId)
+  const adminId = (req as any)?.adminId
   if (!adminId) return res.status(401).json({ error: "Unauthorized" })
   const match = await AdminUserRole.count({
     where: { adminId },
