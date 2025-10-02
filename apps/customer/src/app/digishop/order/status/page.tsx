@@ -4,7 +4,7 @@ import Button from "@/components/button";
 import OrderCard from "@/components/orderCard";
 import OrderDetailPage from "@/components/orderDetail";
 import { useAuth } from "@/contexts/auth-context";
-import { CancelRefundProps, Order, OrderDetail, Orders } from "@/types/props/orderProp";
+import { CancelProp, CancelRefundProps, Order, OrderDetail, Orders } from "@/types/props/orderProp";
 import {CancelOrder} from "@/components/orderCancelCard";
 import {
   fetchOrders,
@@ -13,6 +13,7 @@ import {
 import { Rubik } from "next/font/google";
 import { SetStateAction, useEffect, useState } from "react";
 import StateConfig from './../../../../master/statusOrderConfig.json'
+import { create } from "domain";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -21,13 +22,14 @@ const rubik = Rubik({
 export default function OrderStatus() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<OrderDetail[]>();
-  const [count, setCount] = useState<number>();
-   const [isShowCancel, setIsShowCancel] = useState<CancelRefundProps>({shown: false, id: undefined });
+  const [isShowCancel, setIsShowCancel] = useState<CancelRefundProps>({shown: false, id: undefined });
   const [isShowRefund, setIsShowRefund] = useState<CancelRefundProps>({shown: false, id: undefined });
   const [selectShowDetail, setSelectShowDetail] = useState<
     OrderDetail | undefined
   >();
-  const [orderDetail, setOrderDetail] = useState<OrderDetail>();
+  const [selectShowCancel, setSelectShowCancel] = useState<
+    CancelProp | undefined
+  >();
   const [selectStatus, setSelectStatus] = useState<string>("PENDING");
   useEffect(() => {
     const fetchData = async () => {
@@ -35,24 +37,30 @@ export default function OrderStatus() {
       const data = await fetchUserOrders(user.id);
       const { body, count } = data;
       setOrders(body);
-      setCount(count);
     };
     fetchData();
   }, [user]);
-  console.log(orders)
+  console.log('order',orders)
   if (!orders) return;
   const getFilterOrder = () => {
     if (!orders) return;
-    return orders.filter((order) =>
-      StateConfig[selectStatus].status.includes(order.status)
-    );
+    return orders
+      .map(order => ({
+        ...order,
+        timeStamp: Date.parse(order.created_at)
+      }))
+      .filter((order) =>
+        StateConfig[selectStatus].status.includes(order.status)
+      );
   };
-  const filterOrder = getFilterOrder();
+  
+  const filterOrder = getFilterOrder()?.sort((a,b) => b.timeStamp - a.timeStamp);
   const handleChangeState = (state: string) => {
     setIsShowCancel({shown: false, id: undefined})
     setIsShowRefund({shown: false, id: undefined})
     setSelectStatus(state);
     setSelectShowDetail(undefined);
+    setSelectShowCancel(undefined);
   };
   const handleShowDetail = (order: OrderDetail) => {
     setSelectShowDetail(order);
@@ -78,7 +86,7 @@ export default function OrderStatus() {
                 filterOrder.map((order, index: number) => (
                     <div key={index} 
                     >
-                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} setIsShowCancel={setIsShowCancel} setIsShowRefund={setIsShowRefund} isShowCancel={isShowCancel} isShowRefund={isShowRefund} />
+                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} setIsShowCancel={setIsShowCancel} setIsShowRefund={setIsShowRefund} setSelectShowCancel={setSelectShowCancel} selectShowCancel={selectShowCancel} isShowCancel={isShowCancel} isShowRefund={isShowRefund} />
                     </div>
                 ))
                 ) : (
@@ -87,9 +95,15 @@ export default function OrderStatus() {
             </div>
         </div>
         <div >
+          {
+            selectShowCancel != undefined && (
+              <div>{selectShowCancel.reason}</div>
+            )
+          }
           {selectShowDetail != undefined && (
             <OrderDetailPage order={selectShowDetail} />
           )}
+
         </div>
       </div>      
     </div>

@@ -14,18 +14,14 @@ export interface OrderDetail {
   subtotal_minor:number
   shipping_fee_minor:number
   discount_total_minor:number
-  created_at: Date;
+  created_at: string ;
+  timeStamp?: number
   currency_code: string
   checkout: CheckOut
   shippingInfo: {
     id: number;
     address: Address;
-    shippingType: {
-      name: string;
-      description?: string;
-      estimatedDays: number;
-      price: number;
-    };
+    shippingType: Shipping
   };
   items: [
     {
@@ -36,6 +32,7 @@ export interface OrderDetail {
       productNameSnapshot: string
     },
   ];
+  refundOrders: CancelProp[]
 }
 // 
 export interface Orders {
@@ -176,7 +173,7 @@ export interface CancelProp {
   reason: string;
   description?: string;
   url?: string
-  email: string
+  contactEmail: string
 }
 export interface OrderCard {
   item: OrderDetail;

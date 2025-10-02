@@ -45,7 +45,7 @@ export const createOrderId = async(data: OrderIdProp) => {
 export const createWishList = async(data: ShoppingCartProps) => {
     return await new Promise((resolve, reject) => {
         axios   
-            .post(`/api/order/create/cart`,data)
+            .post(`/api/customer/order/create/cart`,data)
             .then((res) => {
                 resolve(res.data)
             })
@@ -81,7 +81,7 @@ export const fetchOrders = async(id:string, userId: number) => {
             })
     })
 }
-export const deleteCart = async(id: (number | undefined)[]) => {
+export const deleteCart = async(id: (number | undefined)[] | number) => {
     return await new Promise((resolve,reject) => {
         axios
             .post(`/api/customer/order/cart/id`, id)
@@ -117,6 +117,7 @@ export const fetchUserChart = async(id:number) => {
             })
     })
 }
+
 export const updateOrderStatus = async(id: number) => {
     return await new Promise((resolve,reject) => {
         axios

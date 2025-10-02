@@ -40,7 +40,7 @@ export const CancelOrder = ({
     setCancelData({
         reason: CancelReasonMaster[reason].label,
         description: detail,
-        email: email
+        contactEmail: email
     });
   },[reason, detail, email])
   const [cancelData, setCancelData] = useState<CancelProp>();
@@ -153,7 +153,7 @@ export const RefundOrder = ({
     setRefundData({
       reason: RefundReasonMaster[reason].label,
       description: detail,
-      email: email
+      contactEmail: email
     });
   },[reason, detail,email])
   const handleOnConfirm = async() => {
