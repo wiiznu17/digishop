@@ -7,6 +7,8 @@
   "CUSTOMER_CANCELED": {
     "label": "your cancel this order",
     "color": "bg-red-200"
+    ,"cancel": "none"
+
   },
   "PAID": {
     "label": "waiting merchant confirm",
@@ -16,22 +18,27 @@
   "MERCHANT_CANCELED": {
     "label": "merchant cancel this order",
     "color": "bg-red-200"
+    ,"cancel": "none"
   },
   "PROCESSING": {
     "label": "order is preparing",
     "color": "bg-amber-200"
+    ,"cancel": "none"
   },
   "READY_TO_SHIP": {
     "label": "order ready to ship",
     "color": "bg-green-200"
+    ,"cancel": "none"
   },
   "HANDED_OVER": {
     "label": "shipping company pickup",
     "color": "bg-green-200"
+    ,"cancel": "none"
   },
   "SHIPPED": {
     "label": "order is in transit",
     "color": "bg-amber-200"
+    ,"cancel": "none"
   },
   "DELIVERED": {
     "label": "order is delivered",
@@ -40,35 +47,58 @@
   },
   "COMPLETE": {
     "label": "order is complete"
+    ,"cancel": "none"
   },
   "TRANSIT_LACK": {
     "label": "transit lack"
+    ,"cancel": "none"
   },
   "RE_TRANSIT": {
     "label": "re-transport"
-  },
-  "REFUND_REQUEST": {
-    "label": "you refund this order"
+    ,"cancel": "none"
   },
   "AWAITING_RETURN": {
-    "label": "waiting  "
+    "label": "waiting"
+    ,"cancel": "none"
   },
   "RECEIVE_RETURN": {
     "label": "receive return"
+    ,"cancel": "none"
   },
   "RETURN_VERIFIED": {
     "label": "return comfirm"
+    ,"cancel": "none"
   },
   "RETURN_FAIL": {
     "label": "return fail"
+    ,"cancel": "none"
+  },
+  "REFUND_REQUEST": {
+    "label": "you refund this order"
+    ,"cancel": "none"
   },
   "REFUND_APPROVED": {
     "label": "merchant approve refund"
+    ,"cancel": "none"
   },
   "REFUND_SUCCESS": {
     "label": "refund success"
+    ,"cancel": "none"
   },
   "REFUND_FAIL": {
     "label": "refund failed"
+    ,"cancel": "none"
+  },
+  "REFUND_REJECTED":{
+    "label": "refund rejected"
+    ,"cancel": "none"
+  },
+  "REFUND_RETRY": {
+    "label": "retry refund"
+    ,"cancel": "none"
+  },
+  "REFUND_PROCESSING": {
+    "label": "refund in processing"
+    ,"cancel": "none"
   }
 }

@@ -172,6 +172,7 @@ export const findUserOrder = async (
         "subtotal_minor",
         "shipping_fee_minor",
         "discount_total_minor",
+        "created_at"
       ],
       include: [
         {
@@ -255,71 +256,12 @@ export const findUserOrder = async (
             },
           ],
         },
+        {
+          model: RefundOrder,
+          as: "refundOrders",
+        }
       ],
     });
-    // const getUserOrders = await CheckOut.findAndCountAll({
-    //   where: {customerId : id },
-    //
-    //   include: [
-    //     {
-    //       model: Order,
-    //       as: 'orders',
-    //       attributes: [
-    //       "id",
-    //       "reference",
-    //       "status",
-    //       "currency_code",
-    //       "order_note",
-    //       "grand_total_minor",
-    //       ],
-    //       include: [
-    //         {
-    //           model: OrderItem,
-    //           as: "items",
-    //           attributes: [
-    //             "quantity",
-    //             "unit_price_minor",
-    //             "discount_minor",
-    //             "product_name_snapshot",
-    //           ],
-    //           include: [
-    //             {
-    //               model: Product,
-    //               as: "product",
-    //               attributes: ["name"],
-    //               include: [
-    //                 {
-    //                   model: ProductImage,
-    //                   as: "images",
-    //                   attributes: ["url", "blobName", "fileName"],
-    //                 },
-    //               ],
-    //             },
-    //           ],
-    //         },
-    //         {
-    //           model: Store,
-    //           as: "store",
-    //           attributes: ["storeName"],
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       model: Payment,
-    //       as: "payment",
-    //       attributes: [
-    //         "payment_method",
-    //         "status",
-    //         "channel",
-    //         "currency_code",
-    //         "amount_authorized_minor",
-    //         "amount_captured_minor",
-    //         "amount_refunded_minor",
-    //         "pgw_status",
-    //       ],
-    //     },
-    //   ]
-    // });
     return res
       .status(200)
       .json({ body: getUserOrders.rows, count: getUserOrders.count });
@@ -796,8 +738,8 @@ export const cancelOrder = async(
   const findPayment = await Payment.findOne({
     where: { checkoutId: findOrder?.checkoutId }
   })
-  console.log(req.body ,req.params.id)
   if(findOrder && ( findOrder.status === OrderStatus.PAID || findOrder.status === OrderStatus.DELIVERED) && findPayment ){
+    
     try {
       const cancelRequest = await RefundOrder.create({
         orderId: Number(id),
@@ -817,16 +759,6 @@ export const cancelOrder = async(
         changedByType: ActorType.CUSTOMER ,
         source: "WEBSITE"
       })
-      // if(url){
-        // await RefundImage.create({
-          //   refundOrderId: cancelRequest.id,
-          //   url,
-          //   blobName,
-          //   filename,
-          //   isMain,
-          //   sortOrder
-          // })
-      // }
         await OrderStatusHistory.create({
           orderId: findOrder.id,
           fromStatus: findOrder.status,
@@ -844,11 +776,18 @@ export const cancelOrder = async(
         }
       })
       await Order.update({
-        status: OrderStatus.REFUND_PROCESSING
+        status: OrderStatus.REFUND_REQUEST
       },{ where: {id: id}})
       res.json({ data: 'success'})
     } catch (error) {
       res.json({ error: error})
     }
-    }
+  }
+}
+
+export const revokeCancelOrder = async( req: Request,
+  res: Response,
+  next: NextFunction) => {
+  //check 7 day
+  
 }

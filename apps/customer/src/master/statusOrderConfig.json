@@ -14,10 +14,16 @@
     "value": "TRANSIT",
     "status": ["SHIPPED", "TRANSIT_LACK", "RE_TRANSIT"]
   },
+  "DELIVERED": {
+    "label": "delivered",
+    "value": "DELIVERED",
+    "status": "DELIVERED"
+  }
+  ,
   "COMPLETE": {
     "label": "complete",
     "value": "COMPLETE",
-    "status": [ "DELIVERED","COMPLETE"]
+    "status": "COMPLETE"
   },
   "CANCEL": {
     "label": "cancel",
@@ -29,13 +35,16 @@
     "value": "CALM",
     "status": [
       "REFUND_REQUEST",
+      "REFUND_REJECTED",
       "AWAITING_RETURN",
       "RECEIVE_RETURN",
       "RETURN_VERIFIED",
       "RETURN_FAIL", 
       "REFUND_APPROVED", 
-      "REFUND_PENING",
-      "REFUND_SUCCESS"
+      "REFUND_PROCESSING",
+      "REFUND_SUCCESS",
+      "REFUND_FAIL",
+      "REFUND_RETRY"
     ]
   }
 }
