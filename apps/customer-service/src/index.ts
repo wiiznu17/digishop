@@ -25,12 +25,12 @@ async function main() {
     app.use('/api', router);
     app.use('/digishop',router)
     app.use((req, res, next) => {
-      console.log('[MERCHANT] Incoming', req.method, req.url)
+      console.log('[Customer] Incoming', req.method, req.url)
       next()
     })
 
     const server = app.listen(PORT, () => {
-      console.log(`Merchant Service listening at: http://localhost:${PORT}`);
+      console.log(`Customer Service listening at: http://localhost:${PORT}`);
     });
 
     // Server error handling

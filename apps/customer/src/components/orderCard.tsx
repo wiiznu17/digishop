@@ -1,5 +1,5 @@
 "use client";
-import { OrderDetail, CancelRefundProps } from "@/types/props/orderProp";
+import { OrderDetail, CancelRefundProps, CancelProp } from "@/types/props/orderProp";
 import Link from "next/link";
 import Button from "./button";
 import { CancelOrder, RefundOrder } from "./orderCancelCard";
@@ -10,6 +10,8 @@ import CancelReasonMaster from "../master/cancelReason.json";
 import { updateOrderStatus } from "@/utils/requestUtils/requestOrderUtils";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { Configurations } from "@/types/props/productProp";
+import { formatSku } from "@/lib/function";
 
 interface OrderCard {
   item: OrderDetail;
@@ -19,6 +21,8 @@ interface OrderCard {
   setIsShowRefund: React.Dispatch<SetStateAction<CancelRefundProps>>;
   isShowCancel:CancelRefundProps
   isShowRefund:CancelRefundProps
+  setSelectShowCancel: React.Dispatch<SetStateAction<CancelProp>>;
+  selectShowCancel: CancelProp| undefined
 }
 
 
@@ -30,6 +34,8 @@ export default function OrderCard({
   isShowRefund,
   setIsShowCancel,
   setIsShowRefund,
+  setSelectShowCancel,
+  selectShowCancel
 
 }: OrderCard) {
   const router = useRouter()
@@ -44,17 +50,17 @@ export default function OrderCard({
     setReasonRefund("RF01")
     setDetail("");
   };
-  console.log(isShowRefund)
   const handleConfirmed = async() => {
     const data = await updateOrderStatus(item.id)
     if(data.data){
       window.location.reload()
     }
   }
+  
   if(!user)return
   return (
-    <div className=" px-4 py-2 mb-5 border w-md rounded-2xl ">
-      <div>{item.id}</div>
+    <div className="px-4 py-2 mb-5 border w-md rounded-2xl">
+      <div>{item.created_at}</div>
       <div>
         { item.items[0].productItem&& 
           <button className="flex items-center mb-3 hover:cursor-pointer w-full" onClick={() => router.push(`http://localhost:3000/digishop/store/${item.items[0].productItem.product.store.uuid}`)}>
@@ -73,9 +79,11 @@ export default function OrderCard({
                   <div className="w-[100px] h-[100px] bg-amber-700"></div>
                   <div>
                     <div className="flex-1">
-                      <div >{items.productItem.product.name}</div>
-                      <div className="text-xs text-gray-500 ">
-                        {items.productItem.sku}
+                      <div className="flex justify-start mb-1">{items.productItem.product.name}</div>
+                      <div className="flex justify-start text-xs text-gray-500 ">
+                        {
+                          formatSku(items.productItem.configurations)
+                        }
                       </div>
                       <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
                         x {String(items.quantity)}
@@ -95,19 +103,27 @@ export default function OrderCard({
         </div>
         {/* ราคาที่จ่าย */}
       </div>
-      <div className="flex justify-between">
-        <div className="">{OrderStatusConfig[item.status].label}</div>
+      <div className="flex justify-between items-center">
+        <div className="">{OrderStatusConfig[item.status as keyof typeof OrderStatusConfig].label}</div>
+        <div className="flex">
+        {
+          item.refundOrders[0] && (
+            <Button size="sm" onClick={() => setSelectShowCancel(item.refundOrders[item.refundOrders.length - 1])}
+            className={`hover:cursor-pointer ml-3 hover:bg-gray-300 ${item.refundOrders[item.refundOrders.length - 1] == selectShowCancel ? "opacity-0" : "opacity-100"}`} >cancel reason</Button>
+          )
+        }
         <button
           onClick={() => handleShowDetail(item)}
-          className={`hover:cursor-pointer hover:bg-gray-300 ${item == selectShowDetail ? "opacity-0" : "opacity-100"}`}
+          className={`hover:cursor-pointer ml-3 hover:bg-gray-300 ${item == selectShowDetail ? "opacity-0" : "opacity-100"}`}
         >
           <SquareChevronRight />
         </button>
+        </div>
       </div>
       <div
         className={`flex justify-end pt-2`}
       >
-        {OrderStatusConfig[item.status].cancel == "cancel" && (
+        {OrderStatusConfig[item.status as keyof typeof OrderStatusConfig].cancel == "cancel" && (
           <>
             <Button
               color="bg-red-300"
@@ -118,7 +134,7 @@ export default function OrderCard({
             </Button>
           </>
         )}
-        {OrderStatusConfig[item.status].cancel == "refund" && (
+        {OrderStatusConfig[item.status as keyof typeof OrderStatusConfig].cancel == "refund" && (
           <>
             <Button
               color="bg-red-300"

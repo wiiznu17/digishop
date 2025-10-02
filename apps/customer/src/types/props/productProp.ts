@@ -6,7 +6,7 @@ export interface ProductItem {
     stockQuantity: number;
     priceMinor: number;
     imageUrl?: string | undefined;
-    configuration: 
+    configurations: Configurations[]
 }
 export interface Configurations {
   id: number
@@ -37,9 +37,7 @@ export interface Product {
   name: string
   description: string
   images: ProductImages[]
-  items: [
-    ProductItem
-  ]
+  items: ProductItem[]
   store: Store
   category: Category
 }

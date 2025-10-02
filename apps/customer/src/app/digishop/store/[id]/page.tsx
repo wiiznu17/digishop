@@ -11,6 +11,8 @@ export default function StorePage() {
   const [products, setProducts] = useState<StoreProduct>();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchEngine, setSearchEngine] = useState<string[] | undefined>(undefined);
+  const [loading, setLoading] = useState(false)
   const [showProduct, setShowProduct] = useState<Product[]>();
     const handleSearch = (query = searchQuery) => {
       if (!query.trim()) return;
@@ -23,6 +25,18 @@ export default function StorePage() {
       setSearchQuery("");
       setShowProduct(products?.products)
     };
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const filterProduct = products?.products.map(product => product.name).filter((product => product.toLowerCase().includes(searchQuery.toLowerCase())))
+      if(filterProduct){
+        setSearchEngine(filterProduct)
+      }else{
+        setSearchEngine(undefined)
+      }
+      setLoading(false)
+    },500)
+    return () => clearTimeout(timeout)
+  },[searchQuery,products])
   useEffect(() => {
     const fetchData = async () => {
       console.log("id", id);
@@ -58,10 +72,20 @@ export default function StorePage() {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
+                  setLoading(true)
                 }}
                 placeholder= {`Find products in ${products.storeName} ...`}
                 className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-full focus:border-blue-500 focus:outline-none  text-black bg-white"
               />
+              {searchQuery &&(
+                  <div className='absolute right-0 z-100 w-full'>
+                    {
+                      searchEngine?.map((result,index) => (
+                          <button key={index} onClick={() => handleSearch(result)} className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 border-gray-200 hover:bg-gray-300 ${index === searchEngine.length -1 ? 'rounded-b-4xl':''}`}>{result}</button>
+                      ))
+                    }
+                  </div>
+                )}
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
                 {searchQuery && (
                   <button

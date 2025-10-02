@@ -2,14 +2,14 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import { config } from "../config";
 
 export const customerProxy = createProxyMiddleware({
-  target: config.services.merchant,
+  target: config.services.customer,
   changeOrigin: true,
   cookieDomainRewrite: "localhost",
   pathRewrite: { "^/api/customer": "/api/customer" },
   logLevel: "debug",
 
   onProxyReq: (proxyReq, req) => {
-    console.log(`[Gateway] Proxying request to: ${config.services.merchant}${req.url}`);
+    console.log(`[Gateway] Proxying request to: ${config.services.customer}${req.url}`);
     // ❌ ไม่ต้องเขียน body เอง
   },
 

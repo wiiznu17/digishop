@@ -6,7 +6,7 @@ import { resolve } from "path"
 export const getShippingType = async() => {
     return await new Promise((resolve, reject) => {
         axios
-            .get(`/api/order/shiptype`)
+            .get(`/api/customer/order/shiptype`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -19,7 +19,7 @@ export const getShippingType = async() => {
 export const deleteOrder = async(orderCode: string) => {
     return await new Promise((resolve, reject) => {
         axios   
-            .patch(`/api/order/delete/${orderCode}`)
+            .patch(`/api/customer/order/delete/${orderCode}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -32,7 +32,7 @@ export const deleteOrder = async(orderCode: string) => {
 export const createOrderId = async(data: OrderIdProp) => {
     return await new Promise((resolve, reject) => {
         axios   
-            .post(`/api/order/create/id`,data)
+            .post(`/api/customer/order/create/id`,data)
             .then((res) => {
                 resolve(res.data)
             })
@@ -45,7 +45,7 @@ export const createOrderId = async(data: OrderIdProp) => {
 export const createWishList = async(data: ShoppingCartProps) => {
     return await new Promise((resolve, reject) => {
         axios   
-            .post(`/api/order/create/cart`,data)
+            .post(`/api/customer/order/create/cart`,data)
             .then((res) => {
                 resolve(res.data)
             })
@@ -59,20 +59,20 @@ export const createWishList = async(data: ShoppingCartProps) => {
 export const createOrder = async(data:Order) => {
     return await new Promise((resolve, reject) => {
         axios   
-            .post(`/api/order/create`,data)
+            .post(`/api/customer/order/create`,data)
             .then((res) => {
                 resolve(res.data)
             })
             .catch((err) => {
                 reject(err)
             })
-    }) 
-    
+    })  
 }
+
 export const fetchOrders = async(id:string, userId: number) => {
     return await new Promise((resolve,reject) => {
         axios
-            .get(`/api/order/${userId}/${id}`)
+            .get(`/api/customer/order/${userId}/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -81,10 +81,10 @@ export const fetchOrders = async(id:string, userId: number) => {
             })
     })
 }
-export const deleteCart = async(id: (number | undefined)[]) => {
+export const deleteCart = async(id: (number | undefined)[] | number) => {
     return await new Promise((resolve,reject) => {
         axios
-            .post(`/api/order/cart/id`, id)
+            .post(`/api/customer/order/cart/id`, id)
             .then((res) => {
                 resolve(res.data)
             })
@@ -96,7 +96,7 @@ export const deleteCart = async(id: (number | undefined)[]) => {
 export const fetchUserOrders = async(id:number) => {
     return await new Promise((resolve,reject) => {
         axios
-            .get(`/api/order/user/id/${id}`)
+            .get(`/api/customer/order/user/id/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -108,7 +108,7 @@ export const fetchUserOrders = async(id:number) => {
 export const fetchUserChart = async(id:number) => {
     return await new Promise((resolve,reject) => {
         axios 
-            .get(`/api/order/cart/user/${id}`)
+            .get(`/api/customer/order/cart/user/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -117,10 +117,11 @@ export const fetchUserChart = async(id:number) => {
             })
     })
 }
+
 export const updateOrderStatus = async(id: number) => {
     return await new Promise((resolve,reject) => {
         axios
-            .patch(`/api/order/status/${id}`)
+            .patch(`/api/customer/order/status/${id}`)
             .then((res) => {
                 resolve(res.data)
             })
@@ -132,19 +133,7 @@ export const updateOrderStatus = async(id: number) => {
 export const cancelOrder = async(id: number,data: CancelProp ) => {
     return await new Promise((resolve, reject) => {
         axios
-            .patch(`/api/order/cancel/${id}`, data)
-            .then((res) => {
-                resolve(res.data)
-            })
-            .catch((err) => {
-                reject(err)
-            })
-    })
-}
-export const refundOrder = async(id: number) => {
-    return await new Promise((resolve, reject) => {
-        axios
-            .patch(`/api/order/refund/${id}`)
+            .patch(`/api/customer/order/cancel/${id}`, data)
             .then((res) => {
                 resolve(res.data)
             })
