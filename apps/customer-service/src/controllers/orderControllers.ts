@@ -92,7 +92,7 @@ export const findOrder = async (
             {
               model: Payment,
               as: "payment",
-              attributes: ["id","pgw_status", "payment_method", "updated_at"],
+              attributes: ["id", "url_redirect","pgw_status", "payment_method", "updated_at"],
             },
           ],
         },
@@ -123,19 +123,19 @@ export const findOrder = async (
               include: [
                 {
                   model: ProductConfiguration,
-                  as:'configurations',
+                  as: "configurations",
                   include: [
                     {
                       model: VariationOption,
-                      as: 'variationOption',
+                      as: "variationOption",
                       include: [
                         {
                           model: Variation,
-                          as: 'variation'
-                        }
-                      ]
-                    }
-                  ]
+                          as: "variation",
+                        },
+                      ],
+                    },
+                  ],
                 },
                 {
                   model: Product,
@@ -176,7 +176,7 @@ export const findUserOrder = async (
         "subtotal_minor",
         "shipping_fee_minor",
         "discount_total_minor",
-        "created_at"
+        "created_at",
       ],
       include: [
         {
@@ -184,42 +184,43 @@ export const findUserOrder = async (
           as: "items",
           include: [
             {
-            model: ProductItem,
-            as: "productItem",
-            include: [
-              {
-                model: ProductConfiguration,
-                as:'configurations',
-                include: [
-                  {
-                    model: VariationOption,
-                    as: 'variationOption',
-                    include: [
-                      {
-                        model: Variation,
-                        as: 'variation'
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                model: Product,
-                as: "product",
-                include: [
-                  {
-                    model: ProductImage,
-                    as: "images",
-                    attributes: ["url", "blobName", "fileName"],
-                  },
-                  {
-                    model: Store,
-                    as: "store",
-                  },
-                ],
-              },
-            ],
-          }],
+              model: ProductItem,
+              as: "productItem",
+              include: [
+                {
+                  model: ProductConfiguration,
+                  as: "configurations",
+                  include: [
+                    {
+                      model: VariationOption,
+                      as: "variationOption",
+                      include: [
+                        {
+                          model: Variation,
+                          as: "variation",
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  model: Product,
+                  as: "product",
+                  include: [
+                    {
+                      model: ProductImage,
+                      as: "images",
+                      attributes: ["url", "blobName", "fileName"],
+                    },
+                    {
+                      model: Store,
+                      as: "store",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
         {
           model: ShippingInfo,
@@ -255,7 +256,7 @@ export const findUserOrder = async (
                 "amount_captured_minor",
                 "amount_refunded_minor",
                 "pgw_status",
-                "updated_at"
+                "updated_at",
               ],
             },
           ],
@@ -263,7 +264,7 @@ export const findUserOrder = async (
         {
           model: RefundOrder,
           as: "refundOrders",
-        }
+        },
       ],
     });
     return res
@@ -292,21 +293,21 @@ export const findUserCart = async (
             as: "productItem",
             include: [
               {
-              model: ProductConfiguration,
-              as:'configurations',
-              include: [
-                {
-                  model: VariationOption,
-                  as: 'variationOption',
-                  include: [
-                    {
-                      model: Variation,
-                      as: 'variation'
-                    }
-                  ]
-                }
-              ]
-            },
+                model: ProductConfiguration,
+                as: "configurations",
+                include: [
+                  {
+                    model: VariationOption,
+                    as: "variationOption",
+                    include: [
+                      {
+                        model: Variation,
+                        as: "variation",
+                      },
+                    ],
+                  },
+                ],
+              },
               {
                 model: Product,
                 as: "product",
@@ -333,21 +334,21 @@ export const deleteChart = async (
   res: Response,
   next: NextFunction
 ) => {
-  const item =  req.body
+  const item = req.body;
   try {
-    for(let i = 0; i < item.length ; i++){
+    for (let i = 0; i < item.length; i++) {
       await ShoppingCartItem.destroy({
         where: {
-          id: item[i]
-        }
-      })
+          id: item[i],
+        },
+      });
     }
-    res.json({ message: `del ${item}`})
+    res.json({ message: `del ${item}` });
   } catch (error) {
-    console.log()
-    res.json({error: error})
+    console.log();
+    res.json({ error: error });
   }
-}
+};
 
 export const createOrderId = async (
   req: Request,
@@ -370,19 +371,19 @@ export const createOrderId = async (
         orderCode: orderCod,
       });
       const sumprice = (data) => {
-      if(!data)return 0
-      let sum = 0;
+        if (!data) return 0;
+        let sum = 0;
         for (let i = 0; i < data.length; i++) {
-          sum += (data[i].lineTotalMinor)
-          console.log(sum)
+          sum += data[i].lineTotalMinor;
+          console.log(sum);
         }
-        return sum
-    }
+        return sum;
+      };
       Object.entries(groupStoreId).map(async ([key, values]) => {
         let orderData = await Order.create({
           checkoutId: checkoutId.id,
           reference: orderCod + key,
-          subtotalMinor: sumprice(values), 
+          subtotalMinor: sumprice(values),
           shippingFeeMinor: 0,
           taxTotalMinor: 0,
           discountTotalMinor: 0,
@@ -437,27 +438,35 @@ export const createOrder = async (
 
   try {
     const user = await User.findByPk(customerId);
-    const taxTotalMinor = 0
-    const discountTotalMinor = 0
+    const taxTotalMinor = 0;
+    const discountTotalMinor = 0;
     const checkoutId = await CheckOut.findOne({
       where: { orderCode: orderCode },
       attributes: ["id"],
     });
     if (!user || !checkoutId) return;
     const orderId = await Order.findAll({
-      where: {checkoutId: checkoutId.id}
-    })
-    const grandTotalMinor = productprice + (shippingfee * orderId.length) + taxTotalMinor - discountTotalMinor; //รวมทั้งหมด ส่งให้จ่าย
-    
+      where: { checkoutId: checkoutId.id },
+    });
+    const grandTotalMinor =
+      productprice +
+      shippingfee * orderId.length +
+      taxTotalMinor -
+      discountTotalMinor; //รวมทั้งหมด ส่งให้จ่าย
+
     for (let i = 0; i < orderId.length; i++) {
       await Order.update(
         {
-          shippingFeeMinor: shippingfee , //ราคาต่อร้าน
+          shippingFeeMinor: shippingfee, //ราคาต่อร้าน
           taxTotalMinor,
           discountTotalMinor,
           currencyCode: "THB",
           orderNote,
-          grandTotalMinor: shippingfee + orderId[i].subtotalMinor + taxTotalMinor - discountTotalMinor, // , ไปรวมใน database แทน
+          grandTotalMinor:
+            shippingfee +
+            orderId[i].subtotalMinor +
+            taxTotalMinor -
+            discountTotalMinor, // , ไปรวมใน database แทน
         },
         { where: { id: orderId[i].id } }
       );
@@ -523,15 +532,17 @@ export const createOrder = async (
         {
           reference: responseCardPayment.data.reference,
         },
-        { where: { checkoutId: checkoutId.id  } }
+        { where: { checkoutId: checkoutId.id } }
       );
       await Payment.update(
         {
+          urlRedirect: responseCardPayment.data.redirect_url,
           providerRef: responseCardPayment.data.reference,
-        },{
-           where: { checkoutId: checkoutId.id  } 
+        },
+        {
+          where: { checkoutId: checkoutId.id },
         }
-      )
+      );
       const paymentStatus = await PaymentGatewayEvent.create({
         checkoutId: checkoutId.id,
         paymentId: paymentData.id,
@@ -596,11 +607,13 @@ export const createOrder = async (
       );
       await Payment.update(
         {
+          urlRedirect: responseQrPayment.data.redirect_url,
           providerRef: responseQrPayment.data.reference,
-        },{
-           where: { checkoutId: checkoutId.id  } 
+        },
+        {
+          where: { checkoutId: checkoutId.id },
         }
-      )
+      );
       const paymentStatus = await PaymentGatewayEvent.create({
         checkoutId: checkoutId.id,
         paymentId: paymentData.id,
@@ -637,10 +650,10 @@ export const deleteOrder = async (
   next: NextFunction
 ) => {
   try {
-    const id = req.params.id
+    const id = req.params.id;
     const delOrder = await CheckOut.destroy({
-      where: {orderCode: id}
-    })
+      where: { orderCode: id },
+    });
     return res.status(200).json({ data: "connect del order" });
   } catch (error) {
     console.log("error", error);
@@ -684,14 +697,17 @@ export const createCart = async (
     }
     if (product) {
       const findProduct = await ShoppingCartItem.findOne({
-        where: {productItemId: productItemId}
-      })
-      if(findProduct?.productItemId){
-        const cardData = await ShoppingCartItem.update({
-          quantity: quantity + findProduct.quantity,
-        },{where : { productItemId: productItemId }});
+        where: { productItemId: productItemId },
+      });
+      if (findProduct?.productItemId) {
+        const cardData = await ShoppingCartItem.update(
+          {
+            quantity: quantity + findProduct.quantity,
+          },
+          { where: { productItemId: productItemId } }
+        );
         res.json({ data: cardData });
-      }else{
+      } else {
         const cardData = await ShoppingCartItem.create({
           cartId: cardId,
           productItemId,
@@ -702,36 +718,200 @@ export const createCart = async (
       }
     }
   } catch (error) {
-    console.log()
+    console.log();
     res.json({ error: error });
   }
 };
 
-export const updateOrderStatus = async( 
+export const updateOrderStatus = async (
   req: Request,
   res: Response,
-  next: NextFunction) => {
-    const id = req.params.id
-    const order = await Order.findByPk(id)
+  next: NextFunction
+) => {
+  const id = req.params.id;
+  const order = await Order.findByPk(id);
+  try {
+    console.log(order?.status,order?.status == OrderStatus.DELIVERED )
+    if (order && (order.status == OrderStatus.DELIVERED || order.status === OrderStatus.CANCELED_REFUND)) {
+      const createStatus = await OrderStatusHistory.create({
+        orderId: order.id,
+        fromStatus: order.status,
+        toStatus: OrderStatus.COMPLETE,
+        changedByType: ActorType.CUSTOMER,
+      });
+      const updateOrder = await Order.update(
+        {
+          status: OrderStatus.COMPLETE,
+        },
+        { where: { id: order.id } }
+      );
+      res.json({ data: createStatus });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.json({ error: error });
+  }
+};
+
+export const cancelOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const id = req.params.id;
+  const { reason, description, contactEmail, url } = req.body;
+  const findOrder = await Order.findByPk(id);
+  const findPayment = await Payment.findOne({
+    where: { checkoutId: findOrder?.checkoutId },
+  });
+  console.log( findOrder?.status === OrderStatus.CANCELED_REFUND, findOrder?.status)
+  if (
+    findOrder && (findOrder.status === OrderStatus.PAID ||findOrder.status === OrderStatus.DELIVERED || findOrder.status === OrderStatus.CANCELED_REFUND) &&
+    findPayment
+  ) {
     try {
-      if(order && order.status == OrderStatus.DELIVERED){
-        const createStatus = await OrderStatusHistory.create({
-          orderId: order.id,
-          fromStatus: order.status,
-          toStatus: OrderStatus.COMPLETE,
-          changedByType: ActorType.CUSTOMER,
-        })
-        const updateOrder = await Order.update({
-          status: OrderStatus.COMPLETE
-        }, { where: {id: order.id}})
-        res.json({data: createStatus})
-      }
+      const cancelRequest = await RefundOrder.create({
+        orderId: Number(id),
+        paymentId: findPayment.id,
+        reason,
+        status: RefundStatus.REQUESTED,
+        amountMinor: findOrder.grandTotalMinor,
+        currencyCode: findOrder.currencyCode,
+        description,
+        contactEmail,
+        requestedBy: "CUSTOMER",
+      });
+      await RefundStatusHistory.create({
+        refundOrderId: cancelRequest.id,
+        toStatus: RefundStatus.REQUESTED,
+        reason,
+        changedByType: ActorType.CUSTOMER,
+        source: "WEBSITE",
+      });
+      await OrderStatusHistory.create({
+        orderId: findOrder.id,
+        fromStatus: findOrder.status,
+        toStatus: OrderStatus.REFUND_REQUEST,
+        changedByType: ActorType.CUSTOMER,
+        source: "WEB",
+      });
+      await PaymentGatewayEvent.update(
+        {
+          refundOrderId: cancelRequest.id,
+        },
+        {
+          where: {
+            [Op.and]: {
+              checkoutId: findOrder.checkoutId,
+              paymentId: findPayment.id,
+            },
+          },
+        }
+      );
+      await Order.update(
+        {
+          status: OrderStatus.REFUND_REQUEST,
+        },
+        { where: { id: id } }
+      );
+      res.json({ data: "success" });
     } catch (error) {
       console.log(error.message)
-      res.json({error: error})
+      res.json({ error: error });
     }
   }
+};
 
+export const customerCancel = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const id = req.params.id;
+  const findOrder = await Order.findAll({
+    where: { checkoutId: id },
+    attributes: ["id"],
+  });
+  try {
+    await Order.update(
+      {
+        status: OrderStatus.CUSTOMER_CANCELED,
+      },
+      {
+        where: { checkoutId: id },
+      }
+    );
+    await Payment.update(
+      {
+        status: PaymentStatus.FAILED,
+      },
+      {
+        where: { checkoutId: id },
+      }
+    );
+    for (let i = 0; i < findOrder.length; i++) {
+      let createLog = await OrderStatusHistory.create({
+        orderId: findOrder[i].id,
+        fromStatus: OrderStatus.PENDING,
+        toStatus: OrderStatus.CUSTOMER_CANCELED,
+        changedByType: ActorType.CUSTOMER,
+        source: "APP",
+        metadata: {},
+      });
+      createLog.save();
+    }
+    res.json({message: 'success'})
+  } catch (error) {
+    console.log(error)
+    res.json({error: error})
+  }
+};
+export const revokeCancelOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  //check 7 day ยังไม่ทำ
+  const id = req.params.id;
+  const refund = await RefundOrder.findByPk(id);
+  if (refund) {
+    const order = await Order.findByPk(refund.orderId);
+    try {
+      await RefundOrder.update(
+        {
+          status: RefundStatus.CANCELED,
+        },
+        { where: { id: id } }
+      );
+      if (order) {
+        await OrderStatusHistory.create({
+          orderId: order.id,
+          fromStatus: order.status,
+          toStatus: OrderStatus.CANCELED_REFUND,
+          changedByType: ActorType.CUSTOMER,
+          source: "WEB",
+        });
+      }
+      await Order.update(
+        {
+          status: OrderStatus.CANCELED_REFUND,
+        },
+        { where: { id: refund.orderId } }
+      );
+      await RefundStatusHistory.create({
+        refundOrderId: Number(id),
+        fromStatus: RefundStatus.REQUESTED,
+        toStatus: RefundStatus.CANCELED,
+        reason: "customer cancel",
+        changedByType: ActorType.CUSTOMER,
+        source: "WEBSITE",
+      });
+      res.json({ data: "success" });
+    } catch (error) {
+      res.json({ error: error });
+    }
+  }
+};
 // helper
 async function getOrderTimes(orderId: number) {
   const ord = await Order.findByPk(orderId, {
