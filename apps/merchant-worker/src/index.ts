@@ -1,10 +1,11 @@
-import { initDb, startRefundWorker } from "./worker";
+import { startRefundWorker } from "./workers/autoApproveWorker";
 import express from "express";
 import { ExpressAdapter } from "@bull-board/express";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
+import { initDb } from "./db";
 
 const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379");
 const queue = new Queue("refund-auto-approve", { connection });
