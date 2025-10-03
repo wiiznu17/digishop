@@ -22,10 +22,12 @@ import {AddressCardForSetting} from "@/components/addressCard";
 import Button from "@/components/button";
 import InputField from "@/components/inputField";
 import { middleware } from "@/middleware";
+import { formatTime } from "@/lib/function";
 
 const UserProfilePage = () => {
   const [currentUser, setCurrentUser] = useState<Profile>();
   const [addressUser, setAddressUser] = useState<Address[]>();
+  const [time, setTime] = useState<number| null>()
   const [address, setAddress] = useState<Address>({
     recipientName: "",
     phone: "",
@@ -96,6 +98,17 @@ const UserProfilePage = () => {
     router.replace("/");
   };
   useEffect(() => {
+      let interval;
+        if(time > 0 && typeof time === 'number') {
+          interval = setInterval(()=> {
+            setTime((time) => time - 1);
+          },1000)
+        }
+      return () => {
+        clearInterval(interval);
+      }
+    },[time])
+  useEffect(() => {
     const fetchData = async () => {
       const resUser = await getUserDetail(user?.id);
       const resAddress = await getAddress(user?.id);
@@ -127,6 +140,7 @@ const UserProfilePage = () => {
     <div>
       {/* Main Content */}
       <main className="px-3 py-2">
+        <Button onClick={()=> setTime(1 * 10)}>count down 15</Button>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {/* Profile Header */}
           <div className="px-8 py-6 border-b border-gray-200">

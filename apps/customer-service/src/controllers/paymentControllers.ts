@@ -198,7 +198,7 @@ export const getCallBack = async (req: Request, res: Response) => {
           <html>
             <body>
               <script>
-                location.replace(${linkResult})
+                window.close()
               </script>
             </body>
           </html>
@@ -210,7 +210,7 @@ export const getCallBack = async (req: Request, res: Response) => {
           <html>
             <body>
               <script>
-                location.replace(${linkResult})
+                window.close()
               </script>
             </body>
           </html>
@@ -228,16 +228,3 @@ export const getCallBack = async (req: Request, res: Response) => {
         `);
   }
 };
-
-export const testRes = async(req: Request, res: Response) => {
-  const link = JSON.stringify('http://localhost:3000')
-  res.send(`
-          <html>
-            <body>
-              <script>
-                location.replace(${link});
-              </script>
-            </body>
-          </html>
-        `);
-}

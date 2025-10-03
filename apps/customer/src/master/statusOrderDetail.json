@@ -2,7 +2,7 @@
   "PENDING": {
     "label": "wait to paid",
     "color": "bg-amber-200",
-    "cancel": "cancel"
+    "cancel": "none"
   },
   "CUSTOMER_CANCELED": {
     "label": "your cancel this order",
@@ -100,5 +100,10 @@
   "REFUND_PROCESSING": {
     "label": "refund in processing"
     ,"cancel": "none"
+  },
+  "CANCELED_REFUND": {
+    "label": "order is delivered but just cancel refund",
+    "color": "bg-amber-200",
+    "cancel": "refund"
   }
 }

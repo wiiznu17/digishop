@@ -142,3 +142,16 @@ export const cancelOrder = async(id: number,data: CancelProp ) => {
             })
     })
 }
+
+export const revokeCancelOrder = async(id: number) => {
+    return await new Promise((resolve,reject) => {
+        axios
+            .post(`/api/customer/order/revoke/cancel/${id}`)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+}
