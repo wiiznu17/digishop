@@ -46,7 +46,6 @@ export const CancelOrder = ({
   const [cancelData, setCancelData] = useState<CancelProp>();
   const handleOnConfirm = async() => {
     if (!reason) return;
-    console.log(cancelData)
     setIsShowCancel({...isShowCancel, ['shown']: false})
       if(cancelData){
         const updateCancelOrder = await cancelOrder(order.id , cancelData)
@@ -158,14 +157,14 @@ export const RefundOrder = ({
   },[reason, detail,email])
   const handleOnConfirm = async() => {
     if (!reason) return
-    console.log(refundData)
     setIsShowRefund({ ...isShowRefund, ['shown']: false})
       if(refundData){
-          const updateCancelOrder = await cancelOrder(order.id , refundData)
+        const updateCancelOrder = await cancelOrder(order.id , refundData)
+          console.log('updateCancelOrder',updateCancelOrder)
           if(updateCancelOrder.data){
               window.location.reload()
             }
-        }
+      }
   };
 
   const handleSelectReson = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -177,6 +176,7 @@ export const RefundOrder = ({
   if(isShowRefund.shown)
     return (
       <div>
+        <div>{order.id}</div>
         <div className=" m-1 pt-2 bg-white border-t">
           <div>I want to refund this order</div>
         </div>

@@ -86,6 +86,7 @@ export enum OrderStatus {
   REFUND_SUCCESS = 'REFUND_SUCCESS',
   REFUND_FAIL = 'REFUND_FAIL',
   REFUND_RETRY = 'REFUND_RETRY',
+  CANCELED_REFUND = 'CANCELED_REFUND'
 }
 
 export enum ShippingStatus {

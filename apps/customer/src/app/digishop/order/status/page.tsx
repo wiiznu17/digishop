@@ -12,7 +12,7 @@ import {
 } from "@/utils/requestUtils/requestOrderUtils";
 import { Rubik } from "next/font/google";
 import { SetStateAction, useEffect, useState } from "react";
-import StateConfig from './../../../../master/statusOrderConfig.json'
+import StateConfig from '@/master/statusOrderConfig.json'
 import { create } from "domain";
 
 const rubik = Rubik({
@@ -40,7 +40,6 @@ export default function OrderStatus() {
     };
     fetchData();
   }, [user]);
-  console.log('order',orders)
   if (!orders) return;
   const getFilterOrder = () => {
     if (!orders) return;

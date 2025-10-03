@@ -163,6 +163,7 @@ export interface CheckOut {
 }
 export interface Payment {
   id: number
+  url_redirect: string
   pgw_status: string
   payment_method: string
   updated_at: string
@@ -170,6 +171,7 @@ export interface Payment {
 //order before paid
 
 export interface CancelProp {
+  id?: number
   reason: string;
   description?: string;
   url?: string
