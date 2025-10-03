@@ -2,7 +2,12 @@
   "PENDING": {
     "label": "pending",
     "value": "PENDING",
-    "status": ["PAID"]
+    "status": "PENDING"
+  },
+  "PAID": {
+    "label": "paid",
+    "value": "PAID",
+    "status": "PAID"
   },
   "PREPARE": {
     "label": "prepare",
@@ -17,7 +22,7 @@
   "DELIVERED": {
     "label": "delivered",
     "value": "DELIVERED",
-    "status": "DELIVERED"
+    "status": ["DELIVERED","CANCELED_REFUND"]
   }
   ,
   "COMPLETE": {

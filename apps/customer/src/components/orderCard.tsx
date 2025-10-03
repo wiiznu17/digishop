@@ -7,11 +7,12 @@ import { SetStateAction, useState } from "react";
 import { SquareChevronRight } from "lucide-react";
 import OrderStatusConfig from "../master/statusOrderDetail.json";
 import CancelReasonMaster from "../master/cancelReason.json";
-import { updateOrderStatus } from "@/utils/requestUtils/requestOrderUtils";
+import { updateOrderStatus, revokeCancelOrder } from "@/utils/requestUtils/requestOrderUtils";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { Configurations } from "@/types/props/productProp";
 import { formatSku } from "@/lib/function";
+import { OrderStatus } from "../../../../packages/db/src/types/enum";
 
 interface OrderCard {
   item: OrderDetail;
@@ -43,6 +44,12 @@ export default function OrderCard({
   const [reasonCancel, setReasonCancel] = useState<string>("CC01");
   const [reasonRefund, setReasonRefund] = useState<string>("RF01");
   const [detail, setDetail] = useState<string>("");
+  const handleRevokeCancel = async(id:number) => {
+    const data = await revokeCancelOrder(id)
+    if(data.data){
+      window.location.reload()
+    }
+  }
   const handleOnCancel = () => {
     setIsShowCancel({shown: false, id: undefined});
     setIsShowRefund({shown: false, id: undefined});
@@ -60,7 +67,6 @@ export default function OrderCard({
   if(!user)return
   return (
     <div className="px-4 py-2 mb-5 border w-md rounded-2xl">
-      <div>{item.created_at}</div>
       <div>
         { item.items[0].productItem&& 
           <button className="flex items-center mb-3 hover:cursor-pointer w-full" onClick={() => router.push(`http://localhost:3000/digishop/store/${item.items[0].productItem.product.store.uuid}`)}>
@@ -107,9 +113,16 @@ export default function OrderCard({
         <div className="">{OrderStatusConfig[item.status as keyof typeof OrderStatusConfig].label}</div>
         <div className="flex">
         {
+          item.status == OrderStatus.REFUND_REQUEST && typeof item.refundOrders[item.refundOrders.length - 1].id == 'number' && (
+            <Button size="sm" onClick={() => handleRevokeCancel(item.refundOrders[item.refundOrders.length - 1].id)} >cancel refund</Button>
+          )
+        }
+        {
           item.refundOrders[0] && (
-            <Button size="sm" onClick={() => setSelectShowCancel(item.refundOrders[item.refundOrders.length - 1])}
-            className={`hover:cursor-pointer ml-3 hover:bg-gray-300 ${item.refundOrders[item.refundOrders.length - 1] == selectShowCancel ? "opacity-0" : "opacity-100"}`} >cancel reason</Button>
+            <div>
+              <Button size="sm" onClick={() => setSelectShowCancel(item.refundOrders[item.refundOrders.length - 1])}
+              className={`hover:cursor-pointer ml-3 hover:bg-gray-300 ${item.refundOrders[item.refundOrders.length - 1] == selectShowCancel ? "opacity-0" : "opacity-100"}`} >cancel reason</Button>
+            </div>
           )
         }
         <button
