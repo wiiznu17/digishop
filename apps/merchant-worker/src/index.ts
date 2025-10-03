@@ -1,34 +1,77 @@
-import { startRefundWorker } from "./workers/autoApproveWorker";
 import express from "express";
+import IORedis from "ioredis";
+import { Queue } from "bullmq";
 import { ExpressAdapter } from "@bull-board/express";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { Queue } from "bullmq";
-import IORedis from "ioredis";
-import { initDb } from "./db";
 
-const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379");
-const queue = new Queue("refund-auto-approve", { connection });
+import { initDb } from "./db"; // เหมือนเดิม (checkDatabaseConnection/initModels)
+import { ENV } from "./env";   // ต้องมี REDIS_URL, REFUND_QUEUE_NAME, CANCEL_QUEUE_NAME, COMPLETE_QUEUE_NAME
 
-const serverAdapter = new ExpressAdapter();
-// serverAdapter.setBasePath("/admin/queues");
+// Workers
+import { startRefundWorker } from "./workers/autoApproveWorker";
+import { startAutoCancelWorker } from "./workers/autoCancelWorker";
+import { startAutoCompleteWorker } from "./workers/autoCompleteWorker";
 
 async function main() {
   await initDb();
-  startRefundWorker();
+
+  // Redis & Queues (ใช้ connection เดียว)
+  const connection = new IORedis(ENV.REDIS_URL, { maxRetriesPerRequest: null });
+
+  const refundQueue   = new Queue(ENV.REFUND_QUEUE_NAME  || "refund-auto-approve", { connection });
+  const cancelQueue   = new Queue(ENV.CANCEL_QUEUE_NAME  || "auto-cancel-unpaid",  { connection });
+  const completeQueue = new Queue(ENV.COMPLETE_QUEUE_NAME|| "auto-complete",       { connection });
+
+  // Start workers 
+  const refundW   = startRefundWorker(connection);
+  const cancelW   = startAutoCancelWorker(connection);
+  const completeW = startAutoCompleteWorker(connection);
+
+  // Bull Board
+  const serverAdapter = new ExpressAdapter();
   serverAdapter.setBasePath("/admin/queues");
 
   createBullBoard({
-    queues: [new BullMQAdapter(queue)],
+    queues: [
+      new BullMQAdapter(refundQueue),
+      new BullMQAdapter(cancelQueue),
+      new BullMQAdapter(completeQueue),
+    ],
     serverAdapter,
   });
 
   const app = express();
   app.use("/admin/queues", serverAdapter.getRouter());
+  app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
-  app.listen(3005, () => {
-    console.log("Bull Board running on http://localhost:3005/admin/queues");
+  const port = Number(process.env.BULLBOARD_PORT || 3005);
+  app.listen(port, () => {
+    console.log(`Bull Board running on http://localhost:${port}/admin/queues`);
   });
+
+  // ── Graceful shutdown ──────────────────────────────────────────────────
+  async function shutdown() {
+    try {
+      // ปิด workers
+      await Promise.allSettled([
+        refundW.worker?.close(),  refundW.qe?.close(),
+        cancelW.worker?.close(),  cancelW.qe?.close(),
+        completeW.worker?.close(),completeW.qe?.close(),
+      ]);
+      // ปิด queues + redis
+      await Promise.allSettled([
+        refundQueue.close(),
+        cancelQueue.close(),
+        completeQueue.close(),
+        connection.quit(),
+      ]);
+    } finally {
+      process.exit(0);
+    }
+  }
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 main().catch((e) => {
