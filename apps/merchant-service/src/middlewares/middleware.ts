@@ -13,17 +13,27 @@ export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: Nex
   const hdr = req.headers.authorization || "";
   const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : "";
   const expected = process.env.MERCHANT_SERVICE_TOKEN || "";
-
+  console.log("hdr in service Auth: ", hdr)
+  console.log("Token in service Auth: ", token)
+  console.log("Expect in service Auth: ", expected)
+  console.log("is service: ", !expected || !token || token !== expected)
   if (!expected || !token || token !== expected) return next(); // ไม่ตัดทิ้ง ปล่อยให้ไปลอง auth แบบ user ต่อ
 
   // ใส่ principal แบบ service (ไม่มี cookie / ไม่มี store binding)
-  req.user = { id: 0, sub: 0, role: "SERVICE", email: "merchant-worker@system" };
+  req.user = {
+    id: 0,
+    sub: 0,
+    role: "SERVICE",
+    email: "merchant-worker@system"
+  };
   req.authMode = "service";
+  console.log("set req.authMode: ", req.authMode)
   return next();
 }
 
 export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   // ถ้า serviceAuth ผ่านมาแล้ว ก็ไม่ต้องเช็ค cookie
+  console.log("User in authenticae: ", req.authMode)
   if (req.authMode === "service") return next();
 
   const token = req.cookies?.token;
@@ -53,7 +63,10 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
 
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      console.log("User in require Approve: ", req.user)
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      console.log("Bypass in require Approve: ", allowServiceBypass)
+      console.log("Bypass in require Approve: ", req.user.role)
 
       // Bypass: service principal
       if (allowServiceBypass && req.user.role === "SERVICE") return next();

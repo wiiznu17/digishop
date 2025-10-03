@@ -653,7 +653,7 @@ export async function updateOrder(req: Request, res: Response) {
     carrier?: string
     reason?: string
   } = req.body || {}
-
+  console.log("body: ", req.body)
   if (!orderId) return res.status(400).json({ error: "Missing order id" })
   const nothingToUpdate = !nextStatus && !trackingNumber && !carrier
   if (nothingToUpdate) return res.status(400).json({ error: "Nothing to update" })
@@ -850,12 +850,13 @@ export async function updateOrder(req: Request, res: Response) {
         )
       } else if (refund) {
         if (nextStatus === "REFUND_APPROVED" && refund.status !== "APPROVED") {
+          console.log("Start to API refund")
           await refund.update({ status: "APPROVED", approvedAt: new Date() } as any, { transaction: t })
           await RefundStatusHistory.create(
             {
               refundOrderId: Number(refund.id),
               fromStatus: (beforeRefundStatus ?? null) as any,
-              toStatus: "APPROVED",
+              toStatus: RefundStatus.APPROVED,
               reason: reason ?? null,
               changedByType: "MERCHANT",
               changedById,
@@ -866,6 +867,7 @@ export async function updateOrder(req: Request, res: Response) {
             { transaction: t }
           )
         } else if (nextStatus === "REFUND_SUCCESS" && refund.status !== "SUCCESS") {
+          console.log("nextStatus === REFUND_SUCCESS && refund.status !== SUCCESS")
           await refund.update({ status: "SUCCESS", refundedAt: new Date() } as any, { transaction: t })
           await RefundStatusHistory.create(
             {
@@ -882,6 +884,7 @@ export async function updateOrder(req: Request, res: Response) {
             { transaction: t }
           )
         } else if (nextStatus === "REFUND_FAIL" && refund.status !== "FAIL") {
+          console.log("nextStatus === REFUND_FAIL && refund.status !== FAIL")
           await refund.update({ status: "FAIL" } as any, { transaction: t })
           await RefundStatusHistory.create(
             {
@@ -902,6 +905,7 @@ export async function updateOrder(req: Request, res: Response) {
 
       // ── PGW (do after commit)
       if ([OrderStatus.REFUND_APPROVED, OrderStatus.MERCHANT_CANCELED, OrderStatus.REFUND_RETRY].includes(nextStatus as OrderStatus)) {
+        console.log("Start to yingggggggg")
         const pay = (order as any).checkout?.payment
         const paymentId = pay?.id as number | undefined
         const providerRef = read<string>(pay, "provider_ref", "providerRef")
@@ -911,9 +915,12 @@ export async function updateOrder(req: Request, res: Response) {
         const refundOrderId: number | undefined = refundRow?.get("id") as any
         const prev = nextStatus as OrderStatus
         const requestId = genRequestId()
-
+        console.log("Payment id: ", paymentId)
+        console.log("ref: ", providerRef)
+        console.log("ref: ", orderRef)
         postCommit = async () => {
           if (!reference || !paymentId) {
+            console.log("!reference || !paymentId")
             await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } })
             if (refundOrderId) {
               await RefundStatusHistory.create({
@@ -939,6 +946,7 @@ export async function updateOrder(req: Request, res: Response) {
           try {
             // 1) detail
             const detail = await pgwGetDetail(reference, correlationId ?? undefined)
+            console.log("detail payment of gateway: ", detail)
             const action = decidePgwAction(detail?.status ?? "")
             if (action === "NONE") {
               await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } })
@@ -1040,7 +1048,21 @@ export async function updateOrder(req: Request, res: Response) {
               } as any)
             }
           } catch (e: any) {
+            console.log("order id when fail: ", orderId)
+            // const detail = await pgwGetDetail(reference, correlationId ?? undefined)
+            // const action = decidePgwAction(detail?.status ?? "")
             await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } })
+            await OrderStatusHistory.create({
+                orderId: Number(orderId),
+                fromStatus: prev,
+                toStatus: OrderStatus.REFUND_FAIL,
+                changedByType: "SYSTEM",
+                changedById: 0,
+                reason: "Fail to get detail from payment gateway action",
+                source: "PAYMENT_GATEWAY",
+                correlationId,
+                metadata: { response: "Fail to get detail payment from PGW", retry: nextStatus === OrderStatus.REFUND_RETRY },
+              } as any)
             if (refundOrderId) {
               await RefundStatusHistory.create({
                 refundOrderId,

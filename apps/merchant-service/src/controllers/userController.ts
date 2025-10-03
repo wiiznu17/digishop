@@ -299,7 +299,7 @@ export const updateMerchantAddress = async (req: AuthenticatedRequest, res: Resp
 export const createStoreForUser = async (req: Request, res: Response) => {
   const {
     userId,
-    businessName,
+    storeName,
     description,
     ownerName,
     email,
@@ -323,7 +323,7 @@ export const createStoreForUser = async (req: Request, res: Response) => {
     }
     const store = await Store.create({
       userId,
-      storeName: businessName,
+      storeName,
       email,
       phone,
       businessType,
