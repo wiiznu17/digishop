@@ -22,8 +22,8 @@ function isRetryable(err: any): boolean {
   return false;
 }
 
-export function startRefundWorker() {
-  const connection = new IORedis(ENV.REDIS_URL, { maxRetriesPerRequest: null });
+export function startRefundWorker(connection: IORedis) {
+  // const connection = new IORedis(ENV.REDIS_URL, { maxRetriesPerRequest: null });
   const queueName = ENV.REFUND_QUEUE_NAME;
   const dlqName = process.env.REFUND_DLQ_NAME || `${queueName}-dlq`;
   const dlq = new Queue<RefundJob>(dlqName, { connection });

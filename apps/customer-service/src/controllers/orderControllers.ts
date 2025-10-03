@@ -753,125 +753,13 @@ export const updateOrderStatus = async (
   }
 };
 
-export const cancelOrder = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const id = req.params.id;
-  const { reason, description, contactEmail, url } = req.body;
-  const findOrder = await Order.findByPk(id);
-  const findPayment = await Payment.findOne({
-    where: { checkoutId: findOrder?.checkoutId },
-  });
-  console.log( findOrder?.status === OrderStatus.CANCELED_REFUND, findOrder?.status)
-  if (
-    findOrder && (findOrder.status === OrderStatus.PAID ||findOrder.status === OrderStatus.DELIVERED || findOrder.status === OrderStatus.CANCELED_REFUND) &&
-    findPayment
-  ) {
-    try {
-      const cancelRequest = await RefundOrder.create({
-        orderId: Number(id),
-        paymentId: findPayment.id,
-        reason,
-        status: RefundStatus.REQUESTED,
-        amountMinor: findOrder.grandTotalMinor,
-        currencyCode: findOrder.currencyCode,
-        description,
-        contactEmail,
-        requestedBy: "CUSTOMER",
-      });
-      await RefundStatusHistory.create({
-        refundOrderId: cancelRequest.id,
-        toStatus: RefundStatus.REQUESTED,
-        reason,
-        changedByType: ActorType.CUSTOMER,
-        source: "WEBSITE",
-      });
-      await OrderStatusHistory.create({
-        orderId: findOrder.id,
-        fromStatus: findOrder.status,
-        toStatus: OrderStatus.REFUND_REQUEST,
-        changedByType: ActorType.CUSTOMER,
-        source: "WEB",
-      });
-      await PaymentGatewayEvent.update(
-        {
-          refundOrderId: cancelRequest.id,
-        },
-        {
-          where: {
-            [Op.and]: {
-              checkoutId: findOrder.checkoutId,
-              paymentId: findPayment.id,
-            },
-          },
-        }
-      );
-      await Order.update(
-        {
-          status: OrderStatus.REFUND_REQUEST,
-        },
-        { where: { id: id } }
-      );
-      res.json({ data: "success" });
-    } catch (error) {
-      console.log(error.message)
-      res.json({ error: error });
-    }
-  }
-};
-
-export const customerCancel = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const id = req.params.id;
-  const findOrder = await Order.findAll({
-    where: { checkoutId: id },
-    attributes: ["id"],
-  });
-  try {
-    await Order.update(
-      {
-        status: OrderStatus.CUSTOMER_CANCELED,
-      },
-      {
-        where: { checkoutId: id },
-      }
-    );
-    await Payment.update(
-      {
-        status: PaymentStatus.FAILED,
-      },
-      {
-        where: { checkoutId: id },
-      }
-    );
-    for (let i = 0; i < findOrder.length; i++) {
-      let createLog = await OrderStatusHistory.create({
-        orderId: findOrder[i].id,
-        fromStatus: OrderStatus.PENDING,
-        toStatus: OrderStatus.CUSTOMER_CANCELED,
-        changedByType: ActorType.CUSTOMER,
-        source: "APP",
-        metadata: {},
-      });
-      createLog.save();
-    }
-    res.json({message: 'success'})
-  } catch (error) {
-    console.log(error)
-    res.json({error: error})
-  }
-};
 export const revokeCancelOrder = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  //check 7 day ยังไม่ทำ
+  // check 7 day ยังไม่ทำ
+  // check ด้วยว่ามาจาก DELIVERED ไหม กันคิว fail แล้วยิง api revoke cancel เพราะเราไม่ให้ยกเลิกตอนขอคืนเงินหลังจากพึ่งจ่ายเงิน
   const id = req.params.id;
   const refund = await RefundOrder.findByPk(id);
   if (refund) {
