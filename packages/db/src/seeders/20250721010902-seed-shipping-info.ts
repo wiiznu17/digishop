@@ -23,16 +23,10 @@ const addrSnap = (id: number) => ({
   country: "TH",
 });
 
-/**
- * status ใช้ชุดใหม่:
- * PENDING, READY_TO_SHIP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED,
- * DELIVERY_FAILED, RETURN_TO_SENDER_IN_TRANSIT, RETURNED_TO_SENDER,
- * TRANSIT_ISSUE, RE_TRANSIT
- */
 type ShipStatus =
   | "PENDING"
   | "READY_TO_SHIP"
-  | "IN_TRANSIT"
+  | "RECEIVE_PARCEL"
   | "OUT_FOR_DELIVERY"
   | "DELIVERED"
   | "DELIVERY_FAILED"
@@ -78,14 +72,13 @@ const row = (
 export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkInsert("SHIPPING_INFO", [
-      // เดิมใช้ RECIEVE_PARCEL -> map เป็น IN_TRANSIT
       row(6001, 1, "PENDING",     now),
       row(6002, 2, "PENDING",     now),
       row(6003, 1, "PENDING",     now),
       row(6004, 2, "PENDING",     now),
       row(6005, 1, "PENDING",     null),
       row(6006, 2, "READY_TO_SHIP",  now), // was RECIEVE_PARCEL
-      row(6007, 1, "IN_TRANSIT",  now),
+      row(6007, 1, "OUT_FOR_DELIVERY",  now),
       row(6008, 2, "DELIVERED",   now, now), // delivered_at
       row(6009, 1, "DELIVERED",   null, now),
       row(6010, 2, "PENDING",     now),

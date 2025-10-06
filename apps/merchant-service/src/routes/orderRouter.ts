@@ -1,6 +1,5 @@
-// apps/merchant-service/src/routes/orders.ts
 import { Router } from "express";
-import { carrierWebhook, getOrdersSummary, listOrders, updateOrder } from "../controllers/orderController";
+import { getOrdersSummary, listOrders, updateOrder } from "../controllers/orderController";
 import { authenticate, eitherAuth, requireApprovedStore, serviceAuth } from "../middlewares/middleware";
 
 const router = Router();
@@ -16,8 +15,5 @@ router.patch(
   requireApprovedStore({ allowAdminBypass: true, allowServiceBypass: true }),
   updateOrder
 );
-
-// webhook จากขนส่ง: แล้วแต่คุณว่าจะลงลายเซ็นที่ controller แทน (ตามโค้ดเดิม)
-router.post("/webhooks/carriers/:carrier", carrierWebhook);
 
 export default router;

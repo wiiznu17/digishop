@@ -6,8 +6,8 @@ const now = new Date();
 const mapOrderToShipping = (to: string): string | null => {
   switch (to) {
     case "READY_TO_SHIP": return "READY_TO_SHIP";
-    case "HANDED_OVER":   return "IN_TRANSIT";
-    case "SHIPPED":       return "IN_TRANSIT";
+    case "HANDED_OVER":   return "RECEIVE_PARCEL";
+    case "SHIPPED":       return "OUT_FOR_DELIVERY";
     case "DELIVERED":     return "DELIVERED";
     case "TRANSIT_LACK":  return "TRANSIT_ISSUE";
     case "RE_TRANSIT":    return "RE_TRANSIT";

@@ -11,7 +11,7 @@ export interface ListOrdersParams {
   storeId?: number
   startDate?: string // ISO
   endDate?: string // ISO
-  sortBy?: "id" | "createdAt" | "updatedAt" | "grandTotalMinor" // ⬅️ ให้ตรง whitelist ฝั่ง BE
+  sortBy?: "id" | "createdAt" | "updatedAt" | "grandTotalMinor"
   sortDir?: SortDir
   signal?: AbortSignal
 }
