@@ -5,6 +5,7 @@ import productRouter from './routes/productRouter'
 import bankRouter from './routes/bankRouter'
 import orderRouter from './routes/orderRouter'
 import storeRouter from './routes/storeRouter'
+import carrierRouter from './routes/carrierRouter'
 
 const router = Router()
 
@@ -23,6 +24,7 @@ router.use('/merchant/products', productRouter)
 router.use('/merchant/bank-accounts', bankRouter)
 router.use('/merchant/orders', orderRouter)
 router.use('/merchant/store', storeRouter)
+router.use('/merchant/transit', carrierRouter)
 
 export default router
 

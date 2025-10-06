@@ -31,6 +31,7 @@ export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: Nex
   return next();
 }
 
+// ตรวจ cookies
 export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   // ถ้า serviceAuth ผ่านมาแล้ว ก็ไม่ต้องเช็ค cookie
   console.log("User in authenticae: ", req.authMode)
@@ -53,10 +54,6 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
 /**
  * ตรวจว่าร้าน APPROVED
  * - ผ่านเสมอถ้ามาจาก serviceAuth (role=SERVICE)
- * - หา storeId:
- *     1) req.user.storeId (ถ้าระบบ login ยัดมา)
- *     2) req.params.storeId / req.body.storeId / req.query.storeId
- *     3) fallback: หา Store ที่ owner คือ userId = req.user.sub
  */
 export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowServiceBypass?: boolean }) {
   const { allowServiceBypass = true } = opts ?? {};
@@ -107,7 +104,7 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
   };
 }
 
-/** ผสม serviceAuth + authenticate: service มาก่อน, ไม่ผ่านค่อยเช็ค cookie */
+/** รวม serviceAuth + authenticate: service มาก่อน, ไม่ผ่านค่อยเช็ค cookie */
 export function eitherAuth(stack: Array<(req: AuthenticatedRequest, res: Response, next: NextFunction) => any>) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     let i = 0;

@@ -27,12 +27,6 @@ export enum UserStatus {
   BANNED = 'BANNED',
 }
 
-/**
- * NOTE:
- * - เดิมโค้ดกำหนดค่าไม่ตรงชื่อคีย์ (APPROVED='VERIFIED', BANNED='FAILED')
- * - แก้ให้ค่าตรงคีย์ก่อน (ลด breaking change)
- * - แนะนำในอนาคตพิจารณาเปลี่ยนชื่อคีย์เป็น VERIFIED/FAILED ให้สื่อความหมายกว่า
- */
 export enum BankAccountStatus {
   PENDING = 'PENDING',
   VERIFIED = 'VERIFIED',
@@ -65,8 +59,8 @@ export enum OrderStatus {
 
   PROCESSING = 'PROCESSING',             // ร้านเตรียมสินค้า
   READY_TO_SHIP = 'READY_TO_SHIP',       // พร้อมส่ง
-  HANDED_OVER = 'HANDED_OVER',           // ส่งมอบให้ขนส่งแล้ว ShippingStatus.READY_TO_SHIP
-  SHIPPED = 'SHIPPED',                   // ขนส่งรับของ ShippingStatus.IN_TRANSIT
+  HANDED_OVER = 'HANDED_OVER',           // ส่งมอบให้ขนส่งแล้ว ShippingStatus.HANDED_OVER
+  SHIPPED = 'SHIPPED',                   // ขนส่งกำลังทำการนำส่งพัสดุ ShippingStatus.OUT_FOR_DELIVERY
   DELIVERED = 'DELIVERED',               // ลูกค้าได้รับแล้ว ShippingStatus.DELIVERED
   COMPLETE = 'COMPLETE',                // ออเดอร์จบ (ยืนยันแล้ว)
 
@@ -91,8 +85,12 @@ export enum OrderStatus {
 
 export enum ShippingStatus {
   PENDING = 'PENDING',                                   // ยังไม่ส่ง
-  READY_TO_SHIP = 'READY_TO_SHIP',                       // พร้อมส่ง
-  IN_TRANSIT = 'IN_TRANSIT',                             // ระหว่างขนส่ง
+  READY_TO_SHIP = 'READY_TO_SHIP', // ร้านค้าพร้อมส่ง
+  ARRIVED_SORTING_CENTER = 'ARRIVED_SORTING_CENTER',
+  OUT_SORTING_CENTER = 'OUT_SORTING_CENTER',
+  ARRIVED_DESTINATION_STATION= 'ARRIVED_DESTINATION_STATION',
+  RECEIVE_PARCEL = 'RECEIVE_PARCEL',                       // พร้อมส่ง
+  // IN_TRANSIT = 'IN_TRANSIT',                             // ระหว่างขนส่ง
   OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',                 // กำลังออกไปส่ง
   DELIVERED = 'DELIVERED',                               // ส่งสำเร็จ
 
@@ -117,6 +115,7 @@ export enum RefundStatus {
   SUCCESS = 'SUCCESS',
   FAIL = 'FAIL',
   CANCELED = 'CANCELED',
+  // REJECTED = 'REJECTED'
 }
 
 export enum PaymentType {

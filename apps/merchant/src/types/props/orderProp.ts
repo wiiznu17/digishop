@@ -26,11 +26,10 @@ export type OrderStatus =
   | "REFUND_FAIL"
   | "REFUND_RETRY"
 
-// ✅ อิง enum ล่าสุดจากฝั่ง BE
 export type ShippingStatus =
   | "PENDING"
   | "READY_TO_SHIP"
-  | "IN_TRANSIT"
+  | "OUT_FOR_DELIVERY"
   | "OUT_FOR_DELIVERY"
   | "DELIVERED"
   | "DELIVERY_FAILED"
