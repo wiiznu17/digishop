@@ -85,3 +85,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ซ่อน scrollbar แต่ยังเลื่อนได้ */
+.scrollbar-none {
+  -ms-overflow-style: none;     /* IE/Edge legacy */
+  scrollbar-width: none;        /* Firefox */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari/Opera */
+}

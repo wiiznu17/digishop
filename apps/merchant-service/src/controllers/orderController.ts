@@ -268,7 +268,6 @@ const ORDER_BASE_INCLUDES: IncludeOptions[] = [
   },
 ]
 
-// ───────────────────────────────────────────────────────────────────────────────
 // Serializers
 
 function serializeOrder(order: any) {
@@ -362,7 +361,6 @@ function serializeOrder(order: any) {
           refunded: minorTo(read<number>(pay, "amount_refunded_minor", "amountRefundedMinor"), 2),
         }
       : undefined,
-
     shippingType: shippingTypeName ?? undefined,
     trackingNumber: read<string>(ship, "tracking_number", "trackingNumber"),
     carrier: read<string>(ship, "carrier", "carrier"),
@@ -437,7 +435,6 @@ function serializeOrder(order: any) {
   }
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
 // GET /orders/summary
 
 export async function getOrdersSummary(req: Request, res: Response) {
@@ -539,47 +536,86 @@ export async function getOrdersSummary(req: Request, res: Response) {
   }
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
-// GET /orders
-// ค้นหาได้เฉพาะ orderId (ตัวเลข) หรือ orderCode (prefix)
+// GET /orders/:orderId
+export async function getOrderById(req: Request, res: Response) {
+  try {
+    const { orderId } = req.params;
+    if (!orderId) return res.status(400).json({ error: "Missing order id" });
 
+    const order = await Order.findByPk(orderId, { include: ORDER_BASE_INCLUDES });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    console.log("order from get by id: ", order)
+    return res.json({ data: serializeOrder(order) });
+  } catch (err) {
+    console.error("getOrderById error:", err);
+    return res.status(500).json({ error: "Failed to fetch order" });
+  }
+}
+
+// GET /orders (list)
 export async function listOrders(req: Request, res: Response) {
   try {
     const {
       page = "1",
       pageSize = "20",
-      status,
+      status,                        // "ALL" | "PAID" | "PAID,PROCESSING"
       storeId,
       q,
       startDate,
       endDate,
-      sortBy = "createdAt",
+      minTotalMinor,
+      maxTotalMinor,
+      hasTracking,                   // "true" | "false"
+      sortBy = "createdAt",          // id | createdAt | updatedAt | grandTotalMinor
       sortDir = "DESC",
-    } = req.query as Record<string, string>
+    } = req.query as Record<string, string>;
 
-    const limit = toInt(page, 1) > 0 ? toInt(pageSize, 20) : 20
-    const offset = (toInt(page, 1) - 1) * limit
+    const limit = toInt(page, 1) > 0 ? toInt(pageSize, 20) : 20;
+    const offset = (toInt(page, 1) - 1) * limit;
 
-    const orderField = SORT_WHITELIST.has(sortBy as any) ? (sortBy as any) : "createdAt"
-    const orderDir = String(sortDir).toUpperCase() === "ASC" ? "ASC" : "DESC"
+    const orderField = SORT_WHITELIST.has(sortBy as any)
+      ? (sortBy as any)
+      : "createdAt";
+    const orderDir = String(sortDir).toUpperCase() === "ASC" ? "ASC" : "DESC";
 
-    const whereOrder: WhereOptions = {}
-    if (status && status !== "ALL") Object.assign(whereOrder, { status })
-    if (storeId) Object.assign(whereOrder, { storeId })
+    // where: ORDER
+    const whereOrder: WhereOptions = {};
+    if (storeId) Object.assign(whereOrder, { storeId });
+
+    // status multi
+    if (status && status !== "ALL") {
+      const list = status.split(",").map((s) => s.trim()).filter(Boolean);
+      if (list.length === 1) Object.assign(whereOrder, { status: list[0] });
+      else Object.assign(whereOrder, { status: { [Op.in]: list } });
+    }
+
+    // date range
     if (startDate || endDate) {
       Object.assign(whereOrder, {
         createdAt: {
           ...(startDate ? { [Op.gte]: new Date(startDate) } : {}),
           ...(endDate ? { [Op.lte]: new Date(endDate) } : {}),
         },
-      })
+      });
     }
 
-    const isNumericQ = q?.trim() && !isNaN(Number(q))
-    const escapeLike = (s: string) => s.replace(/[%_]/g, "\\$&")
-    const orderOr: WhereOptions[] = []
-    if (isNumericQ) orderOr.push({ id: Number(q) })
+    // grand total range
+    if (minTotalMinor || maxTotalMinor) {
+      Object.assign(whereOrder, {
+        grandTotalMinor: {
+          ...(minTotalMinor ? { [Op.gte]: Number(minTotalMinor) } : {}),
+          ...(maxTotalMinor ? { [Op.lte]: Number(maxTotalMinor) } : {}),
+        },
+      });
+    }
 
+    // q: orderId (numeric) | orderCode prefix (string)
+    const isNumericQ = q?.trim() && !isNaN(Number(q));
+    const escapeLike = (s: string) => s.replace(/[%_]/g, "\\$&");
+    const orderOr: WhereOptions[] = [];
+    if (isNumericQ) orderOr.push({ id: Number(q) });
+
+    // include checkout + payment (for orderCode search)
     const checkoutInclude: IncludeOptions = {
       model: CheckOut,
       as: "checkout",
@@ -610,10 +646,30 @@ export async function listOrders(req: Request, res: Response) {
           ],
         },
       ],
-    }
+    };
 
-    const finalWhere: WhereOptions = { ...whereOrder, ...(orderOr.length ? { [Op.or]: orderOr } : {}) }
-    const includes: IncludeOptions[] = [checkoutInclude, ...ORDER_BASE_INCLUDES.filter(i => i.as !== "checkout")]
+    // hasTracking filter ผ่าน ShippingInfo
+    const shippingInclude: IncludeOptions = {
+      ...(ORDER_BASE_INCLUDES.find(i => i.as === "shippingInfo") as IncludeOptions),
+      required: typeof hasTracking === "string",
+      where:
+        typeof hasTracking === "string"
+          ? (hasTracking === "true"
+              ? { trackingNumber: { [Op.ne]: null } }
+              : { trackingNumber: null })
+          : undefined,
+    };
+
+    const includes: IncludeOptions[] = [
+      checkoutInclude,
+      shippingInclude,
+      ...ORDER_BASE_INCLUDES.filter(i => !["checkout", "shippingInfo"].includes(i.as as string)),
+    ];
+
+    const finalWhere: WhereOptions = {
+      ...whereOrder,
+      ...(orderOr.length ? { [Op.or]: orderOr } : {}),
+    };
 
     const { rows, count } = await Order.findAndCountAll({
       where: finalWhere,
@@ -622,13 +678,13 @@ export async function listOrders(req: Request, res: Response) {
       limit,
       offset,
       distinct: true,
-    })
+    });
 
-    const data = rows.map(serializeOrder)
-    return res.json({ data, meta: { page: toInt(page, 1), pageSize: limit, total: count } })
+    const data = rows.map(serializeOrder);
+    return res.json({ data, meta: { page: toInt(page, 1), pageSize: limit, total: count } });
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ error: "Failed to fetch orders" })
+    console.error("listOrders error:", err);
+    return res.status(500).json({ error: "Failed to fetch orders" });
   }
 }
 

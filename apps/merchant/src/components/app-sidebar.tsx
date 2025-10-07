@@ -41,14 +41,14 @@ type NavItem = {
 }
 
 const items: NavItem[] = [
-  { title: "Dashboard", url: "/", icon: Home },
+  // { title: "Dashboard", url: "/", icon: Home },
   { title: "Orders", url: "/orders", icon: ShoppingCart },
   { title: "Products", url: "/products", icon: Package },
-  { title: "Customers", url: "/customers", icon: Users },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  // { title: "Customers", url: "/customers", icon: Users },
+  // { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Bank Account", url: "/balance", icon: WalletMinimal },
-  { title: "Profile", url: "/profile", icon: User },
-  { title: "Settings", url: "/settings", icon: Settings }
+  { title: "Profile", url: "/profile", icon: User }
+  // { title: "Settings", url: "/settings", icon: Settings }
 ]
 
 // โลโก้ง่าย ๆ (inline SVG) — เปลี่ยนได้ตามต้องการ
