@@ -23,7 +23,7 @@ export default {
       {
         uuid: uuidv4(),
         product_id: 1001,
-        url: 'https://digishop.blob.core.windows.net/product/products/378e2d1d-1ca4-4ba8-95b0-f6da257f360c/8f91bd3b-6753-4f83-8239-f95bf6b436b3.jpg',
+        url: 'https://digishop.blob.core.windows.net/product/products/3c59b61d-0ee0-463a-b6c5-0ff429899aa9/9fbb73db-9ebd-4c43-96af-427347e659b3.jpg',
         blob_name: 'products/378e2d1d-1ca4-4ba8-95b0-f6da257f360c/8f91bd3b-6753-4f83-8239-f95bf6b436b3.jpg',
         file_name: 'mohammad-metri-E-0ON3VGrBc-unsplash.jpg',
         is_main: false,
@@ -51,7 +51,7 @@ export default {
       {
         uuid: uuidv4(),
         product_id: 1003,
-        url: 'https://digishop.blob.core.windows.net/product/products/378e2d1d-1ca4-4ba8-95b0-f6da257f360c/8f91bd3b-6753-4f83-8239-f95bf6b436b3.jpg',
+        url: 'https://digishop.blob.core.windows.net/product/products/3c59b61d-0ee0-463a-b6c5-0ff429899aa9/9fbb73db-9ebd-4c43-96af-427347e659b3.jpg',
         blob_name: 'products/378e2d1d-1ca4-4ba8-95b0-f6da257f360c/8f91bd3b-6753-4f83-8239-f95bf6b436b3.jpg',
         file_name: 'mohammad-metri-E-0ON3VGrBc-unsplash.jpg',
         is_main: true,
@@ -79,7 +79,7 @@ export default {
       {
         uuid: uuidv4(),
         product_id: 1005,
-        url: 'https://digishop.blob.core.windows.net/product/products/378e2d1d-1ca4-4ba8-95b0-f6da257f360c/8f91bd3b-6753-4f83-8239-f95bf6b436b3.jpg',
+        url: 'https://digishop.blob.core.windows.net/product/products/3c59b61d-0ee0-463a-b6c5-0ff429899aa9/9fbb73db-9ebd-4c43-96af-427347e659b3.jpg',
         blob_name: 'products/378e2d1d-1ca4-4ba8-95b0-f6da257f360c/8f91bd3b-6753-4f83-8239-f95bf6b436b3.jpg',
         file_name: 'mohammad-metri-E-0ON3VGrBc-unsplash.jpg',
         is_main: true,
