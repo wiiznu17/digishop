@@ -77,7 +77,7 @@ export default {
       row(6003, 1, "PENDING",     now),
       row(6004, 2, "PENDING",     now),
       row(6005, 1, "PENDING",     null),
-      row(6006, 2, "READY_TO_SHIP",  now), // was RECIEVE_PARCEL
+      row(6006, 2, "RECEIVE_PARCEL",  now), // was RECIEVE_PARCEL
       row(6007, 1, "OUT_FOR_DELIVERY",  now),
       row(6008, 2, "DELIVERED",   now, now), // delivered_at
       row(6009, 1, "DELIVERED",   null, now),
