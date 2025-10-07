@@ -17,197 +17,153 @@ import {
   fetchOrderSummary
 } from "@/utils/requestUtils/requestOrderUtils"
 import { useToast } from "@/hooks/use-toast"
-// import { useToast } from "@/components/ui/use-toast"
+import {
+  OrdersFilters,
+  OrdersFiltersValue
+} from "@/components/order/orders-filters"
 
-/** --- Strongly typed API response from listOrders --- */
 type ListOrdersResponse = _ListOrdersResponse
 
-/** --- Strongly typed request options for listOrders --- */
-type ListOrdersParams = _ListOrdersParams & {
-  sortBy: "created_at" | "updated_at"
-  sortDir: "ASC" | "DESC"
-}
-
 export default function OrdersPage() {
-  // table data & ui state
   const [orders, setOrders] = useState<Order[]>([])
   const [total, setTotal] = useState<number>(0)
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
 
-  // ค่าที่ “ยืนยันแล้ว” (จะเอาไปยิงจริงเมื่อกด Search)
-  const [statusFilter, setStatusFilter] = useState<string>("ALL")
-  const [searchTerm, setSearchTerm] = useState<string>("")
+  // filters (ยืนยันจริงเมื่อ apply)
+  const [filters, setFilters] = useState<OrdersFiltersValue>({
+    q: "",
+    statuses: [], // [] = ALL
+    sortBy: "createdAt",
+    sortDir: "DESC",
+    hasTracking: ""
+  })
 
-  // ตัวคุม “จังหวะยิง” manual search / initial load
-  const [queryTick, setQueryTick] = useState(0)
-  const bumpQuery = () => setQueryTick((v) => v + 1)
+  // trigger search
+  const [tick, setTick] = useState(0)
+  const applyFilters = (v: OrdersFiltersValue) => {
+    setPage(1)
+    setFilters(v)
+    setTick((x) => x + 1)
+  }
+  const resetFilters = () =>
+    applyFilters({
+      q: "",
+      statuses: [],
+      sortBy: "createdAt",
+      sortDir: "DESC",
+      hasTracking: ""
+    })
 
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // summary state
+  // summary
   const [summary, setSummary] = useState<OrderSummary | null>(null)
   const [summaryLoading, setSummaryLoading] = useState<boolean>(false)
 
-  // detail dialog state
+  // detail dialog
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false)
 
   const { getStatusIcon, getStatusBadgeColor, getStatusText } = useOrderStatus()
   const { toast } = useToast()
 
-  // --- Initial load ครั้งเดียวแม้มี StrictMode ---
+  // initial load
   const didInit = useRef(false)
   useEffect(() => {
     if (didInit.current) return
     didInit.current = true
-    bumpQuery() // ยิงครั้งแรก
+    setTick((x) => x + 1)
   }, [])
 
-  // --- Fetch list: ยิงเมื่อ queryTick เปลี่ยน หรือ page/pageSize เปลี่ยน ---
+  // fetch list
   useEffect(() => {
-    if (queryTick === 0) return // ยังไม่สั่งยิง
     const ac = new AbortController()
-    let aborted = false
-    ac.signal.addEventListener("abort", () => {
-      aborted = true
-    })
-
-    const run = async () => {
-      setLoading(true)
-      setError(null)
+    ;(async () => {
       try {
-        const params: ListOrdersParams = {
+        const res = await listOrdersRequester({
           page,
           pageSize,
-          status: statusFilter,
-          q: searchTerm, // ใช้ค่าที่ถูก “ยืนยันแล้ว”
-          sortBy: "created_at",
-          sortDir: "DESC",
+          q: filters.q,
+          status: filters.statuses.length ? filters.statuses.join(",") : "ALL",
+          sortBy: filters.sortBy,
+          sortDir: filters.sortDir,
+          hasTracking: filters.hasTracking || undefined,
           signal: ac.signal
-        }
-        const res: ListOrdersResponse = await listOrdersRequester(params)
-        if (aborted) return
+        })
         setOrders(res.data)
         setTotal(res.meta.total)
       } catch (e) {
         if (!isAbortError(e)) {
-          if (aborted) return
-          setError("Failed to load orders")
           setOrders([])
           setTotal(0)
         }
-      } finally {
-        if (!aborted) setLoading(false)
       }
-    }
-
-    run()
+    })()
     return () => ac.abort()
-  }, [queryTick, page, pageSize, statusFilter, searchTerm])
+  }, [tick, page, pageSize, filters])
 
-  // summary คงเดิม
+  // summary
   useEffect(() => {
     const ac = new AbortController()
-    let aborted = false
-    ac.signal.addEventListener("abort", () => {
-      aborted = true
-    })
-    const run = async () => {
+    ;(async () => {
       setSummaryLoading(true)
       try {
         const s = await fetchOrderSummary({ signal: ac.signal })
-        if (!aborted) setSummary(s)
-      } catch (e) {
-        if (!isAbortError(e)) console.error("Failed to load summary", e)
-        if (!aborted) setSummary(null)
-      } finally {
-        if (!aborted) setSummaryLoading(false)
-      }
-    }
-    run()
+        setSummary(s)
+      } catch {}
+      setSummaryLoading(false)
+    })()
     return () => ac.abort()
   }, [])
 
-  // ===== Backed-by-API updates =====
+  // click stat -> set filters + search
+  const handleStatClick = (p: { statuses?: string[] }) => {
+    applyFilters({
+      ...filters,
+      statuses: p.statuses ?? []
+    })
+  }
 
-  // Update status (optimistic -> call API -> rollback if failed)
+  // actions (เดิม)
   const handleStatusChange = async (
     orderId: string,
     newStatus: OrderStatus
   ) => {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
-
     const willTouchPGW = [
       "MERCHANT_CANCELED",
       "REFUND_APPROVED",
       "REFUND_RETRY"
     ].includes(newStatus)
-
-    // optimistic
     setOrders((prevList) =>
-      prevList.map((o) => {
-        if (o.id !== orderId) return o
-        const newHistory = [...(o.statusHistory || [o.status]), newStatus]
-        return { ...o, status: newStatus, statusHistory: newHistory }
-      })
+      prevList.map((o) =>
+        o.id !== orderId
+          ? o
+          : {
+              ...o,
+              status: newStatus,
+              statusHistory: [...(o.statusHistory || [o.status]), newStatus]
+            }
+      )
     )
-
-    if (willTouchPGW) {
-      toast({
-        title: "Contacting payment gateway…",
-        description: "Submitting refund request to PGW."
-      })
-    }
-
     try {
       const res = await updateOrderRequester(orderId, { status: newStatus })
       const updated = res.data
-
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-
-      // show result toast for PGW-related actions
-      if (willTouchPGW) {
-        if (updated.status === "REFUND_PROCESSING") {
-          toast({
-            title: "Refund accepted",
-            description:
-              "Payment gateway accepted the refund. Waiting for processing."
-          })
-        } else if (updated.status === "REFUND_FAIL") {
-          toast({
-            title: "Refund failed",
-            description:
-              "Payment gateway rejected or errored. You can retry from this screen.",
-            variant: "destructive"
-          })
-        } else {
-          toast({
-            title: "Status updated",
-            description: `New status: ${getStatusText(updated.status)}`
-          })
-        }
-      } else {
-        toast({
-          title: "Status updated",
-          description: `New status: ${getStatusText(updated.status)}`
-        })
+      toast({
+        title: "Status updated",
+        description: `New status: ${getStatusText(updated.status)}`
+      })
+      if (willTouchPGW && updated.status === "REFUND_FAIL") {
+        toast({ title: "Refund failed", variant: "destructive" })
       }
     } catch (e) {
-      // rollback
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
-      console.error(e)
-      toast({
-        title: "Failed to update",
-        description: "Please try again.",
-        variant: "destructive"
-      })
+      toast({ title: "Failed to update", variant: "destructive" })
     }
   }
 
@@ -218,11 +174,9 @@ export default function OrdersPage() {
   ) => {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
-
     setOrders((list) =>
       list.map((o) => (o.id === orderId ? { ...o, trackingNumber } : o))
     )
-
     try {
       const res = await updateOrderRequester(orderId, {
         trackingNumber,
@@ -231,22 +185,13 @@ export default function OrdersPage() {
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-
-      toast({
-        title: "Tracking updated",
-        description: "Tracking number has been saved."
-      })
+      toast({ title: "Tracking updated" })
     } catch (e) {
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
-      console.error(e)
-      toast({
-        title: "Failed to update tracking",
-        description: "Please try again.",
-        variant: "destructive"
-      })
+      toast({ title: "Failed to update tracking", variant: "destructive" })
     }
   }
 
@@ -257,42 +202,33 @@ export default function OrdersPage() {
   ) => {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
-
     setOrders((list) =>
-      list.map((o) => {
-        if (o.id !== orderId) return o
-        const newStatus: OrderStatus = "HANDED_OVER"
-        const newHistory = [...(o.statusHistory || [o.status]), newStatus]
-        return {
-          ...o,
-          status: newStatus,
-          statusHistory: newHistory,
-          trackingNumber
-        }
-      })
+      list.map((o) =>
+        o.id !== orderId
+          ? o
+          : {
+              ...o,
+              status: "HANDED_OVER",
+              statusHistory: [
+                ...(o.statusHistory || [o.status]),
+                "HANDED_OVER"
+              ],
+              trackingNumber
+            }
+      )
     )
-
     try {
       const res = await handOverOrderRequester(orderId, trackingNumber, carrier)
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-
-      toast({
-        title: "Parcel handed over",
-        description: "Status updated and tracking number saved."
-      })
+      toast({ title: "Parcel handed over" })
     } catch (e) {
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
-      console.error(e)
-      toast({
-        title: "Failed to hand over",
-        description: "Please try again.",
-        variant: "destructive"
-      })
+      toast({ title: "Failed to hand over", variant: "destructive" })
     }
   }
 
@@ -300,7 +236,6 @@ export default function OrdersPage() {
     setSelectedOrder(order)
     setIsDetailOpen(true)
   }
-
   const handleCloseDialog = () => {
     setIsDetailOpen(false)
     setTimeout(() => setSelectedOrder(null), 300)
@@ -314,46 +249,33 @@ export default function OrdersPage() {
       />
 
       <div className="flex flex-1 flex-col gap-6 p-4">
-        {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        <OrderStats
+          summary={summary}
+          loading={summaryLoading}
+          onStatClick={handleStatClick}
+        />
 
-        <OrderStats summary={summary} loading={summaryLoading} />
+        <OrdersFilters
+          initial={filters}
+          onApply={applyFilters}
+          onReset={resetFilters}
+        />
 
         <OrdersTable
           orders={orders}
-          searchTerm={searchTerm}
-          statusFilter={statusFilter}
-          // เปลี่ยนเป็น “ยืนยันค่าแล้วค่อยยิง”
-          onSearchChange={(v) => {
-            setPage(1)
-            setSearchTerm(v)
-          }}
-          onStatusFilterChange={(v) => {
-            setPage(1)
-            setStatusFilter(v)
-          }}
-          // ปุ่ม Search: สั่งยิง
-          onTriggerSearch={() => {
-            setPage(1)
-            bumpQuery()
-          }}
-          // pagination: เปลี่ยนแล้วยิงทันที
           page={page}
           pageSize={pageSize}
           total={total}
           onPageChange={(p) => {
             setPage(p)
-            bumpQuery()
+            setTick((x) => x + 1)
           }}
           onPageSizeChange={(s) => {
             setPageSize(s)
             setPage(1)
-            bumpQuery()
+            setTick((x) => x + 1)
           }}
-          loading={loading}
+          loading={false}
           onViewDetails={viewOrderDetails}
           getStatusIcon={getStatusIcon}
           getStatusBadgeColor={getStatusBadgeColor}
@@ -373,28 +295,12 @@ export default function OrdersPage() {
   )
 }
 
-function useDebouncedValue<T>(value: T, delay = 250): T {
-  const [v, setV] = useState<T>(value)
-  const tRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    if (tRef.current) clearTimeout(tRef.current)
-    tRef.current = setTimeout(() => setV(value), delay)
-    return () => {
-      if (tRef.current) clearTimeout(tRef.current)
-    }
-  }, [value, delay])
-
-  return v
-}
-
 function isAbortError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false
   const e = err as { code?: string; name?: string; message?: string }
   return (
     e?.code === "ERR_CANCELED" ||
     e?.name === "CanceledError" ||
-    e?.name === "AbortError" ||
-    (typeof e?.message === "string" && e.message.toLowerCase() === "canceled")
+    e?.name === "AbortError"
   )
 }

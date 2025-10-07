@@ -77,6 +77,21 @@ export interface PaymentSummary {
   refunded?: number
 }
 
+export interface ShippingEvent {
+  id: string
+  toStatus?: string
+  description?: string
+  location?: string
+  occurredAt: string // createAt
+}
+
+export interface ReturnShippingEvent {
+  id: string
+  toStatus?: string
+  description?: string
+  location?: string
+  occurredAt: string // createAt
+}
 export interface Order {
   id: string
   orderCode: string
@@ -110,7 +125,18 @@ export interface Order {
   deliveredAt?: string | null
   returnedToSenderAt?: string | null
   shippingStatus?: ShippingStatus
-
+  shipping?: {
+    events?: ShippingEvent[]
+  }
+  returnShipments?: {
+    id: string
+    trackingNumber: string
+    carrier: string
+    status: string
+    deliveredBackAt: Date
+    shippedAt: Date
+    events?: ReturnShippingEvent[]
+  }[]
   orderItems?: OrderItem[]
 
   notes?: string | null

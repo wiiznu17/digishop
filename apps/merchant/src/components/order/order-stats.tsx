@@ -1,4 +1,3 @@
-// components/order/order-stats.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Package,
@@ -13,6 +12,7 @@ import type { OrderSummary } from "@/utils/requestUtils/requestOrderUtils"
 interface OrderStatsProps {
   summary: OrderSummary | null
   loading?: boolean
+  onStatClick?: (payload: { statuses?: string[] }) => void // NEW
 }
 
 function StatCard({
@@ -20,16 +20,23 @@ function StatCard({
   value,
   icon,
   colorClass,
-  description
+  description,
+  onClick
 }: {
   title: string
   value: string | number
   icon: React.ReactNode
   colorClass: string
   description?: string
+  onClick?: () => void
 }) {
   return (
-    <Card>
+    <Card
+      className={
+        onClick ? "cursor-pointer hover:bg-muted/40 transition-colors" : ""
+      }
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <div className={colorClass}>{icon}</div>
@@ -44,10 +51,10 @@ function StatCard({
   )
 }
 
-export function OrderStats({ summary, loading }: OrderStatsProps) {
+export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
   const s = summary
   const val = (n?: number) => (loading ? "…" : (n ?? 0))
-
+  const PAID_STATUS = ["PAID", "PROCESSING"]
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
       <StatCard
@@ -55,53 +62,49 @@ export function OrderStats({ summary, loading }: OrderStatsProps) {
         value={val(s?.totalOrders)}
         icon={<Package className="h-4 w-4" />}
         colorClass="text-muted-foreground"
-        description="All orders in the system"
       />
       <StatCard
         title="Pending Payment"
         value={val(s?.pendingPayment)}
         icon={<Clock className="h-4 w-4" />}
         colorClass="text-yellow-600"
-        description="Waiting for customer payment"
+        onClick={() => onStatClick?.({ statuses: ["PENDING"] })}
       />
       <StatCard
         title="Paid Orders"
         value={val(s?.paidOrders)}
         icon={<CreditCard className="h-4 w-4" />}
         colorClass="text-green-600"
-        description="Successfully paid orders"
+        onClick={() => onStatClick?.({ statuses: PAID_STATUS })}
       />
       <StatCard
         title="Processing"
         value={val(s?.processing)}
         icon={<Package className="h-4 w-4" />}
         colorClass="text-blue-600"
-        description="Preparing and shipping orders"
+        onClick={() =>
+          onStatClick?.({ statuses: ["PROCESSING", "READY_TO_SHIP"] })
+        }
       />
       <StatCard
         title="Handed Over"
         value={val(s?.handedOver)}
         icon={<Truck className="h-4 w-4" />}
         colorClass="text-indigo-600"
-        description="Orders handed over to courier"
+        onClick={() => onStatClick?.({ statuses: ["HANDED_OVER"] })}
       />
       <StatCard
         title="Refund Requests"
         value={val(s?.refundRequests)}
         icon={<RotateCcw className="h-4 w-4" />}
         colorClass="text-orange-600"
-        description="All refund requests"
+        onClick={() => onStatClick?.({ statuses: ["REFUND_REQUEST"] })}
       />
       <StatCard
         title="Total Revenue"
         value={loading ? "…" : `฿${(s?.totalRevenue ?? 0).toLocaleString()}`}
         icon={<DollarSign className="h-4 w-4" />}
         colorClass="text-green-600"
-        description={
-          s?.completedToday != null
-            ? `Completed today: ${s.completedToday} orders`
-            : undefined
-        }
       />
     </div>
   )
