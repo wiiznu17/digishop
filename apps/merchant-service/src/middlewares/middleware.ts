@@ -1,4 +1,3 @@
-// apps/merchant-service/src/middlewares/authenticate.ts
 import { Store } from "@digishop/db/src/models/Store";
 import { StoreStatus } from "@digishop/db/src/types/enum";
 import { Request, Response, NextFunction } from "express";
@@ -8,7 +7,7 @@ export interface AuthenticatedRequest extends Request {
   user?: any;
   authMode?: "service" | "user";
 }
-
+// ตรวจ Bearer ที่ส่งมาจาก queue
 export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction) {
   const hdr = req.headers.authorization || "";
   const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : "";
@@ -38,15 +37,19 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
   if (req.authMode === "service") return next();
 
   const token = req.cookies?.token;
+  console.log("token: ", token)
   if (!token) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    console.log(decoded)
     if (typeof decoded === "string") return res.status(401).json({ error: "Invalid token" });
+    console.log(decoded)
     req.user = decoded;
     req.authMode = "user";
     return next();
   } catch {
+    console.log("authenticate error")
     return res.status(401).json({ error: "Unauthorized" });
   }
 };

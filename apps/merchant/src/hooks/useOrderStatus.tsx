@@ -48,13 +48,13 @@ export const useOrderStatus = () => {
       // case "READY_TO_SHIP":
       //   return ["HANDED_OVER"]
       case "REFUND_REQUEST":
-        return ["REFUND_APPROVED", "REFUND_REJECTED"]
+        return ["REFUND_APPROVED", "REFUND_REJECTED", "AWAITING_RETURN"]
       case "REFUND_FAIL":
-        return ["REFUND_RETRY"] // NEW: retry ปลอดภัย
-      case "AWAITING_RETURN":
-        return ["RECEIVE_RETURN", "RETURN_FAIL"]
+        return ["REFUND_RETRY"]
+      // case "AWAITING_RETURN":
+      //   return ["RECEIVE_RETURN", "RETURN_FAIL"]
       case "RECEIVE_RETURN":
-        return ["RETURN_VERIFIED", "RETURN_FAIL"]
+        return ["RETURN_VERIFIED"]
       case "RETURN_VERIFIED":
         return ["REFUND_APPROVED"]
       default:
@@ -145,21 +145,21 @@ export const useOrderStatus = () => {
     const statusMap: Record<OrderStatus, string> = {
       PENDING: "Awaiting payment",
       PAID: "Payment completed",
-      PROCESSING: "Processing order",
-      READY_TO_SHIP: "Ready to ship",
+      PROCESSING: "Confirm order", // use
+      READY_TO_SHIP: "Ready to ship", // use
       HANDED_OVER: "Handed over to courier",
       SHIPPED: "Shipped",
       DELIVERED: "Delivered",
       COMPLETE: "Completed",
       CUSTOMER_CANCELED: "Canceled by customer",
-      MERCHANT_CANCELED: "Canceled order",
+      MERCHANT_CANCELED: "Canceled order", // use
       REFUND_REQUEST: "Refund requested",
-      REFUND_REJECTED: "Refund rejected",
-      AWAITING_RETURN: "Awaiting return",
+      REFUND_REJECTED: "Rejected refund request", // use
+      AWAITING_RETURN: "Approved refund and want product return", //use
       RECEIVE_RETURN: "Return received",
-      RETURN_VERIFIED: "Return verified",
+      RETURN_VERIFIED: "Verify product returned", // use
       RETURN_FAIL: "Return failed",
-      REFUND_APPROVED: "Refund approved",
+      REFUND_APPROVED: "Approve refund (Don't return product)", // use
       REFUND_PROCESSING: "Refund processing",
       REFUND_SUCCESS: "Refund successful",
       REFUND_FAIL: "Refund failed",

@@ -699,14 +699,16 @@ export async function updateOrder(req: Request, res: Response) {
 
   const {
     status: nextStatusRaw,
-    trackingNumber,
-    carrier,
+    // trackingNumber, // เผื่อสามารถอัพเดตได้ภายหลัง
+    // carrier,
     reason,
+    needToReturn
   }: {
     status?: OrderStatus | string;
-    trackingNumber?: string;
-    carrier?: string;
+    // trackingNumber?: string;
+    // carrier?: string;
     reason?: string;
+    needToReturn: boolean // บอกว่าต้องคืนของไหม
   } = req.body || {};
 
   if (!orderId) return res.status(400).json({ error: "Missing order id" });
@@ -720,11 +722,9 @@ export async function updateOrder(req: Request, res: Response) {
     (req.headers["x-correlation-id"] as string | undefined) ??
     null;
 
-  // แผนที่ ShippingStatus ที่สัมพันธ์กับ OrderStatus ที่ "ร้าน" แตะได้
+  // map ShippingStatus ที่สัมพันธ์กับ OrderStatus ที่ร้านแตะได้
   const mapShipping: Record<string, ShippingStatus | undefined> = {
     READY_TO_SHIP: ShippingStatus.READY_TO_SHIP,
-    HANDED_OVER: ShippingStatus.RECEIVE_PARCEL,
-    RECEIVE_RETURN: ShippingStatus.RETURNED_TO_SENDER,
     // (สถานะขนส่งอื่นให้ระบบขนส่ง/เว็บฮุคเป็นคนอัปเดต)
   };
 
@@ -732,17 +732,15 @@ export async function updateOrder(req: Request, res: Response) {
   const MERCHANT_ALLOWED_NEXT: Record<OrderStatus, OrderStatus[]> = {
     [OrderStatus.PAID]: [OrderStatus.PROCESSING, OrderStatus.MERCHANT_CANCELED],
     [OrderStatus.PROCESSING]: [OrderStatus.READY_TO_SHIP],
-    [OrderStatus.READY_TO_SHIP]: [OrderStatus.HANDED_OVER],
 
     // คำขอรีฟันด์ที่ร้านเป็นคนตัดสินใจ
     [OrderStatus.REFUND_REQUEST]: [
-      OrderStatus.REFUND_APPROVED, // manual-approve หรือ auto-approve ก็เข้ามาที่นี่เหมือนกัน
-      OrderStatus.AWAITING_RETURN,
+      OrderStatus.REFUND_APPROVED, // manual-approve หรือ auto-approve ก็เข้ามาที่นี่เหมือนกัน ถ้าส่งของแล้วร้านค้าไม่ต้องการสินค้าคืนก็มาที่นี่ได้
+      OrderStatus.AWAITING_RETURN, // กรณีทีี่ต้องการให้คืนสินค้าด้วย
       OrderStatus.REFUND_REJECTED, // ควรปฏิเสธได้แค่หลังจาก Delivered ถ้าหลังจากพึ่งจ่ายเงินจะ auto approve
     ],
 
     // กระบวนการรับของคืน/ตรวจสอบ
-    [OrderStatus.AWAITING_RETURN]: [OrderStatus.RECEIVE_RETURN, OrderStatus.RETURN_FAIL],
     [OrderStatus.RECEIVE_RETURN]: [OrderStatus.RETURN_VERIFIED],
     [OrderStatus.RETURN_VERIFIED]: [OrderStatus.REFUND_APPROVED],
 
@@ -770,43 +768,13 @@ export async function updateOrder(req: Request, res: Response) {
     const current = order.status as OrderStatus;
     const nextStatus = (nextStatusRaw as OrderStatus) || undefined;
 
-    // ── อัปเดตเลขพัสดุ/ขนส่ง (เฉพาะช่วงที่ร้านแก้ได้จริง) — อนุญาตแม้ไม่เปลี่ยนสถานะ
-    if ((trackingNumber || carrier) && [OrderStatus.READY_TO_SHIP, OrderStatus.HANDED_OVER].includes(current)) {
-      let ship: any = (order as any).shippingInfo;
-      if (!ship) {
-        ship = await ShippingInfo.create(
-          {
-            orderId: Number(order.id),
-            trackingNumber: trackingNumber ?? null,
-            carrier: carrier ?? null,
-            shippingStatus: ShippingStatus.READY_TO_SHIP,
-          } as any,
-          { transaction: t }
-        );
-        (order as any).shippingInfo = ship;
-      } else {
-        await ship.update(
-          { ...(trackingNumber ? { trackingNumber } : {}), ...(carrier ? { carrier } : {}) },
-          { transaction: t }
-        );
-      }
-    }
-
-    // ถ้าไม่มีการขอเปลี่ยนสถานะ ก็รีเทิร์นแค่การอัปเดต tracking/carrier
-    if (!nextStatus) {
-      await order.reload({ include: ORDER_BASE_INCLUDES, transaction: t });
-      const dto = serializeOrder(order);
-      await t.commit();
-      return res.json({ data: dto });
-    }
-
-    // ── Validate terminal
+    // Validate terminal
     if (TERMINAL.has(current)) {
       await t.rollback();
       return res.status(400).json({ error: `Order is terminal (${current}), cannot transition` });
     }
 
-    // ── Validate allowed next (merchant/system)
+    // Validate allowed next (merchant/system)
     const allowed = MERCHANT_ALLOWED_NEXT[current] ?? [];
     if (!allowed.includes(nextStatus)) {
       await t.rollback();
@@ -833,7 +801,7 @@ export async function updateOrder(req: Request, res: Response) {
       { transaction: t }
     );
 
-    // ── Sync Shipping (เฉพาะสถานะที่ร้านแตะได้)
+    // Shipping (เฉพาะสถานะที่ร้านแตะได้) มีแค่ ready to ship
     const ship: any = (order as any).shippingInfo;
     const newShipStatus = mapShipping[nextStatus];
     if (ship && newShipStatus) {
@@ -849,8 +817,6 @@ export async function updateOrder(req: Request, res: Response) {
       const fromStatus = (lastEvent?.get("toStatus") as ShippingStatus | undefined) ?? ship.shippingStatus ?? null;
 
       const patch: any = { shippingStatus: newShipStatus };
-      if (nextStatus === OrderStatus.HANDED_OVER && !ship.shippedAt) patch.shippedAt = now;
-      if (nextStatus === OrderStatus.RECEIVE_RETURN && !ship.returnedToSenderAt) patch.returnedToSenderAt = now;
       await ship.update(patch, { transaction: t });
 
       await ShipmentEvent.create(
@@ -867,41 +833,58 @@ export async function updateOrder(req: Request, res: Response) {
       );
     }
 
-    // ── Return logistics: เคลื่อนไหวฝั่งคืนของ (เฉพาะที่ร้านทำได้)
-    if (nextStatus === OrderStatus.RECEIVE_RETURN) {
+    // Return logistics: เคลื่อนไหวฝั่งคืนของ (เฉพาะที่ร้านทำได้) ตอนรับสินค้า ตรงนี้ขนส่งทำ ร้านต้อง verify
+    if (nextStatus === OrderStatus.RETURN_VERIFIED) {
+      // รับของแล้ว
+      if (current !== OrderStatus.RECEIVE_RETURN) {
+        await t.rollback();
+        return res.status(409).json({ error: "order_not_in_receive_return" });
+      }
+
+      const now = new Date();
+      const ship: any = (order as any).shippingInfo;
+
+      // หา ReturnShipment
       const ret = await ReturnShipment.findOne({ where: { orderId: order.id }, transaction: t });
-      if (ret) {
-        const before = ret.status;
-        await ret.update({ status: ReturnShipmentStatus.DELIVERED_BACK }, { transaction: t });
+
+      const useReturnEvent = Boolean(ret);
+      const useRtsEvent = !useReturnEvent && ship && ship.shippingStatus === ShippingStatus.RETURNED_TO_SENDER;
+
+      // กรณีมาจาก ReturnShipment (ส่งของคืนเองจากลูกค้า)
+      if (useReturnEvent && ret) {
+        const before = ret.status as ReturnShipmentStatus;
+        // ไม่เปลี่ยนสถานะ ReturnShipment ที่นี่ แค่บันทึกเหตุการณ์ยืนยันการตรวจรับ
         await ReturnShipmentEvent.create(
           {
             returnShipmentId: ret.id,
             fromStatus: before,
-            toStatus: ReturnShipmentStatus.DELIVERED_BACK,
-            occurredAt: new Date(),
-            description: "Merchant received returned parcel",
+            toStatus: before, // คงสถานะเดิม (ส่วนใหญ่ควรเป็น DELIVERED_BACK อยู่แล้ว)
+            occurredAt: now,
+            description: "Merchant verified goods (RETURN_VERIFIED)",
+            location: null,
+          } as any,
+          { transaction: t }
+        );
+      }
+
+      // กรณีมาจาก RTS (ShippingInfo) ตีกลับ
+      if (useRtsEvent && ship) {
+        const beforeShip = (ship.shippingStatus as ShippingStatus) ?? null;
+        // ไม่อัพเดต ShippingInfo.shippingStatus
+        await ShipmentEvent.create(
+          {
+            shippingInfoId: ship.id,
+            fromStatus: beforeShip,
+            toStatus: beforeShip, // คงสถานะเดิม (เช่น RETURNED_TO_SENDER)
+            description: "Merchant verified goods from RTS (RETURN_VERIFIED)",
+            location: null,
+            rawPayload: { source: "RTS_VERIFY" },
+            occurredAt: now,
           } as any,
           { transaction: t }
         );
       }
     }
-    // if (nextStatus === OrderStatus.RETURN_VERIFIED) {
-    //   const ret = await ReturnShipment.findOne({ where: { orderId: order.id }, transaction: t });
-    //   if (ret && ret.status !== ReturnShipmentStatus.VERIFIED) {
-    //     const before = ret.status;
-    //     await ret.update({ status: ReturnShipmentStatus.VERIFIED }, { transaction: t });
-    //     await ReturnShipmentEvent.create(
-    //       {
-    //         returnShipmentId: ret.id,
-    //         fromStatus: before,
-    //         toStatus: ReturnShipmentStatus.VERIFIED,
-    //         occurredAt: new Date(),
-    //         description: "Merchant verified returned item",
-    //       } as any,
-    //       { transaction: t }
-    //     );
-    //   }
-    // }
 
     // ── Refunds: สร้าง/อัปเดต RefundOrder + RefundStatusHistory
     if (
@@ -912,6 +895,8 @@ export async function updateOrder(req: Request, res: Response) {
         OrderStatus.REFUND_SUCCESS,
         OrderStatus.REFUND_FAIL,
         OrderStatus.REFUND_RETRY,
+        OrderStatus.AWAITING_RETURN,
+        OrderStatus.REFUND_REJECTED
       ].includes(nextStatus)
     ) {
       let refund = await RefundOrder.findOne({ where: { orderId: order.id }, transaction: t });
@@ -919,16 +904,16 @@ export async function updateOrder(req: Request, res: Response) {
       const orderGrandMinor = read<number>(order, "grand_total_minor", "grandTotalMinor") ?? 0;
       const currency = read<string>(order, "currency_code", "currencyCode") ?? "THB";
 
-      // สร้าง record ครั้งแรก (มาจาก REFUND_REQUEST ของลูกค้า หรือ ร้านยกเลิกหลังชำระ)
-      if (!refund && (nextStatus === OrderStatus.REFUND_REQUEST || nextStatus === OrderStatus.MERCHANT_CANCELED)) {
+      // สร้าง record ครั้งแรก (ร้านยกเลิกหลังชำระ) เหมือน refund req แต่ไม่ต้องรอ approve
+      if (!refund && (nextStatus === OrderStatus.MERCHANT_CANCELED)) {
         refund = await RefundOrder.create(
           {
             orderId: order.id,
             reason: reason ?? null,
             amountMinor: orderGrandMinor,
             currencyCode: currency,
-            status: nextStatus === OrderStatus.REFUND_REQUEST ? RefundStatus.REQUESTED : RefundStatus.APPROVED,
-            requestedBy: nextStatus === OrderStatus.REFUND_REQUEST ? "CUSTOMER" : "MERCHANT",
+            status: RefundStatus.APPROVED,
+            requestedBy: "MERCHANT",
             requestedAt: new Date(),
             approvedAt: nextStatus === OrderStatus.MERCHANT_CANCELED ? new Date() : null,
             metadata: { via: "updateOrder" },
@@ -949,7 +934,7 @@ export async function updateOrder(req: Request, res: Response) {
           } as any,
           { transaction: t }
         );
-      } else if (refund) {
+      } else if (refund) { // มีข้อมูลในตาราง refund แล้ว
         if (nextStatus === OrderStatus.REFUND_APPROVED && refund.status !== RefundStatus.APPROVED) {
           await refund.update({ status: RefundStatus.APPROVED, approvedAt: new Date() } as any, { transaction: t });
           await RefundStatusHistory.create(
@@ -998,7 +983,82 @@ export async function updateOrder(req: Request, res: Response) {
             } as any,
             { transaction: t }
           );
+        } else if (nextStatus === OrderStatus.AWAITING_RETURN && refund.status === RefundStatus.REQUESTED) {
+          // ต้องส่งสำเร็จแล้ว (DELIVERED) ถึงจะเริ่ม flow ส่งคืน
+          // const ship: any = (order as any).shippingInfo;
+          if (!ship || ship.shippingStatus !== ShippingStatus.DELIVERED) {
+            await t.rollback();
+            return res.status(409).json({ error: "order_not_delivered_cannot_request_return" });
+          }
+
+          // สร้าง ReturnShipment สถานะแรกคือรอสินค้าเข้าระบขนส่ง มีแล้วไม่สร้าง ยังไม่รองรับกรณี
+          let ret = await ReturnShipment.findOne({ where: { orderId: order.id }, transaction: t });
+          if (ret) {
+            await t.rollback();
+            return res.status(409).json({ error: "return_shipment_already_exists" });
+          } else {
+            const DEFAULT_RETURN_DEADLINE_DAYS = 7;
+            const deadlineDays: number = DEFAULT_RETURN_DEADLINE_DAYS;
+
+            const deadlineAt = new Date();
+            deadlineAt.setDate(deadlineAt.getDate() + deadlineDays);
+
+            const fromAddr = ship?.address_snapshot ?? null; // ที่อยู่ลูกค้า = ต้นทางขากลับ
+            const toAddr = null; // ถ้ามีที่อยู่คืนเฉพาะให้ใส่ snapshot ที่นี่
+            const refundOrders: any = (order as any).refundOrders;
+            console.log("refund order id: ", refundOrders)
+            ret = await ReturnShipment.create(
+              {
+                orderId: order.id,
+                refundOrderId: refundOrders.id,
+                status: ReturnShipmentStatus.AWAITING_DROP,
+                carrier: null,
+                trackingNumber: null,
+                shippedAt: null,
+                deliveredBackAt: null,
+                fromAddressSnapshot: fromAddr,
+                toAddressSnapshot: toAddr,
+                deadlineDropoffAt: deadlineAt
+              } as any,
+              { transaction: t }
+            );
+
+            await ReturnShipmentEvent.create(
+              {
+                returnShipmentId: ret.id,
+                fromStatus: null,
+                toStatus: ReturnShipmentStatus.AWAITING_DROP,
+                occurredAt: new Date(),
+                description: "Return created (REFUND_REQUEST -> AWAITING_RETURN)"
+              } as any,
+              { transaction: t }
+            );
+
+            // TODO: enqueue job ตรวจ deadline (เช่น BullMQ) soon
+            // ถ้าขนส่ง fail ตอนส่งกลับไม่ต้องอัพเดตออเดอร์ อัพเดตตอนที่หมดเวลาการส่ง
+            // await jobs.enqueueReturnDropDeadlineCheck({ returnShipmentId: ret.id, at: deadlineAt })
+          }
+        } else if (nextStatus === OrderStatus.REFUND_REJECTED && refund.status !== RefundStatus.CANCELED) {
+          await refund.update({
+            status: RefundStatus.CANCELED,
+            merchantRejectReason: reason
+          } as any, { transaction: t });
+          await RefundStatusHistory.create(
+            {
+              refundOrderId: Number(refund.id),
+              fromStatus: (beforeRefundStatus ?? null) as any,
+              toStatus: RefundStatus.CANCELED,
+              reason: reason ?? null,
+              changedByType,
+              changedById,
+              source: isService ? "SERVICE" : "WEB",
+              correlationId,
+              metadata: {},
+            } as any,
+            { transaction: t }
+          );
         }
+
       }
 
       // ── Trigger PGW หลัง commit: REFUND_APPROVED / MERCHANT_CANCELED / REFUND_RETRY
@@ -1007,14 +1067,14 @@ export async function updateOrder(req: Request, res: Response) {
         const paymentId = pay?.id as number | undefined;
         const providerRef = read<string>(pay, "provider_ref", "providerRef");
         const orderRef = read<string>(order, "reference", "reference");
-        const reference = orderRef || providerRef;
+        const reference = orderRef || providerRef; // จริงๆ ควรมีใน refund order ตั้งแต่สร้าง refund order
         const refundRow = refund ?? (await RefundOrder.findOne({ where: { orderId: order.id }, transaction: t }));
         const refundOrderId: number | undefined = refundRow?.get("id") as any;
         const prev = nextStatus;
         const requestId = genRequestId();
 
         postCommit = async () => {
-          if (!reference || !paymentId) {
+          if (!reference || !paymentId) { // เคสนี้ไม่น่าเกิดถ้าฝั่งเว็บ customer ไม่มีปัญหา
             await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } });
             if (refundOrderId) {
               await RefundStatusHistory.create({
@@ -1032,10 +1092,8 @@ export async function updateOrder(req: Request, res: Response) {
             return;
           }
 
-          const amountMinor =
-            (read<number>(pay, "amount_captured_minor", "amountCapturedMinor") ?? 0) ||
-            (read<number>(pay, "amount_authorized_minor", "amountAuthorizedMinor") ?? 0) ||
-            (read<number>(order, "grand_total_minor", "grandTotalMinor") ?? 0);
+          // จำนวนเงินในการคืนของแต่ละ ออเดอร์ ไม่ใช่ทั้งหมด ค่าควรอยู่ใน refund order
+          const amountMinor = refundRow?.amountMinor || 0;
 
           try {
             // 1) ตรวจสถานะธุรกรรม
