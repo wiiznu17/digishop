@@ -73,7 +73,7 @@ export enum OrderStatus {
   AWAITING_RETURN = 'AWAITING_RETURN', // ShippingStatus.RETURN_TO_SENDER_IN_TRANSIT
   RECEIVE_RETURN = 'RECEIVE_RETURN', // ShippingStatus.RETURNED_TO_SENDER
   RETURN_VERIFIED = 'RETURN_VERIFIED',
-  RETURN_FAIL = 'RETURN_FAIL', // ShippingStatus.DELIVERY_FAILED
+  RETURN_FAIL = 'RETURN_FAIL', // ShippingStatus.DELIVERY_FAILED คือลูกค้าส่งของไม่ทันเวลาที่กำหนด
 
   REFUND_APPROVED = 'REFUND_APPROVED',
   REFUND_PROCESSING = 'REFUND_PROCESSING',
@@ -81,26 +81,6 @@ export enum OrderStatus {
   REFUND_FAIL = 'REFUND_FAIL',
   REFUND_RETRY = 'REFUND_RETRY',
   CANCELED_REFUND = 'CANCELED_REFUND'
-}
-
-export enum ShippingStatus {
-  PENDING = 'PENDING',                                   // ยังไม่ส่ง
-  READY_TO_SHIP = 'READY_TO_SHIP', // ร้านค้าพร้อมส่ง
-  ARRIVED_SORTING_CENTER = 'ARRIVED_SORTING_CENTER',
-  OUT_SORTING_CENTER = 'OUT_SORTING_CENTER',
-  ARRIVED_DESTINATION_STATION= 'ARRIVED_DESTINATION_STATION',
-  RECEIVE_PARCEL = 'RECEIVE_PARCEL',                       // พร้อมส่ง
-  // IN_TRANSIT = 'IN_TRANSIT',                             // ระหว่างขนส่ง
-  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',                 // กำลังออกไปส่ง
-  DELIVERED = 'DELIVERED',                               // ส่งสำเร็จ
-
-  DELIVERY_FAILED = 'DELIVERY_FAILED',                   // ส่งไม่สำเร็จ (เช่น ไม่พบผู้รับ)
-  RETURN_TO_SENDER_IN_TRANSIT = 'RETURN_TO_SENDER_IN_TRANSIT', // ตีกลับระหว่างทาง
-  RETURNED_TO_SENDER = 'RETURNED_TO_SENDER',             // กลับถึงผู้ส่งแล้ว
-
-  TRANSIT_ISSUE = 'TRANSIT_ISSUE',                       // ปัญหาระหว่างขนส่ง (จับทุกกรณี)
-  RE_TRANSIT = 'RE_TRANSIT',                             // ส่งใหม่ (ถ้าต้องเริ่มรอบใหม่)
-  // CUSTOMER_REJECT
 }
 
 export enum PaymentStatus {
@@ -143,9 +123,30 @@ export enum PaymentMethod {
   // CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
 }
 
+export enum ShippingStatus {
+  PENDING = 'PENDING',                                   // ยังไม่ส่ง
+  READY_TO_SHIP = 'READY_TO_SHIP', // ร้านค้าพร้อมส่ง
+  ARRIVED_SORTING_CENTER = 'ARRIVED_SORTING_CENTER',
+  OUT_SORTING_CENTER = 'OUT_SORTING_CENTER',
+  ARRIVED_DESTINATION_STATION= 'ARRIVED_DESTINATION_STATION',
+  RECEIVE_PARCEL = 'RECEIVE_PARCEL',                       // พร้อมส่ง
+  // IN_TRANSIT = 'IN_TRANSIT',                             // ระหว่างขนส่ง
+  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',                 // กำลังออกไปส่ง
+  DELIVERED = 'DELIVERED',                               // ส่งสำเร็จ
+
+  DELIVERY_FAILED = 'DELIVERY_FAILED',                   // ส่งไม่สำเร็จ (เช่น ไม่พบผู้รับ)
+  RETURN_TO_SENDER_IN_TRANSIT = 'RETURN_TO_SENDER_IN_TRANSIT', // ตีกลับระหว่างทาง
+  RETURNED_TO_SENDER = 'RETURNED_TO_SENDER',             // กลับถึงผู้ส่งแล้ว
+
+  TRANSIT_ISSUE = 'TRANSIT_ISSUE',                       // ปัญหาระหว่างขนส่ง (จับทุกกรณี)
+  RE_TRANSIT = 'RE_TRANSIT',                             // ส่งใหม่ (ถ้าต้องเริ่มรอบใหม่)
+  // CUSTOMER_REJECT
+}
+
 export enum ReturnShipmentStatus {
-  AWAITING_DROP = 'AWAITING_DROP',             // รอลูกค้าส่งของคืน/รอรับเข้าระบบขากลับ
-  RETURN_IN_TRANSIT = 'RETURN_IN_TRANSIT',     // ระหว่างขนส่งขากลับ
-  DELIVERED_BACK = 'DELIVERED_BACK',           // คืนถึงร้าน/คลังแล้ว
-  RETURN_FAILED = 'RETURN_FAILED',             // ขากลับล้มเหลว
+  AWAITING_DROP = 'AWAITING_DROP',             // รอลูกค้าส่งของคืน/รอรับเข้าระบบขากลับ (สร้าง return shipment ตอนร้านค้ากด approve refund)
+  RETURN_IN_TRANSIT = 'RETURN_IN_TRANSIT',     // ระหว่างขนส่งขากลับ (อัพเดตแค่ return shipment กับ return shipment event)
+  DELIVERED_BACK = 'DELIVERED_BACK',           // คืนถึงร้าน/คลังแล้ว (เปลี่ยน order status เป็น RECEIVE_RETURN)
+  RETURN_FAILED = 'RETURN_FAILED',             // ขากลับล้มเหลว (ไม่เกี่ยวกับลูกค้า)
+  RETURN_TIME_OUT = 'RETURN_TIME_OUT'          // ลูกค้าไม่จัดส่งภายในเวลาที่กำหนด
 }

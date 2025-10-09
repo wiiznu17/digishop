@@ -1,4 +1,3 @@
-// seeders/2025xxxx-seed-return-shipments-and-events.ts
 import { QueryInterface, QueryTypes } from "sequelize";
 
 const now = new Date();
@@ -9,7 +8,7 @@ const mapOrderToReturn = (to: string): string | null => {
     case "AWAITING_RETURN": return "RETURN_IN_TRANSIT";
     case "RECEIVE_RETURN":  return "DELIVERED_BACK";
     case "RETURN_VERIFIED": return "DELIVERED_BACK";
-    case "RETURN_FAIL":     return "RETURN_FAILED";
+    case "RETURN_FAIL":     return "RETURN_TIME_OUT";
     default: return null;
   }
 };
@@ -80,9 +79,11 @@ export default {
       }
 
       if (!finalReturnStatus) {
-        // ไม่มีสถานะคืน → ข้าม
+        // ไม่มีสถานะคืน = ข้าม
         continue;
       }
+      const deadlineAt = new Date();
+        deadlineAt.setDate(deadlineAt.getDate() + 7);
 
       const carrier = "ReturnCarrier"; // mock
       const tracking = `RTRK${orderId}`;
@@ -95,6 +96,7 @@ export default {
         carrier,
         tracking_number: tracking,
         status: finalReturnStatus,
+        deadline_dropoff_at: deadlineAt,
         shipped_at: shippedAt,
         delivered_back_at: deliveredBackAt,
         from_address_snapshot: null,
