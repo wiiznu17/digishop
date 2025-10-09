@@ -46,6 +46,11 @@ export default {
           defaultValue: ReturnShipmentStatus.AWAITING_DROP,
         },
 
+        deadline_dropoff_at: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+
         shipped_at: {
           type: DataTypes.DATE,
           allowNull: true,

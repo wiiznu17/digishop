@@ -10,6 +10,7 @@ export interface ReturnShipmentAttributes {
   status: ReturnShipmentStatus;
   shippedAt?: Date | null;
   deliveredBackAt?: Date | null;
+  deadlineDropoffAt: Date
 
   fromAddressSnapshot?: object | null;
   toAddressSnapshot?: object | null;
@@ -28,6 +29,7 @@ export interface ReturnShipmentCreationAttributes
     | 'carrier'
     | 'trackingNumber'
     | 'status'
+    | 'deadlineDropoffAt'
     | 'shippedAt'
     | 'deliveredBackAt'
     | 'fromAddressSnapshot'
@@ -50,6 +52,7 @@ export class ReturnShipment
   public status!: ReturnShipmentStatus;
   public shippedAt!: Date | null;
   public deliveredBackAt!: Date | null;
+  public deadlineDropoffAt!: Date;
 
   public fromAddressSnapshot!: object | null;
   public toAddressSnapshot!: object | null;
@@ -92,6 +95,11 @@ export class ReturnShipment
           type: DataTypes.ENUM(...Object.values(ReturnShipmentStatus)),
           allowNull: false,
           defaultValue: ReturnShipmentStatus.AWAITING_DROP
+        },
+        deadlineDropoffAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: 'deadline_dropoff_at'
         },
         shippedAt: {
           type: DataTypes.DATE,
