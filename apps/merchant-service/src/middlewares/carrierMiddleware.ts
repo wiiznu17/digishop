@@ -100,7 +100,9 @@ function computeNextOrderStatus(
         ? OrderStatus.RECEIVE_RETURN
         : null;
     case ShippingStatus.TRANSIT_ISSUE:
-      return currentOrderStatus === OrderStatus.SHIPPED
+      return [OrderStatus.SHIPPED, OrderStatus.RE_TRANSIT].includes(
+        currentOrderStatus
+      )
         ? OrderStatus.TRANSIT_LACK
         : null;
     case ShippingStatus.RE_TRANSIT:

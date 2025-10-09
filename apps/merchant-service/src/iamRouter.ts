@@ -6,7 +6,7 @@ import bankRouter from './routes/bankRouter'
 import orderRouter from './routes/orderRouter'
 import storeRouter from './routes/storeRouter'
 import carrierRouter from './routes/carrierRouter'
-
+import ReturnCarrierRouter from './routes/returnCarrierRouter'
 const router = Router()
 
 router.get('/', async (req: Request, res: Response) => {
@@ -25,6 +25,7 @@ router.use('/merchant/bank-accounts', bankRouter)
 router.use('/merchant/orders', orderRouter)
 router.use('/merchant/store', storeRouter)
 router.use('/merchant/transit', carrierRouter)
+router.use('/merchant/return-transit', ReturnCarrierRouter)
 
 export default router
 
