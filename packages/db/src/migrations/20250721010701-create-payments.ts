@@ -29,6 +29,7 @@ export default {
           defaultValue: PaymentStatus.PENDING,
         },
         paid_at: { type: DataTypes.DATE, allowNull: true },
+        expiry_at: { type: DataTypes.DATE, allowNull: true },
 
         // gateway snapshot fields
         provider: { type: DataTypes.STRING(64), allowNull: false, defaultValue: "DGS_PGW" },
