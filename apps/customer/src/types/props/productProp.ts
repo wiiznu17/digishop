@@ -7,6 +7,7 @@ export interface ProductItem {
     priceMinor: number;
     imageUrl?: string | undefined;
     configurations: Configurations[]
+    productItemImage: ProductItemImages
 }
 export interface Configurations {
   id: number
@@ -30,6 +31,13 @@ export interface ProductImages {
   fileName: string
   isMain: boolean
   sortOrder: number
+}
+export interface ProductItemImages {
+  id: number;
+  uuid: string;
+  url: string;
+  blobName: string;
+  fileName: string;
 }
 export interface Product {
   id: number
