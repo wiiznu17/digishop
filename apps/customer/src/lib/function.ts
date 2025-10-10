@@ -1,5 +1,5 @@
 import { Address } from "@/types/props/addressProp";
-import { OrderDetail } from "@/types/props/orderProp";
+import { OrderDetail, ProductItemProps } from "@/types/props/orderProp";
 import { Configurations } from "@/types/props/productProp"
 
 export const formatSku = (configs : Configurations[]) => {
@@ -35,7 +35,35 @@ export const sumprice = (data: OrderDetail|undefined) => {
 
 export const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-
+    const remainingSeconds = Math.floor(seconds % 60 );
+    // return Math.max(0, Math.floor((seconds) / 1000))
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+// use in order page
+export const sumPrice = (
+    items: [
+      {
+        quantity: number;
+        unitPriceMinor: number;
+        lineTotalMinor: number;
+        productItem: ProductItemProps;
+        productNameSnapshot: string;
+      },
+    ]
+  ) => {
+    let sum = 0;
+    for (let i = 0; i < items.length; i++) {
+      sum += items[i].quantity * items[i].productItem.priceMinor;
+    }
+    return sum / 100;
+  };
+  export const sumPriceTotal = (items: OrderDetail[]) => {
+    let sum = 0;
+    for (let i = 0; i < items.length; i++) {
+      for (let j = 0; j < items[i].items.length; j++) {
+        sum +=
+          items[i].items[j].quantity * items[i].items[j].productItem.priceMinor;
+      }
+    }
+    return sum / 100;
   };

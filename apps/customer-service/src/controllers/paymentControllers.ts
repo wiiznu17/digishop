@@ -189,8 +189,8 @@ export const getCallBack = async (req: Request, res: Response) => {
   const orderCode = await CheckOut.findOne({
     where: {id: findId?.checkoutId} , attributes: ["orderCode"]
   })
-  //res.send(window.location.replace(`http://localhost:3000/digishop/order/${String(findId.id)}`))
-  const linkResult = JSON.stringify(`http://localhost:3000/digishop/order/${String(orderCode?.orderCode)}`)
+  //res.send(window.location.replace(`http://localhost:3000/order/${String(findId.id)}`))
+  const linkResult = JSON.stringify(`http://localhost:3000/order/${String(orderCode?.orderCode)}`)
   const link = JSON.stringify('http://localhost:3000')
   if (process_status == "true") {
     if (findId) {
@@ -199,6 +199,7 @@ export const getCallBack = async (req: Request, res: Response) => {
             <body>
               <script>
                 window.close()
+                
               </script>
             </body>
           </html>
