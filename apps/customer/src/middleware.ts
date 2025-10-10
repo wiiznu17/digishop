@@ -1,39 +1,33 @@
 import { NextRequest, NextResponse } from "next/server"
 import { jwtVerify } from "jose"
 
-const PUBLIC_PATHS = ["/register", "/"]
+const PUBLIC_PATHS = ["/auth","/product","/search","/store"]
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const token = req.cookies.get("token")?.value
-  if (PUBLIC_PATHS.includes(pathname)) {
+  console.log('token',token)
+  console.log('pathname',PUBLIC_PATHS.some((x) => pathname.startsWith(x)) ,pathname)
+  if(PUBLIC_PATHS.some((x) => pathname.startsWith(x)) || pathname === '/') {
+    return NextResponse.next()
+  }else{
     if (token) {
       try {
         const payload = await jwtVerify(
           token,
           new TextEncoder().encode(process.env.JWT_SECRET!)
         )
+        console.log('role',payload.payload.role)
         if (payload.payload.role === "CUSTOMER") {
-          return NextResponse.redirect(new URL("/digishop", req.url))
+          return NextResponse.next()
         } else {
-          return NextResponse.redirect(new URL("/register"))
+          return NextResponse.redirect(new URL("/auth"))
         }
       } catch {
-        return NextResponse.next()
+        console.log('ji')
+        return NextResponse.redirect(new URL("/"))
       }
-    } else {
-        return NextResponse.next()
     }
-  }
-
-  if (!token) {
-    return NextResponse.redirect(new URL("/", req.url))
-  }
-
-  try {
-    await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET!))
-    return NextResponse.next()
-  } catch {
     return NextResponse.redirect(new URL("/", req.url))
   }
 }
