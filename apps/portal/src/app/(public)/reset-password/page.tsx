@@ -1,0 +1,60 @@
+"use client"
+
+import { useSearchParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import PasswordRulesForm from "@/components/auth/PasswordRulesForm"
+import { confirmReset } from "@/utils/requesters/credentialRequester"
+
+export default function ResetPasswordPage() {
+  const sp = useSearchParams()
+  const token = sp.get("token") || ""
+  const email = sp.get("email") || "" // ถ้ามี แปะมาก็ใช้ช่วย validation ได้
+  const router = useRouter()
+
+  const [submitting, setSubmitting] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!token) setErr("Missing token. Please use the link from your email.")
+  }, [token])
+
+  async function handleSubmit({ password }: { password: string }) {
+    setErr(null)
+    if (!token) {
+      setErr("Missing token.")
+      return
+    }
+    setSubmitting(true)
+    try {
+      await confirmReset({ token, password })
+      router.push("/login?msg=password_reset")
+    } catch (e: any) {
+      console.error(e)
+      setErr(e?.response?.data?.error ?? "Failed to reset password.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Reset your password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PasswordRulesForm
+            onSubmit={handleSubmit}
+            showNameField={false}
+            emailForPII={email}
+            submitting={submitting}
+            externalError={err}
+            submitLabel="Reset password"
+            title=""
+          />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
