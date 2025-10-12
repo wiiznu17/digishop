@@ -167,6 +167,7 @@ export interface Payment {
   pgw_status: string
   payment_method: string
   updated_at: string
+  expiry_at: string
 }
 //order before paid
 

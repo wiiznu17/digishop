@@ -69,7 +69,7 @@ export default function OrderCard({
     <div className="px-4 py-2 mb-5 border w-md rounded-2xl">
       <div>
         { item.items[0].productItem&& 
-          <button className="flex items-center mb-3 hover:cursor-pointer w-full" onClick={() => router.push(`http://localhost:3000/digishop/store/${item.items[0].productItem.product.store.uuid}`)}>
+          <button className="flex items-center mb-3 hover:cursor-pointer w-full" onClick={() => router.push(`http://localhost:3000/store/${item.items[0].productItem.product.store.uuid}`)}>
             <div className=" w-[70px] h-[70px] rounded-full bg-amber-300"></div>
             <div className="mx-4" >
               {item.items[0].productItem.product.store.storeName}
@@ -80,7 +80,7 @@ export default function OrderCard({
           <div key={index}>
             {!items.productItem && <div>{items.productNameSnapshot}</div>}
             {items.productItem && (
-              <button className="w-full hover:cursor-pointer"  onClick={() => router.push(`http://localhost:3000/digishop/product/${item.items[0].productItem.product.uuid}`)}>
+              <button className="w-full hover:cursor-pointer"  onClick={() => router.push(`http://localhost:3000/product/${item.items[0].productItem.product.uuid}`)}>
                 <div className="flex gap-4 relative mb-2">
                   <div className="w-[100px] h-[100px] bg-amber-700"></div>
                   <div>
@@ -104,9 +104,13 @@ export default function OrderCard({
             )}
           </div>
         ))}
+        {
+          item.status !== 'PENDING' && (
         <div className="flex justify-end border-b mb-2 pb-2">
           total ฿ {(item.grand_total_minor /100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </div>
+          )
+        }
         {/* ราคาที่จ่าย */}
       </div>
       <div className="flex justify-between items-center">
@@ -125,12 +129,15 @@ export default function OrderCard({
             </div>
           )
         }
-        <button
+        {
+
+        item.status !== 'PENDING' && (<button
           onClick={() => handleShowDetail(item)}
           className={`hover:cursor-pointer ml-3 hover:bg-gray-300 ${item == selectShowDetail ? "opacity-0" : "opacity-100"}`}
         >
           <SquareChevronRight />
-        </button>
+        </button>)
+        }
         </div>
       </div>
       <div

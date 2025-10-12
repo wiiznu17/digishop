@@ -1,16 +1,35 @@
 import { Router } from 'express'
-import { createOrder, createOrderId , createCart, deleteOrder,deleteChart,findUserOrder , findOrder, findShipping, findUserCart, updateOrderStatus, cancelOrder, revokeCancelOrder, customerCancel } from '../controllers/orderControllers'
+import {
+  createOrder,
+  createOrderId ,
+  createCart,
+  deleteOrder,
+  deleteChart,
+  findUserOrder,
+  findOrder,
+  findShipping,
+  findUserCart,
+  updateOrderStatus,
+  cancelOrder, revokeCancelOrder, customerCancel,
+  customerCancelV2
+} from '../controllers/orderControllers'
+import { authenticate, requireApprovedUser } from '../middlewares/middleware'
+
 const router = Router()
 
-router.get('/shiptype', findShipping)
+router.get('/test',() => {console.log('success get api')} )
+router.get('/shiptype',authenticate,requireApprovedUser(), findShipping)
 router.get('/:userId/:id',findOrder)
-router.get('/user/id/:id', findUserOrder)
-router.get('/cart/user/:id', findUserCart)
-router.post('/create/id',createOrderId)
+// router.get('/:userId/:id',authenticate,requireApprovedUser(),findOrder)
+router.get('/user/id/:id',authenticate,requireApprovedUser(),findUserOrder)
+router.get('/cart/user/:id',authenticate,requireApprovedUser(), findUserCart)
+router.post('/create/id',authenticate,requireApprovedUser(),createOrderId)
 router.post('/create',createOrder)
-router.post('/create/cart', createCart)
-router.patch('/delete/:id', deleteOrder)
-router.post('/cart/id', deleteChart)
-router.patch('/status/:id', updateOrderStatus)
-router.patch('/cancel/:id', cancelOrder)
+router.post('/create/cart',authenticate,requireApprovedUser(),createCart)
+router.patch('/delete/:id',authenticate,requireApprovedUser(),deleteOrder)
+router.post('/cart/id',authenticate,requireApprovedUser(),deleteChart)
+router.patch('/status/:id',authenticate,requireApprovedUser(),updateOrderStatus)
+router.patch('/cancel/:id',authenticate,requireApprovedUser(),cancelOrder)
+router.patch('/customer/cancel/:id',authenticate,requireApprovedUser(),customerCancelV2)
+router.post('/revoke/cancel/:id',authenticate,requireApprovedUser(),revokeCancelOrder)
 export default router
