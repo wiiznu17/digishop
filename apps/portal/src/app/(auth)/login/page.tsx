@@ -15,8 +15,8 @@ export default function LoginPage() {
 
   const nextPath = (() => {
     const next = search.get("next")
+    console.log("next url: ", next)
     if (!next || !next.startsWith("/")) return "/admin/orders"
-    // กัน open redirect (ยอมรับเฉพาะ path ภายใน)
     return next
   })()
 
@@ -59,7 +59,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@example.com"
+            placeholder="email"
           />
         </label>
 
@@ -94,10 +94,10 @@ export default function LoginPage() {
           {submitting ? "Signing in…" : "Sign in"}
         </button>
 
-        <p className="text-xs text-gray-500">
+        {/* <p className="text-xs text-gray-500">
           You’ll be redirected to{" "}
           <span className="font-medium">{nextPath}</span>.
-        </p>
+        </p> */}
       </form>
     </main>
   )

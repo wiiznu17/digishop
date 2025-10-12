@@ -3,10 +3,11 @@ import IORedis from "ioredis";
 import { http, svcHeaders } from "../httpClient";
 import { ENV } from "../env";
 import { logger } from "../logger";
-import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
-import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
-import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
+// import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
+// import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
+// import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
 import { OrderStatus, RefundStatus } from "@digishop/db/src/types/enum";
+import { OrderStatusHistory, RefundOrder, RefundStatusHistory, sequelize } from "@digishop/db";
 
 export type RefundJob = {
   orderId: number;
@@ -33,7 +34,10 @@ export function startRefundWorker(connection: IORedis) {
     queueName,
     async (job) => {
       const { orderId, correlationId, reason } = job.data;
-
+      console.log("hi")
+      console.log("OSH.sequelize === db ?", OrderStatusHistory.sequelize === sequelize);
+      console.log("OSH table:", OrderStatusHistory.getTableName?.());
+      // console.log("hi", orderId)
       // ข้ามถ้าเคย DELIVERED
       const delivered = await OrderStatusHistory.findOne({
         where: { orderId, toStatus: OrderStatus.DELIVERED },

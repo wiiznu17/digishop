@@ -1,45 +1,48 @@
+// apps/portal/src/app/(main)/admin/(system)/admins/new/page.tsx
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent
-} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
+  SelectContent,
+  SelectItem
 } from "@/components/ui/select"
-import { createAdminUser } from "@/utils/requesters/adminRequester"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRouter } from "next/navigation"
+import {
+  createAdminUser,
+  sendAdminInviteById
+} from "@/utils/requesters/adminRequester"
 
 export default function NewAdminPage() {
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
   const [roleSlug, setRoleSlug] = useState("ADMIN")
+  const [sendInvite, setSendInvite] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
-  const onSubmit = async () => {
-    setError(null)
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
     setLoading(true)
     try {
-      const res = await createAdminUser({
+      const { id } = await createAdminUser({
         email: email.trim(),
         name: name.trim(),
         roleSlug
       })
-      if (res?.id) router.push(`/admin/system/admins/${res.id}`)
-    } catch (e: any) {
-      setError(e?.response?.data?.error || "Failed to create admin")
+      if (sendInvite) {
+        await sendAdminInviteById(id)
+      }
+      router.push("/admin/admins") // กลับไปลิสต์
+    } catch (err) {
+      console.error(err)
+      alert("Failed to create admin")
     } finally {
       setLoading(false)
     }
@@ -49,55 +52,61 @@ export default function NewAdminPage() {
     <div className="p-4">
       <Card className="max-w-xl">
         <CardHeader>
-          <CardTitle>Add Admin</CardTitle>
-          <CardDescription>
-            สร้างผู้ดูแลระบบใหม่ (Super Admin เท่านั้น)
-          </CardDescription>
+          <CardTitle>Add admin</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <label className="block text-sm mb-1">Email</label>
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Jane Admin"
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Role</label>
-            <Select value={roleSlug} onValueChange={setRoleSlug}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="SUPER_ADMIN">SUPER_ADMIN</SelectItem>
-                <SelectItem value="ADMIN">ADMIN</SelectItem>
-                <SelectItem value="MODERATOR">MODERATOR</SelectItem>
-                <SelectItem value="VIEWER">VIEWER</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {error && <div className="text-sm text-destructive">{error}</div>}
-          <div className="flex gap-2">
-            <Button onClick={onSubmit} disabled={loading}>
-              Create
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => router.back()}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-          </div>
+        <CardContent>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="block text-sm mb-1">Email</label>
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                type="email"
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Name</label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Role</label>
+              <Select value={roleSlug} onValueChange={setRoleSlug}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PLATFORM_ADMIN">PLATFORM_ADMIN</SelectItem>
+                  <SelectItem value="RBAC_ADMIN">RBAC_ADMIN</SelectItem>
+                  <SelectItem value="OPERATIONS_MANAGER">
+                    OPERATIONS_MANAGER
+                  </SelectItem>
+                  <SelectItem value="ANALYST">ANALYST</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="send-invite"
+                checked={sendInvite}
+                onCheckedChange={(v) => setSendInvite(Boolean(v))}
+              />
+              <label htmlFor="send-invite" className="text-sm">
+                Send invite email now
+              </label>
+            </div>
+
+            <div className="pt-2">
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Create admin"}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

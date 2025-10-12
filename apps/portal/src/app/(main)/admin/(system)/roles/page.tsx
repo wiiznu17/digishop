@@ -98,7 +98,7 @@ export default function AdminRolesPage() {
         <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
             <CardTitle>Roles</CardTitle>
-            <CardDescription>กำหนดบทบาทและจำนวนสิทธิ์</CardDescription>
+            <CardDescription>Assign roles & Permission</CardDescription>
           </div>
           <Button
             className="gap-2"

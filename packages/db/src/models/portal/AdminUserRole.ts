@@ -43,7 +43,12 @@ export class AdminUserRole extends Model<AdminUserRoleAttributes, AdminUserRoleC
         modelName: "AdminUserRole",
         paranoid: true,
         deletedAt: "deleted_at",
-        indexes: [{ unique: true, fields: ["admin_id", "role_id"] }],
+        indexes: [
+          { fields: ["admin_id"] },
+          { fields: ["role_id"] },
+          { fields: ["start_at"] },
+          { fields: ["end_at"] },
+        ],
       }
     );
     return AdminUserRole;

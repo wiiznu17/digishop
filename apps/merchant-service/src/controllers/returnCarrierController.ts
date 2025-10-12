@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Transaction } from "sequelize";
-import sequelize from "@digishop/db";
+import { sequelize } from '@digishop/db';
 
 import { Order } from "@digishop/db/src/models/Order";
 import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";

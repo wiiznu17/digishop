@@ -53,4 +53,21 @@ export type AdminDetail = {
     revokedAt?: string | null
     createdAt: string
   }[]
+  roleHistory: {
+    id: number
+    roleId: number | null
+    roleSlug: string | null
+    roleName: string | null
+    startAt: string | null
+    endAt: string | null
+    createdAt: string
+    updatedAt: string
+    deletedAt: string | null
+    status: "ACTIVE" | "INACTIVE"
+  }[]
+  canReinvite: boolean
+  canResetPassword: boolean
+  reinviteCooldownSeconds?: number
+  lastInviteAt?: string
+  reinviteAvailableAt?: string
 }

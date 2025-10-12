@@ -25,7 +25,7 @@ import {
   RefundStatus,
   ActorType,
 } from "@digishop/db/src/types/enum"
-import sequelize from "@digishop/db"
+import { sequelize } from "@digishop/db"
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -1058,7 +1058,6 @@ export async function updateOrder(req: Request, res: Response) {
             { transaction: t }
           );
         }
-
       }
 
       // ── Trigger PGW หลัง commit: REFUND_APPROVED / MERCHANT_CANCELED / REFUND_RETRY
@@ -1096,11 +1095,25 @@ export async function updateOrder(req: Request, res: Response) {
           const amountMinor = refundRow?.amountMinor || 0;
 
           try {
+            console.log("let's refund", reference)
             // 1) ตรวจสถานะธุรกรรม
             const detail = await pgwGetDetail(reference, correlationId ?? undefined);
-            const action = decidePgwAction(detail?.status ?? "");
+            console.log("pgw detail: ", detail)
+            const action = decidePgwAction(detail?.transaction.status ?? "");
+            console.log("action: ", action)
             if (action === "NONE") {
               await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } });
+              await OrderStatusHistory.create({
+                orderId: Number(orderId),
+                fromStatus: prev,
+                toStatus: OrderStatus.REFUND_FAIL,
+                changedByType: "SYSTEM",
+                changedById: 0,
+                reason: `${action} is not do anything at payment gateway`,
+                source: "WEB",
+                correlationId,
+                // metadata: { response: resp, retry: nextStatus === OrderStatus.REFUND_RETRY },
+              } as any);
               if (refundOrderId) {
                 await RefundStatusHistory.create({
                   refundOrderId,
@@ -1141,6 +1154,7 @@ export async function updateOrder(req: Request, res: Response) {
 
             const ok = resp?.res_code === "0000";
 
+            // response อะไรก็ให้บันทึกไว้ก่อน
             await PaymentGatewayEvent.create({
               checkoutId: (order as any).checkout?.id ?? null,
               paymentId,
@@ -1155,12 +1169,14 @@ export async function updateOrder(req: Request, res: Response) {
               resJson: resp,
             } as any);
 
-            if (ok) {
+            if (ok) { // response 0000
+              // ไม่แน่ใจว่า 0000 คือเสร็จหรือยัง
               await Order.update({ status: OrderStatus.REFUND_PROCESSING } as any, { where: { id: orderId } });
               await OrderStatusHistory.create({
                 orderId: Number(orderId),
                 fromStatus: prev,
-                toStatus: OrderStatus.REFUND_PROCESSING,
+                // toStatus: OrderStatus.REFUND_PROCESSING,
+                toStatus: OrderStatus.REFUND_SUCCESS,
                 changedByType: "SYSTEM",
                 changedById: 0,
                 reason: `${action} accepted by PGW`,
@@ -1172,7 +1188,8 @@ export async function updateOrder(req: Request, res: Response) {
                 await RefundStatusHistory.create({
                   refundOrderId,
                   fromStatus: RefundStatus.APPROVED,
-                  toStatus: RefundStatus.APPROVED, // คงไว้ระหว่างรอ PGW โอน
+                  // toStatus: RefundStatus.APPROVED, // คงไว้ระหว่างรอ PGW โอน
+                  toStatus: RefundStatus.SUCCESS,
                   reason: `${action} accepted by PGW`,
                   changedByType: "SYSTEM",
                   changedById: 0,
@@ -1181,7 +1198,7 @@ export async function updateOrder(req: Request, res: Response) {
                   metadata: { response: resp },
                 } as any);
               }
-            } else {
+            } else { // response != 0000
               await Order.update({ status: OrderStatus.REFUND_FAIL } as any, { where: { id: orderId } });
               await OrderStatusHistory.create({
                 orderId: Number(orderId),

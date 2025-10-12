@@ -49,17 +49,17 @@ type NavGroup = { label: string; items: NavItem[] }
 
 // กำหนดสิทธิ์ของแต่ละเมนู
 const groups: NavGroup[] = [
-  {
-    label: "Platform Overview",
-    items: [
-      {
-        title: "Dashboard",
-        url: "/admin/dashboards",
-        icon: Home,
-        perms: ["DASHBOARD_VIEW"]
-      }
-    ]
-  },
+  // {
+  //   label: "Platform Overview",
+  //   items: [
+  //     {
+  //       title: "Dashboard",
+  //       url: "/admin/dashboards",
+  //       icon: Home,
+  //       perms: ["DASHBOARD_VIEW"]
+  //     }
+  //   ]
+  // },
   {
     label: "Commerce",
     items: [
@@ -70,7 +70,7 @@ const groups: NavGroup[] = [
         perms: ["ORDERS_READ"]
       },
       {
-        title: "Refunds",
+        title: "Refund orders",
         url: "/admin/refunds",
         icon: RotateCcw,
         perms: ["REFUNDS_READ"]
@@ -125,13 +125,13 @@ const groups: NavGroup[] = [
         url: "/admin/roles",
         icon: Shield,
         perms: ["ROLES_READ"]
-      },
-      {
-        title: "Audit Logs",
-        url: "/admin/audit-logs",
-        icon: ShieldCheck,
-        perms: ["AUDIT_LOGS_READ"]
       }
+      // {
+      //   title: "Audit Logs",
+      //   url: "/admin/audit-logs",
+      //   icon: ShieldCheck,
+      //   perms: ["AUDIT_LOGS_READ"]
+      // }
     ]
   }
 ]

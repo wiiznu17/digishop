@@ -203,7 +203,7 @@ export default function AdminUsersRolesPage() {
         <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
             <CardTitle>Admin Users & Roles</CardTitle>
-            <CardDescription>จัดการผู้ดูแลระบบ บทบาท และสิทธิ์</CardDescription>
+            <CardDescription>Manage admin user</CardDescription>
           </div>
           {/* ปุ่ม Add (แสดงได้ แต่ backend บังคับ Super Admin อยู่แล้ว) */}
           <Button asChild className="gap-2">

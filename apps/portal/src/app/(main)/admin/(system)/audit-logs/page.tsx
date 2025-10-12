@@ -217,7 +217,7 @@ export default function AuditLogsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Audit Logs</CardTitle>
-          <CardDescription>ติดตามกิจกรรมสำคัญในระบบ</CardDescription>
+          <CardDescription>View audit log</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-6 gap-3">
           <div className="md:col-span-3">
