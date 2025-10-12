@@ -1,7 +1,8 @@
 import { Request, Response } from "express"
 import { User } from "../../../../packages/db/src/models/User"
 import { signToken, verifyToken } from "../utils/jwt"
-import bcypt from 'bcrypt'
+import bcrypt from "bcrypt"
+
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body
@@ -9,7 +10,6 @@ export const login = async (req: Request, res: Response) => {
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password required" })
   }
-
   try {
     const user = await User.findOne({ where: { email } })
     if (!user) {
@@ -17,9 +17,9 @@ export const login = async (req: Request, res: Response) => {
     }
     console.log("user: ", user)
     // ตรวจสอบ password (สมมติเป็น plain text, แนะนำใช้ bcrypt)
-
-    // const passwordHash = await bcypt.hash(password, 10) ยังไม่เปลี่ยนเพราะมันจะกระทบส่วนอื่น
-    if (user.password !== password) {
+   
+    const match = await bcrypt.compare(password, user.password)
+    if (!match) {
       return res.status(401).json({ message: "Invalid credentials" })
     }
 

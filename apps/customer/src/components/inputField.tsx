@@ -68,9 +68,9 @@ const InputField: React.FC<InputFieldProps> = ({
             {!showPassword ? <EyeOff size={18} className='' /> : <Eye size={18} />}
           </button>
         )}
-        {error && <p className="text-sm text-red-600 px-2">{error}</p>}
-        {!whiteListRegexText.test(value) && type === 'text' && value.length > 0 && <p className="text-sm text-red-600 px-2">* accept only ก-ฮ, a-z, A-Z</p>}
-        {!whiteListRegexTel.test(value) && type === 'num' && value != null && value.length > 0 && <p className="text-sm text-red-600 px-2">* accept only number</p>}
+        {error && <p className=" absolute bottom-0 text-sm text-red-600 px-2">{error}</p>}
+        {!whiteListRegexText.test(value) && type === 'text' && value.length > 0 && <p className=" absolute bottom text-sm text-red-600 px-2">* accept only ก-ฮ, a-z, A-Z</p>}
+        {!whiteListRegexTel.test(value) && type === 'num' && value != null && value.length > 0 && <p className=" absolute bottom-0 text-sm text-red-600 px-2">* accept only number</p>}
       </div>
       
     </div>

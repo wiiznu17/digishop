@@ -5,15 +5,6 @@ export const metadata = {
     title: "Next.js",
 };
 
-const rubik = Rubik({
-  subsets: ["latin"],
-  weight: "300"
-})
-const ubuntu = Ubuntu({
-  subsets: ["latin"],
-  weight: "300"
-})
-
 export default function SettingLayout({
     children,
 }: {

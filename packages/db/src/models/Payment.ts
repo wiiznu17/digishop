@@ -12,6 +12,7 @@ export interface PaymentAttributes {
   paymentMethod: string;        // CREDIT_CARD / PROMPTPAY / QR / COD etc.
   status: PaymentStatus;        // PENDING / SUCCESS / FAILED
   paidAt?: Date | null;
+  expiryAt?: Date | null;
 
   // gateway snapshot fields
   provider: string;             // PGW provider --> "DigiPay"
@@ -64,6 +65,7 @@ export class Payment
   public approvalCode!: string;
   public bankReference!: string;
   public paidAt!: Date | null;
+  public expiryAt!: Date | null;
 
   public provider!: string;
   public providerRef!: string | null; // reference from PGW
@@ -115,6 +117,11 @@ export class Payment
           type: DataTypes.DATE,
           allowNull: true,
           field: "paid_at",
+        },
+        expiryAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          field: "expiry_at",
         },
 
         // gateway snapshot fields
@@ -199,6 +206,13 @@ export class Payment
           { fields: ["provider_ref"] },
           { fields: ["created_at"] },
         ],
+        hooks: {
+          beforeValidate(instance: Payment) {
+            const createAt = instance.createdAt ?? Date.now();
+            const expiry = new Date(createAt.getTime() + 15 * 60 * 1000) ;
+            instance.expiryAt = expiry ? expiry : null;
+          },
+        },
       }
     );
     return Payment;
