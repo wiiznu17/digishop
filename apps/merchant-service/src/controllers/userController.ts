@@ -7,7 +7,7 @@ import { AuthenticatedRequest } from '../middlewares/middleware'
 import { BankAccount } from '@digishop/db/src/models/bank/BankAccount'
 import { azureBlobService } from '../helpers/azureBlobService'
 import { ProfileMerchantImage } from '@digishop/db/src/models/ProfileImage'
-import sequelize from '@digishop/db'
+import { sequelize } from '@digishop/db';
 import { Product } from '@digishop/db/src/models/Product'
 import { Order } from '@digishop/db/src/models/Order'
 import { Review } from '@digishop/db/src/models/Review'

@@ -26,7 +26,6 @@ export async function checkDatabaseConnection(): Promise<void> {
     await sequelize.authenticate();
     // await sequelize.sync(); // รอ sync ให้เสร็จก่อน
     console.log('Database connection has been established successfully.');
-    console.log('Database synced!');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
     throw error;

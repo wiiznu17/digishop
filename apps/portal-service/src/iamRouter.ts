@@ -1,5 +1,5 @@
 import { NextFunction, Response, Request, Router } from 'express'
-import sequelize from '@digishop/db'
+import  {sequelize } from '@digishop/db'
 // import userRouter from './routes/userRouter'
 import categoryRouter from './routes/categoryRouter'
 import productRouter from './routes/productRouter'

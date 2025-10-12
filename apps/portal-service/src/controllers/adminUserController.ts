@@ -6,13 +6,13 @@ import { AdminRole } from "@digishop/db/src/models/portal/AdminRole"
 import { AdminUserRole } from "@digishop/db/src/models/portal/AdminUserRole"
 import { AdminPermission } from "@digishop/db/src/models/portal/AdminPermission"
 import { AdminRolePermission } from "@digishop/db/src/models/portal/AdminRolePermission"
+import { AdminInvite } from "@digishop/db/src/models/portal/AdminInvite"
 
 const asInt = (v: any, d: number) => {
   const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d
 }
 const likeify = (q: string) => `%${q.replace(/[%_]/g, "\\$&")}%`
 
-// ───────────────────────── List
 export async function adminListAdmins(req: Request, res: Response) {
   try {
     const { q = "", role, status, sortBy = "createdAt", sortDir = "desc" } =
@@ -90,7 +90,6 @@ export async function adminListAdmins(req: Request, res: Response) {
   }
 }
 
-// ───────────────────────── Suggest
 export async function adminSuggestAdmins(req: Request, res: Response) {
   try {
     const q = String(req.query.q || "").trim()
@@ -109,7 +108,8 @@ export async function adminSuggestAdmins(req: Request, res: Response) {
   }
 }
 
-// ───────────────────────── Detail (sessions + roles + permissions)
+const REINVITE_COOLDOWN_MIN = 10;
+
 export async function adminGetAdminDetail(req: Request, res: Response) {
   try {
     const id = Number((req.params as { id: string }).id)
@@ -121,9 +121,12 @@ export async function adminGetAdminDetail(req: Request, res: Response) {
         {
           model: AdminRole,
           as: "roles",
-          through: { attributes: [] },
           attributes: ["id", "slug", "name", "description", "isSystem"],
           required: false,
+          // ห้ามใส่ model ตรงนี้
+          through: {
+            attributes: ["endAt"],
+          },
           include: [
             {
               model: AdminPermission,
@@ -151,26 +154,35 @@ export async function adminGetAdminDetail(req: Request, res: Response) {
       ],
       attributes: [
         "id",
-        ["email", "email"],
-        ["name", "name"],
-        ["status", "status"],
-        ["last_login_at", "lastLoginAt"],
-        ["created_at", "createdAt"],
-        ["updated_at", "updatedAt"]
+        "email",
+        "password",
+        "name",
+        "status",
+        "lastLoginAt",
+        "createdAt",
+        "updatedAt"
       ]
     })
     if (!u) return res.status(404).json({ error: "Not found" })
 
-    const roleObjs = (u.roles ?? []).map((r: any) => ({
+    // ⬇️ Filter เฉพาะ active roles: endAt == null
+    const activeRoles = (u.roles ?? []).filter((r: any) => {
+      const junction = (r as any).AdminUserRole   // ชื่อเท่ากับ model ของ join table
+      // ถ้าใช้ camelCase mapping endAt จะมาเป็น endAt
+      return !junction?.endAt
+    })
+
+    const roleObjs = activeRoles.map((r: any) => ({
       id: r.get("id"),
       slug: r.get("slug"),
       name: r.get("name"),
       description: r.get("description"),
       isSystem: !!r.get("isSystem")
     }))
-    // รวม permission (unique ตาม slug)
+
+    // รวม permissions เฉพาะจาก active roles
     const permMap = new Map<string, any>()
-    for (const r of u.roles ?? []) {
+    for (const r of activeRoles) {
       for (const p of (r.permissions ?? [])) {
         const slug = p.get("slug") as string
         if (!permMap.has(slug)) {
@@ -198,18 +210,100 @@ export async function adminGetAdminDetail(req: Request, res: Response) {
       .sort((a: any, b: any) =>
         new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime()
       )
+    const roleHistoryRows = await AdminUserRole.findAll({
+      where: { adminId: u.get("id") as number },
+      paranoid: false,
+      include: [
+        {
+          model: AdminRole,
+          as: "role",
+          attributes: ["id", "slug", "name"]
+        }
+      ],
+      attributes: [
+        "id",
+        ["start_at", "startAt"],
+        ["end_at", "endAt"],
+        ["created_at", "createdAt"],
+        ["updated_at", "updatedAt"],
+        ["deleted_at", "deletedAt"]
+      ] as any,
+      order: [["created_at", "DESC"]]
+    })
+
+    const roleHistory = roleHistoryRows.map((r: any) => {
+      const startAt = r.get("startAt") as Date | null
+      const endAt = r.get("endAt") as Date | null
+      const deletedAt = r.get("deletedAt") as Date | null
+      const isActive = !endAt && !deletedAt
+      const role = r.get("role") as any
+      return {
+        id: r.get("id"),
+        roleId: role?.get("id") ?? null,
+        roleSlug: role?.get("slug") ?? null,
+        roleName: role?.get("name") ?? null,
+        startAt: startAt ? startAt.toISOString() : null,
+        endAt: endAt ? endAt.toISOString() : null,
+        createdAt: (r.get("createdAt") as Date).toISOString(),
+        updatedAt: (r.get("updatedAt") as Date).toISOString(),
+        deletedAt: deletedAt ? deletedAt.toISOString() : null,
+        status: isActive ? "ACTIVE" : "INACTIVE"
+      }
+    })
+
+    const hasPassword = Boolean(u.get("password"))
+    const status = String(u.get("status"))
+    const canResetPassword = hasPassword === true
+    const canReinviteBase = !hasPassword && status !== "ACTIVE"
+
+    let canReinvite = canReinviteBase
+    let reinviteCooldownSeconds: number | undefined
+    let lastInviteAt: string | undefined
+    let reinviteAvailableAt: string | undefined
+
+    if (canReinviteBase) {
+      const email = String(u.get("email"))
+      const recentInvite = await AdminInvite.findOne({
+        where: {
+          email,
+          acceptedAt: { [Op.is]: null },
+          deletedAt: { [Op.is]: null },
+        },
+        order: [["created_at", "DESC"]],
+      })
+
+      if (recentInvite) {
+        const createdAt = recentInvite.get("createdAt") as Date
+        lastInviteAt = createdAt.toISOString()
+
+        const available = new Date(createdAt.getTime() + REINVITE_COOLDOWN_MIN * 60 * 1000)
+        reinviteAvailableAt = available.toISOString()
+
+        const now = Date.now()
+        if (now < available.getTime()) {
+          canReinvite = false
+          reinviteCooldownSeconds = Math.ceil((available.getTime() - now) / 1000)
+        }
+      }
+    }
 
     res.json({
       id: u.get("id"),
       email: u.get("email"),
       name: u.get("name"),
-      status: u.get("status"),
+      status,
       lastLoginAt: u.get("lastLoginAt"),
       createdAt: u.get("createdAt"),
       updatedAt: u.get("updatedAt"),
-      roles: roleObjs,
-      permissions: Array.from(permMap.values()),
-      sessions
+      roles: roleObjs,                            // เฉพาะ active
+      permissions: Array.from(permMap.values()),  // จาก active
+      sessions,
+      canReinvite,
+      canResetPassword,
+      reinviteCooldownSeconds,
+      lastInviteAt,
+      reinviteAvailableAt,
+      roleHistory
     })
   } catch (e) {
     console.error("adminGetAdminDetail error:", e)
@@ -217,30 +311,28 @@ export async function adminGetAdminDetail(req: Request, res: Response) {
   }
 }
 
-// ───────────────────────── Create (เฉพาะ Super Admin)
 export async function adminCreateAdmin(req: Request, res: Response) {
   try {
-    const { email, name, roleSlug } = (req.body || {}) as { email?: string; name?: string; roleSlug?: string }
+    const { email, name, roleSlug } = (req.body || {}) as { email?: string; name?: string; roleSlug?: string };
     if (!email || !name || !roleSlug) {
-      return res.status(400).json({ error: "Missing fields (email, name, roleSlug)" })
+      return res.status(400).json({ error: "Missing fields (email, name, roleSlug)" });
     }
 
-    const existed = await AdminUser.count({ where: { email } })
-    if (existed > 0) return res.status(409).json({ error: "Email already exists" })
-
-    // default: สร้างเป็น SUSPENDED และให้ Super Admin ไปส่ง invite/reset password flow ภายหลัง
+    const existed = await AdminUser.count({ where: { email } });
+    if (existed > 0) return res.status(409).json({ error: "Email already exists" });
+    
+    // สร้างแบบไม่ตั้งรหัส และตั้งสถานะ SUSPENDED (รอ invite)
     const created = await AdminUser.create({
-      email, name, status: "ACTIVE", lastLoginAt: null
-    } as any)
+      email, name, status: "SUSPENDED", password: null, lastLoginAt: null
+    } as any);
 
-    // ผูกบทบาท
-    const role = await AdminRole.findOne({ where: { slug: roleSlug } })
-    if (!role) return res.status(400).json({ error: "Invalid roleSlug" })
-    await AdminUserRole.create({ adminId: created.get("id") as number, roleId: role.get("id") as number })
+    const role = await AdminRole.findOne({ where: { slug: roleSlug } });
+    if (!role) return res.status(400).json({ error: "Invalid roleSlug" });
+    await AdminUserRole.create({ adminId: created.get("id") as number, roleId: role.get("id") as number });
 
-    return res.json({ id: created.get("id") })
+    return res.json({ id: created.get("id") });
   } catch (e) {
-    console.error("adminCreateAdmin error:", e)
-    res.status(500).json({ error: "Internal server error" })
+    console.error("adminCreateAdmin error:", e);
+    res.status(500).json({ error: "Internal server error" });
   }
 }

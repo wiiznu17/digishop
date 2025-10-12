@@ -1,11 +1,10 @@
-// controllers/bankAccountController.ts
-import sequelize from '@digishop/db';
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middlewares/middleware';
 import { Store } from '@digishop/db/src/models/Store';
 import { BankAccount } from '@digishop/db/src/models/bank/BankAccount';
 import { setDefaultAccountForStore } from '../helpers/bankAccountService';
 import { scheduleBankAccountApproval } from '../helpers/mocks api/bankAccountVerify';
+import { sequelize } from '@digishop/db';
 
 export const getBankAccountList = async (req: AuthenticatedRequest, res: Response) => {
   try {

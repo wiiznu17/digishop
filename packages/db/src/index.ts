@@ -413,5 +413,10 @@ export function initModels(conn: Sequelize) {
   };
 }
 
-export { checkDatabaseConnection };
-export default sequelize;
+// export { checkDatabaseConnection };
+// export default sequelize;
+
+export { sequelize, checkDatabaseConnection } from "./db";
+export { OrderStatusHistory } from "./models/OrderStatusHistory";
+export { RefundOrder } from "./models/RefundOrder";
+export { RefundStatusHistory } from "./models/RefundStatusHistory";

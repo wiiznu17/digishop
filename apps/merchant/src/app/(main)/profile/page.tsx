@@ -540,12 +540,12 @@ export default function ProfilePage({ merchant }: MerchantProfileProps) {
                     {metrics?.totalOrders ?? 0}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span className="text-sm">Rating</span>
                   <span className="text-sm font-medium">
                     {metrics?.rating ? `${metrics.rating.toFixed(1)}/5` : "-"}
                   </span>
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>

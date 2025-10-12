@@ -65,6 +65,8 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1)
 
   const handleChange = (field: string, value: string) => {
+    console.log("data set: ", field)
+    console.log("data set: ", value)
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -137,12 +139,12 @@ export default function RegisterPage() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="businessName">Business Name *</Label>
+                      <Label htmlFor="storeName">Business Name *</Label>
                       <Input
-                        id="businessName"
+                        id="storeName"
                         value={formData.storeName}
                         onChange={(e) =>
-                          handleChange("businessName", e.target.value)
+                          handleChange("storeName", e.target.value)
                         }
                         placeholder="Your Business Name"
                         required

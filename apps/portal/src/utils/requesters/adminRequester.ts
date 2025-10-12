@@ -1,5 +1,5 @@
 import axios from "@/lib/axios"
-import {
+import type {
   AdminDetail,
   AdminListResponse,
   AdminSuggestItem
@@ -48,4 +48,41 @@ export async function createAdminUser(payload: {
     { withCredentials: true }
   )
   return r.data
+}
+
+export async function sendAdminInviteById(adminId: number) {
+  await axios.post(
+    `/api/admin/admins/${adminId}/invite`,
+    {},
+    { withCredentials: true }
+  )
+}
+
+export async function resetAdminPasswordById(adminId: number) {
+  await axios.post(
+    `/api/admin/admins/${adminId}/reset-password`,
+    {},
+    { withCredentials: true }
+  )
+}
+
+export async function fetchRoleOptions() {
+  const r = await axios.get<
+    Array<{
+      id: number
+      slug: string
+      name: string
+      description?: string | null
+      isSystem: boolean
+    }>
+  >("/api/admin/admins/roles/list", { withCredentials: true })
+  return r.data
+}
+
+export async function updateAdminRoles(adminId: number, roleSlugs: string[]) {
+  await axios.patch(
+    `/api/admin/admins/${adminId}/roles`,
+    { roleSlugs },
+    { withCredentials: true }
+  )
 }

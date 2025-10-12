@@ -1,13 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyAccess } from '../lib/jwt';
 // import { AdminSession, AdminUser, AdminPermission, AdminRole, AdminUserRole, AdminRolePermission } from '@digishop/db/src/index'
-import sequelize from '@digishop/db';
 import { AdminSession } from '@digishop/db/src/models/portal/AdminSession';
 import { AdminUser } from '@digishop/db/src/models/portal/AdminUser';
 import { AdminPermission } from '@digishop/db/src/models/portal/AdminPermission';
 import { AdminRole } from '@digishop/db/src/models/portal/AdminRole';
 import { AdminUserRole } from '@digishop/db/src/models/portal/AdminUserRole';
 import { AdminRolePermission } from '@digishop/db/src/models/portal/AdminRolePermission';
+import { sequelize } from '@digishop/db';
 declare global {
   namespace Express {
     interface Request {
@@ -30,7 +30,7 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
     req.adminId = Number(payload.sub);
     req.sessionJti = payload.jti;
 
-    // ตรวจ session jti ใน DB (optional แต่แนะนำ)
+    // ตรวจ session jti ใน DB
     const sess = await AdminSession.findOne({ where: { jti: req.sessionJti, adminId: req.adminId, revokedAt: null } as any });
     if (!sess) return res.status(401).json({ error: 'SESSION_REVOKED' });
     console.log("Authen Pass")
@@ -60,7 +60,7 @@ export function requirePerms(...need: string[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.adminId) return res.status(401).json({ error: 'UNAUTHORIZED' });
     if (!req.permCache) req.permCache = await getPerms(req.adminId);
-    console.log("permission: ", req.permCache)
+    // console.log("permission: ", req.permCache)
     const ok = need.every(s => req.permCache!.has(s));
     if (!ok) return res.status(403).json({ error: 'FORBIDDEN', required: need });
     next();

@@ -6,7 +6,7 @@ export interface AdminUserAttributes {
   uuid?: string | null;
   email: string;
   name: string;
-  password: string;           // bcrypt hash
+  password?: string;           // bcrypt hash
   status: AdminUserStatus;    // ACTIVE|SUSPENDED
   lastLoginAt?: Date | null;
   createdAt?: Date;
@@ -53,7 +53,7 @@ export class AdminUser extends Model<AdminUserAttributes, AdminUserCreationAttri
         },
         password: {
           type: DataTypes.STRING(191),
-          allowNull: false,           // bcrypt hash
+          allowNull: true,           // bcrypt hash
         },
         status: {
           type: DataTypes.ENUM(...Object.values(AdminUserStatus)),

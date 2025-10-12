@@ -8,7 +8,7 @@ export type CompleteJob = {
 };
 // await removeJobById(completeQueue, `complete:${orderId}`);
 // เมื่อลูกค้าขอคืนสินค้า หรือกดยอมรับเองไปแล้วให้ลบคิวออก
-async function removeJobById(q: Queue, jobId: string) {
+export async function removeJobById(q: Queue, jobId: string) {
   const job = await q.getJob(jobId);
   if (job) await job.remove();
 }

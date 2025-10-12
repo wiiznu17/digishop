@@ -2,6 +2,9 @@ import { Router, type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import * as AuthController from "../controllers/authController";
 import { authenticateAdmin } from "../middlewares/auth";
+import { adminAcceptInvite, adminPerformReset } from "../controllers/adminCredentialController";
+import { AcceptInviteBody, ResetConfirmBody } from "../lib/zod/schemas/credentialSchemas";
+import { zodValidate } from "../lib/zod/validate";
 
 const router = Router();
 
@@ -36,5 +39,15 @@ router.get("/access",
   authenticateAdmin,
   AuthController.access
 )
+
+router.post("/invite/accept",
+  zodValidate(AcceptInviteBody),
+  adminAcceptInvite
+);
+
+router.post("/password/reset/confirm",
+  zodValidate(ResetConfirmBody),
+  adminPerformReset
+);
 
 export default router;
