@@ -1,8 +1,9 @@
-import { Queue } from "bullmq";
+import { delay, Queue } from "bullmq";
 import IORedis from "ioredis";
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 const REFUND_QUEUE_NAME = process.env.REFUND_QUEUE_NAME || "refund-auto-approve";
+const AUTO_CANCEL_TIMEOUT = process.env.AUTO_CANCEL_TIMEOUT || "auto-cancel-unpaid";
 
 export type RefundJob = {
   orderId: number;
@@ -10,6 +11,7 @@ export type RefundJob = {
   correlationId?: string;
   reason?: string;
 };
+
 
 const connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
 const queue = new Queue<RefundJob>(REFUND_QUEUE_NAME, { connection });
@@ -22,3 +24,6 @@ export async function enqueueRefundAutoApprove(job: RefundJob) {
     removeOnFail: 1000,
   });
 }
+
+
+

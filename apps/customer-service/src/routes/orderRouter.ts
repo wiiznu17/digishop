@@ -17,10 +17,8 @@ import { authenticate, requireApprovedUser } from '../middlewares/middleware'
 
 const router = Router()
 
-router.get('/test',() => {console.log('success get api')} )
-router.get('/shiptype',authenticate,requireApprovedUser(), findShipping)
 router.get('/:userId/:id',findOrder)
-// router.get('/:userId/:id',authenticate,requireApprovedUser(),findOrder)
+router.get('/shiptype',authenticate,requireApprovedUser(), findShipping)
 router.get('/user/id/:id',authenticate,requireApprovedUser(),findUserOrder)
 router.get('/cart/user/:id',authenticate,requireApprovedUser(), findUserCart)
 router.post('/create/id',authenticate,requireApprovedUser(),createOrderId)
@@ -30,6 +28,6 @@ router.patch('/delete/:id',authenticate,requireApprovedUser(),deleteOrder)
 router.post('/cart/id',authenticate,requireApprovedUser(),deleteChart)
 router.patch('/status/:id',authenticate,requireApprovedUser(),updateOrderStatus)
 router.patch('/cancel/:id',authenticate,requireApprovedUser(),cancelOrder)
-router.patch('/customer/cancel/:id',authenticate,requireApprovedUser(),customerCancelV2)
+router.patch('/customer/cancel/:id',customerCancelV2)
 router.post('/revoke/cancel/:id',authenticate,requireApprovedUser(),revokeCancelOrder)
 export default router

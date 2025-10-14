@@ -3,7 +3,9 @@ import IORedis from "ioredis";
 
 export type CancelJob = {
   orderId: number;
+  createdAt: string;
   correlationId?: string;
+  reason?: string;
 };
 // await removeCancelJobById(cancelQueue, `complete:${orderId}`);
 // เมื่อลูกค้ายกเลิก ให้ลบคิวออก
@@ -19,14 +21,13 @@ const connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
 
 const cancelQueue= new Queue<CancelJob>(CANCEL_QUEUE_NAME,{ connection });
 
-export async function enqueueAutoCancel(input: CancelJob, opts?: { delayMs?: number }) {
+export async function enqueueAutoCancel(job: CancelJob, opts?: { delayMs?: number }) {
   const delay = opts?.delayMs ?? Number(process.env.DELIVERED_AUTOCOMPLETE_AFTER_MS || 604_800_000); // 7 day
-  await cancelQueue.add("auto-cancel-unpaid", input, {
-    jobId: `cancel:${input.orderId}`,
+  return await cancelQueue.add("auto-cancel-unpaid", job, {
+    attempts: 1,
     delay,
-    attempts: 3,
     backoff: { type: "fixed", delay: 10000 },
-    removeOnComplete: 1000,
+    removeOnComplete: false,
     removeOnFail: false
-  });
+  })
 }

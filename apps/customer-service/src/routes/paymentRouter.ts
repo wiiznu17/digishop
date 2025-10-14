@@ -4,6 +4,6 @@ import { authenticate, requireApprovedUser } from '../middlewares/middleware'
 
 const router = Router()
 
-router.post('/callback',authenticate,requireApprovedUser(),getCallBack)
-router.post('/notify',authenticate,requireApprovedUser(),getNotify)
+router.post('/callback',getCallBack)
+router.post('/notify',getNotify)
 export default router

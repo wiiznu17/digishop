@@ -169,7 +169,7 @@ export interface Payment {
   pgw_status: string
   payment_method: string
   updated_at: Date
-  expiry_at: string
+  expiryAt: string
   providerRef: string
   paid_at?: Date;
   createdAt?: Date;

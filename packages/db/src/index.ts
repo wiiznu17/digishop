@@ -420,3 +420,6 @@ export { sequelize, checkDatabaseConnection } from "./db";
 export { OrderStatusHistory } from "./models/OrderStatusHistory";
 export { RefundOrder } from "./models/RefundOrder";
 export { RefundStatusHistory } from "./models/RefundStatusHistory";
+
+export { Order } from "./models/Order";
+export { Payment } from "./models/Payment"
