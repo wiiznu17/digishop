@@ -6,15 +6,17 @@ import {
   OrderDetail,
   ProductItemProps,
   Shipping,
+  ShoppingCartProps
 } from "@/types/props/orderProp";
 import {
   createOrder,
   fetchOrders,
   getShippingType,
   deleteOrder,
+  createWishList,
 } from "@/utils/requestUtils/requestOrderUtils";
 import { customerCancel} from "@/utils/requestUtils/requestOrderUtils"
-import { getAddress } from "@/utils/requestUtils/requestUserUtils";
+import { createAddress, getAddress } from "@/utils/requestUtils/requestUserUtils";
 import { redirect, RedirectType, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ShippingCardDetail from "@/components/shippingCard";
@@ -31,6 +33,7 @@ import Image from "next/image";
 import { Configurations } from "@/types/props/productProp";
 import { formatAddress, formatSku, formatTime, sumPriceTotal, sumPrice } from "@/lib/function";
 import OrderStatus from "../status/page";
+import { DialogAddress } from "@/components/createAddress";
 export default function OrderPage() {
   const { id } = useParams();
   const orderCode = String(id);
@@ -50,16 +53,61 @@ export default function OrderPage() {
   const [addresses, setAddresses] = useState<Address[]>();
   const [selectAddress, setSelectAddress] = useState<Address>();
   const [shipping, setShipping] = useState<Shipping[]>();
-  const [paymentMethod, setPaymentMethod] = useState<string>();
+  const [paymentMethod, setPaymentMethod] = useState<string>("CREDIT_CARD");
   const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1);
   const [isShowSelectAddress, setIsShowSelectAddress] = useState(false);
   const [orderDetail, setOrderDetail] = useState<OrderDetail[]>();
   const [nextPath, setNextPath] = useState<string | null>("/");
   const [showModal, setShowModel] = useState(false);
-  const [windows, setWindow] = useState<Window| null>();
+  // const [windows, setWindow] = useState<Window| null>();
   const [now, setNow] = useState<number|null>(null);
   const [end, setEnd] = useState<number|null>(null);
-  
+  const [cart, setCart] = useState<ShoppingCartProps>()
+  const [isShowAddress, setIsShowAddress] = useState(false);
+  const [address, setAddress] = useState<Address>({
+      recipientName: "",
+      phone: "",
+      province: "",
+      address_number: "",
+      building: "",
+      subStreet: "",
+      street: "",
+      subdistrict: "",
+      district: "",
+      country: "",
+      postalCode: "",
+      isDefault: false,
+      addressType: "HOME",
+    });
+  const handleOnClickAddress = (): void => {
+      setIsShowAddress(true);
+    };
+    const handleOnCancelAddress = (): void => {
+      setIsShowAddress(false);
+      setAddress({
+        recipientName: "",
+        phone: "",
+        address_number: "",
+        building: "",
+        subStreet: "",
+        street: "",
+        subdistrict: "",
+        district: "",
+        country: "",
+        province: "",
+        postalCode: "",
+        isDefault: false,
+        addressType: "HOME",
+      });
+    };
+    const handleOnConfirmAddress = async (e: React.FormEvent): Promise<void> => {
+      const axiosData = { ...address, userId: user?.id };
+      const res = await createAddress(axiosData);
+      if (res.data) {
+        setIsShowAddress(false);
+        window.location.reload()
+      }
+    };
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
@@ -69,12 +117,10 @@ export default function OrderPage() {
       setOrderDetail(resProduct.body);
       setAddresses(resAddress.data);
       setShipping(resShipping.data);
-      
     };
     fetchData();
   }, [user, orderCode]);
   const firstOrder = orderDetail?.[0];
-  console.log('orderDetail',orderDetail)
   useEffect(() => {
     const isMain = addresses?.filter((item) => item.isDefault === true);
     if (isMain) {
@@ -91,6 +137,14 @@ export default function OrderPage() {
       !orderDetail
     )
     return;
+    const productItemsId = orderDetail[0].items.map(item => item.productItem.id).filter((id): id is number => typeof id === 'number')
+    const productItemsquatity = orderDetail[0].items.map(item => item.quantity).filter((id): id is number => typeof id === 'number')
+    if(!productItemsId)return
+    setCart({
+      customerId: user.id,
+      productItemId: productItemsId,
+      quantity: productItemsquatity
+    })
     setOrder({
       orderCode: orderCode,
       customerId: user.id,
@@ -112,34 +166,35 @@ export default function OrderPage() {
     paymentMethod,
     shipping,
   ]);
-  useEffect(() => {
-    // if (!firstOrder) {
-    //   redirect('/', RedirectType.replace);
-    //   return ;
-    // }
-    if (!orderDetail || !firstOrder?.checkout ) return;
-  const shouldOpen = localStorage.getItem("openPayment");
-  if (shouldOpen === "true" && orderDetail) {
-    paymentWeb(firstOrder.checkout.payment?.url_redirect)
-    localStorage.removeItem("openPayment");
-  }
-  if (orderDetail &&firstOrder.checkout.payment?.pgw_status === "PENDING") {
-    const expiry = new Date(firstOrder.checkout.payment.expiry_at).getTime();
-    setEnd(expiry);
-  }
-}, [orderDetail]);
+
+//   useEffect(() => {
+//     if (!firstOrder) {
+//       redirect('/', RedirectType.replace);
+//       return ;
+//     }
+//     if (!orderDetail || !firstOrder?.checkout ) return;
+//   const shouldOpen = localStorage.getItem("openPayment");
+//   if (shouldOpen === "true" && orderDetail) {
+//     paymentWeb(firstOrder.checkout.payment?.url_redirect)
+//     localStorage.removeItem("openPayment");
+//   }
+//   if (orderDetail &&firstOrder.checkout.payment?.pgw_status === "PENDING") {
+//     const expiry = new Date(firstOrder.checkout.payment.expiry_at).getTime();
+//     setEnd(expiry);
+//   }
+// }, [orderDetail]);
 
 useEffect(() => {
   const interval = setInterval(() => setNow(Date.now()), 1000);
   return () => clearInterval(interval);
 }, []);
-  useEffect(() => {
-    const paymentTimeOut = localStorage.getItem("timeOut")
-    if(paymentTimeOut === "true"){
-      windows?.location.reload()
-    }
-    localStorage.removeItem("timeOut")
-  },[windows])
+  // useEffect(() => {
+  //   const paymentTimeOut = localStorage.getItem("timeOut")
+  //   if(paymentTimeOut === "true"){
+  //     windows?.location.reload()
+  //   }
+  //   localStorage.removeItem("timeOut")
+  // },[windows])
     
   const remaining: null | number = (end !== null && now !== null) ? end - now : null;
   useEffect(() => {
@@ -167,16 +222,17 @@ useEffect(() => {
   const handleConfirmCancel = async() => {
     setShowModel(false);
     // del order
+    if(!cart)return
+    console.log(cart)
     const cancel = await deleteOrder(orderCode);
-    if (nextPath && cancel.data) {
+    const addCart = await createWishList(cart)
+    if (nextPath && cancel.data && addCart.data) {
       router.push(nextPath);
     }
   };
   const handleCancelOrder = async(id:number) => {
-    console.log('id',id)
     const data = await customerCancel(id)
     if(data.data){
-      console.log(data.data)
       windows?.close()
       window.location.reload()
     }
@@ -216,19 +272,21 @@ useEffect(() => {
 
   const handleOrder = async () => {
     if (!order) return;
+    console.log(order)
     const res = await createOrder(order);
     console.log(res)
     if (res.data.redirect_url) {
-      localStorage.setItem("openPayment", "true");
-      window.location.reload()
+      router.push(res.data.redirect_url)
+      // localStorage.setItem("openPayment", "true");
+      // window.location.reload()
     }
   };
 
-  const paymentWeb = (url:string| undefined) => {
-    if(!orderDetail ||  !firstOrder?.checkout?.payment) return
-    const windowOpen = window.open(url,'_blank')
-    setWindow(windowOpen)
-  }
+  // const paymentWeb = (url:string| undefined) => {
+  //   if(!orderDetail ||  !firstOrder?.checkout?.payment) return
+  //   const windowOpen = window.open(url,'_blank')
+  //   setWindow(windowOpen)
+  // }
   const handleOnClickSelectAddress = (): void => {
     setIsShowSelectAddress(true);
   };
@@ -241,7 +299,7 @@ useEffect(() => {
   const handlePayment = (e) => {
     setPaymentMethod(e);
   };
-  if (!shipping || !user || !selectAddress ) return;
+  if (!shipping || !user  ) return;
 
   if (!firstOrder) {
     //redirect('/', RedirectType.replace)
@@ -253,7 +311,7 @@ useEffect(() => {
       {firstOrder.status == "PENDING" && (
         <div className="flex justify-center p-2 ">
           {showModal && (
-            <div className="fixed inset-0 flex items-center justify-center">
+            <div className="fixed inset-0 flex items-center justify-center z-100000">
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
                 <h2 className="text-xl font-bold mb-4">Confirm Navigation</h2>
                 <p className="mb-4">This order will be canceled</p>
@@ -341,7 +399,15 @@ useEffect(() => {
                   Address
                 </div>
                 <div className="rounded-lg shadow-md py-4 px-2">
-                  
+                  {
+                    addresses?.length === 0 && (
+                      //address form
+                      <Button onClick={handleOnClickAddress} border="border-black">create address</Button>
+
+                    )
+                  }
+                  {
+                    selectAddress &&
                   <div>
                     <div className="bg-gray-200 p-3 rounded-2xl max-w-xl mb-2">
                       <div className="font-bold">
@@ -362,6 +428,7 @@ useEffect(() => {
                       </div>
                     </div>
                   </div>
+                  }
                   
                   <div className="">select your shipping type {selectShippingTypeId}</div>
 
@@ -497,14 +564,23 @@ useEffect(() => {
               setSelectAddress={setSelectAddress}
             />
           </div>
+          <DialogAddress
+              isShowAddress={isShowAddress}
+              setIsShowAddress={setIsShowAddress}
+              handleOnCancel={handleOnCancelAddress}
+              handleOnConfirm={handleOnConfirmAddress}
+              address={address}
+              setAddress={setAddress}
+            />
         </div>
       )}
     </div>
-  ) : (
+  ) 
+  : (
     <div>
       {firstOrder.checkout.payment.pgw_status == "PENDING" && (
         <div className="w-full min-h-full p-6">
-          {/* <div className="flex justify-center items-center p-4 ">
+          <div className="flex justify-center items-center p-4 ">
             <div>
               <div className="flex mb-3">
                 <div className="text-4xl m-3 p-3">Order is error</div>
@@ -527,13 +603,13 @@ useEffect(() => {
                 </div>
               </div>
             </div>
-          </div> */}
-          <div className="flex justify-center items-center">
+          </div>
+          {/* <div className="flex justify-center items-center">
             <div className="">
-              <div>pay in 15 min </div>
+              <div>pay in 15 min </div> */}
             {/* <div>{end}</div>
             <div>{now}</div> */}
-            <div className="my-4">
+            {/* <div className="my-4">
               {
                 remaining && formatTime(remaining / 1000)
               }
@@ -542,10 +618,10 @@ useEffect(() => {
               <Button onClick={() => handleCancelOrder(firstOrder.id)}>cancel order</Button>
             </div>
 
-          </div>
+          </div>*/}
           
         </div>
-      )}
+      )} 
       {firstOrder.checkout.payment.pgw_status == "APPROVED" && (
         <div>
           <div className="flex justify-center items-center p-4 ">
