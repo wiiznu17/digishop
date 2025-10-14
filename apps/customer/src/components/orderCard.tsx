@@ -96,7 +96,7 @@ export default function OrderCard({
   //   setEnd(expiry);
   // }
 }, []);
-  const end = item.checkout.payment?.expiry_at ? new Date(item.checkout.payment.expiry_at).getTime() : null;
+  const end = item.checkout.payment?.expiryAt ? new Date(item.checkout.payment.expiryAt).getTime() : null;
   const remaining: null | number = (end !== null && now !== null) ? end - now : null;
   useEffect(() => {
       const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -183,13 +183,13 @@ export default function OrderCard({
         item.status === "PENDING" && (
           (
               <div>
-                {/* <div>{end}</div>
-                <div>{now}</div>  */}
+                <div>{end}</div>
+                {/* <div>{now}</div>  */}
                 <div className="flex">
-                  <div className="mr-4">
+                  <div className="mr-2">
                     ref: {item.checkout.payment?.providerRef} paid in 
                   </div>
-                  <div className="my-4">
+                  <div className="">
                   {
                     remaining && formatTime(remaining / 1000)
                   } 
@@ -243,7 +243,7 @@ export default function OrderCard({
                 </div>
               </div>
             </div> */}
-          {item.checkout.payment?.payment_method && (
+          {item.checkout.payment?.paid_at && (
             <div className="">
               <div className="border-b py-2 text-2xl font-bold mb-2">
                 Payment
@@ -254,13 +254,12 @@ export default function OrderCard({
               {item.checkout.payment?.payment_method == "QR" && (
                 <div>paid by {PaymentMethodMaster["QR"].label}</div>
               )}
-              {
-                item.checkout.payment.updated_at && (
-                  <div className="my-2">
-                transaction : {formatTimeZoneTH(item.checkout.payment.updated_at)}
+              
+              <div className="my-2">
+                transaction : {formatTimeZoneTH(item.checkout.payment.paid_at)}
               </div>
-                )
-              }
+                
+              
             </div>
           )}
           {item.refundOrders.length > 0 && (

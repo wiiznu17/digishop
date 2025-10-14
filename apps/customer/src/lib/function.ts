@@ -67,3 +67,10 @@ export const sumPrice = (
     }
     return sum / 100;
   };
+
+  export const formatTimeZoneTH = (date: string) => {
+    const newDate = new Date(date)
+    return newDate.toLocaleString("en-US", {
+      timeZone: "Asia/Bangkok"
+    });
+  }

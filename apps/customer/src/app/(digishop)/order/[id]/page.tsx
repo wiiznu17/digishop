@@ -589,13 +589,13 @@ useEffect(() => {
               <div className="flex justify-center">
                 <div className="flex">
                   <Button
-                    onClick={() => router.replace("/digishop/order/status")}
+                    onClick={() => router.replace("/order/status")}
                     className="p-3  cursor-pointer text-black"
                   >
                     see order status
                   </Button>
                   <Button
-                    onClick={() => router.replace("/digishop")}
+                    onClick={() => router.replace("/")}
                     className="ml-6 p-4 bg-blue-300 cursor-pointer"
                   >
                     back first page
@@ -604,22 +604,6 @@ useEffect(() => {
               </div>
             </div>
           </div>
-          {/* <div className="flex justify-center items-center">
-            <div className="">
-              <div>pay in 15 min </div> */}
-            {/* <div>{end}</div>
-            <div>{now}</div> */}
-            {/* <div className="my-4">
-              {
-                remaining && formatTime(remaining / 1000)
-              }
-
-            </div>
-              <Button onClick={() => handleCancelOrder(firstOrder.id)}>cancel order</Button>
-            </div>
-
-          </div>*/}
-          
         </div>
       )} 
       {firstOrder.checkout.payment.pgw_status == "APPROVED" && (
