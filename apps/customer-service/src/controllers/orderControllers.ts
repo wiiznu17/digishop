@@ -263,7 +263,8 @@ export const findUserOrder = async (
                 "amount_refunded_minor",
                 "pgw_status",
                 "updated_at",
-                "providerRef"
+                "providerRef",
+                "expiryAt"
               ],
             },
           ],
@@ -650,7 +651,7 @@ export const createOrder = async (
         orderId: orderId[0].id, //send checkout id not order id
         createdAt: orderId[0].createdAt.toString()
       },{
-        delayMs: 15 * 1000
+        delayMs: 15 * 60 * 1000
       })
     }
   } catch (error) {
