@@ -48,18 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // สมมติว่าบทบาทแอดมินเข้าได้แม้ร้านจะไม่ approved (ถ้าโปรเจ็กต์คุณไม่มีบทบาทนี้ ก็ข้ามส่วนนี้)
-      // const role = (currentUser as UserAuth)?.role
-      // const isAdmin =
-      //   (typeof role === "string" && /ADMIN/i.test(role)) ||
-      //   (Array.isArray(role) && role.some((r) => /ADMIN/i.test(r)))
-
-      // if (isAdmin) {
-      //   setStoreStatus(null)
-      //   setIsLoading(false)
-      //   return
-      // }
-
       // ดึงสถานะร้าน
       const status = await fetchStoreStatus()
       if (cancelled) return

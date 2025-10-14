@@ -15,6 +15,7 @@ export async function middleware(req: NextRequest) {
           new TextEncoder().encode(process.env.JWT_SECRET!)
         )
         if (payload.payload.role === "MERCHANT") {
+          console.log("redirect to ... ")
           return NextResponse.redirect(new URL("/", req.url))
         } else {
           return NextResponse.redirect(new URL("/register"))

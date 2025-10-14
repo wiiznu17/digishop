@@ -21,6 +21,7 @@ import {
   OrdersFilters,
   OrdersFiltersValue
 } from "@/components/order/orders-filters"
+import { extractErrorMessage } from "@/utils/errorToToast"
 
 type ListOrdersResponse = _ListOrdersResponse
 
@@ -95,11 +96,18 @@ export default function OrdersPage() {
         if (!isAbortError(e)) {
           setOrders([])
           setTotal(0)
+          const { title, description } = extractErrorMessage(e)
+          toast({
+            title: "Failed to load orders",
+            description,
+            variant: "destructive"
+          })
+          console.error("listOrders error:", e)
         }
       }
     })()
     return () => ac.abort()
-  }, [tick, page, pageSize, filters])
+  }, [tick, page, pageSize, filters, toast])
 
   // summary
   useEffect(() => {
@@ -109,7 +117,17 @@ export default function OrdersPage() {
       try {
         const s = await fetchOrderSummary({ signal: ac.signal })
         setSummary(s)
-      } catch {}
+      } catch (e) {
+        if (!isAbortError(e)) {
+          const { title, description } = extractErrorMessage(e)
+          toast({
+            title: `Failed to load summary · ${title}`,
+            description,
+            variant: "destructive"
+          })
+          console.error("orderSummary error:", e)
+        }
+      }
       setSummaryLoading(false)
     })()
     return () => ac.abort()
@@ -123,7 +141,6 @@ export default function OrdersPage() {
     })
   }
 
-  // actions (เดิม)
   const handleStatusChange = async (
     orderId: string,
     newStatus: OrderStatus
@@ -135,6 +152,8 @@ export default function OrdersPage() {
       "REFUND_APPROVED",
       "REFUND_RETRY"
     ].includes(newStatus)
+
+    // optimistic update
     setOrders((prevList) =>
       prevList.map((o) =>
         o.id !== orderId
@@ -146,6 +165,7 @@ export default function OrdersPage() {
             }
       )
     )
+
     try {
       const res = await updateOrderRequester(orderId, { status: newStatus })
       const updated = res.data
@@ -159,11 +179,21 @@ export default function OrdersPage() {
         toast({ title: "Refund failed", variant: "destructive" })
       }
     } catch (e) {
+      // rollback
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
-      toast({ title: "Failed to update", variant: "destructive" })
+
+      if (!isAbortError(e)) {
+        const { title, description } = extractErrorMessage(e)
+        toast({
+          title: `Failed to update · ${title}`,
+          description,
+          variant: "destructive"
+        })
+        console.error("updateOrder error:", e)
+      }
     }
   }
 
@@ -174,9 +204,12 @@ export default function OrdersPage() {
   ) => {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
+
+    // optimistic
     setOrders((list) =>
       list.map((o) => (o.id === orderId ? { ...o, trackingNumber } : o))
     )
+
     try {
       const res = await updateOrderRequester(orderId, {
         trackingNumber,
@@ -187,11 +220,21 @@ export default function OrdersPage() {
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
       toast({ title: "Tracking updated" })
     } catch (e) {
+      // rollback
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
-      toast({ title: "Failed to update tracking", variant: "destructive" })
+
+      if (!isAbortError(e)) {
+        const { title, description } = extractErrorMessage(e)
+        toast({
+          title: `Failed to update tracking · ${title}`,
+          description,
+          variant: "destructive"
+        })
+        console.error("updateTracking error:", e)
+      }
     }
   }
 
@@ -202,6 +245,8 @@ export default function OrdersPage() {
   ) => {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
+
+    // optimistic
     setOrders((list) =>
       list.map((o) =>
         o.id !== orderId
@@ -217,6 +262,7 @@ export default function OrdersPage() {
             }
       )
     )
+
     try {
       const res = await handOverOrderRequester(orderId, trackingNumber, carrier)
       const updated = res.data
@@ -224,11 +270,21 @@ export default function OrdersPage() {
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
       toast({ title: "Parcel handed over" })
     } catch (e) {
+      // rollback
       setOrders((list) =>
         list.map((o) => (o.id === orderId ? (prev as Order) : o))
       )
       setSelectedOrder((o) => (o && o.id === orderId ? (prev as Order) : o))
-      toast({ title: "Failed to hand over", variant: "destructive" })
+
+      if (!isAbortError(e)) {
+        const { title, description } = extractErrorMessage(e)
+        toast({
+          title: `Failed to hand over · ${title}`,
+          description,
+          variant: "destructive"
+        })
+        console.error("handOver error:", e)
+      }
     }
   }
 

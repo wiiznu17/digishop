@@ -24,8 +24,9 @@
     "@repo/typescript-config": "*",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^24.0.14",
+    "@types/uuid": "^10.0.0",
     "sequelize-cli": "^6.6.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   }
 }

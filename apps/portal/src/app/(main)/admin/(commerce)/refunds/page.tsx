@@ -38,57 +38,6 @@ import AuthGuard from "@/components/AuthGuard"
 const formatTHB = (m: number) =>
   (m / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
 
-// interface PagerProps {
-//   page: number
-//   pageSize: number
-//   total: number
-//   onPage: (page: number) => void
-//   onPageSize: (size: number) => void
-// }
-
-// function Pager({ page, pageSize, total, onPage, onPageSize }: PagerProps) {
-//   const totalPages = Math.max(1, Math.ceil(total / pageSize))
-//   return (
-//     <div className="flex items-center justify-between py-3">
-//       <div className="text-sm text-muted-foreground">{total} refunds</div>
-//       <div className="flex items-center gap-2">
-//         <Select
-//           value={String(pageSize)}
-//           onValueChange={(v) => onPageSize(Number(v))}
-//         >
-//           <SelectTrigger className="w-[120px]">
-//             <SelectValue />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {[10, 20, 50, 100].map((s) => (
-//               <SelectItem key={s} value={String(s)}>
-//                 {s} / page
-//               </SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-//         <Button
-//           variant="outline"
-//           onClick={() => onPage(Math.max(1, page - 1))}
-//           disabled={page <= 1}
-//         >
-//           Prev
-//         </Button>
-//         <div className="text-sm">
-//           {page} / {totalPages}
-//         </div>
-//         <Button
-//           variant="outline"
-//           onClick={() => onPage(Math.min(totalPages, page + 1))}
-//           disabled={page >= totalPages}
-//         >
-//           Next
-//         </Button>
-//       </div>
-//     </div>
-//   )
-// }
-
 function AdminRefundsPage() {
   const router = useRouter()
 
@@ -147,7 +96,7 @@ function AdminRefundsPage() {
     void load()
   }, [page, pageSize])
 
-  // Suggest (debounce 250ms แบบง่าย)
+  // Suggest debounce 250ms
   useEffect(() => {
     const t = setTimeout(async () => {
       const q = orderCode.trim()
@@ -243,7 +192,7 @@ function AdminRefundsPage() {
             </div>
 
             {/* Date range */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1.5">
               <label className="block text-sm mb-1">From</label>
               <Input
                 type="datetime-local"
@@ -251,7 +200,7 @@ function AdminRefundsPage() {
                 onChange={(e) => setDateFrom(e.target.value)}
               />
             </div>
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1.5">
               <label className="block text-sm mb-1">To</label>
               <Input
                 type="datetime-local"

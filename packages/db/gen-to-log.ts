@@ -1,3 +1,4 @@
+// packages/db/gen-to-log.ts
 import { generateKeyPairSync } from "crypto";
 
 function genPair(name: string) {

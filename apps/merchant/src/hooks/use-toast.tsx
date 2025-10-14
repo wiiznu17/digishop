@@ -53,7 +53,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     // Auto remove after 5 seconds
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 3000)
+    }, 4000)
   }, [])
 
   const removeToast = React.useCallback((id: string) => {

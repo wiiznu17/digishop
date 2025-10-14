@@ -28,7 +28,7 @@ export async function adminListRefunds(req: Request, res: Response) {
 
     const from = asDate(dateFrom);
     const to = asDate(dateTo);
-
+    console.log("refund order from: ", from, "to: ", to)
     if (from && to) whereRefund.createdAt = { [Op.between]: [from, to] };
     else if (from) whereRefund.createdAt = { [Op.gte]: from };
     else if (to) whereRefund.createdAt = { [Op.lte]: to };
