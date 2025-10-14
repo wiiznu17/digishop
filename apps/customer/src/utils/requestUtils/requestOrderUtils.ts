@@ -155,3 +155,16 @@ export const revokeCancelOrder = async(id: number) => {
             })
     })
 }
+
+export const customerCancel = async(id: number) => {
+    return await new Promise((resolve,reject) => {
+        axios
+            .patch(`/api/customer/order/customer/cancel/${id}`)
+            .then((res) => {
+                resolve(res.data)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+}

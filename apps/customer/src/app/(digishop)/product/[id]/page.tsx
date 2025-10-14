@@ -26,7 +26,7 @@ export default function ProductDetailPage() {
     customerId: 0,
     orderData: [],
   });
-  const [options, setOptions] = useState<Record<string, string>>({})
+  const [options, setOptions] = useState<string[]>([])
   const [selected, setSelected] = useState<ProductItem|null>();
   const [amount, setAmount] = useState(1);
   const [loading, setLoading] = useState<boolean>();
@@ -37,11 +37,8 @@ export default function ProductDetailPage() {
       setChoices(res.choices)
     };
     fetchData();
+    // setSelected()
   }, [productId]);
-  console.log(product)
-  // useEffect(() => {
-  //   setSelected(product?.items[0]);
-  // }, [product]);
   useEffect(() => {
     if (!user || !product || !selected) return;
     setData({
@@ -73,32 +70,49 @@ export default function ProductDetailPage() {
     });
     setWishList({
       customerId: user.id,
-      productItemId: selected.id,
-      quantity: amount,
+      productItemId: [selected.id],
+      quantity: [amount],
     });
   }, [user, product, amount, selected]);
-  const handleOption = (name: string ,value: string) => {
-    setOptions({...options, [name]: value})
+  useEffect(() => {
+    if(!product) return
+    setSelected(product?.items[0])
+    setOptions(filterOption(product.items)[0])
+  },[product])
+  // check session
+    useEffect(() => {
+    const isFilter = (choices: string[]) => {
+      //Object.values(options) = ['black']
+      return Object.values(options).every(option => choices.includes(option))
+    }
+    if(!product) return
+    const filterChoice = filterOption(product.items)
+    const productIndex = filterChoice.findIndex(option => isFilter(option));
+    setSelected(product.items[productIndex])
+  },[options, product]) 
+  // {color: "black"}
+  useEffect(() => {
+    setOptions(options)
+    console.log('option in use',options)
+  },[options])
+  const handleOption = (index: number,value: string) => {
+    //create new option
+    const newOption = [...options]
+    newOption[index] = value
+    setOptions(newOption)
   }
-
+  console.log('options',options)
+  // ['black','blue']
   const filterOption = (items: ProductItem[] ) => { 
     const data = items.filter(item => item.stockQuantity > 0).map(item => item.configurations.map(config => config.variationOption.value)) 
     return data
   }
-  useEffect(() => {
-    const isFilter = (choices: string[]) => {
-       return Object.values(options).every(option => choices.includes(option))
-    }
-    if(!product || Object.values(options).length === 0) return
-   const filterChoice = filterOption(product.items)
-    const productIndex = filterChoice.findIndex(option => isFilter(option));
-    setSelected(product.items[productIndex])
-  },[options, product]) 
   const handleBuy = async () => {
     if(!user){
       alert('log korn in ja')
     }else{
       if (!data) return;
+      console.log(data)
       const res = await createOrderId(data);
       if (res) {
         // window.open(`/order/${res.data}`,'_blank')
@@ -117,8 +131,7 @@ export default function ProductDetailPage() {
       }
     }
   };
-  console.log('selected',selected)
-  console.log('select option',Object.values(options).length)
+  console.log('option',options)
   return product ? (
     <div className="flex justify-center">
       <div className="p-6">
@@ -161,19 +174,18 @@ export default function ProductDetailPage() {
                 </button>
               ))} */}
               {
-                choices?.variations.map((choice,index) => (
-                  <div key={index}>
+                choices?.variations.map((choice,indexs) => (
+                  <div key={indexs}>
                     <div >{choice.name}</div>
                     <div>
                       {
                         choice.options.map((option, index) => (
                           <button
                             key={index}
-                            className={`${option.value === options[choice.name]? 'border-black': 'border-gray-300 text-gray-300'} border-1 rounded-md p-3 m-3 `}
-                            onClick={() => handleOption(choice.name, option.value)}
+                            className={`${option.value === options[indexs]? 'border-black': 'border-gray-300 text-gray-300'} border-1 rounded-md p-3 m-3 cursor-pointer`}
+                            onClick={() => handleOption(indexs, option.value)}
                           >
                             {option.value}
-                            <div></div>
                           </button>
                         ))
                       }
@@ -184,7 +196,7 @@ export default function ProductDetailPage() {
               }
             </div>
             {selected &&  (
-              <div className={`${Object.values(options).length === choices?.variations.length ? 'opacity-100':'opacity-0'}`}>
+              <div >
                 {
                   selected.stockQuantity === 0 && (
                     <div>
@@ -204,9 +216,9 @@ export default function ProductDetailPage() {
                         </div>
                       </div>
                       <div>
-                          <div className="flex items-center justify-center mb-5">
-                            <div>
-                              <div className="flex my-4 ">
+                          <div className="relative flex items-center justify-center mb-5">
+                            <div >
+                              <div className=" flex mt-4 ">
                                 <button
                                   disabled={amount == 1}
                                   onClick={() => setAmount(amount - 1)}
@@ -227,9 +239,9 @@ export default function ProductDetailPage() {
                                   <Plus className="w-7 h-7" />
                                 </button>
                               </div>
-                              {/* <div className="flex text-gray-400 text-[16px] items-end justify-end">
-                              stock: {selected.stock_quantity}
-                            </div> */}
+                              <div className=" flex text-gray-400 text-xl mt-2 items-end justify-center">
+                              stock: {selected.stockQuantity}
+                            </div>
                             </div>
                           </div>
                         

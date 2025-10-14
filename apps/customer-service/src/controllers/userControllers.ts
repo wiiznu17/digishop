@@ -4,6 +4,10 @@ import { AddressType, UserRole } from "@digishop/db/src/types/enum";
 import { Request, Response } from "express";
 import { Op } from "@digishop/db/src/db";
 import bcrypt from "bcrypt"
+import jwt, { JwtPayload } from "jsonwebtoken"
+import nodemailer from "nodemailer";
+// import sgTransport from "nodemailer-sendgrid-transport";
+const JWT_SECRET = process.env.JWT_SECRET ?? 'supersecretkey'
 
 export const createUser = async (req: Request, res: Response) => {
   const {
@@ -26,6 +30,7 @@ export const createUser = async (req: Request, res: Response) => {
     isDefault,
     addressType,
   } = req.body;
+  const addressValide = [recipientName,phone,address_number,street,district,country,province,postalCode]
   try {
     // หา user จาก userId
     const user = await User.findByPk(email);
@@ -43,25 +48,52 @@ export const createUser = async (req: Request, res: Response) => {
       password: passwordHash,
       role: UserRole.CUSTOMER,
     });
-    await Address.create({
-      userId: newUser.id,
-      recipientName,
-      phone,
-      addressNumber: address_number,
-      building,
-      subStreet,
-      street,
-      subdistrict,
-      district,
-      country,
-      province,
-      postalCode,
-      isDefault: true,
-      addressType,
-    });
     await newUser.save();
-    res.json({ data: newUser });
+    if(addressValide.every(x => x !== '') ){
+      const address = await Address.create({
+        userId: newUser.id,
+        recipientName,
+        phone,
+        addressNumber: address_number,
+        building,
+        subStreet,
+        street,
+        subdistrict,
+        district,
+        country,
+        province,
+        postalCode,
+        isDefault: true,
+        addressType,
+      });
+      await address.save()
+    }
+    const payload = {
+      firstName: newUser.firstName,
+      middleName: newUser.middleName,
+      lastName: newUser.lastName,
+      email: newUser.email
+    }
+    const token = await jwt.sign(payload, JWT_SECRET, { expiresIn: "1H" })
+    const transport = nodemailer.createTransport(
+      nodemailerSendgrid({
+        apiKey: process.env.SENDGRED_API
+      })
+    )
+    const url = `http://localhost:3000/confirmation/token?=${token}`
+    transport.sendMail({
+      from: 'no-reply@digishop.com',
+      to: `${newUser.firstName} <${newUser.email}>`,
+      subject: 'Confirmation Email',
+      html:`Confirmation Email <a href=${url}> ${url}`
+    }).then(() => {
+      console.log("Email sent")
+    }).catch(() => {
+      console.log("Email not sent")
+    })
+    res.json({ data: newUser , token: token });
   } catch (err: any) {
+    console.log(err.message)
     res.status(400).json({ error: err });
   }
 };
@@ -81,11 +113,23 @@ export const createAddress = async (req: Request, res: Response) => {
     province,
     postalCode,
     addressType,
-    isDefault,
     createdAt,
     updatedAt,
   } = req.body;
   try {
+    const hasDefaultAdd = await Address.findAll({where: {
+      [Op.and]: {
+        userId: userId,
+        isDefault: true
+      }
+    }})
+    let isDefault
+    console.log('has',hasDefaultAdd)
+    if(hasDefaultAdd.length === 0){
+      isDefault = true
+    }else{
+      isDefault = false
+    }
     const address = await Address.create({
       userId,
       recipientName,
@@ -100,9 +144,7 @@ export const createAddress = async (req: Request, res: Response) => {
       province,
       postalCode,
       addressType,
-      isDefault: false,
-      createdAt,
-      updatedAt,
+      isDefault,
     });
     await address.save();
     return res.status(200).json({ data: address });
@@ -248,4 +290,8 @@ export const updateUserName = async ( req: Request, res: Response) => {
   } catch (error) {
     console.log(error.message)
   }
+}
+
+function nodemailerSendgrid(arg0: { apiKey: string | undefined; }): import("nodemailer/lib/smtp-pool") | import("nodemailer/lib/smtp-pool").Options {
+  throw new Error("Function not implemented.");
 }

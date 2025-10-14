@@ -1,5 +1,5 @@
 import { Address } from "@/types/props/addressProp";
-import { SetStateAction, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -32,6 +32,10 @@ export const DialogSelectAddress = ({
       setSelectAddress(select)
       setIsShown(false)
     }
+    useEffect(() => {
+      setSelect(selectAddress)
+    },[selectAddress])
+
     return (
             <div>
               <Dialog open={isShown} onClose={() => setIsShown(false)} className="relative ">
