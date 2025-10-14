@@ -1,6 +1,7 @@
 import {
     OrderStatus,
-    PaymentMethod
+    PaymentMethod,
+    RefundStatus
 } from "../../../../../packages/db/src/types/enum";
 import { Address } from "./addressProp";
 import { Configurations, Store } from "./productProp";
@@ -18,6 +19,7 @@ export interface OrderDetail {
   timeStamp?: number
   currency_code: string
   checkout: CheckOut
+  createdAt?: Date;
   shippingInfo: {
     id: number;
     address: Address;
@@ -74,8 +76,8 @@ export interface OrderIdProp {
 }
 export interface ShoppingCartProps {
   customerId: number;
-  productItemId: number;
-  quantity: number;
+  productItemId: number[];
+  quantity: number[];
 }
 // export interface Order1 {
 //     pruductId: string,
@@ -166,8 +168,11 @@ export interface Payment {
   url_redirect: string
   pgw_status: string
   payment_method: string
-  updated_at: string
+  updated_at: Date
   expiry_at: string
+  providerRef: string
+  paid_at?: Date;
+  createdAt?: Date;
 }
 //order before paid
 
@@ -175,8 +180,10 @@ export interface CancelProp {
   id?: number
   reason: string;
   description?: string;
+  status?: RefundStatus;
   url?: string
   contactEmail: string
+  createdAt?: Date;
 }
 export interface OrderCard {
   item: OrderDetail;

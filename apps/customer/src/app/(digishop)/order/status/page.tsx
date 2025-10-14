@@ -67,7 +67,7 @@ export default function OrderStatus() {
   };
   return (
     <div className="mx-20">
-      <div className="flex sticky top-0 items-center justify-center space-x-20 p-3 ">
+      <div className="flex sticky top-0 items-center bg-white justify-center space-x-20 p-3 z-100">
         {Object.entries(StateConfig).map(([state, config]) => (
           <div key={state}>
             <Button
@@ -102,9 +102,9 @@ export default function OrderStatus() {
               <div>{selectShowCancel.reason}</div>
             )
           }
-          {selectShowDetail != undefined && (
+          {/* {selectShowDetail != undefined && (
             <OrderDetailPage order={selectShowDetail} />
-          )}
+          )} */}
 
         </div>
       </div>      
