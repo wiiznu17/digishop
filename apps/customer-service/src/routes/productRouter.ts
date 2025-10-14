@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { searchProduct , getProduct, getAllProduct, getStoreProduct } from '../controllers/productControllers'
+import { authenticate, requireApprovedUser } from '../middlewares/middleware'
 
 const router = Router()
 
