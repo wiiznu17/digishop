@@ -141,7 +141,7 @@ export default function SearchResult({
         ) : 
       <div className="flex justify-center items-center">
         <div className="w-3/4">
-          {products?.length && (
+          {products?.length > 0 && (
             <div className="flex justify-end items-center mb-2">
               <div className="flex mx-3">
                 <div className="mx-3">price</div>

@@ -117,6 +117,7 @@ export const DialogAddress = ({
                             value={address.address_number}
                             onChange={handleInputChange}
                             placeholder="address number"
+                            required
                           />
                           <InputField
                             label="Building"

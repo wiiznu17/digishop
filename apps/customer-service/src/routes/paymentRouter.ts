@@ -1,7 +1,9 @@
 import { Router } from 'express'
-import { getCallBack, getNotify,testRes  } from '../controllers/paymentControllers'
+import { getCallBack, getNotify  } from '../controllers/paymentControllers'
+import { authenticate, requireApprovedUser } from '../middlewares/middleware'
+
 const router = Router()
 
-router.post('/callback',getCallBack)
-router.post('/notify',getNotify)
+router.post('/callback',authenticate,requireApprovedUser(),getCallBack)
+router.post('/notify',authenticate,requireApprovedUser(),getNotify)
 export default router

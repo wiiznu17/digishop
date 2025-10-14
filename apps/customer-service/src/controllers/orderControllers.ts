@@ -36,7 +36,7 @@ import { Variation } from "@digishop/db/src/models/Variation";
 import sequelize from "@digishop/db";
 import { addDays, differenceInDays } from "date-fns";
 import { OrderPolicy } from "@digishop/configs/orderPolicy"
-import { enqueueRefundAutoApprove } from "../queues/refundQueue";
+import { enqueueAutoCancel } from "../queues/cancelQueue";
 const signKey =
   process.env.MERCHANRT_SIGN_KEY ??
   "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
@@ -85,14 +85,14 @@ export const findOrder = async (
           where: {
             [Op.and]: {
               customerId: userId,
-              orderCode: id,
+              orderCode: id
             },
           },
           include: [
             {
               model: Payment,
               as: "payment",
-              attributes: ["id", "url_redirect","pgw_status", "payment_method", "updated_at"],
+              attributes: ["id", "url_redirect","expiry_at" ,"pgw_status", "payment_method", "updated_at"],
             },
           ],
         },
@@ -241,7 +241,13 @@ export const findUserOrder = async (
         {
           model: CheckOut,
           as: "checkout",
-          where: { customerId: id },
+          where: {
+            [Op.and]: {
+              customerId: id,
+              deletedAt: null,
+              
+            }
+          },
           attributes: ["id", "orderCode"],
           include: [
             {
@@ -257,6 +263,7 @@ export const findUserOrder = async (
                 "amount_refunded_minor",
                 "pgw_status",
                 "updated_at",
+                "providerRef"
               ],
             },
           ],
@@ -356,6 +363,7 @@ export const createOrderId = async (
   next: NextFunction
 ) => {
   const { customerId, orderData } = req.body;
+  console.log(req.body)
   const user = await User.findByPk(customerId);
   const groupStoreId = orderData.reduce((acc: any, item: any) => {
     const key = item.productItem.product.storeId;
@@ -435,14 +443,14 @@ export const createOrder = async (
     shippingfee,
     orderNote,
   } = req.body;
-
+  let paymentResponse ;
   try {
     const user = await User.findByPk(customerId);
     const taxTotalMinor = 0;
     const discountTotalMinor = 0;
     const checkoutId = await CheckOut.findOne({
       where: { orderCode: orderCode },
-      attributes: ["id"],
+      attributes: ["id","createdAt"],
     });
     if (!user || !checkoutId) return;
     const orderId = await Order.findAll({
@@ -509,7 +517,7 @@ export const createOrder = async (
         url_redirect: "http://localhost:4000/api/customer/payment/callback",
         url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
       });
-      const responseCardPayment = await axios.request({
+      paymentResponse = await axios.request({
         method: "post",
         url: "http://localhost:4002/payment",
         data: {
@@ -530,14 +538,14 @@ export const createOrder = async (
       });
       await Order.update(
         {
-          reference: responseCardPayment.data.reference,
+          reference: paymentResponse.data.reference,
         },
         { where: { checkoutId: checkoutId.id } }
       );
       await Payment.update(
         {
-          urlRedirect: responseCardPayment.data.redirect_url,
-          providerRef: responseCardPayment.data.reference,
+          urlRedirect: paymentResponse.data.redirect_url,
+          providerRef: paymentResponse.data.reference,
         },
         {
           where: { checkoutId: checkoutId.id },
@@ -559,10 +567,9 @@ export const createOrder = async (
           url_redirect: "http://localhost:4000/api/customer/payment/callback",
           url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         },
-        resJson: responseCardPayment.data,
+        resJson: paymentResponse.data,
       });
       paymentStatus.save();
-      res.status(200).json({ data: responseCardPayment.data });
     }
     if (paymentMethod == PaymentMethod.QR) {
       const contentSigQr = contentSignature({
@@ -577,7 +584,7 @@ export const createOrder = async (
           biller_reference_1: `REF${orderId}`,
         },
       });
-      const responseQrPayment = await axios.request({
+      paymentResponse = await axios.request({
         method: "post",
         url: "http://localhost:4002/payment",
         data: {
@@ -601,14 +608,14 @@ export const createOrder = async (
       });
       await Order.update(
         {
-          reference: responseQrPayment.data.reference,
+          reference: paymentResponse.data.reference,
         },
         { where: { checkoutId: checkoutId.id } }
       );
       await Payment.update(
         {
-          urlRedirect: responseQrPayment.data.redirect_url,
-          providerRef: responseQrPayment.data.reference,
+          urlRedirect: paymentResponse.data.redirect_url,
+          providerRef: paymentResponse.data.reference,
         },
         {
           where: { checkoutId: checkoutId.id },
@@ -633,10 +640,18 @@ export const createOrder = async (
             biller_reference_1: `REF${orderCode}`,
           },
         },
-        resJson: responseQrPayment.data,
+        resJson: paymentResponse.data,
       });
       paymentStatus.save();
-      res.status(200).json({ data: responseQrPayment.data });
+    }
+    if(paymentResponse) {
+      res.status(200).json({ data: paymentResponse.data , queue: true});
+      await enqueueAutoCancel({
+        orderId: orderId[0].id, //send checkout id not order id
+        createdAt: orderId[0].createdAt.toString()
+      },{
+        delayMs: 15 * 1000
+      })
     }
   } catch (error) {
     console.log(error.message);
@@ -678,43 +693,45 @@ export const createCart = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { customerId, productItemId, quantity, unitPriceMinor } = req.body;
+  const { customerId, productItemId, quantity } = req.body;
   try {
-    const product = await ProductItem.findByPk(productItemId);
-    let cardId;
-    const haveshoppingCart = await ShoppingCart.findOne({
-      where: { userId: customerId },
-    });
-
-    if (!haveshoppingCart) {
-      const createCart = await ShoppingCart.create({
-        userId: customerId,
+    for(let i = 0 ; i < productItemId.length ; i++ ){
+      let product = await ProductItem.findByPk(productItemId[i]);
+      let cardId;
+      const haveshoppingCart = await ShoppingCart.findOne({
+        where: { userId: customerId },
       });
-      createCart.save();
-      cardId = createCart.id;
-    } else {
-      cardId = haveshoppingCart.id;
-    }
-    if (product) {
-      const findProduct = await ShoppingCartItem.findOne({
-        where: { productItemId: productItemId },
-      });
-      if (findProduct?.productItemId) {
-        const cardData = await ShoppingCartItem.update(
-          {
-            quantity: quantity + findProduct.quantity,
-          },
-          { where: { productItemId: productItemId } }
-        );
-        res.json({ data: cardData });
-      } else {
-        const cardData = await ShoppingCartItem.create({
-          cartId: cardId,
-          productItemId,
-          quantity,
-          unitPriceMinor: product.priceMinor,
+  
+      if (!haveshoppingCart) {
+        const createCart = await ShoppingCart.create({
+          userId: customerId,
         });
-        res.json({ data: cardData });
+        createCart.save();
+        cardId = createCart.id;
+      } else {
+        cardId = haveshoppingCart.id;
+      }
+      if (product) {
+        const findProduct = await ShoppingCartItem.findOne({
+          where: { productItemId: productItemId[i] },
+        });
+        if (findProduct?.productItemId) {
+          const cardData = await ShoppingCartItem.update(
+            {
+              quantity: quantity[i] + findProduct.quantity,
+            },
+            { where: { productItemId: productItemId[i] } }
+          );
+          res.json({ data: cardData });
+        } else {
+          const cardData = await ShoppingCartItem.create({
+            cartId: cardId,
+            productItemId: productItemId[i],
+            quantity: quantity[i],
+            unitPriceMinor: product.priceMinor,
+          });
+          res.json({ data: cardData });
+        }
       }
     }
   } catch (error) {
@@ -722,6 +739,7 @@ export const createCart = async (
     res.json({ error: error });
   }
 };
+
 
 export const updateOrderStatus = async (
   req: Request,
@@ -753,6 +771,154 @@ export const updateOrderStatus = async (
   }
 };
 
+// export const cancelOrder = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const id = req.params.id;
+//   const { reason, description, contactEmail, url } = req.body;
+//   const findOrder = await Order.findByPk(id);
+//   const findPayment = await Payment.findOne({
+//     where: { checkoutId: findOrder?.checkoutId },
+//   });
+//   console.log( findOrder?.status === OrderStatus.CANCELED_REFUND, findOrder?.status)
+//   if (
+//     findOrder && (findOrder.status === OrderStatus.PAID ||findOrder.status === OrderStatus.DELIVERED || findOrder.status === OrderStatus.CANCELED_REFUND) &&
+//     findPayment
+//   ) {
+//     try {
+//       const cancelRequest = await RefundOrder.create({
+//         orderId: Number(id),
+//         paymentId: findPayment.id,
+//         reason,
+//         status: RefundStatus.REQUESTED,
+//         amountMinor: findOrder.grandTotalMinor,
+//         currencyCode: findOrder.currencyCode,
+//         description,
+//         contactEmail,
+//         requestedBy: "CUSTOMER",
+//       });
+//       await RefundStatusHistory.create({
+//         refundOrderId: cancelRequest.id,
+//         toStatus: RefundStatus.REQUESTED,
+//         reason,
+//         changedByType: ActorType.CUSTOMER,
+//         source: "WEBSITE",
+//       });
+//       await OrderStatusHistory.create({
+//         orderId: findOrder.id,
+//         fromStatus: findOrder.status,
+//         toStatus: OrderStatus.REFUND_REQUEST,
+//         changedByType: ActorType.CUSTOMER,
+//         source: "WEB",
+//       });
+//       await PaymentGatewayEvent.update(
+//         {
+//           refundOrderId: cancelRequest.id,
+//         },
+//         {
+//           where: {
+//             [Op.and]: {
+//               checkoutId: findOrder.checkoutId,
+//               paymentId: findPayment.id,
+//             },
+//           },
+//         }
+//       );
+//       await Order.update(
+//         {
+//           status: OrderStatus.REFUND_REQUEST,
+//         },
+//         { where: { id: id } }
+//       );
+//       res.json({ data: "success" });
+//     } catch (error) {
+//       console.log(error.message)
+//       res.json({ error: error });
+//     }
+//   }
+// };
+
+export const customerCancel = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const id = req.params.id;
+  console.log('in customer cancel', id)
+  const findOrder = await Order.findAll({
+    where: { checkoutId: id },
+    attributes: ["id"],
+  });
+  try {
+    await Order.update(
+      {
+        status: OrderStatus.CUSTOMER_CANCELED,
+      },
+      {
+        where: { checkoutId: id },
+      }
+    );
+    await Payment.update(
+      {
+        status: PaymentStatus.FAILED,
+        pgwStatus: 'CANCELED'
+      },
+      {
+        where: { checkoutId: id },
+      }
+    );
+    for (let i = 0; i < findOrder.length; i++) {
+      let createLog = await OrderStatusHistory.create({
+        orderId: findOrder[i].id,
+        fromStatus: OrderStatus.PENDING,
+        toStatus: OrderStatus.CUSTOMER_CANCELED,
+        changedByType: ActorType.CUSTOMER,
+        source: "APP",
+        metadata: {},
+      });
+      createLog.save();
+    }
+    res.json({data: 'success'})
+  } catch (error) {
+    console.log(error)
+    res.json({error: error})
+  }
+};
+export const customerCancelV2 = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const id = req.params.id;
+  console.log('in customer cancel', id)
+  const findOrder = await Order.findByPk(id);
+  try {
+    await Order.update(
+      {
+        status: OrderStatus.CUSTOMER_CANCELED,
+      },
+      {
+        where: { id: id },
+      }
+    );
+
+    await Payment.update(
+      {
+        status: PaymentStatus.FAILED,
+        pgwStatus: 'CANCELED'
+      },
+      {
+        where: { checkoutId: findOrder?.checkoutId },
+      }
+    );
+    res.json({data: 'success'})
+  } catch (error) {
+    console.log(error)
+    res.json({error: error})
+  }
+};
 export const revokeCancelOrder = async (
   req: Request,
   res: Response,

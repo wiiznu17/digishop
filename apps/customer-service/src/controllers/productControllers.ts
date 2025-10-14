@@ -1,16 +1,16 @@
-import { Product } from "@digishop/db/src/models/Product";
 import { Op } from "sequelize";
 import { NextFunction, Request, Response } from "express";
+import { Product } from "@digishop/db/src/models/Product";
 import { Category } from "@digishop/db/src/models/Category";
 import { ProductImage } from "@digishop/db/src/models/ProductImage";
 import { Store } from "@digishop/db/src/models/Store";
-import { ProductStatus, StoreStatus } from "@digishop/db/src/types/enum";
 import { ProductItem } from "@digishop/db/src/models/ProductItem";
 import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
-import sequelize from "@digishop/db";
 import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
 import { VariationOption } from "@digishop/db/src/models/VariationOption";
 import { Variation } from "@digishop/db/src/models/Variation";
+import { ProductStatus, StoreStatus } from "@digishop/db/src/types/enum";
+import sequelize from "@digishop/db";
 
 export const searchProduct = async (
   req: Request,
@@ -115,7 +115,7 @@ export const getProduct = async (
                   include: [
                     {
                       model: Variation,
-                      as: 'variation'
+                      as: 'variation',
                     }
                   ]
                 }
@@ -131,12 +131,10 @@ export const getProduct = async (
           model: Store,
           as: "store",
           where: { status: StoreStatus.APPROVED },
-          attributes: ["id", "storeName", "logoUrl", "description","uuid"],
         },
         {
           model: Category,
           as: "category",
-          attributes: ["id", "name"],
         },
       ],
       attributes: ["id", "name", "description"],
