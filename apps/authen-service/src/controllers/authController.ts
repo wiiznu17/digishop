@@ -35,7 +35,7 @@ export const login = async (req: Request, res: Response) => {
       sameSite: "lax",
       path: "/"
     })
-
+    console.log('login success')
     res.json({ message: "Logged in", role: user.role, user: { id: user.id, email: user.email, role: user.role } })
 
   } catch (error) {

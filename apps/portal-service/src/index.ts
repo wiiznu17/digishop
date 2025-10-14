@@ -9,7 +9,6 @@ import { checkDatabaseConnection, initModels } from '@digishop/db';
 import { sequelize } from '@digishop/db/src/db';
 import { ensureRedis } from './lib/redis';
 const cookieParser = require('cookie-parser');
- 
 const PORT = Number(process.env.PORT) || 4001;
 
 async function main() {

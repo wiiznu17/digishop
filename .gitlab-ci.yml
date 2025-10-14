@@ -1,13 +1,82 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+# .gitlab-ci.yml
 stages:
-- test
-sast:
-  stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+  - install
+  - build
+  - deploy
+
+variables:
+  NODE_ENV: production
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .npm
+    - node_modules
+
+install:
+  stage: install
+  image: node:20
+  script:
+    - npm ci
+  artifacts:
+    paths:
+      - node_modules
+
+build:
+  stage: build
+  image: node:20
+  script:
+    # Build ทุก service ที่มีใน monorepo
+    - npm run build -w apps/portal-service
+    - npm run build -w apps/merchant-service
+    - npm run build -w apps/customer-service
+    - npm run build -w apps/merchant-worker
+    - npm run build -w apps/authen-service
+    - npm run build -w apps/gateway-service
+  artifacts:
+    paths:
+      - apps/portal-service/dist
+      - apps/merchant-service/dist
+      - apps/customer-service/dist
+      - apps/merchant-worker/dist
+      - apps/authen-service/dist
+      - apps/gateway-service/dist
+
+.deploy_template: &deploy_template
+  stage: deploy
+  image: node:20
+  only:
+    - main
+  before_script:
+    - npm i -g @railway/cli
+    - railway login --token "$RAILWAY_TOKEN"
+
+deploy_portal_service:
+  <<: *deploy_template
+  script:
+    - railway up --service portal-service --base-dir apps/portal-service
+
+deploy_merchant_service:
+  <<: *deploy_template
+  script:
+    - railway up --service merchant-service --base-dir apps/merchant-service
+
+deploy_customer_service:
+  <<: *deploy_template
+  script:
+    - railway up --service customer-service --base-dir apps/customer-service
+
+deploy_merchant_worker:
+  <<: *deploy_template
+  script:
+    - railway up --service merchant-worker --base-dir apps/merchant-worker
+
+deploy_authen_service:
+  <<: *deploy_template
+  script:
+    - railway up --service authen-service --base-dir apps/authen-service
+
+deploy_gateway_service:
+  <<: *deploy_template
+  script:
+    - railway up --service gateway-service --base-dir apps/gateway-service

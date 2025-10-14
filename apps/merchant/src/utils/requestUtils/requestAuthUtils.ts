@@ -17,6 +17,7 @@ export const createMerchant = async (data: RegisterData) => {
 export async function fetchUser(): Promise<UserAuth | null> {
   try {
     const res = await axios.get("/api/auth/me", { withCredentials: true })
+    console.log("success get auth")
     return res.data.user
   } catch (error) {
     console.error("Error fetching user:", error)
@@ -34,6 +35,7 @@ export async function loginUser(
       { email, password },
       { withCredentials: true }
     )
+    console.log("success login")
     return res.data.user
   } catch (error) {
     console.error("Login error:", error)

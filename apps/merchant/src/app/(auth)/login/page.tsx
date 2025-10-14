@@ -28,6 +28,7 @@ export default function LoginPage() {
     setIsLoadingLocal(true)
     const ok = await login(formData.email, formData.password)
     if (ok) {
+      console.log("push", ok)
       router.push("/")
     } else {
       setIsLoadingLocal(false)
