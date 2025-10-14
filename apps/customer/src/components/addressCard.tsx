@@ -133,7 +133,6 @@ export function AddressCardForOrder({ item , select }: AddressCardForOrderProps)
       window.location.reload()
     }
   }
-  console.log(item.id,select.id)
   return (
     <div className={`relative border  rounded-2xl mb-3 p-4 ${item.id !== select.id? ' border-gray-400':''}`}>
       <div className={`${item.id !== select.id? 'text-gray-400':''}`}
