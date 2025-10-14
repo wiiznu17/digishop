@@ -198,8 +198,7 @@ export const getCallBack = async (req: Request, res: Response) => {
           <html>
             <body>
               <script>
-                window.close()
-                
+                location.replace(${linkResult})
               </script>
             </body>
           </html>
@@ -211,7 +210,7 @@ export const getCallBack = async (req: Request, res: Response) => {
           <html>
             <body>
               <script>
-                window.close()
+                location.replace(${linkResult})
               </script>
             </body>
           </html>
