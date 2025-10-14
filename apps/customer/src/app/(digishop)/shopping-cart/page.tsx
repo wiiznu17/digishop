@@ -139,6 +139,8 @@ export default function ShoppingCart() {
                         name="selected"
                         value={value.id}
                         onChange={handleSelected}
+                        className={`${value.quantity > value.productItem.stockQuantity? 'opacity-0':''}`}
+                        disabled={value.quantity > value.productItem.stockQuantity}
                       />
                       <div className="w-[100px] h-[100px] bg-amber-700"></div>
                       <div>
@@ -150,7 +152,7 @@ export default function ShoppingCart() {
                             {value.productItem.product.name}
                           </Link>
                           <div className="flex justify-between items-center">
-                            <div className="text-xs text-gray-500">
+                            <div className=" text-xs text-gray-500">
                               {
                                 formatSku(value.productItem.configurations)
                               }
@@ -184,6 +186,12 @@ export default function ShoppingCart() {
                                   <Plus className="w-4 h-4" />
                                 </button>
                               </div>
+                              {value.quantity > value.productItem.stockQuantity &&
+                                <div className="absolute bottom-5 left-40 text-red-400 text-lg">
+                                * product has only {value.productItem.stockQuantity} 
+                              </div>
+                              }
+
                           </div>
 
                           {/* <div className="absolute bottom-6 left-0 text-xs text-gray-500 ">
@@ -218,6 +226,7 @@ export default function ShoppingCart() {
                   </div>
                 </div>
               )}
+              
             </div>
           ))}
         </div>
