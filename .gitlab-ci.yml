@@ -35,18 +35,18 @@ build:
     - npm ci --include=dev
     - npm exec -w packages/db -- tsc -p tsconfig.json
     - npm run build -w apps/portal-service
-    - npm run build -w apps/merchant-service
-    - npm run build -w apps/merchant-worker
-    - npm run build -w apps/authen-service
-    - npm run build -w apps/gateway-service
+    # - npm run build -w apps/merchant-service
+    # - npm run build -w apps/merchant-worker
+    # - npm run build -w apps/authen-service
+    # - npm run build -w apps/gateway-service
   artifacts:
     expire_in: 1h
     paths:
       - apps/portal-service/dist
-      - apps/merchant-service/dist
-      - apps/merchant-worker/dist
-      - apps/authen-service/dist
-      - apps/gateway-service/dist
+      # - apps/merchant-service/dist
+      # - apps/merchant-worker/dist
+      # - apps/authen-service/dist
+      # - apps/gateway-service/dist
 
 .deploy_template: &deploy_template
   stage: deploy
@@ -56,12 +56,9 @@ build:
   before_script:
     - 'echo "🔍 RAILWAY_TOKEN length: ${#RAILWAY_TOKEN}"'
     - npm i -g @railway/cli
-    # ตรวจว่ามี token จริง (ไม่ echo token ออกมา)
     - '[ -n "$RAILWAY_TOKEN" ] || (echo "❌ Missing RAILWAY_TOKEN"; exit 1)'
     - railway --version
-    # ข้างล่างนี้แค่ช่วยดีบัก ถ้า token ใช้ได้ should pass
     - railway whoami || (echo "❌ RAILWAY_TOKEN invalid or scope/protection mismatch"; exit 1)
-    # (ออปชัน) ถ้าตั้งไว้ใน Variables จะถูกอ่านโดย CLI อัตโนมัติ
     - if [ -n "$RAILWAY_PROJECT_ID" ]; then export RAILWAY_PROJECT_ID; fi
     - if [ -n "$RAILWAY_ENVIRONMENT" ]; then export RAILWAY_ENVIRONMENT; fi
 
@@ -71,26 +68,26 @@ deploy_portal_service:
   script:
     - railway up apps/portal-service --service portal-service --ci
 
-deploy_merchant_service:
-  <<: *deploy_template
-  needs: ["build"]
-  script:
-    - railway up apps/merchant-service --service merchant-service --ci
+# deploy_merchant_service:
+#   <<: *deploy_template
+#   needs: ["build"]
+#   script:
+#     - railway up apps/merchant-service --service merchant-service --ci
 
-deploy_merchant_worker:
-  <<: *deploy_template
-  needs: ["build"]
-  script:
-    - railway up apps/merchant-worker --service merchant-worker --ci
+# deploy_merchant_worker:
+#   <<: *deploy_template
+#   needs: ["build"]
+#   script:
+#     - railway up apps/merchant-worker --service merchant-worker --ci
 
-deploy_authen_service:
-  <<: *deploy_template
-  needs: ["build"]
-  script:
-    - railway up apps/authen-service --service authen-service --ci
+# deploy_authen_service:
+#   <<: *deploy_template
+#   needs: ["build"]
+#   script:
+#     - railway up apps/authen-service --service authen-service --ci
 
-deploy_gateway_service:
-  <<: *deploy_template
-  needs: ["build"]
-  script:
-    - railway up apps/gateway-service --service gateway-service --ci
+# deploy_gateway_service:
+#   <<: *deploy_template
+#   needs: ["build"]
+#   script:
+#     - railway up apps/gateway-service --service gateway-service --ci
