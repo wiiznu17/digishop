@@ -19,7 +19,8 @@ install:
   stage: install
   image: node:20
   script:
-    - npm ci --include=dev
+    # ติดตั้งแบบ workspaces เพื่อให้ลิงก์ @digishop/db เข้ากับ portal-service
+    - npm ci --workspaces --include-workspace-root
   artifacts:
     expire_in: 1h
     paths:
@@ -32,10 +33,10 @@ build:
   image: node:20
   needs: ["install"]
   script:
-    - npm ci --include=dev
-    - npm exec -w packages/db -- tsc -p tsconfig.json
-    - npm run build -w apps/portal-service
-
+    # ไม่ต้อง npm ci ซ้ำอีกครั้ง (มีจาก stage install แล้ว)
+    # คอมไพล์ db ก่อน แล้วค่อย portal-service
+    - npm run -w packages/db build
+    - npm run -w apps/portal-service build
   artifacts:
     expire_in: 1h
     paths:
@@ -58,5 +59,5 @@ deploy_portal_service:
   <<: *deploy_template
   needs: ["build"]
   script:
-    # รันจากรูท repo (อย่า cd เข้า apps/portal-service)
-    - railway up . --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci --path-as-root --no-gitignore
+    # อัปจาก root (ไฟล์จะถูกกรองด้วย .railwayignore ให้เหลือแค่ของที่ต้องใช้)
+    - railway up . --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci --path-as-root --verbose
