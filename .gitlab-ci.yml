@@ -58,8 +58,15 @@ build:
     - feature/merchant
   before_script:
     - npm i -g @railway/cli
-  variables:
-    RAILWAY_TOKEN: $RAILWAY_TOKEN
+    - railway --version
+    # ตรวจว่า token ใช้ได้ (ไม่ต้อง login)
+    - railway whoami
+    # ถ้ามีหลาย project/env และตั้งค่าไว้ใน CI variables
+    - if [ -n "$RAILWAY_PROJECT_ID" ]; then export RAILWAY_PROJECT_ID; fi
+    - if [ -n "$RAILWAY_ENVIRONMENT_ID" ]; then export RAILWAY_ENVIRONMENT_ID; fi
+    # (ออปชัน) พิมพ์ context ช่วยดีบัก
+    - railway status || true
+    - railway service list || true
 
 deploy_portal_service:
   <<: *deploy_template
