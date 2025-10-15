@@ -32,8 +32,9 @@ build:
   image: node:20
   needs: ["install"]             # ดึง artifacts ของ install มา
   script:
-    - npm ci                     # กันเหนียว ติดตั้งอีกรอบ (ใช้ cache/arts เร็ว)
-    - npm run build -w packages/db
+    - npm ci --include=dev                   # กันเหนียว ติดตั้งอีกรอบ (ใช้ cache/arts เร็ว)
+    # - npm run build -w packages/db
+    - npm exec -w packages/db tsc -p tsconfig.json
     - npm run build -w apps/portal-service
     - npm run build -w apps/merchant-service
     # - npm run build -w apps/customer-service
