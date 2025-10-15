@@ -299,7 +299,10 @@ export function ProductFilters({
           <Select
             value={v.status ?? ALL_VALUE}
             onValueChange={(val) =>
-              onChange({ status: val === ALL_VALUE ? undefined : (val as any) })
+              onChange({
+                status:
+                  val === ALL_VALUE ? undefined : (val as "ACTIVE" | "INACTIVE")
+              })
             }
           >
             <SelectTrigger>
@@ -323,7 +326,10 @@ export function ProductFilters({
             value={v.reqStatus ?? ALL_VALUE}
             onValueChange={(val) =>
               onChange({
-                reqStatus: val === ALL_VALUE ? undefined : (val as any)
+                reqStatus:
+                  val === ALL_VALUE
+                    ? undefined
+                    : (val as "PENDING" | "APPROVED" | "REJECT")
               })
             }
           >
