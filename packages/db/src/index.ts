@@ -417,9 +417,64 @@ export function initModels(conn: Sequelize) {
 // export default sequelize;
 
 export { sequelize, checkDatabaseConnection } from "./db";
-export { OrderStatusHistory } from "./models/OrderStatusHistory";
-export { RefundOrder } from "./models/RefundOrder";
-export { RefundStatusHistory } from "./models/RefundStatusHistory";
+export {
+  // Core
+  User,
+  Address,
+  Store,
+  MerchantAddress,
+  ProfileMerchantImage,
+  BankAccount,
+  ShippingConfig,
 
-export { Order } from "./models/Order";
-export { Payment } from "./models/Payment"
+  // Catalog
+  Category,
+  Product,
+  ProductImage,
+  ProductItemImage,
+  Variation,
+  VariationOption,
+  ProductItem,
+  ProductConfiguration,
+
+  // Cart
+  ShoppingCart,
+  ShoppingCartItem,
+
+  // Order domain
+  Order,
+  OrderItem,
+  OrderStatusHistory,
+  ShippingType,
+  ShippingInfo,
+  Payment,
+  PaymentGatewayEvent,
+  RefundOrder,
+  RefundImage,
+  RefundStatusHistory,
+  Review,
+  Dispute,
+  CheckOut,
+  ShipmentEvent,
+  ReturnShipment,
+  ReturnShipmentEvent,
+
+  // Analytics
+  ProductView,
+  StoreView,
+
+  // Admin (portal)
+  AdminUser,
+  AdminSystemLog,
+  AdminSession,
+  AdminPasswordReset,
+  AdminInvite,
+  AdminMfaFactor,
+  AdminMfaChallenge,
+  AdminRecoveryCode,
+  AdminRole,
+  AdminPermission,
+  AdminRolePermission,
+  AdminUserRole,
+  AdminApiKey,
+};

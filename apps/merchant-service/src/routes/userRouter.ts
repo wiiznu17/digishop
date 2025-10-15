@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import express from 'express'
 import {
   createStoreForUser,
   deleteUser,
@@ -10,7 +10,7 @@ import { authenticate } from '../middlewares/middleware'
 import { upload } from '../middlewares/upload'
 import { getStoreStatus } from '../controllers/storeController'
 
-const router = Router()
+const router: express.Router = express.Router();
 
 router.get('/profile', authenticate, getMerchantProfile)
 

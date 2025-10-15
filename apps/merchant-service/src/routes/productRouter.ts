@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express from "express";
 import { authenticate, requireApprovedStore } from "../middlewares/middleware";
 import { upload } from "../middlewares/upload";
 
@@ -18,7 +18,7 @@ import {
   updateProductItem,
 } from "../controllers/productController";
 
-const router = Router();
+const router: express.Router = express.Router();
 
 // List & Detail
 router.get("/suggest", authenticate, requireApprovedStore(), suggestProducts);

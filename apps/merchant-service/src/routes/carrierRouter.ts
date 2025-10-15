@@ -1,4 +1,5 @@
-import { Router } from "express";
+// import { Router } from "express";
+import express from "express"
 import { carrierWebhook } from "../controllers/carrierController";
 import {
   cmwParseBase,
@@ -9,7 +10,7 @@ import {
   cmwComputeOrderTransition,
 } from "../middlewares/carrierMiddleware";
 
-const router = Router();
+const router: express.Router = express.Router();
 
 // Validate → Enrich → Handle
 router.post(
