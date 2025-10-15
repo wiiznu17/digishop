@@ -1,4 +1,4 @@
-import { Router, type RequestHandler } from "express";
+import express, { type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import * as AuthController from "../controllers/authController";
 import { authenticateAdmin } from "../middlewares/auth";
@@ -6,7 +6,7 @@ import { adminAcceptInvite, adminPerformReset } from "../controllers/adminCreden
 import { AcceptInviteBody, ResetConfirmBody } from "../lib/zod/schemas/credentialSchemas";
 import { zodValidate } from "../lib/zod/validate";
 
-const router = Router();
+const router: express.Router = express.Router();
 
 // ระบุ type ชัดเจนเพื่อกัน TS งอแงเรื่อง overload
 const loginLimiter: RequestHandler = rateLimit({

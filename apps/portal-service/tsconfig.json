@@ -7,7 +7,6 @@
   "compilerOptions": {
     "outDir": "./dist",
     "noImplicitReturns": false,
-    "ignoreDeprecations": "6.0"
   },
   "exclude": [
     "node_modules"
