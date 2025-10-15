@@ -1,4 +1,4 @@
-import { Router } from "express"
+import express from "express"
 import {
   adminListAuditLogs,
   adminGetAuditLogDetail,
@@ -7,7 +7,7 @@ import {
 import { requireSuperAdmin } from "../middlewares/requireSuperAdmin"
 import { requirePerms } from "../middlewares/auth"
 
-const router = Router()
+const router: express.Router = express.Router();
 
 router.get("/list",
   requirePerms("AUDIT_LOGS_READ"),

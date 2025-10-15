@@ -1,10 +1,10 @@
-import { Router } from "express"
+import express from "express"
 import {
   adminListStores, adminSuggestStores, adminGetStoreDetail
 } from "../controllers/storeController"
 import { requirePerms } from "../middlewares/auth"
 
-const router = Router()
+const router: express.Router = express.Router();
 
 // Stores (Merchants)
 router.get("/list",

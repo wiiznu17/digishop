@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express from "express";
 import {
   adminListProducts,
   adminSuggestProducts,
@@ -9,7 +9,7 @@ import {
 } from "../controllers/productController";
 import { requirePerms } from "../middlewares/auth";
 
-const router = Router();
+const router: express.Router = express.Router();
 
 router.get("/list",
   requirePerms("PRODUCTS_READ"),

@@ -1,4 +1,4 @@
-import { NextFunction, Response, Request, Router } from 'express'
+import express, { NextFunction, Response, Request, Router } from 'express'
 import  {sequelize } from '@digishop/db'
 // import userRouter from './routes/userRouter'
 import categoryRouter from './routes/categoryRouter'
@@ -16,7 +16,7 @@ import analyticsRouter from './routes/analyticsRouter';
 
 import { authenticateAdmin, requirePerms } from './middlewares/auth';
 
-const router = Router()
+const router: express.Router = express.Router();
 
 router.get('/', async (_req, res) => {
   try {

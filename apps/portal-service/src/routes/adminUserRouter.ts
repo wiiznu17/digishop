@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express from "express";
 import {
   adminListAdmins, adminSuggestAdmins, adminGetAdminDetail, adminCreateAdmin
 } from "../controllers/adminUserController";
@@ -10,7 +10,7 @@ import { zodValidate } from "../lib/zod/validate";
 import { IdParam } from "../lib/zod/schemas/credentialSchemas";
 import { adminListRoles, adminUpdateAdminRoles } from "../controllers/changeRoleController";
 
-const router = Router();
+const router: express.Router = express.Router();
 
 // อ่าน/ค้นหา
 router.get("/list",   requirePerms("ADMIN_USERS_READ"),   adminListAdmins);

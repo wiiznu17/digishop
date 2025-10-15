@@ -1,4 +1,4 @@
-import { Router } from "express"
+import express from "express"
 import { requirePerms } from "../middlewares/auth"
 import {
   adminDashboardKpis,
@@ -7,7 +7,7 @@ import {
   adminDashboardTopStores
 } from "../controllers/dashboardController"
 
-const router = Router()
+const router: express.Router = express.Router();
 
 router.get("/kpis",
   requirePerms("DASHBOARD_VIEW"),

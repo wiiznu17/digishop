@@ -1,4 +1,4 @@
-import { Router } from "express"
+import express from "express"
 import {
   adminListRoles,
   adminGetRoleDetail,
@@ -9,7 +9,7 @@ import {
 import { requireSuperAdmin } from "../middlewares/requireSuperAdmin"
 import { requirePerms } from "../middlewares/auth"
 
-const router = Router()
+const router: express.Router = express.Router();
 
 router.get("/list",
   // requireSuperAdmin,
