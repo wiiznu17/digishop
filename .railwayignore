@@ -1,0 +1,24 @@
+/*
+
+# --- allow เฉพาะของที่ portal-service ต้องใช้ ---
+!/apps/
+!/apps/portal-service/**
+
+!/packages/
+!/packages/db/**
+
+# ไฟล์ root ที่จำเป็นต่อ workspaces / TS build
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.base.json
+!.npmrc
+
+# กันของหนักที่ไม่ต้องอัป
+**/node_modules
+.turbo
+.next
+.vercel
+coverage
+**/dist
+*.log
