@@ -1,7 +1,6 @@
+import { AdminSystemLog, AdminUser } from "@digishop/db";
 import { Request, Response } from "express"
 import { Op, col, fn, WhereOptions } from "sequelize"
-import { AdminSystemLog } from "@digishop/db/src/models/portal/AdminSystemLog"
-import { AdminUser } from "@digishop/db/src/models/portal/AdminUser"
 
 const asInt = (v: any, d: number) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d }
 const likeify = (q: string) => `%${q.replace(/[%_]/g, "\\$&")}%`

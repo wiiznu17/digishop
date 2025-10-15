@@ -2,10 +2,7 @@ import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import { signAccess, signRefresh, verifyRefresh } from "../lib/jwt";
-import { AdminUser } from "@digishop/db/src/models/portal/AdminUser";
-import { AdminSession } from "@digishop/db/src/models/portal/AdminSession";
-import { AdminRole } from "@digishop/db/src/models/portal/AdminRole";
-import { AdminPermission } from "@digishop/db/src/models/portal/AdminPermission";
+import { AdminPermission, AdminRole, AdminSession, AdminUser } from "@digishop/db";
 
 // cookie name + opts (prod: secure=true)
 const RTK_NAME = process.env.JWT_COOKIE_NAME || "rtk";

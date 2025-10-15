@@ -1,8 +1,6 @@
+import { AdminPermission, AdminRole, AdminRolePermission } from "@digishop/db";
 import { Request, Response } from "express"
 import { Op, col, fn } from "sequelize"
-import { AdminRole } from "@digishop/db/src/models/portal/AdminRole"
-import { AdminPermission } from "@digishop/db/src/models/portal/AdminPermission"
-import { AdminRolePermission } from "@digishop/db/src/models/portal/AdminRolePermission"
 
 const asInt = (v: any, d: number) => {
   const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d

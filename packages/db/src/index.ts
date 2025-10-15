@@ -1,66 +1,65 @@
-import { checkDatabaseConnection, sequelize } from "./db";
+import { checkDatabaseConnection, sequelize, Op } from "./db";
 import { Sequelize } from "sequelize";
-
 // ── Core / Profile
-import { User } from "../src/models/User";
-import { Address } from "../src/models/Address";
-import { Store } from "../src/models/Store";
-import { MerchantAddress } from "../src/models/StoreAddress";
-import { ProfileMerchantImage } from "../src/models/ProfileImage";
-import { BankAccount } from "../src/models/bank/BankAccount";
-import { ShippingConfig } from "../src/models/ShippingConfig";
+import { User } from "./models/User";
+import { Address } from "./models/Address";
+import { Store } from "./models/Store";
+import { MerchantAddress } from "./models/StoreAddress";
+import { ProfileMerchantImage } from "./models/ProfileImage";
+import { BankAccount } from "./models/bank/BankAccount";
+import { ShippingConfig } from "./models/ShippingConfig";
 
 // ── Catalog
-import { Category } from "../src/models/Category";
-import { Product } from "../src/models/Product";
-import { ProductImage } from "../src/models/ProductImage";
-import { ProductItemImage } from "../src/models/ProductItemImage";
+import { Category } from "./models/Category";
+import { Product } from "./models/Product";
+import { ProductImage } from "./models/ProductImage";
+import { ProductItemImage } from "./models/ProductItemImage";
 // Variations / SKU
-import { Variation } from "../src/models/Variation";
-import { VariationOption } from "../src/models/VariationOption";
-import { ProductItem } from "../src/models/ProductItem";
-import { ProductConfiguration } from "../src/models/ProductConfiguration";
+import { Variation } from "./models/Variation";
+import { VariationOption } from "./models/VariationOption";
+import { ProductItem } from "./models/ProductItem";
+import { ProductConfiguration } from "./models/ProductConfiguration";
 
 // ── Cart
-import { ShoppingCart } from "../src/models/ShoppingCart";
-import { ShoppingCartItem } from "../src/models/ShoppingCartItem";
+import { ShoppingCart } from "./models/ShoppingCart";
+import { ShoppingCartItem } from "./models/ShoppingCartItem";
 
 // ── Order domain
-import { Order } from "../src/models/Order";
-import { OrderItem } from "../src/models/OrderItem";
-import { OrderStatusHistory } from "../src/models/OrderStatusHistory";
-import { ShippingType } from "../src/models/ShippingType";
-import { ShippingInfo } from "../src/models/ShippingInfo";
-import { Payment } from "../src/models/Payment";
-import { PaymentGatewayEvent } from "../src/models/PaymentGatewayEvent";
-import { RefundOrder } from "../src/models/RefundOrder";
-import { RefundImage } from "../src/models/RefundImage";
-import { RefundStatusHistory } from "../src/models/RefundStatusHistory";
-import { Review } from "../src/models/Review";
-import { Dispute } from "../src/models/Dispute";
-import { CheckOut } from "../src/models/CheckOut";
+import { Order } from "./models/Order";
+import { OrderItem } from "./models/OrderItem";
+import { OrderStatusHistory } from "./models/OrderStatusHistory";
+import { ShippingType } from "./models/ShippingType";
+import { ShippingInfo } from "./models/ShippingInfo";
+import { Payment } from "./models/Payment";
+import { PaymentGatewayEvent } from "./models/PaymentGatewayEvent";
+import { RefundOrder } from "./models/RefundOrder";
+import { RefundImage } from "./models/RefundImage";
+import { RefundStatusHistory } from "./models/RefundStatusHistory";
+import { Review } from "./models/Review";
+import { Dispute } from "./models/Dispute";
+import { CheckOut } from "./models/CheckOut";
 
 // ── Analytics
-import { ProductView } from "../src/models/ProductView";
-import { StoreView } from "../src/models/StoreView";
+import { ProductView } from "./models/ProductView";
+import { StoreView } from "./models/StoreView";
 
 // ── Admin (portal)
-import { AdminUser } from "../src/models/portal/AdminUser";
-import { AdminSystemLog } from "../src/models/portal/AdminSystemLog";
-import { AdminSession } from "../src/models/portal/AdminSession";
-import { AdminPasswordReset } from "../src/models/portal/AdminPasswordReset";
-import { AdminInvite } from "../src/models/portal/AdminInvite";
-import { AdminMfaFactor } from "../src/models/portal/AdminMfaFactor";
-import { AdminMfaChallenge } from "../src/models/portal/AdminMfaChallenge";
-import { AdminRecoveryCode } from "../src/models/portal/AdminRecoveryCode";
-import { AdminRole } from "../src/models/portal/AdminRole";
-import { AdminPermission } from "../src/models/portal/AdminPermission";
-import { AdminRolePermission } from "../src/models/portal/AdminRolePermission";
-import { AdminUserRole } from "../src/models/portal/AdminUserRole";
-import { AdminApiKey } from "../src/models/portal/AdminApiKey";
-import { ShipmentEvent } from "../src/models/ShipmentEvent";
-import { ReturnShipment } from "../src/models/ReturnShipment";
-import { ReturnShipmentEvent } from "../src/models/ReturnShipmentEvent";
+import { AdminUser } from "./models/portal/AdminUser";
+import { AdminSystemLog } from "./models/portal/AdminSystemLog";
+import { AdminSession } from "./models/portal/AdminSession";
+import { AdminPasswordReset } from "./models/portal/AdminPasswordReset";
+import { AdminInvite } from "./models/portal/AdminInvite";
+import { AdminMfaFactor } from "./models/portal/AdminMfaFactor";
+import { AdminMfaChallenge } from "./models/portal/AdminMfaChallenge";
+import { AdminRecoveryCode } from "./models/portal/AdminRecoveryCode";
+import { AdminRole } from "./models/portal/AdminRole";
+import { AdminPermission } from "./models/portal/AdminPermission";
+import { AdminRolePermission } from "./models/portal/AdminRolePermission";
+import { AdminUserRole } from "./models/portal/AdminUserRole";
+import { AdminApiKey } from "./models/portal/AdminApiKey";
+import { ShipmentEvent } from "./models/ShipmentEvent";
+import { ReturnShipment } from "./models/ReturnShipment";
+import { ReturnShipmentEvent } from "./models/ReturnShipmentEvent";
 
 export function initModels(conn: Sequelize) {
   // ── init (Core)
@@ -416,7 +415,9 @@ export function initModels(conn: Sequelize) {
 // export { checkDatabaseConnection };
 // export default sequelize;
 
-export { sequelize, checkDatabaseConnection } from "./db";
+export { sequelize, checkDatabaseConnection, Op } from "./db";
+export * from "./types/enum"
+export * from "./types/portal"
 export {
   // Core
   User,
@@ -478,3 +479,4 @@ export {
   AdminUserRole,
   AdminApiKey,
 };
+

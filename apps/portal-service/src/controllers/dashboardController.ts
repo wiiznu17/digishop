@@ -1,13 +1,8 @@
 import { Request, Response } from "express"
 import { Op, fn, col, literal, WhereOptions } from "sequelize"
 import type { Order as SequelizeOrderType } from "sequelize"
-import { Order } from "@digishop/db/src/models/Order"
-import { Store } from "@digishop/db/src/models/Store"
-import { CheckOut } from "@digishop/db/src/models/CheckOut"
-import { Payment } from "@digishop/db/src/models/Payment"
-import { User } from "@digishop/db/src/models/User"
 import { cacheGet, cacheSet, weakEtag } from "../lib/cache"
-import { Col, Fn, Literal } from "sequelize/types/utils"
+import { Order, Store, User } from "@digishop/db"
 
 type OrderStatus =
   | "PENDING"
