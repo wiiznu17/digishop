@@ -54,10 +54,10 @@ build:
   only:
     - feature/merchant
   before_script:
-    - 'echo "🔍 RAILWAY_API_KEY length: ${#RAILWAY_API_KEY}"'
+    - 'echo "🔍 RAILWAY_TOKEN length: ${#RAILWAY_TOKEN}"'
     - npm i -g @railway/cli
     # ตรวจว่ามี token จริง (ไม่ echo token ออกมา)
-    - '[ -n "$RAILWAY_API_KEY" ] || (echo "❌ Missing RAILWAY_API_KEY"; exit 1)'
+    - '[ -n "$RAILWAY_TOKEN" ] || (echo "❌ Missing RAILWAY_TOKEN"; exit 1)'
     - railway --version
     # ข้างล่างนี้แค่ช่วยดีบัก ถ้า token ใช้ได้ should pass
     - railway whoami || (echo "❌ RAILWAY_TOKEN invalid or scope/protection mismatch"; exit 1)
