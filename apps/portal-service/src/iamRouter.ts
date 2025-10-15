@@ -27,6 +27,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
+router.get('/healthz', (_req, res) => res.status(200).json({ ok: true }));
 // router.use('/user', userRouter);
 
 router.use('/admin', authenticateAdmin);
