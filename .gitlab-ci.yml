@@ -19,7 +19,7 @@ install:
   stage: install
   image: node:20
   script:
-    - npm ci
+    - npm ci --include=dev
   artifacts:
     expire_in: 1h
     paths:
