@@ -63,9 +63,16 @@ build:
 
 deploy_portal_service:
   <<: *deploy_template
-  needs: ["build"]
+  needs: [build]
   script:
-    - railway up apps/portal-service --service portal-service --ci
+    - cd apps/portal-service
+    - railway up --service portal-service --ci -v
+
+# deploy_portal_service:
+#   <<: *deploy_template
+#   needs: ["build"]
+#   script:
+#     - railway up apps/portal-service --service portal-service --ci
 
 # deploy_merchant_service:
 #   <<: *deploy_template
