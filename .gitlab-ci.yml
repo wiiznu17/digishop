@@ -35,18 +35,11 @@ build:
     - npm ci --include=dev
     - npm exec -w packages/db -- tsc -p tsconfig.json
     - npm run build -w apps/portal-service
-    # - npm run build -w apps/merchant-service
-    # - npm run build -w apps/merchant-worker
-    # - npm run build -w apps/authen-service
-    # - npm run build -w apps/gateway-service
+
   artifacts:
     expire_in: 1h
     paths:
       - apps/portal-service/dist
-      # - apps/merchant-service/dist
-      # - apps/merchant-worker/dist
-      # - apps/authen-service/dist
-      # - apps/gateway-service/dist
 
 .deploy_template: &deploy_template
   stage: deploy
@@ -66,34 +59,5 @@ deploy_portal_service:
   needs: ["build"]
   script:
     - cd apps/portal-service
-    - railway up --service portal-service --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --ci --verbose
-
-# deploy_portal_service:
-#   <<: *deploy_template
-#   needs: ["build"]
-#   script:
-#     - railway up apps/portal-service --service portal-service --ci
-
-# deploy_merchant_service:
-#   <<: *deploy_template
-#   needs: ["build"]
-#   script:
-#     - railway up apps/merchant-service --service merchant-service --ci
-
-# deploy_merchant_worker:
-#   <<: *deploy_template
-#   needs: ["build"]
-#   script:
-#     - railway up apps/merchant-worker --service merchant-worker --ci
-
-# deploy_authen_service:
-#   <<: *deploy_template
-#   needs: ["build"]
-#   script:
-#     - railway up apps/authen-service --service authen-service --ci
-
-# deploy_gateway_service:
-#   <<: *deploy_template
-#   needs: ["build"]
-#   script:
-#     - railway up apps/gateway-service --service gateway-service --ci
+    # project จะอ้างจาก env RAILWAY_PROJECT_ID อัตโนมัติ
+    - railway up --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci --verbose
