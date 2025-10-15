@@ -58,6 +58,5 @@ deploy_portal_service:
   <<: *deploy_template
   needs: ["build"]
   script:
-    - cd apps/portal-service
-    # project จะอ้างจาก env RAILWAY_PROJECT_ID อัตโนมัติ
-    - railway up --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci --verbose
+    # รันจาก root เพื่อให้ npm เห็น workspaces ครบ
+    - railway up --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci -- --base-dir apps/portal-service
