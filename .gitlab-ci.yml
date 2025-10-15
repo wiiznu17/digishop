@@ -6,7 +6,6 @@ stages:
 variables:
   NODE_ENV: production
   NPM_CONFIG_CACHE: .npm
-  RAILWAY_TOKEN: dcfbf493-269f-4a0c-a5d6-f1b372989c9b
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
