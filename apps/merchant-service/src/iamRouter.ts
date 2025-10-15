@@ -19,6 +19,7 @@ router.get("/", async (_req: Request, res: Response) => {
     res.status(500).json({ database: "Database disconnected" });
   }
 });
+router.get('/healthz', (_req, res) => res.status(200).json({ ok: true }));
 
 router.use("/merchant", userRouter);
 router.use("/merchant/products", productRouter);

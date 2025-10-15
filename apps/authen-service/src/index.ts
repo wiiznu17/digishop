@@ -19,7 +19,7 @@ async function main() {
     app.use(cookieParser())
     app.use(express.json())
     initModels(sequelize);
-
+    
     app.use("/api/auth", authRoutes)
     app.use((req, res, next) => {
       console.log('[MERCHANT] Incoming', req.url)
