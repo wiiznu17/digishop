@@ -2,6 +2,9 @@
 
 // เพิ่ม interface สำหรับหน้า List
 export interface ProductListItem {
+  totalImageCount: number
+  productImageCount: number
+  itemImageCount: number
   uuid: string
   name: string
   description?: string | null

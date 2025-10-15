@@ -17,6 +17,7 @@ export function extractErrorMessage(err: unknown): {
   let description: string | undefined
 
   // axios-like
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyErr = err as any
   const status = anyErr?.response?.status as number | undefined
   const data = anyErr?.response?.data

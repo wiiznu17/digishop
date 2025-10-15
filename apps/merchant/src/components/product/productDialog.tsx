@@ -50,9 +50,9 @@ export function ProductDialog({
 
   const main = product?.images?.[0] ?? null
   const totalImages =
-    (product as any)?.totalImageCount ??
-    ((product as any)?.productImageCount ?? 0) +
-      ((product as any)?.itemImageCount ?? 0)
+    (product as ProductRow)?.totalImageCount ??
+    ((product as ProductRow)?.productImageCount ?? 0) +
+      ((product as ProductRow)?.itemImageCount ?? 0)
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
