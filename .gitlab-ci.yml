@@ -1,4 +1,3 @@
-# .gitlab-ci.yml
 stages:
   - install
   - build
@@ -29,7 +28,7 @@ build:
     # Build ทุก service ที่มีใน monorepo
     - npm run build -w apps/portal-service
     - npm run build -w apps/merchant-service
-    - npm run build -w apps/customer-service
+    # - npm run build -w apps/customer-service
     - npm run build -w apps/merchant-worker
     - npm run build -w apps/authen-service
     - npm run build -w apps/gateway-service
@@ -37,7 +36,7 @@ build:
     paths:
       - apps/portal-service/dist
       - apps/merchant-service/dist
-      - apps/customer-service/dist
+      # - apps/customer-service/dist
       - apps/merchant-worker/dist
       - apps/authen-service/dist
       - apps/gateway-service/dist
@@ -61,10 +60,10 @@ deploy_merchant_service:
   script:
     - railway up --service merchant-service --base-dir apps/merchant-service
 
-deploy_customer_service:
-  <<: *deploy_template
-  script:
-    - railway up --service customer-service --base-dir apps/customer-service
+# deploy_customer_service:
+#   <<: *deploy_template
+#   script:
+#     - railway up --service customer-service --base-dir apps/customer-service
 
 deploy_merchant_worker:
   <<: *deploy_template
