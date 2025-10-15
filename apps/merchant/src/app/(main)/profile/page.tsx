@@ -51,10 +51,9 @@ function normalizeImages(
   return Array.isArray(imgs) ? imgs : [imgs]
 }
 
-export default function ProfilePage({ merchant }: MerchantProfileProps) {
-  const [profileData, setProfileData] = useState<MerchantProfileFormValues>(
-    merchant ?? defaultMerchant
-  )
+export default function ProfilePage() {
+  const [profileData, setProfileData] =
+    useState<MerchantProfileFormValues>(defaultMerchant)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
