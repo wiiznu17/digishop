@@ -63,10 +63,10 @@ build:
 
 deploy_portal_service:
   <<: *deploy_template
-  needs: [build]
+  needs: ["build"]
   script:
     - cd apps/portal-service
-    - railway up --service portal-service --ci -v
+    - railway up --service portal-service --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --ci --verbose
 
 # deploy_portal_service:
 #   <<: *deploy_template
