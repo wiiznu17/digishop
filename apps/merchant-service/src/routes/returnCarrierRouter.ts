@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express from "express";
 import {
   rcmwParseBase,
   rcmwVerifySignature,
@@ -13,7 +13,7 @@ import {
   markReturnFailed,
 } from "../controllers/returnCarrierController";
 
-const router = Router();
+const router: express.Router = express.Router();
 
 // webhook ขนส่ง “ขากลับ”
 router.post(

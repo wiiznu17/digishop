@@ -1,7 +1,6 @@
 {
   "name": "merchant-worker",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "nodemon",
     "build": "tsc -p tsconfig.json",

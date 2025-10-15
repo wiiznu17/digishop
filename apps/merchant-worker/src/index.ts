@@ -25,7 +25,7 @@ async function main() {
 
   // Start workers 
   const refundW   = startRefundWorker(connection);
-  const cancelW   = startAutoCancelWorker(connection);
+  // const cancelW   = startAutoCancelWorker(connection);
   const completeW = startAutoCompleteWorker(connection);
 
   // Bull Board
@@ -51,12 +51,13 @@ async function main() {
   });
 
   // ── Graceful shutdown ──────────────────────────────────────────────────
+  // const cw = await cancelW;
   async function shutdown() {
     try {
       // ปิด workers
       await Promise.allSettled([
         refundW.worker?.close(),  refundW.qe?.close(),
-        cancelW.worker?.close(),  cancelW.qe?.close(),
+        // cw.worker?.close(),  cancelW.qe?.close(),
         completeW.worker?.close(),completeW.qe?.close(),
       ]);
       // ปิด queues + redis

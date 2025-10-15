@@ -9,29 +9,29 @@ import { OrderStatus, ReturnShipmentStatus } from "@digishop/db/src/types/enum";
 
 // Types
 
-export interface ReturnCarrierContext {
-  carrierCode: string;
-  payload: any;
-  payloadRaw: string;
-  signatureHeader?: string;
+// export interface ReturnCarrierContext {
+//   carrierCode: string;
+//   payload: any;
+//   payloadRaw: string;
+//   signatureHeader?: string;
 
-  trackingNumber: string;
-  eventTime: Date;
-  nextReturnStatus: ReturnShipmentStatus;
+//   trackingNumber: string;
+//   eventTime: Date;
+//   nextReturnStatus: ReturnShipmentStatus;
 
-  returnShipment?: any; // ReturnShipment instance
-  lastEventStatus?: ReturnShipmentStatus | null;
-  isDuplicateEvent?: boolean;
+//   returnShipment?: any; // ReturnShipment instance
+//   lastEventStatus?: ReturnShipmentStatus | null;
+//   isDuplicateEvent?: boolean;
 
-  orderRecord?: any; // Order instance
-  nextOrderStatus?: OrderStatus | null; // computed next order status (based on return status)
-}
+//   orderRecord?: any; // Order instance
+//   nextOrderStatus?: OrderStatus | null; // computed next order status (based on return status)
+// }
 
-declare module "express-serve-static-core" {
-  interface Request {
-    returnCarrierCtx?: ReturnCarrierContext;
-  }
-}
+// declare module "express-serve-static-core" {
+//   interface Request {
+//     returnCarrierCtx?: ReturnCarrierContext;
+//   }
+// }
 
 // mapping order status trigger
 export function computeNextOrderFromReturn(

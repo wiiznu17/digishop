@@ -1,12 +1,9 @@
 import { Request, Response } from "express";
 import { Transaction } from "sequelize";
 
-import { Order } from "@digishop/db/src/models/Order";
-import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
-import { ShipmentEvent } from "@digishop/db/src/models/ShipmentEvent";
 import { ShippingStatus, OrderStatus } from "@digishop/db/src/types/enum";
-import { sequelize } from '@digishop/db';
-import type { CarrierContext } from "../middlewares/carrierMiddleware";
+import { OrderStatusHistory, sequelize, ShipmentEvent } from '@digishop/db';
+import { CarrierContext } from "../types/express";
 
 // Allowed Next Status Maps
 

@@ -1,31 +1,31 @@
-import { NextFunction, Response, Request, Router } from 'express'
-import sequelize from '@digishop/db'
-import userRouter from './routes/userRouter'
-import productRouter from './routes/productRouter'
-import bankRouter from './routes/bankRouter'
-import orderRouter from './routes/orderRouter'
-import storeRouter from './routes/storeRouter'
-import carrierRouter from './routes/carrierRouter'
-import ReturnCarrierRouter from './routes/returnCarrierRouter'
-const router = Router()
+import express, { type Request, type Response } from "express";
+import userRouter from "./routes/userRouter";
+import productRouter from "./routes/productRouter";
+import bankRouter from "./routes/bankRouter";
+import orderRouter from "./routes/orderRouter";
+import storeRouter from "./routes/storeRouter";
+import carrierRouter from "./routes/carrierRouter";
+import ReturnCarrierRouter from "./routes/returnCarrierRouter";
+import { sequelize } from "@digishop/db";
 
-router.get('/', async (req: Request, res: Response) => {
+const router: express.Router = express.Router();
+
+router.get("/", async (_req: Request, res: Response) => {
   try {
-    await sequelize.authenticate()
-    res.status(200).json({ database: 'Database connected' })
+    await sequelize.authenticate();
+    res.status(200).json({ database: "Database connected" });
   } catch (error) {
-    console.error('DB Error:', error)
-    res.status(500).json({ database: 'Databas disconnected' })
+    console.error("DB Error:", error);
+    res.status(500).json({ database: "Database disconnected" });
   }
-})
+});
 
-router.use('/merchant', userRouter)
-router.use('/merchant/products', productRouter)
-router.use('/merchant/bank-accounts', bankRouter)
-router.use('/merchant/orders', orderRouter)
-router.use('/merchant/store', storeRouter)
-router.use('/merchant/transit', carrierRouter)
-router.use('/merchant/return-transit', ReturnCarrierRouter)
+router.use("/merchant", userRouter);
+router.use("/merchant/products", productRouter);
+router.use("/merchant/bank-accounts", bankRouter);
+router.use("/merchant/orders", orderRouter);
+router.use("/merchant/store", storeRouter);
+router.use("/merchant/transit", carrierRouter);
+router.use("/merchant/return-transit", ReturnCarrierRouter);
 
-export default router
-
+export default router;

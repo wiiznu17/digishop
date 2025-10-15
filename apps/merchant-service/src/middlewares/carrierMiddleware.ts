@@ -1,39 +1,36 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
 
-import { ShippingInfo } from "@digishop/db/src/models/ShippingInfo";
-import { ShipmentEvent } from "@digishop/db/src/models/ShipmentEvent";
-import { Order } from "@digishop/db/src/models/Order";
-import sequelize from "@digishop/db";
-
 import { ShippingStatus, OrderStatus } from "@digishop/db/src/types/enum";
-
+import { Order, ShipmentEvent, ShippingInfo } from "@digishop/db";
+// import "../types/express";
+// import type { CarrierContext } from "../types/express";
 // ───────────────────────────────────────────────────────────────────────────────
 // Types
 
-export interface CarrierContext {
-  carrierCode: string;
-  payload: any;
-  payloadRaw: string;
-  signatureHeader?: string;
+// export interface CarrierContext {
+//   carrierCode: string;
+//   payload: any;
+//   payloadRaw: string;
+//   signatureHeader?: string;
 
-  trackingNumber: string;
-  eventTime: Date;
-  nextShippingStatus: ShippingStatus;
+//   trackingNumber: string;
+//   eventTime: Date;
+//   nextShippingStatus: ShippingStatus;
 
-  shippingInfo?: any; // ShippingInfo instance
-  lastEventStatus?: ShippingStatus | null;
-  isDuplicateEvent?: boolean;
+//   shippingInfo?: any; // ShippingInfo instance
+//   lastEventStatus?: ShippingStatus | null;
+//   isDuplicateEvent?: boolean;
 
-  orderRecord?: any; // Order instance
-  nextOrderStatus?: OrderStatus | null; // computed next order status
-}
+//   orderRecord?: any; // Order instance
+//   nextOrderStatus?: OrderStatus | null; // computed next order status
+// }
 
-declare module "express-serve-static-core" {
-  interface Request {
-    carrierCtx?: CarrierContext;
-  }
-}
+// declare module "express-serve-static-core" {
+//   interface Request {
+//     carrierCtx?: CarrierContext;
+//   }
+// }
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers

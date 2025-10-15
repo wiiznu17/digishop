@@ -1,5 +1,4 @@
-// routes/bankAccountRoutes.ts
-import { Router } from 'express'
+import express from 'express'
 import {
   addBankAccountToStore,
   getBankAccountList,
@@ -8,7 +7,7 @@ import {
 } from '../controllers/bankController'
 import { authenticate, requireApprovedStore } from '../middlewares/middleware'
 
-const router = Router()
+const router: express.Router = express.Router();
 
 router.get(
   '/bank-list',
