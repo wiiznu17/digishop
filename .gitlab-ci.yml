@@ -58,5 +58,5 @@ deploy_portal_service:
   <<: *deploy_template
   needs: ["build"]
   script:
-    # รันจาก root เพื่อให้ npm เห็น workspaces ครบ
-    - railway up --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci -- --base-dir apps/portal-service
+    - cd apps/portal-service
+    - railway up --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci --verbose
