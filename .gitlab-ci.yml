@@ -26,6 +26,7 @@ build:
   image: node:20
   script:
     # Build ทุก service ที่มีใน monorepo
+    - npm run build -w packages/db
     - npm run build -w apps/portal-service
     - npm run build -w apps/merchant-service
     # - npm run build -w apps/customer-service
