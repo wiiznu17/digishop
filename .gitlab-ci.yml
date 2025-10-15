@@ -5,12 +5,15 @@ stages:
 
 variables:
   NODE_ENV: production
+  NPM_CONFIG_CACHE: .npm
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - .npm
-    - node_modules
+    - .npm/
+    - node_modules/
+    - apps/**/node_modules/
+    - packages/**/node_modules/
 
 install:
   stage: install
@@ -18,14 +21,18 @@ install:
   script:
     - npm ci
   artifacts:
+    expire_in: 1h
     paths:
-      - node_modules
+      - node_modules/
+      - apps/**/node_modules/
+      - packages/**/node_modules/
 
 build:
   stage: build
   image: node:20
+  needs: ["install"]             # ดึง artifacts ของ install มา
   script:
-    # Build ทุก service ที่มีใน monorepo
+    - npm ci                     # กันเหนียว ติดตั้งอีกรอบ (ใช้ cache/arts เร็ว)
     - npm run build -w packages/db
     - npm run build -w apps/portal-service
     - npm run build -w apps/merchant-service
@@ -34,6 +41,7 @@ build:
     - npm run build -w apps/authen-service
     - npm run build -w apps/gateway-service
   artifacts:
+    expire_in: 1h
     paths:
       - apps/portal-service/dist
       - apps/merchant-service/dist
@@ -53,30 +61,36 @@ build:
 
 deploy_portal_service:
   <<: *deploy_template
+  needs: ["build"]               # ให้ deploy รอ build เสมอ
   script:
     - railway up --service portal-service --base-dir apps/portal-service
 
 deploy_merchant_service:
   <<: *deploy_template
+  needs: ["build"]
   script:
     - railway up --service merchant-service --base-dir apps/merchant-service
 
 # deploy_customer_service:
 #   <<: *deploy_template
+#   needs: ["build"]
 #   script:
 #     - railway up --service customer-service --base-dir apps/customer-service
 
 deploy_merchant_worker:
   <<: *deploy_template
+  needs: ["build"]
   script:
     - railway up --service merchant-worker --base-dir apps/merchant-worker
 
 deploy_authen_service:
   <<: *deploy_template
+  needs: ["build"]
   script:
     - railway up --service authen-service --base-dir apps/authen-service
 
 deploy_gateway_service:
   <<: *deploy_template
+  needs: ["build"]
   script:
     - railway up --service gateway-service --base-dir apps/gateway-service
