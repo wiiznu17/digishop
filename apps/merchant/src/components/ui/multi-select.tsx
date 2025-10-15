@@ -76,9 +76,7 @@ export function MultiSelectTrigger({
       >
         {/* โซนค่า: ชิดซ้าย + เลื่อนแนวนอน + เห็นสกอร์บาร์ */}
         <div className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap pr-2 text-left">
-          <div className="inline-flex items-center gap-1">
-            {children}
-          </div>
+          <div className="inline-flex items-center gap-1">{children}</div>
         </div>
 
         <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />

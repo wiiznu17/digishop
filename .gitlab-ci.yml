@@ -30,14 +30,12 @@ install:
 build:
   stage: build
   image: node:20
-  needs: ["install"]             # ดึง artifacts ของ install มา
+  needs: ["install"]
   script:
-    - npm ci --include=dev                   # กันเหนียว ติดตั้งอีกรอบ (ใช้ cache/arts เร็ว)
-    # - npm run build -w packages/db
+    - npm ci --include=dev
     - npm exec -w packages/db -- tsc -p tsconfig.json
     - npm run build -w apps/portal-service
     - npm run build -w apps/merchant-service
-    # - npm run build -w apps/customer-service
     - npm run build -w apps/merchant-worker
     - npm run build -w apps/authen-service
     - npm run build -w apps/gateway-service
@@ -46,7 +44,6 @@ build:
     paths:
       - apps/portal-service/dist
       - apps/merchant-service/dist
-      # - apps/customer-service/dist
       - apps/merchant-worker/dist
       - apps/authen-service/dist
       - apps/gateway-service/dist
@@ -58,48 +55,41 @@ build:
     - feature/merchant
   before_script:
     - npm i -g @railway/cli
+    # ตรวจว่ามี token จริง (ไม่ echo token ออกมา)
+    - '[ -n "$RAILWAY_TOKEN" ] || (echo "❌ Missing RAILWAY_TOKEN"; exit 1)'
     - railway --version
-    # ตรวจว่า token ใช้ได้ (ไม่ต้อง login)
-    - railway whoami
-    # ถ้ามีหลาย project/env และตั้งค่าไว้ใน CI variables
+    # ข้างล่างนี้แค่ช่วยดีบัก ถ้า token ใช้ได้ should pass
+    - railway whoami || (echo "❌ RAILWAY_TOKEN invalid or scope/protection mismatch"; exit 1)
+    # (ออปชัน) ถ้าตั้งไว้ใน Variables จะถูกอ่านโดย CLI อัตโนมัติ
     - if [ -n "$RAILWAY_PROJECT_ID" ]; then export RAILWAY_PROJECT_ID; fi
-    - if [ -n "$RAILWAY_ENVIRONMENT_ID" ]; then export RAILWAY_ENVIRONMENT_ID; fi
-    # (ออปชัน) พิมพ์ context ช่วยดีบัก
-    - railway status || true
-    - railway service list || true
+    - if [ -n "$RAILWAY_ENVIRONMENT" ]; then export RAILWAY_ENVIRONMENT; fi
 
 deploy_portal_service:
   <<: *deploy_template
-  needs: ["build"]               # ให้ deploy รอ build เสมอ
+  needs: ["build"]
   script:
-    - railway up --service portal-service --base-dir apps/portal-service
+    - railway up apps/portal-service --service portal-service --ci
 
 deploy_merchant_service:
   <<: *deploy_template
   needs: ["build"]
   script:
-    - railway up --service merchant-service --base-dir apps/merchant-service
-
-# deploy_customer_service:
-#   <<: *deploy_template
-#   needs: ["build"]
-#   script:
-#     - railway up --service customer-service --base-dir apps/customer-service
+    - railway up apps/merchant-service --service merchant-service --ci
 
 deploy_merchant_worker:
   <<: *deploy_template
   needs: ["build"]
   script:
-    - railway up --service merchant-worker --base-dir apps/merchant-worker
+    - railway up apps/merchant-worker --service merchant-worker --ci
 
 deploy_authen_service:
   <<: *deploy_template
   needs: ["build"]
   script:
-    - railway up --service authen-service --base-dir apps/authen-service
+    - railway up apps/authen-service --service authen-service --ci
 
 deploy_gateway_service:
   <<: *deploy_template
   needs: ["build"]
   script:
-    - railway up --service gateway-service --base-dir apps/gateway-service
+    - railway up apps/gateway-service --service gateway-service --ci
