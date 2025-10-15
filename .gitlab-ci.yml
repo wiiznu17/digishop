@@ -58,16 +58,8 @@ build:
     - feature/merchant
   before_script:
     - npm i -g @railway/cli
-    # login ด้วย API key (เลิกใช้ --token)
-    - railway login --apiKey "$RAILWAY_TOKEN"
-    # ชี้ project ให้ตรง
-    - if [ -n "$RAILWAY_PROJECT_ID" ]; then railway link --project "$RAILWAY_PROJECT_ID"; fi
-    # เลือก environment ถ้ามีระบุ
-    - if [ -n "$RAILWAY_ENVIRONMENT_ID" ]; then railway environment use "$RAILWAY_ENVIRONMENT_ID"; fi
-    - if [ -n "$RAILWAY_ENVIRONMENT" ]; then railway environment "$RAILWAY_ENVIRONMENT"; fi
-    # (อ็อปชัน) ตรวจสอบสถานะ context ปัจจุบัน
-    - railway status
-
+  variables:
+    RAILWAY_TOKEN: $RAILWAY_TOKEN
 
 deploy_portal_service:
   <<: *deploy_template
