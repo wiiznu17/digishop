@@ -54,7 +54,7 @@ build:
   only:
     - feature/merchant
   before_script:
-    - echo "🔍 RAILWAY_API_KEY length: ${#RAILWAY_API_KEY}"
+    - 'echo "🔍 RAILWAY_API_KEY length: ${#RAILWAY_API_KEY}"'
     - npm i -g @railway/cli
     # ตรวจว่ามี token จริง (ไม่ echo token ออกมา)
     - '[ -n "$RAILWAY_API_KEY" ] || (echo "❌ Missing RAILWAY_API_KEY"; exit 1)'
