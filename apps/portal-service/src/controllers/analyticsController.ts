@@ -1,12 +1,7 @@
 import { Request, Response } from "express"
 import { Op, fn, col, literal, WhereOptions } from "sequelize"
 import { cacheGet, cacheSet } from "../lib/cache"
-
-// Models จากแพ็กเกจ db (อิง index.ts ที่คุณให้)
-import { Order } from "@digishop/db/src/models/Order"
-import { Store } from "@digishop/db/src/models/Store"
-import { RefundOrder } from "@digishop/db/src/models/RefundOrder"
-import { CheckOut } from "@digishop/db/src/models/CheckOut"
+import { CheckOut, Order, RefundOrder, Store } from "@digishop/db"
 
 type MaybeDate = string | undefined
 

@@ -1,10 +1,7 @@
 // apps/portal-service/src/controllers/adminRoleController.ts
 import { Request, Response } from "express"
 import { Transaction } from "sequelize"
-import { AdminRole } from "@digishop/db/src/models/portal/AdminRole"
-import { AdminUserRole } from "@digishop/db/src/models/portal/AdminUserRole"
-import { AdminUser } from "@digishop/db/src/models/portal/AdminUser"
-import { sequelize } from "@digishop/db"
+import { AdminRole, AdminUser, AdminUserRole, sequelize } from "@digishop/db"
 
 // GET /roles/list
 export async function adminListRoles(req: Request, res: Response) {

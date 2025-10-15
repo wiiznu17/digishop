@@ -1,13 +1,9 @@
 import { Request, Response } from "express";
 import { Op } from "sequelize";
 import bcrypt from "bcrypt";
-import { AdminUser } from "@digishop/db/src/models/portal/AdminUser";
-import { AdminUserRole } from "@digishop/db/src/models/portal/AdminUserRole";
-import { AdminRole } from "@digishop/db/src/models/portal/AdminRole";
-import { AdminInvite } from "@digishop/db/src/models/portal/AdminInvite";
-import { AdminPasswordReset } from "@digishop/db/src/models/portal/AdminPasswordReset";
 import { addHours, genTokenRaw, sha256b64 } from "../lib/tokens";
 import { sendAdminInvite, sendAdminReset } from "../helpers/mailer";
+import { AdminInvite, AdminPasswordReset, AdminRole, AdminUser, AdminUserRole } from "@digishop/db";
 
 const INVITE_TTL_HOURS = 48;
 const RESET_TTL_HOURS = 2;

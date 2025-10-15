@@ -58,5 +58,5 @@ deploy_portal_service:
   <<: *deploy_template
   needs: ["build"]
   script:
-    - cd apps/portal-service
-    - railway up --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci --verbose
+    # รันจากรูท repo (อย่า cd เข้า apps/portal-service)
+    - railway up . --service portal-service --environment "$RAILWAY_ENVIRONMENT" --ci --path-as-root --no-gitignore

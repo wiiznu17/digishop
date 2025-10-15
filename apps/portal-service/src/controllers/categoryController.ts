@@ -1,7 +1,5 @@
 import { Request, Response } from "express"
-import { Op, sequelize } from "@digishop/db/src/db"
-import { Category } from "@digishop/db/src/models/Category"
-import { Product } from "@digishop/db/src/models/Product"
+import { Category, Op, Product, sequelize } from "@digishop/db"
 
 type ListQuery = {
   parentUuid?: string

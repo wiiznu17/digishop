@@ -1,21 +1,13 @@
 import { Request, Response } from "express"
-import { Op, sequelize } from "@digishop/db/src/db"
 import {
   col, fn,
+  Op,
   where as sqWhere,
   type Order, type OrderItem
 } from "sequelize"
 
-import { Product, ProductAttributes } from "@digishop/db/src/models/Product"
-import { ProductImage } from "@digishop/db/src/models/ProductImage"
-import { Category } from "@digishop/db/src/models/Category"
-import { Variation } from "@digishop/db/src/models/Variation"
-import { VariationOption } from "@digishop/db/src/models/VariationOption"
-import { ProductItem } from "@digishop/db/src/models/ProductItem"
-import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration"
-import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage"
-import { Store } from "@digishop/db/src/models/Store"
-import { ProductReqStatus } from "@digishop/db/src/types/enum"
+import { Category, Product, ProductConfiguration, ProductImage, ProductItem, ProductItemImage, ProductReqStatus, sequelize, Store, Variation, VariationOption } from "@digishop/db"
+import { ProductAttributes } from "@digishop/db/src/models/Product"
 
 const asInt = (v: any, d: number) => {
   const n = Number(v)

@@ -1,3 +1,4 @@
+import { Address, CheckOut, Dispute, Order, Review, Store, User } from "@digishop/db"
 import { Request, Response } from "express"
 import {
   Op,
@@ -6,14 +7,6 @@ import {
   where as sequelizeWhere,
   WhereOptions,
 } from "sequelize"
-
-import { User } from "@digishop/db/src/models/User"
-import { Store } from "@digishop/db/src/models/Store"
-import { Address } from "@digishop/db/src/models/Address"
-import { CheckOut } from "@digishop/db/src/models/CheckOut"
-import { Order } from "@digishop/db/src/models/Order"
-import { Review } from "@digishop/db/src/models/Review"
-import { Dispute } from "@digishop/db/src/models/Dispute"
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers

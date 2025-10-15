@@ -1,11 +1,6 @@
+import { CheckOut, Order, OrderItem, Product, Store, User } from "@digishop/db";
 import { Request, Response } from "express"
 import { Op, col, fn, where as sqlWhere, WhereOptions } from "sequelize"
-import { User } from "@digishop/db/src/models/User"
-import { Store } from "@digishop/db/src/models/Store"
-import { Product } from "@digishop/db/src/models/Product"
-import { Order } from "@digishop/db/src/models/Order"
-import { OrderItem } from "@digishop/db/src/models/OrderItem"
-import { CheckOut } from "@digishop/db/src/models/CheckOut"
 
 const asInt = (v: any, d: number) => {
   const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d

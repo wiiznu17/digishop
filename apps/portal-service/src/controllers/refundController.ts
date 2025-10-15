@@ -1,8 +1,6 @@
+import { CheckOut, Order, RefundOrder } from "@digishop/db";
 import { Request, Response } from "express";
 import { Op, col, where as sqWhere } from "sequelize";
-import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
-import { Order } from "@digishop/db/src/models/Order";
-import { CheckOut } from "@digishop/db/src/models/CheckOut";
 
 const asInt = (v: any, d: number) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : d; };
 const asDate = (v?: string) => (v && !Number.isNaN(new Date(v).getTime())) ? new Date(v) : null;

@@ -1,13 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyAccess } from '../lib/jwt';
+import { AdminSession, sequelize } from '@digishop/db';
 // import { AdminSession, AdminUser, AdminPermission, AdminRole, AdminUserRole, AdminRolePermission } from '@digishop/db/src/index'
-import { AdminSession } from '@digishop/db/src/models/portal/AdminSession';
-import { AdminUser } from '@digishop/db/src/models/portal/AdminUser';
-import { AdminPermission } from '@digishop/db/src/models/portal/AdminPermission';
-import { AdminRole } from '@digishop/db/src/models/portal/AdminRole';
-import { AdminUserRole } from '@digishop/db/src/models/portal/AdminUserRole';
-import { AdminRolePermission } from '@digishop/db/src/models/portal/AdminRolePermission';
-import { sequelize } from '@digishop/db';
+
 declare global {
   namespace Express {
     interface Request {
