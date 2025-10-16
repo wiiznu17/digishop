@@ -1,6 +1,6 @@
 "use client"
 import { ReactNode } from "react"
-import { useAuth, useCan } from "@/lib/authClient"
+import { useAuth, useCan } from "./AuthGuard"
 
 export function Can({
   perms,
