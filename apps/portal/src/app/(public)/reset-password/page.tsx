@@ -1,22 +1,27 @@
-import { Suspense } from "react"
 import ResetPasswordClient from "./reset-password-client"
 
-export default function ResetPasswordPage({
+export const revalidate = 0 // หรือใช้ export const dynamic = "force-dynamic"
+
+export default async function ResetPasswordPage({
   searchParams
 }: {
-  searchParams: { token?: string; email?: string }
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const token = searchParams?.token ?? ""
-  const email = searchParams?.email ?? ""
+  const sp = await searchParams
 
-  return (
-    <Suspense>
-      <ResetPasswordClient token={token} email={email} />
-    </Suspense>
-  )
+  const token =
+    typeof sp.token === "string"
+      ? sp.token
+      : Array.isArray(sp.token)
+        ? (sp.token[0] ?? "")
+        : ""
+
+  const email =
+    typeof sp.email === "string"
+      ? sp.email
+      : Array.isArray(sp.email)
+        ? (sp.email[0] ?? "")
+        : ""
+
+  return <ResetPasswordClient token={token} email={email} />
 }
-
-// ถ้าหน้านี้ต้อง dynamic เสมอ (ไม่ cache)
-export const revalidate = 0
-// หรือใช้บรรทัดนี้แทน:
-// export const dynamic = "force-dynamic"
