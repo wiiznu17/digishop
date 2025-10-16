@@ -1,67 +1,23 @@
-"use client"
+import SetPasswordClient from "./set-password-client"
 
-import { useSearchParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import PasswordRulesForm from "@/components/auth/PasswordRulesForm"
-import { acceptInvite } from "@/utils/requesters/credentialRequester"
+// หน้านี้เป็นลิงก์จากอีเมล/โทเค็น → ไม่ควร cache
+export const revalidate = 0
+// หรือใช้แทนกันได้:
+// export const dynamic = "force-dynamic"
 
-export default function SetPasswordPage() {
-  const sp = useSearchParams()
-  const token = sp.get("token") || ""
-  const email = sp.get("email") || ""
-  const router = useRouter()
+export default async function SetPasswordPage({
+  searchParams
+}: {
+  // Next.js 15: searchParams เป็น Promise
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const sp = await searchParams
 
-  const [submitting, setSubmitting] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
+  const get1 = (v: unknown) =>
+    typeof v === "string" ? v : Array.isArray(v) ? (v[0] ?? "") : ""
 
-  useEffect(() => {
-    if (!token) setErr("Missing token. Please use the link from your email.")
-  }, [token])
+  const token = get1(sp.token)
+  const email = get1(sp.email)
 
-  async function handleSubmit({
-    password,
-    name
-  }: {
-    password: string
-    name?: string
-  }) {
-    setErr(null)
-    if (!token) {
-      setErr("Missing token.")
-      return
-    }
-    setSubmitting(true)
-    try {
-      await acceptInvite({ token, name, password })
-      router.push("/login?msg=account_ready")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.error(e)
-      setErr(e?.response?.data?.error ?? "Failed to set password.")
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <div className="min-h-[60vh] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Set your password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PasswordRulesForm
-            onSubmit={handleSubmit}
-            showNameField
-            emailForPII={email}
-            submitting={submitting}
-            externalError={err}
-            submitLabel="Set password"
-            title=""
-          />
-        </CardContent>
-      </Card>
-    </div>
-  )
+  return <SetPasswordClient token={token} email={email} />
 }
