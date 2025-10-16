@@ -1,61 +1,22 @@
-"use client"
+import { Suspense } from "react"
+import ResetPasswordClient from "./reset-password-client"
 
-import { useSearchParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import PasswordRulesForm from "@/components/auth/PasswordRulesForm"
-import { confirmReset } from "@/utils/requesters/credentialRequester"
-
-export default function ResetPasswordPage() {
-  const sp = useSearchParams()
-  const token = sp.get("token") || ""
-  const email = sp.get("email") || "" // ถ้ามี แปะมาก็ใช้ช่วย validation ได้
-  const router = useRouter()
-
-  const [submitting, setSubmitting] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!token) setErr("Missing token. Please use the link from your email.")
-  }, [token])
-
-  async function handleSubmit({ password }: { password: string }) {
-    setErr(null)
-    if (!token) {
-      setErr("Missing token.")
-      return
-    }
-    setSubmitting(true)
-    try {
-      await confirmReset({ token, password })
-      router.push("/login?msg=password_reset")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.error(e)
-      setErr(e?.response?.data?.error ?? "Failed to reset password.")
-    } finally {
-      setSubmitting(false)
-    }
-  }
+export default function ResetPasswordPage({
+  searchParams
+}: {
+  searchParams: { token?: string; email?: string }
+}) {
+  const token = searchParams?.token ?? ""
+  const email = searchParams?.email ?? ""
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Reset your password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PasswordRulesForm
-            onSubmit={handleSubmit}
-            showNameField={false}
-            emailForPII={email}
-            submitting={submitting}
-            externalError={err}
-            submitLabel="Reset password"
-            title=""
-          />
-        </CardContent>
-      </Card>
-    </div>
+    <Suspense>
+      <ResetPasswordClient token={token} email={email} />
+    </Suspense>
   )
 }
+
+// ถ้าหน้านี้ต้อง dynamic เสมอ (ไม่ cache)
+export const revalidate = 0
+// หรือใช้บรรทัดนี้แทน:
+// export const dynamic = "force-dynamic"
