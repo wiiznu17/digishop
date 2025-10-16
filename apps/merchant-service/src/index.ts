@@ -17,7 +17,7 @@ async function main() {
     app.use(express.json());
     app.use(cookieParser())
     app.use(cors({
-      origin: ["http://localhost:4000"],
+      origin: process.env.ALLOW_CORS,
       credentials: true
     }))
     initModels(sequelize);

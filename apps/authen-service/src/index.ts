@@ -10,9 +10,9 @@ async function main() {
     await checkDatabaseConnection();
     const app = express()
     console.log("JWT", process.env.JWT_SECRET)
-    
+
     app.use(cors({
-      origin: ["http://localhost:3000", "http://localhost:4000"],
+      origin: process.env.ALLOW_CORS,
       credentials: true
     }))
     app.use(cookieParser())

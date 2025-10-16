@@ -22,7 +22,7 @@ async function main() {
     app.use(cookieParser());
 
     app.use(cors({
-      origin: ["http://localhost:3002"],
+      origin: process.env.ALLOW_CORS,
       credentials: true
     }));
 
