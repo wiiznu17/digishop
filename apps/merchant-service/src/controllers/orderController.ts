@@ -3,21 +3,6 @@ import axios from "axios"
 import crypto from "crypto"
 import { IncludeOptions, Op, WhereOptions, literal, Transaction } from "sequelize"
 
-import { Order } from "@digishop/db/src/models/Order"
-import { OrderItem } from "@digishop/db/src/models/OrderItem"
-import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory"
-import { Payment } from "@digishop/db/src/models/Payment"
-import { Product } from "@digishop/db/src/models/Product"
-import { ShippingInfo } from "@digishop/db/src/models/ShippingInfo"
-import { User } from "@digishop/db/src/models/User"
-import { RefundOrder } from "@digishop/db/src/models/RefundOrder"
-import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory"
-import { CheckOut } from "@digishop/db/src/models/CheckOut"
-import { ShipmentEvent } from "@digishop/db/src/models/ShipmentEvent"
-import { ReturnShipment } from "@digishop/db/src/models/ReturnShipment"
-import { ReturnShipmentEvent } from "@digishop/db/src/models/ReturnShipmentEvent"
-import { PaymentGatewayEvent } from "@digishop/db/src/models/PaymentGatewayEvent"
-
 import {
   ReturnShipmentStatus,
   ShippingStatus,
@@ -25,7 +10,7 @@ import {
   RefundStatus,
   ActorType,
 } from "@digishop/db/src/types/enum"
-import { sequelize } from "@digishop/db"
+import { CheckOut, Order, OrderItem, OrderStatusHistory, Payment, PaymentGatewayEvent, Product, RefundOrder, RefundStatusHistory, ReturnShipment, ReturnShipmentEvent, sequelize, ShipmentEvent, ShippingInfo, User } from "@digishop/db"
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -58,7 +43,7 @@ const SORT_WHITELIST = new Set<"id" | "createdAt" | "updatedAt" | "grandTotalMin
 // ───────────────────────────────────────────────────────────────────────────────
 // PGW (Payment Gateway)
 
-const PGW_BASE = process.env.PGW_BASE ?? "http://localhost:4002"
+const PGW_BASE = process.env.PGW_BASE
 const PGW_API_ID = process.env.MERCHANRT_API_ID ?? ""
 const PGW_API_KEY = process.env.MERCHANRT_API_KEY ?? ""
 const PGW_PARTNER_ID = process.env.MERCHANRT_PARTNER_ID ?? ""

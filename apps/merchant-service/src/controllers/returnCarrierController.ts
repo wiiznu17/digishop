@@ -1,13 +1,6 @@
 import { Request, Response } from "express";
 import { Transaction } from "sequelize";
-import { sequelize } from '@digishop/db';
-
-import { Order } from "@digishop/db/src/models/Order";
-import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
-import { ReturnShipment } from "@digishop/db/src/models/ReturnShipment";
-import { ReturnShipmentEvent } from "@digishop/db/src/models/ReturnShipmentEvent";
-
-import { OrderStatus, ReturnShipmentStatus } from "@digishop/db/src/types/enum";
+import { Order, OrderStatus, OrderStatusHistory, ReturnShipment, ReturnShipmentEvent, ReturnShipmentStatus, sequelize } from '@digishop/db';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Transition rules

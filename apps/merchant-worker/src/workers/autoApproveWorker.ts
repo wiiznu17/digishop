@@ -3,11 +3,7 @@ import IORedis from "ioredis";
 import { http, svcHeaders } from "../httpClient";
 import { ENV } from "../env";
 import { logger } from "../logger";
-// import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
-// import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
-// import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
-import { OrderStatus, RefundStatus } from "@digishop/db/src/types/enum";
-import { OrderStatusHistory, RefundOrder, RefundStatusHistory, sequelize } from "@digishop/db";
+import { OrderStatus, OrderStatusHistory, RefundOrder, RefundStatus, RefundStatusHistory, sequelize } from "@digishop/db";
 
 export type RefundJob = {
   orderId: number;
