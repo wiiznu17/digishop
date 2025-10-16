@@ -1,6 +1,6 @@
 import { Response } from "express"
 import { AuthenticatedRequest } from "../middlewares/middleware"
-import { Store } from "@digishop/db/src/models/Store"
+import { Store } from "@digishop/db";
 
 export async function getStoreStatus(req: AuthenticatedRequest, res: Response) {
   try {

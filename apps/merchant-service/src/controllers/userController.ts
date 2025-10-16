@@ -1,17 +1,8 @@
-import { Store } from '@digishop/db/src/models/Store'
-import { User } from '@digishop/db/src/models/User'
-import { MerchantAddress } from '@digishop/db/src/models/StoreAddress'
-import { AddressType, StoreStatus, UserRole } from '@digishop/db/src/types/enum'
 import { Request, Response } from 'express'
 import { AuthenticatedRequest } from '../middlewares/middleware'
-import { BankAccount } from '@digishop/db/src/models/bank/BankAccount'
-import { azureBlobService } from '../helpers/azureBlobService'
-import { ProfileMerchantImage } from '@digishop/db/src/models/ProfileImage'
-import { sequelize } from '@digishop/db';
-import { Product } from '@digishop/db/src/models/Product'
-import { Order } from '@digishop/db/src/models/Order'
-import { Review } from '@digishop/db/src/models/Review'
 import { Op } from 'sequelize'
+import { AddressType, BankAccount, MerchantAddress, Order, Product, ProfileMerchantImage, Review, sequelize, Store, StoreStatus, User, UserRole } from '@digishop/db';
+import { azureBlobService } from '../helpers/azureBlobService';
 
 // get merchant detail with metrics
 export const getMerchantProfile = async (req: AuthenticatedRequest, res: Response) => {

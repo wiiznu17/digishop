@@ -3,10 +3,8 @@ import IORedis from "ioredis";
 import { ENV } from "../env";
 import { http, svcHeaders } from "../httpClient";
 import { logger } from "../logger";
-import { Order } from "@digishop/db/src/models/Order";
-import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
-import { OrderStatus } from "@digishop/db/src/types/enum";
 import { Op } from "sequelize";
+import { Order, OrderStatus, OrderStatusHistory } from "@digishop/db";
 
 export type CompleteJob = {
   orderId: number;

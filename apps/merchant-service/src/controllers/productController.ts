@@ -1,19 +1,10 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/middleware";
-import { Op, sequelize } from "@digishop/db/src/db";
-import { col, fn, literal, Op as SQ, where as sqWhere, type Order, type OrderItem } from "sequelize";
+import { col, fn, literal, Op, Op as SQ, where as sqWhere, type Order, type OrderItem } from "sequelize";
 import { azureBlobService } from "../helpers/azureBlobService";
+import { Category, Product, ProductConfiguration, ProductImage, ProductItem, ProductItemImage, ProductReqStatus, ProductStatus, sequelize, Store, Variation, VariationOption } from "@digishop/db";
+import { ProductAttributes, ProductCreationAttributes } from "@digishop/db/src/models/Product";
 
-import { Product, ProductAttributes, ProductCreationAttributes } from "@digishop/db/src/models/Product";
-import { ProductImage } from "@digishop/db/src/models/ProductImage";
-import { Store } from "@digishop/db/src/models/Store";
-import { Category } from "@digishop/db/src/models/Category";
-import { Variation } from "@digishop/db/src/models/Variation";
-import { VariationOption } from "@digishop/db/src/models/VariationOption";
-import { ProductItem } from "@digishop/db/src/models/ProductItem";
-import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
-import { ProductReqStatus, ProductStatus } from "@digishop/db/src/types/enum";
-import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
 
 // ===== helper: canon/compare review-impacting footprint =====
 const canon = (x: unknown) => JSON.stringify(x)
