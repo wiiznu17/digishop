@@ -2,8 +2,7 @@ import express from 'express';
 import cors from "cors"
 import router from './iamRouter';
 import './helpers/dotenv.helper';
-import { checkDatabaseConnection, initModels } from '@digishop/db';
-import { sequelize } from '@digishop/db/src/db';
+import { checkDatabaseConnection, initModels, sequelize } from '@digishop/db';
 const cookieParser = require("cookie-parser")
 
 const PORT = Number(process.env.PORT);

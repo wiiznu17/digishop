@@ -1,11 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
-
-import { ReturnShipment } from "@digishop/db/src/models/ReturnShipment";
-import { ReturnShipmentEvent } from "@digishop/db/src/models/ReturnShipmentEvent";
-import { Order } from "@digishop/db/src/models/Order";
-
-import { OrderStatus, ReturnShipmentStatus } from "@digishop/db/src/types/enum";
+import { Order, OrderStatus, ReturnShipment, ReturnShipmentEvent, ReturnShipmentStatus } from "@digishop/db";
 
 // Types
 

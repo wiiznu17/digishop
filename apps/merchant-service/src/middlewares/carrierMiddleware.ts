@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
 
-import { ShippingStatus, OrderStatus } from "@digishop/db/src/types/enum";
+import { ShippingStatus, OrderStatus } from "@digishop/db";
 import { Order, ShipmentEvent, ShippingInfo } from "@digishop/db";
 // import "../types/express";
 // import type { CarrierContext } from "../types/express";

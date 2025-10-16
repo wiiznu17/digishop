@@ -1,5 +1,4 @@
-// In a new file, e.g., services/bankAccountService.ts
-import { BankAccount } from '@digishop/db/src/models/bank/BankAccount';
+import { BankAccount } from '@digishop/db';
 import { Transaction } from 'sequelize';
 
 /**

@@ -1,5 +1,4 @@
-import { BankAccount } from "@digishop/db/src/models/bank/BankAccount";
-import { BankAccountStatus } from "@digishop/db/src/types/enum";
+import { BankAccount, BankAccountStatus } from "@digishop/db";
 
 // ใช้ async/await กับ delay
 function delay(ms: number) {
