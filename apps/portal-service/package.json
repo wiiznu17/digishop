@@ -19,8 +19,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@digishop/db": "file:../../packages/db",
-    "@repo/typescript-config": "file:../../packages/eslint-config",
+    "@digishop/db": "*",
+    "@repo/typescript-config": "*",
     "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
