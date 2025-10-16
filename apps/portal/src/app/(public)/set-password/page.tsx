@@ -9,7 +9,7 @@ import { acceptInvite } from "@/utils/requesters/credentialRequester"
 export default function SetPasswordPage() {
   const sp = useSearchParams()
   const token = sp.get("token") || ""
-  const email = sp.get("email") || "" // ถ้ามี แปะมาจากลิงก์ เช็ก PII ได้แม่นขึ้น
+  const email = sp.get("email") || ""
   const router = useRouter()
 
   const [submitting, setSubmitting] = useState(false)
@@ -35,6 +35,7 @@ export default function SetPasswordPage() {
     try {
       await acceptInvite({ token, name, password })
       router.push("/login?msg=account_ready")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error(e)
       setErr(e?.response?.data?.error ?? "Failed to set password.")
