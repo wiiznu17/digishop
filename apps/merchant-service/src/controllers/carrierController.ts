@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Transaction } from "sequelize";
 
-import { ShippingStatus, OrderStatus } from "@digishop/db/src/types/enum";
+import { ShippingStatus, OrderStatus } from "@digishop/db";
 import { OrderStatusHistory, sequelize, ShipmentEvent } from '@digishop/db';
 import { CarrierContext } from "../types/express";
 

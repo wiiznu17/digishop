@@ -9,7 +9,7 @@ import {
   OrderStatus,
   RefundStatus,
   ActorType,
-} from "@digishop/db/src/types/enum"
+} from "@digishop/db"
 import { CheckOut, Order, OrderItem, OrderStatusHistory, Payment, PaymentGatewayEvent, Product, RefundOrder, RefundStatusHistory, ReturnShipment, ReturnShipmentEvent, sequelize, ShipmentEvent, ShippingInfo, User } from "@digishop/db"
 
 // ───────────────────────────────────────────────────────────────────────────────
