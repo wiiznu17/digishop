@@ -29,6 +29,7 @@ export default function ResetPasswordPage() {
     try {
       await confirmReset({ token, password })
       router.push("/login?msg=password_reset")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error(e)
       setErr(e?.response?.data?.error ?? "Failed to reset password.")
