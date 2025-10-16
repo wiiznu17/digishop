@@ -2,8 +2,7 @@ import express from "express"
 import cors from "cors"
 import './helpers/dotenv.helper';
 import authRoutes from "./routes/authRouter"
-import { checkDatabaseConnection, initModels } from '@digishop/db';
-import { sequelize } from '@digishop/db/src/db';
+import { checkDatabaseConnection, initModels, sequelize } from '@digishop/db';
 const cookieParser = require("cookie-parser")  // ใช้ require แทน
 
 async function main() {
