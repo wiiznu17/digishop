@@ -20,7 +20,11 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import type { AdminDetail } from "@/types/system/admin"
+import type {
+  AdminDetail,
+  AdminRoleSlug,
+  RolesDetail
+} from "@/types/system/admin"
 import {
   fetchAdminDetail,
   sendAdminInviteById,
@@ -46,10 +50,10 @@ export default function AdminDetailPage() {
   const [resettingPass, setResettingPass] = useState(false)
 
   // role editor state
-  const [roleOptions, setRoleOptions] = useState<
-    Array<{ id: number; slug: string; name: string }>
-  >([])
-  const [roleDraft, setRoleDraft] = useState<string[]>([])
+  // role editor state
+  const [roleOptions, setRoleOptions] = useState<RolesDetail[]>([])
+  const [roleDraft, setRoleDraft] = useState<AdminRoleSlug[]>([])
+
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false)
   const [savingRoles, setSavingRoles] = useState(false)
 
@@ -61,12 +65,11 @@ export default function AdminDetailPage() {
         const res = await fetchAdminDetail(Number(id))
         if (!alive) return
         setData(res)
-        setRoleDraft(res.roles.map((r) => r.slug))
-        const opts = await fetchRoleOptions()
+        setRoleDraft(res.roles.map((r) => r.slug)) // AdminRoleSlug[]
+
+        const opts = await fetchRoleOptions() // ← ควรคืนเป็น RolesDetail[]
         if (!alive) return
-        setRoleOptions(
-          opts.map((o) => ({ id: o.id, slug: o.slug, name: o.name }))
-        )
+        setRoleOptions(opts)
       } finally {
         setLoading(false)
       }
@@ -155,6 +158,7 @@ export default function AdminDetailPage() {
       setData(res)
       setRoleDraft(res.roles.map((r) => r.slug))
       setRolePopoverOpen(false)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error(e)
       alert(e?.response?.data?.error ?? "Failed to update roles.")
@@ -229,6 +233,7 @@ export default function AdminDetailPage() {
                               </label>
                             )
                           })}
+
                           {roleOptions.length === 0 && (
                             <div className="text-xs text-muted-foreground py-2">
                               No roles

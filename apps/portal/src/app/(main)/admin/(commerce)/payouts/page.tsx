@@ -464,7 +464,7 @@ export default function AdminPayoutsPage() {
               <Select
                 value={status}
                 onValueChange={(v) => {
-                  setStatus(v as any)
+                  setStatus(v as PayoutStatus)
                   setPage(1)
                 }}
               >

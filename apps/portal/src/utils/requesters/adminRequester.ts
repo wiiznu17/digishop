@@ -2,8 +2,11 @@ import axios from "@/lib/axios"
 import type {
   AdminDetail,
   AdminListResponse,
-  AdminSuggestItem
+  AdminRoleSlug,
+  AdminSuggestItem,
+  RolesDetail
 } from "@/types/system/admin"
+import { AdminRoleDetail } from "./rolesRequester"
 
 export async function fetchAdminList(params: {
   q?: string
@@ -67,19 +70,16 @@ export async function resetAdminPasswordById(adminId: number) {
 }
 
 export async function fetchRoleOptions() {
-  const r = await axios.get<
-    Array<{
-      id: number
-      slug: string
-      name: string
-      description?: string | null
-      isSystem: boolean
-    }>
-  >("/api/admin/admins/roles/list", { withCredentials: true })
+  const r = await axios.get<RolesDetail[]>("/api/admin/admins/roles/list", {
+    withCredentials: true
+  })
   return r.data
 }
 
-export async function updateAdminRoles(adminId: number, roleSlugs: string[]) {
+export async function updateAdminRoles(
+  adminId: number,
+  roleSlugs: AdminRoleSlug[]
+) {
   await axios.patch(
     `/api/admin/admins/${adminId}/roles`,
     { roleSlugs },

@@ -1,5 +1,4 @@
-import { Store } from "@digishop/db/src/models/Store";
-import { StoreStatus } from "@digishop/db/src/types/enum";
+import { Store, StoreStatus } from "@digishop/db";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
