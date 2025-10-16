@@ -4,10 +4,19 @@ import { v4 as uuidv4 } from "uuid";
 import { signAccess, signRefresh, verifyRefresh } from "../lib/jwt";
 import { AdminPermission, AdminRole, AdminSession, AdminUser } from "@digishop/db";
 
-// cookie name + opts (prod: secure=true)
 const RTK_NAME = process.env.JWT_COOKIE_NAME || "rtk";
-const COOKIE_OPTS = { httpOnly: true, sameSite: "lax" as const, secure: false, path: "/" };
+const IS_PROD = process.env.NODE_ENV === "production";
 
+// สำหรับ cross-site: ต้อง None
+const COOKIE_OPTS: import("express").CookieOptions = {
+  httpOnly: true,
+  sameSite: "none",        // สำคัญ: ให้ข้ามโดเมนได้
+  secure: true,            // สำคัญ: ต้องเป็น https เท่านั้น
+  path: "/",
+  // CHIPS (ช่วยในยุคที่เบราว์เซอร์บล็อก third-party cookies เป็น default)
+  // type ยัง experimental → cast เป็น any
+  ...(IS_PROD ? { partitioned: true as any } : {}),
+};
 export const login = async (req: Request, res: Response) => {
   console.log("ip: ", req.ip)
   const { email, password } = (req.body ?? {}) as { email?: string; password?: string };
@@ -36,13 +45,8 @@ export const login = async (req: Request, res: Response) => {
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 วัน
   } as any);
   console.log("seesion is created")
-  res.cookie(
-    RTK_NAME,
-    refresh, 
-    { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 });
-    console.log("set cookie: ", RTK_NAME)
-    console.log("refresh: ", refresh)
-    console.log("opts: ", { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 })
+  res.cookie(RTK_NAME, refresh, { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 });
+  console.log("set cookie: ", RTK_NAME)
   return res.json({ accessToken: access });
 };
 

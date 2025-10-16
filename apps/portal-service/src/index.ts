@@ -21,9 +21,17 @@ async function main() {
     app.use(express.json({ limit: '1mb' }));
     app.use(cookieParser());
 
+    const allowedOrigins = [process.env.ALLOW_CORS];
     app.use(cors({
-      origin: process.env.ALLOW_CORS,
-      credentials: true
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true); // อนุญาตเครื่องมือ health check
+        if (allowedOrigins.includes(origin)) return cb(null, true);
+        cb(new Error("Not allowed by CORS: " + origin));
+      },
+      credentials: true,
+      methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      optionsSuccessStatus: 204,
     }));
 
     initModels(sequelize);
