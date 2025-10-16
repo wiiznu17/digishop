@@ -1,10 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { login } from "@/utils/requesters/authRequester"
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen grid place-items-center p-4">
+          Loading…
+        </main>
+      }
+    >
+      <LoginInner />
+    </Suspense>
+  )
+}
+
+function LoginInner() {
   const [email, setEmail] = useState("superadmin@example.com")
   const [password, setPassword] = useState("1234")
   const [errorMsg, setErrorMsg] = useState<string>("")
@@ -13,16 +27,16 @@ export default function LoginPage() {
   const router = useRouter()
   const search = useSearchParams()
 
-  const nextPath = (() => {
+  const nextPath = useMemo(() => {
     const next = search.get("next")
-    console.log("next url: ", next)
+    // กัน open redirect: ต้องขึ้นต้นด้วย "/"
     if (!next || !next.startsWith("/")) return "/admin/orders"
     return next
-  })()
+  }, [search])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (submitting) return // กันกดรัว
+    if (submitting) return
     setErrorMsg("")
     setSubmitting(true)
 
@@ -30,7 +44,6 @@ export default function LoginPage() {
       await login(email.trim(), password)
       router.replace(nextPath)
     } catch (err: unknown) {
-      // แสดงข้อความจาก backend ถ้ามี (เช่น INVALID_CREDENTIALS)
       const msg =
         (isAxiosError(err) &&
           (err.response?.data as { error?: string })?.error) ||
@@ -93,20 +106,14 @@ export default function LoginPage() {
         >
           {submitting ? "Signing in…" : "Sign in"}
         </button>
-
-        {/* <p className="text-xs text-gray-500">
-          You’ll be redirected to{" "}
-          <span className="font-medium">{nextPath}</span>.
-        </p> */}
       </form>
     </main>
   )
 }
 
-function isAxiosError(e: unknown): e is {
-  isAxiosError: boolean
-  response?: { data?: unknown }
-} {
+function isAxiosError(
+  e: unknown
+): e is { isAxiosError: boolean; response?: { data?: unknown } } {
   return typeof e === "object" && e !== null && "isAxiosError" in e
 }
 
