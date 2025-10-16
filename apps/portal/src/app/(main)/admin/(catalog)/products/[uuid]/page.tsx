@@ -23,7 +23,14 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { AdminProductDetail } from "@/types/admin/catalog"
+import {
+  AdminProductDetail,
+  AdminProductImage,
+  AdminProductItem,
+  AdminProductItemConfiguration,
+  AdminVariation,
+  AdminVariationOption
+} from "@/types/admin/catalog"
 import AuthGuard from "@/components/AuthGuard"
 
 const fmtTHB = (minor?: number | null) =>
@@ -119,7 +126,10 @@ function AdminProductDetailPage() {
 
   const galleryList = useMemo(
     () =>
-      (data?.images ?? []).map((g: any) => ({ url: g.url, label: g.fileName })),
+      (data?.images ?? []).map((g: AdminProductImage) => ({
+        url: g.url,
+        label: g.fileName
+      })),
     [data]
   )
 
@@ -244,7 +254,8 @@ function AdminProductDetailPage() {
                     <div className="text-lg font-semibold">
                       {
                         (data.items ?? []).filter(
-                          (i: any) => (i.isEnable ?? true) !== false
+                          (i: AdminProductItem) =>
+                            (i.isEnable ?? true) !== false
                         ).length
                       }
                     </div>
@@ -279,7 +290,7 @@ function AdminProductDetailPage() {
                 )}
                 {data.images && data.images.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {data.images.map((img: any, idx: number) => (
+                    {data.images.map((img: AdminProductImage, idx: number) => (
                       <button
                         key={img.uuid}
                         type="button"
@@ -319,12 +330,12 @@ function AdminProductDetailPage() {
                     No variations
                   </div>
                 )}
-                {(data.variations ?? []).map((v: any) => (
+                {(data.variations ?? []).map((v: AdminVariation) => (
                   <div key={v.uuid} className="rounded border p-3">
                     <div className="font-medium">{v.name}</div>
                     <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-2">
                       {(v.options?.length ?? 0) > 0
-                        ? v.options?.map((o: any) => (
+                        ? v.options?.map((o: AdminVariationOption) => (
                             <span
                               key={o.uuid}
                               className="px-2 py-1 rounded bg-muted/40 border"
@@ -363,7 +374,7 @@ function AdminProductDetailPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(data.items ?? []).map((it: any) => {
+                        {(data.items ?? []).map((it: AdminProductItem) => {
                           const enabled = (it.isEnable ?? true) !== false
                           const itemImgUrl =
                             it.productItemImage?.url ?? it.imageUrl ?? null
@@ -401,7 +412,10 @@ function AdminProductDetailPage() {
                               <td className="p-2">{it.sku || "-"}</td>
                               <td className="p-2 text-xs text-muted-foreground">
                                 {(it.configurations ?? [])
-                                  .map((c: any) => c.variationOption?.value)
+                                  .map(
+                                    (c: AdminProductItemConfiguration) =>
+                                      c.variationOption?.value
+                                  )
                                   .filter(Boolean)
                                   .join(" · ") || "—"}
                               </td>

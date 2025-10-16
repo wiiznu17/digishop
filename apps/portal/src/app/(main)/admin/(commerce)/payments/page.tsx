@@ -59,6 +59,7 @@ const MOCK: Payment[] = Array.from({ length: 90 }).map((_, i) => ({
 const formatTHB = (m: number) =>
   (m / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   return (
@@ -235,7 +236,7 @@ export default function AdminPaymentsPage() {
                 <Select
                   value={provider}
                   onValueChange={(v) => {
-                    setProvider(v as any)
+                    setProvider(v as "stripe" | "omise" | "paypal" | "mock")
                     setPage(1)
                   }}
                 >
@@ -256,7 +257,9 @@ export default function AdminPaymentsPage() {
                 <Select
                   value={status}
                   onValueChange={(v) => {
-                    setStatus(v as any)
+                    setStatus(
+                      v as "AUTHORIZED" | "CAPTURED" | "REFUNDED" | "FAILED"
+                    )
                     setPage(1)
                   }}
                 >

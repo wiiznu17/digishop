@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // middleware ไม่กันหน้านี้ อาจจะทำเป็น plublic
 "use client"
 
