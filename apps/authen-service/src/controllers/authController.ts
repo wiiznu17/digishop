@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
-import { User } from "../../../../packages/db/src/models/User"
 import { signToken, verifyToken } from "../utils/jwt"
 import bcrypt from "bcrypt"
+import { User } from "@digishop/db"
 
 
 export const login = async (req: Request, res: Response) => {
@@ -31,8 +31,8 @@ export const login = async (req: Request, res: Response) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // เปลี่ยนเป็น true ถ้าใช้ HTTPS
-      sameSite: "lax",
+      secure: true, // เปลี่ยนเป็น true ถ้าใช้ HTTPS
+      sameSite: "none",
       path: "/"
     })
     console.log('login success')
