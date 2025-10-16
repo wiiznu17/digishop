@@ -9,7 +9,6 @@ async function main() {
   try {
     await checkDatabaseConnection();
     const app = express()
-    console.log("JWT", process.env.JWT_SECRET)
 
     app.use(cors({
       origin: process.env.ALLOW_CORS,
@@ -24,7 +23,7 @@ async function main() {
       console.log('[MERCHANT] Incoming', req.url)
       next()
     })
-    const PORT = process.env.PORT || 4001
+    const PORT = process.env.PORT
     app.listen(PORT, () => {
       console.log(`Auth Service running on http://localhost:${PORT}`)
     })
