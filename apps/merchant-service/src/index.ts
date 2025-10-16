@@ -15,10 +15,10 @@ async function main() {
     const app = express();
     app.use(express.json());
     app.use(cookieParser())
-    app.use(cors({
-      origin: process.env.ALLOW_CORS,
-      credentials: true
-    }))
+    // app.use(cors({
+    //   origin: process.env.ALLOW_CORS,
+    //   credentials: true
+    // }))
     initModels(sequelize);
     app.use('/api', router);
     app.use((req, res, next) => {
