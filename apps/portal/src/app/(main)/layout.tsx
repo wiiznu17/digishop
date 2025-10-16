@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import ClientBody from "./ClientBody"
 
 export const metadata: Metadata = {
-  title: "Merchant Dashboard",
+  title: "DigiShop Portal",
   description:
     "Complete merchant management platform for products, orders, and business insights"
 }
