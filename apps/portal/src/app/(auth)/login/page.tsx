@@ -19,8 +19,8 @@ export default function LoginPage() {
 }
 
 function LoginInner() {
-  const [email, setEmail] = useState("superadmin@example.com")
-  const [password, setPassword] = useState("1234")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [errorMsg, setErrorMsg] = useState<string>("")
   const [submitting, setSubmitting] = useState(false)
 
@@ -60,7 +60,7 @@ function LoginInner() {
         onSubmit={onSubmit}
         className="w-full max-w-sm space-y-3 rounded-xl border p-6 shadow-sm bg-white"
       >
-        <h1 className="text-xl font-semibold">Sign in</h1>
+        <h1 className="text-xl font-semibold dark:text-gray-900">Sign in</h1>
 
         <label className="block">
           <span className="text-sm text-gray-700">Email</span>
