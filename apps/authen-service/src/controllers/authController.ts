@@ -3,6 +3,8 @@ import { accessToken, signToken, verifyToken } from "../utils/jwt"
 import bcrypt from "bcrypt"
 import { User } from "@digishop/db"
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body
 
@@ -32,11 +34,13 @@ export const login = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role
     });
+
     res.cookie("token", token, {
       httpOnly: true,
       secure: true, // เปลี่ยนเป็น true ถ้าใช้ HTTPS
       sameSite: "none",
-      path: "/"
+      path: "/",
+      ...(IS_PROD ? { partitioned: true } : {}),
     })
 
     res.json({ message: "Logged in", accessToken: accesstoken ,role: user.role, user: { id: user.id, email: user.email, role: user.role } })
@@ -50,9 +54,11 @@ export const login = async (req: Request, res: Response) => {
 export const logout = (req: Request, res: Response) => {
   console.log("Logging out user")
   res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/"
+      httpOnly: true,
+      secure: true, // เปลี่ยนเป็น true ถ้าใช้ HTTPS
+      sameSite: "none",
+      path: "/",
+      ...(IS_PROD ? { partitioned: true } : {}),
   }).json({ message: "Logged out" })
 }
 

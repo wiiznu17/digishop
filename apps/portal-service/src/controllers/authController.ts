@@ -12,7 +12,7 @@ const COOKIE_OPTS: import("express").CookieOptions = {
   sameSite: "none",
   secure: true,
   path: "/",
-  ...(IS_PROD ? { partitioned: true as any } : {}),
+  ...(IS_PROD ? { partitioned: true } : {}),
 };
 export const login = async (req: Request, res: Response) => {
   console.log("ip: ", req.ip)
