@@ -3,7 +3,7 @@
   "include": [
     "./src/**/*.ts",
     "./src/**/*.d.ts"
-  ],
+, "src/queues/tokenQueue.ts"  ],
   "compilerOptions": {
     "outDir": "./dist",
     "noImplicitReturns": false,

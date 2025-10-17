@@ -9,7 +9,9 @@ import { usePathname, useRouter } from "next/navigation";
 import Button from "@/components/button";
 
 const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400'
+  weight:'400',
+  subsets: ['thai']
+
 })
 export default function MainLayout({
   children,

@@ -418,6 +418,7 @@ export function initModels(conn: Sequelize) {
 export { sequelize, checkDatabaseConnection, Op } from "./db";
 export * from "./types/enum"
 export * from "./types/portal"
+export * from './config/orderPolicy'
 export {
   // Core
   User,

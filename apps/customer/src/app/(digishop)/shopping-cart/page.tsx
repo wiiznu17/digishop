@@ -139,10 +139,13 @@ export default function ShoppingCart() {
                         name="selected"
                         value={value.id}
                         onChange={handleSelected}
-                        className={`${value.quantity > value.productItem.stockQuantity? 'opacity-0':''}`}
+                        className={`${(value.quantity > value.productItem.stockQuantity) || (select[0] && select[0].productItem.product.storeId !== value.productItem.product.storeId)? 'opacity-0':''}`}
                         disabled={value.quantity > value.productItem.stockQuantity}
                       />
-                      <div className="w-[100px] h-[100px] bg-amber-700"></div>
+                      <img
+                    src={value.productItem.productItemImage.url}
+                    className="object-fill w-[100px] h-[100px] "
+                  /> 
                       <div>
                         <div className="flex-1">
                           <Link
@@ -187,7 +190,7 @@ export default function ShoppingCart() {
                                 </button>
                               </div>
                               {value.quantity > value.productItem.stockQuantity &&
-                                <div className="absolute bottom-5 left-40 text-red-400 text-lg">
+                                <div className="absolute bottom-5  text-red-400 text-[14px]">
                                 * product has only {value.productItem.stockQuantity} 
                               </div>
                               }

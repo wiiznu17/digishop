@@ -1,4 +1,5 @@
 import axios from "@/lib/axios"
+import { setAccessToken } from "@/lib/tokenStore"
 import { FormLogin } from "@/types/props/userProp"
 export async function fetchUser(): Promise<FormLogin | null> {
   try {
@@ -13,14 +14,16 @@ export async function fetchUser(): Promise<FormLogin | null> {
 export async function loginUser(
   email: string,
   password: string
-): Promise<FormLogin | null> {
+): Promise<FormLogin| null> {
   try {
     const res = await axios.post(
       `/api/auth/login`,
       { email, password },
       { withCredentials: true }
     )
-    return res.data.user
+    const {accessToken , refreshtoken ,user } = res.data
+    if(accessToken) setAccessToken(accessToken)
+    return user
   } catch (error) {
     console.error("Login error:", error)
     return null

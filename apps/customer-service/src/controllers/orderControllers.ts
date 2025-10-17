@@ -1,42 +1,14 @@
-import { Address } from "@digishop/db/src/models/Address";
-import { Order } from "@digishop/db/src/models/Order";
-import { OrderItem } from "@digishop/db/src/models/OrderItem";
-import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
-import { Payment } from "@digishop/db/src/models/Payment";
-import { PaymentGatewayEvent } from "@digishop/db/src/models/PaymentGatewayEvent";
-import { Product } from "@digishop/db/src/models/Product";
-import { ProductImage } from "@digishop/db/src/models/ProductImage";
-import { ProductItem } from "@digishop/db/src/models/ProductItem";
-import { ShippingInfo } from "@digishop/db/src/models/ShippingInfo";
-import { ShippingType } from "@digishop/db/src/models/ShippingType";
-import { ShoppingCart } from "@digishop/db/src/models/ShoppingCart";
-import { ShoppingCartItem } from "@digishop/db/src/models/ShoppingCartItem";
-import { Store } from "@digishop/db/src/models/Store";
-import { User } from "@digishop/db/src/models/User";
-import { CheckOut } from "@digishop/db/src/models/CheckOut";
-import {
-  ActorType,
-  OrderStatus,
-  PaymentMethod,
-  PaymentStatus,
-  RefundStatus,
-  ShippingStatus,
-} from "@digishop/db/src/types/enum";
+
+
 import axios from "axios";
-import { count } from "console";
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 import { Op, where } from "sequelize";
-import { RefundOrder } from "@digishop/db/src/models/RefundOrder";
-import { RefundStatusHistory } from "@digishop/db/src/models/RefundStatusHistory";
-import { RefundImage } from "@digishop/db/src/models/RefundImage";
-import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
-import { VariationOption } from "@digishop/db/src/models/VariationOption";
-import { Variation } from "@digishop/db/src/models/Variation";
-import sequelize from "@digishop/db";
 import { addDays, differenceInDays } from "date-fns";
-import { OrderPolicy } from "@digishop/configs/orderPolicy"
 import { enqueueAutoCancel } from "../queues/cancelQueue";
+import { enqueueRefundAutoApprove } from "../queues/refundQueue";
+
+import { ActorType, Address, CheckOut, Order, OrderItem, OrderPolicy, OrderStatus, OrderStatusHistory, Payment, PaymentGatewayEvent, PaymentMethod, PaymentStatus, Product, ProductConfiguration, ProductImage, ProductItem, ProductItemImage, RefundOrder, RefundStatus, RefundStatusHistory, sequelize, ShippingInfo, ShippingStatus, ShippingType, ShoppingCart, ShoppingCartItem, Store, User, Variation, VariationOption } from "@digishop/db";
 const signKey =
   process.env.MERCHANRT_SIGN_KEY ??
   "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
@@ -50,7 +22,6 @@ const apiKey =
 const partnerId = process.env.MERCHANRT_PARTNER_ID ?? "1754627921";
 
 const contentSignature = (body: Object) => {
-  console.log("sign key", String(signKey));
   const hmac = crypto.createHmac(
     "sha256",
     Buffer.from(String(signKey), "base64")
@@ -122,6 +93,10 @@ export const findOrder = async (
               as: "productItem",
               include: [
                 {
+                  model: ProductItemImage,
+                  as: "productItemImage",
+                },
+                {
                   model: ProductConfiguration,
                   as: "configurations",
                   include: [
@@ -187,6 +162,10 @@ export const findUserOrder = async (
               model: ProductItem,
               as: "productItem",
               include: [
+                {
+                  model: ProductItemImage,
+                  as: "productItemImage",
+                },
                 {
                   model: ProductConfiguration,
                   as: "configurations",
@@ -264,7 +243,8 @@ export const findUserOrder = async (
                 "pgw_status",
                 "updated_at",
                 "providerRef",
-                "expiryAt"
+                "expiryAt",
+                "paidAt"
               ],
             },
           ],
@@ -278,7 +258,7 @@ export const findUserOrder = async (
     return res
       .status(200)
       .json({ body: getUserOrders.rows, count: getUserOrders.count });
-  } catch (error) {
+  } catch (error:any) {
     console.log("error", error);
   }
 };
@@ -300,6 +280,10 @@ export const findUserCart = async (
             model: ProductItem,
             as: "productItem",
             include: [
+              {
+                model: ProductItemImage,
+                as: "productItemImage",
+              },
               {
                 model: ProductConfiguration,
                 as: "configurations",
@@ -332,7 +316,7 @@ export const findUserCart = async (
       });
       res.json({ data: shoppingCartData.rows, count: shoppingCartData.count });
     }
-  } catch (error) {
+  } catch (error:any) {
     res.json({ body: error });
   }
 };
@@ -352,12 +336,41 @@ export const deleteChart = async (
       });
     }
     res.json({ message: `del ${item}` });
-  } catch (error) {
+  } catch (error:any) {
     console.log();
     res.json({ error: error });
   }
 };
 
+
+
+
+interface ShoppingDetail {
+  id?: number;
+  cartId?: number;
+  productItemId: number;
+  quantity: number;
+  // unitprice ใช้จากตาราง productItem
+  discountMinor: number;
+  lineTotalMinor: number;
+  productItem: ProductItemProps;
+}
+export interface ProductItemProps {
+  id?: number;
+  productId: number;
+  sku: string;
+  stockQuantity: number;
+  priceMinor: number;
+  image_url?: string | undefined;
+  product: {
+    id: number;
+    uuid: string;
+    name: string;
+    description: string;
+    storeId: number;
+    store: Store;
+  };
+}
 export const createOrderId = async (
   req: Request,
   res: Response,
@@ -372,6 +385,7 @@ export const createOrderId = async (
     acc[key].push(item);
     return acc;
   }, {});
+  if(Object.keys(groupStoreId).length > 1) return res.json({ error: 'order more than one store' });
   try {
     if (user) {
       const orderCod = "DGS" + Date.now() + customerId;
@@ -379,7 +393,7 @@ export const createOrderId = async (
         customerId: customerId,
         orderCode: orderCod,
       });
-      const sumprice = (data) => {
+      const sumprice = (data:ShoppingDetail[]) => {
         if (!data) return 0;
         let sum = 0;
         for (let i = 0; i < data.length; i++) {
@@ -388,7 +402,7 @@ export const createOrderId = async (
         }
         return sum;
       };
-      Object.entries(groupStoreId).map(async ([key, values]) => {
+      for (const [key, values] of Object.entries(groupStoreId) as [string, ShoppingDetail[]][]) {
         let orderData = await Order.create({
           checkoutId: checkoutId.id,
           reference: orderCod + key,
@@ -420,10 +434,10 @@ export const createOrderId = async (
           });
           orderItem.save();
         }
-      });
+      }
       res.json({ data: orderCod });
     }
-  } catch (error) {
+  } catch (error:any) {
     console.log(error.message);
     res.json({ error: error });
   }
@@ -462,7 +476,6 @@ export const createOrder = async (
       shippingfee * orderId.length +
       taxTotalMinor -
       discountTotalMinor; //รวมทั้งหมด ส่งให้จ่าย
-
     for (let i = 0; i < orderId.length; i++) {
       await Order.update(
         {
@@ -572,7 +585,7 @@ export const createOrder = async (
       });
       paymentStatus.save();
     }
-    if (paymentMethod == PaymentMethod.QR) {
+    if (paymentMethod == PaymentMethod.PROMPTPAY) {
       const contentSigQr = contentSignature({
         mid: midQR30,
         order_id: orderCode,
@@ -582,7 +595,7 @@ export const createOrder = async (
         url_redirect: "http://localhost:4000/api/customer/payment/callback",
         url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
         qrcode: {
-          biller_reference_1: `REF${orderId}`,
+          biller_reference_1: `REF${orderId[0].id}`,
         },
       });
       paymentResponse = await axios.request({
@@ -597,7 +610,7 @@ export const createOrder = async (
           url_redirect: "http://localhost:4000/api/customer/payment/callback",
           url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
           qrcode: {
-            biller_reference_1: `REF${orderId}`,
+            biller_reference_1: `REF${orderId[0].id}`,
           },
         },
         headers: {
@@ -635,8 +648,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4005/api/customer/payment/callback",
-          url_notify: "http://localhost:4005/api/customer/payment/notify", //web เรา
+          url_redirect: "http://localhost:4000/api/customer/payment/callback",
+          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
           qrcode: {
             biller_reference_1: `REF${orderCode}`,
           },
@@ -646,6 +659,7 @@ export const createOrder = async (
       paymentStatus.save();
     }
     if(paymentResponse) {
+      console.log(paymentResponse)
       res.status(200).json({ data: paymentResponse.data , queue: true});
       await enqueueAutoCancel({
         orderId: orderId[0].id, //send checkout id not order id
@@ -654,8 +668,7 @@ export const createOrder = async (
         delayMs: 15 * 60 * 1000
       })
     }
-  } catch (error) {
-    console.log(error.message);
+  } catch (error:any) {
     res.status(404).json({ error: error });
   }
 };
@@ -672,7 +685,7 @@ export const deleteOrder = async (
     });
     return res.status(200).json({ data: "connect del order" });
   } catch (error) {
-    console.log("error", error);
+    return res.json({ error: error})
   }
 };
 
@@ -684,7 +697,7 @@ export const findShipping = async (
   try {
     const response = await ShippingType.findAll();
     res.json({ data: response });
-  } catch (error) {
+  } catch (error:any) {
     res.json({ error: error });
   }
 };
@@ -736,7 +749,6 @@ export const createCart = async (
       }
     }
   } catch (error) {
-    console.log();
     res.json({ error: error });
   }
 };
@@ -766,8 +778,7 @@ export const updateOrderStatus = async (
       );
       res.json({ data: createStatus });
     }
-  } catch (error) {
-    console.log(error.message);
+  } catch (error:any) {
     res.json({ error: error });
   }
 };
@@ -883,7 +894,6 @@ export const customerCancel = async (
     }
     res.json({data: 'success'})
   } catch (error) {
-    console.log(error)
     res.json({error: error})
   }
 };
@@ -893,7 +903,6 @@ export const customerCancelV2 = async (
   next: NextFunction
 ) => {
   const id = req.params.id;
-  console.log('in customer cancel', id)
   const findOrder = await Order.findByPk(id);
   try {
     await Order.update(
@@ -904,7 +913,6 @@ export const customerCancelV2 = async (
         where: { id: id },
       }
     );
-
     await Payment.update(
       {
         status: PaymentStatus.FAILED,
@@ -916,7 +924,6 @@ export const customerCancelV2 = async (
     );
     res.json({data: 'success'})
   } catch (error) {
-    console.log(error)
     res.json({error: error})
   }
 };

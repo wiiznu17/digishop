@@ -8,7 +8,8 @@ import { Address } from "@/types/props/addressProp";
 import { Noto_Sans_Thai_Looped } from "next/font/google";
 import Button from "./button";
 const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400'
+  weight:'400',
+  subsets:['thai']
 })
 interface CreateAddress {
   isShowAddress: boolean;
@@ -125,6 +126,7 @@ export const DialogAddress = ({
                             value={address.building}
                             onChange={handleInputChange}
                             placeholder="building"
+                            required
                           />
                           <InputField
                             label="Street"
@@ -132,6 +134,7 @@ export const DialogAddress = ({
                             value={address.street}
                             onChange={handleInputChange}
                             placeholder="street"
+                            required
                           />
                           <InputField
                             label="Sub Street"
@@ -146,6 +149,7 @@ export const DialogAddress = ({
                             value={address.district}
                             onChange={handleInputChange}
                             placeholder="district"
+                            required
                           />
                           <InputField
                             label="Sub district"
