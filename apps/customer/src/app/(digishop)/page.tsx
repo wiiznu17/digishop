@@ -1,16 +1,19 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { Search, Filter, X, Clock, TrendingUp, Key } from 'lucide-react';
-import NotFound from '@/components/notFound';
 import {useRouter} from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import { Rubik } from 'next/font/google';
 import { searchProduct } from '@/utils/requestUtils/requestProduct';
+import { Product, Store } from '@/types/props/productProp';
 const rubik = Rubik({
   subsets: ["latin"],
   weight: "500"
 })
-
+type ProductResponse = {
+  product: Product[];       // type ของ searchProduct
+  productCount: number;       // ตัวนับจำนวนสินค้า
+  store: Store[];           // type ของ searchStore
+};
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<string[]>();
@@ -28,9 +31,9 @@ const SearchPage = () => {
     const query = searchQuery.trim()
     if(query.length > 0 && loading){
     const timeOutId = setTimeout(async()=>{
-      const res = await searchProduct(query); 
-      const  productName = res.product.map(product => product.name)
-      const  storeName = res.store.map(store => store.storeName)
+      const res = (await searchProduct(query)) as ProductResponse; 
+      const  productName = res.product.map((product:Product) => product.name)
+      const  storeName = res.store.map((store:Store) => store.storeName)
       const resultSearch = productName.concat(storeName)
       console.log('resultSearch',resultSearch)
       if(resultSearch.length > 0){

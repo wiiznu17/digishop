@@ -1,13 +1,13 @@
-import { User } from "@digishop/db/src/models/User";
-import { Address } from "@digishop/db/src/models/Address";
-import { AddressType, UserRole } from "@digishop/db/src/types/enum";
 import { Request, Response } from "express";
-import { Op } from "@digishop/db/src/db";
-import bcrypt from "bcrypt"
-import jwt, { JwtPayload } from "jsonwebtoken"
+import bcrypt from "bcrypt";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import nodemailer from "nodemailer";
 // import sgTransport from "nodemailer-sendgrid-transport";
-const JWT_SECRET = process.env.JWT_SECRET ?? 'supersecretkey'
+import { sendMailForgotPassword, sendMailVerified } from "../util/mailUtil";
+import { enqueueRefreshToken } from "../queues/tokenQueue";
+import { accessToken } from "../util/jwt";
+import { Address, Op, User, UserRole } from "@digishop/db";
+const JWT_SECRET = process.env.JWT_SECRET ?? "supersecretkey";
 
 export const createUser = async (req: Request, res: Response) => {
   const {
@@ -30,7 +30,16 @@ export const createUser = async (req: Request, res: Response) => {
     isDefault,
     addressType,
   } = req.body;
-  const addressValide = [recipientName,phone,address_number,street,district,country,province,postalCode]
+  const addressValide = [
+    recipientName,
+    phone,
+    address_number,
+    street,
+    district,
+    country,
+    province,
+    postalCode,
+  ];
   try {
     // หา user จาก userId
     const user = await User.findByPk(email);
@@ -39,7 +48,7 @@ export const createUser = async (req: Request, res: Response) => {
         .status(404)
         .json({ error: "This email already have an account" });
     }
-    const passwordHash = await bcrypt.hash(password, 10)
+    const passwordHash = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       firstName,
       middleName,
@@ -49,7 +58,7 @@ export const createUser = async (req: Request, res: Response) => {
       role: UserRole.CUSTOMER,
     });
     await newUser.save();
-    if(addressValide.every(x => x !== '') ){
+    if (addressValide.every((x) => x !== "")) {
       const address = await Address.create({
         userId: newUser.id,
         recipientName,
@@ -66,34 +75,19 @@ export const createUser = async (req: Request, res: Response) => {
         isDefault: true,
         addressType,
       });
-      await address.save()
+      await address.save();
     }
     const payload = {
       firstName: newUser.firstName,
       middleName: newUser.middleName,
       lastName: newUser.lastName,
-      email: newUser.email
-    }
-    const token = await jwt.sign(payload, JWT_SECRET, { expiresIn: "1H" })
-    const transport = nodemailer.createTransport(
-      nodemailerSendgrid({
-        apiKey: process.env.SENDGRED_API
-      })
-    )
-    const url = `http://localhost:3000/confirmation/token?=${token}`
-    transport.sendMail({
-      from: 'no-reply@digishop.com',
-      to: `${newUser.firstName} <${newUser.email}>`,
-      subject: 'Confirmation Email',
-      html:`Confirmation Email <a href=${url}> ${url}`
-    }).then(() => {
-      console.log("Email sent")
-    }).catch(() => {
-      console.log("Email not sent")
-    })
-    res.json({ data: newUser , token: token });
+      email: newUser.email,
+    };
+    // sendMailVerified(payload)
+    const token = await jwt.sign(payload, JWT_SECRET, { expiresIn: "1H" });
+    res.json({ data: newUser, token: token });
   } catch (err: any) {
-    console.log(err.message)
+    console.log(err.message);
     res.status(400).json({ error: err });
   }
 };
@@ -117,18 +111,20 @@ export const createAddress = async (req: Request, res: Response) => {
     updatedAt,
   } = req.body;
   try {
-    const hasDefaultAdd = await Address.findAll({where: {
-      [Op.and]: {
-        userId: userId,
-        isDefault: true
-      }
-    }})
-    let isDefault
-    console.log('has',hasDefaultAdd)
-    if(hasDefaultAdd.length === 0){
-      isDefault = true
-    }else{
-      isDefault = false
+    const hasDefaultAdd = await Address.findAll({
+      where: {
+        [Op.and]: {
+          userId: userId,
+          isDefault: true,
+        },
+      },
+    });
+    let isDefault;
+    console.log("has", hasDefaultAdd);
+    if (hasDefaultAdd.length === 0) {
+      isDefault = true;
+    } else {
+      isDefault = false;
     }
     const address = await Address.create({
       userId,
@@ -254,44 +250,150 @@ export const updateAddress = async (req: Request, res: Response) => {
         where: { id: id },
       }
     );
-    res.json({data: 'success'})
-  } catch (error) {
-    console.log(error.message)
+    res.json({ data: "success" });
+  } catch (error: any) {
+    console.log(error.message);
   }
 };
 
 export const deleteAddress = async (req: Request, res: Response) => {
   const id = req.params.id;
-  console.log(id)
+  console.log(id);
   try {
     await Address.destroy({
       where: { id: id },
     });
-    res.json({data: 'success'})
-  } catch (error) {
-    console.log(error.message)    
+    res.json({ data: "success" });
+  } catch (error: any) {
+    console.log(error.message);
   }
 };
 
-export const updateUserName = async ( req: Request, res: Response) => {
-  const id = req.params.id
-  const {
-    firstName,
-    lastName,
-    middleName
-  } = req.body
+export const updateUserName = async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const { firstName, lastName, middleName } = req.body;
   try {
-    await User.update({
-      firstName: firstName,
-      lastName: lastName,
-      middleName: middleName
-    }, { where: { id: id}})
-    res.json({data: 'success'})
-  } catch (error) {
-    console.log(error.message)
+    await User.update(
+      {
+        firstName: firstName,
+        lastName: lastName,
+        middleName: middleName,
+      },
+      { where: { id: id } }
+    );
+    res.json({ data: "success" });
+  } catch (error: any) {
+    console.log(error.message);
   }
-}
+};
 
-function nodemailerSendgrid(arg0: { apiKey: string | undefined; }): import("nodemailer/lib/smtp-pool") | import("nodemailer/lib/smtp-pool").Options {
-  throw new Error("Function not implemented.");
-}
+export const refreshTokenAuth = async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    res.status(400).json({ error: "Refresh token is required" });
+    return;
+  }
+
+  try {
+    // Replace with correct method to get job by refreshToken
+    const job = await enqueueRefreshToken(refreshToken);
+    console.log("job", job.data);
+    if (!job) {
+      res.status(403).json({ error: "Invalid or expired refresh token" });
+      return;
+    }
+
+    const { userId } = job.data;
+    console.log("user id", userId);
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      await job.remove(); // Remove job if user not found
+      res.status(403).json({ error: "User not found" });
+      return;
+    }
+
+    const accesstoken = accessToken({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+    const newrefreshtoken = refreshToken();
+    // Remove old refresh token and add new one
+    await job.remove();
+    await enqueueRefreshToken({
+      userId: user.id,
+      refreshToken: newrefreshtoken,
+    });
+    res.json({ accessToken: accesstoken, refreshToken: newrefreshtoken });
+  } catch (error) {
+    console.error("Error refreshing token", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// export const refreshPassword = async() => (req: Request, res: Response) => {
+//   const tokenConfig.resetPasswordToken.secret:string = '' ค่าใน catch ที่เก้บไว้มาเทียบกับฝั่งหน้าบ้าน
+//   const token = req.query.token || req.body.token
+//   const {email, password} = req.body
+//   jwt.verify(token, tokenConfig.resetPasswordToken.secret, (err) => {
+//     if (err) {
+//       // if (err.name === 'TokenExpiredError') {
+//       //   next(new ServiceError(userError.ERR_USER_RESET_PASSWORD_TOKEN_EXPIRED))
+//       // } else {
+//       //   next(new ServiceError(userError.ERR_USER_INVALID_RESET_PASSWORD_TOKEN))
+//       // }
+//     } else {
+//       try {
+//         const updatePassword = await User.findAll({where: {email}})
+//         if(updatePassword.length === 1){
+//           await User.update({ password }, {where: {email}})
+//         }
+//         res.json({ data: 'success'})
+//       } catch (error) {
+//         res.json({ error: error})
+//       }
+//   }})
+// }
+
+//       const query = {
+//         include: [
+//           {
+//             model: model.USER_RESET_PASSWORD_TOKEN,
+//             required: true,
+//             where: { token }
+//           }
+//         ]
+//       }
+//       model.USER.findOne(query)
+//         .then((user) => {
+//           if (!user) {
+//             throw new ServiceError(userError.ERR_USER_INVALID_RESET_PASSWORD_TOKEN)
+//           }
+//           if (user.status === userStatusMaster.SUSPEND) {
+//             throw new ServiceError(userError.ERR_USER_SUSPEND)
+//           }
+//           req.user = user.toJSON()
+//           next()
+//         })
+//         .catch((err) => next(err))
+
+export const sendMailResetPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  // const {email} = req.body
+  try {
+    const findEmail = await User.findAll({ where: { email } });
+    if (findEmail.length === 1) {
+      const response = await sendMailForgotPassword(email);
+      if (response) {
+        res.json({ data: response });
+      } else {
+        res.json({ error: "not send mail" });
+      }
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.json({ error: error });
+  }
+};
