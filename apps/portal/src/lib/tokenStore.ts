@@ -1,58 +1,84 @@
-let accessToken: string | null = null
-const listeners = new Set<() => void>()
-const bc: BroadcastChannel | null =
-  typeof window !== "undefined" ? new BroadcastChannel("auth") : null
-
-// เพิ่ม: โหลด token จาก localStorage ตอน init
-if (typeof window !== "undefined") {
-  accessToken = localStorage.getItem("accessToken")
+// apps/portal/src/lib/tokenStore.ts
+type Listener = () => void
+type TokenStore = {
+  accessToken: string | null
+  listeners: Set<Listener>
+  bc: BroadcastChannel | null
+  initDone: boolean
+}
+declare global {
+  var __tokenStore__: TokenStore
 }
 
-export function getAccessToken(): string | null {
-  return accessToken
+const store: TokenStore = globalThis.__tokenStore__ ?? {
+  accessToken: null,
+  listeners: new Set(),
+  bc: null,
+  initDone: false
 }
 
-export function setAccessToken(token: string | null): void {
-  console.log("Access token to set: ", token)
-  accessToken = token
+function ensureInit() {
+  if (store.initDone) return
+  if (typeof window === "undefined") return
 
-  // เพิ่ม: sync กับ localStorage
-  if (typeof window !== "undefined") {
-    console.log("type window is not undefinded ")
-    if (token) {
-      console.log("Access token to set: ", token)
-      localStorage.setItem("accessToken", token)
-    } else {
-      console.log("Access token to remove: ", token)
-      localStorage.removeItem("accessToken")
+  try {
+    const saved = localStorage.getItem("accessToken")
+    if (saved) store.accessToken = saved
+  } catch {}
+
+  try {
+    store.bc = new BroadcastChannel("auth")
+    store.bc.onmessage = (e: MessageEvent) => {
+      const data = e.data as { type?: string; token?: string | null }
+      if (data?.type !== "accessToken") return
+      store.accessToken = data.token ?? null
+      try {
+        if (store.accessToken)
+          localStorage.setItem("accessToken", store.accessToken)
+        else localStorage.removeItem("accessToken")
+      } catch {}
+      store.listeners.forEach((l) => l())
     }
+    window.addEventListener("beforeunload", () => {
+      try {
+        store.bc?.close()
+      } catch {}
+    })
+  } catch {
+    store.bc = null
   }
 
-  listeners.forEach((l) => l())
-  bc?.postMessage({ type: "accessToken", token })
+  // fallback sync ระหว่างแท็บ
+  window.addEventListener("storage", (ev) => {
+    if (ev.key !== "accessToken") return
+    store.accessToken = ev.newValue ?? null
+    store.listeners.forEach((l) => l())
+  })
+
+  store.initDone = true
+  globalThis.__tokenStore__ = store
 }
 
-export function subscribe(listener: () => void): () => void {
-  listeners.add(listener)
-  return () => listeners.delete(listener)
+export function getAccessToken() {
+  ensureInit()
+  return store.accessToken
 }
-
-if (bc) {
-  bc.onmessage = (e: MessageEvent) => {
-    const data = e.data as { type?: string; token?: string | null }
-    if (data?.type === "accessToken") {
-      accessToken = data.token ?? null
-
-      // เพิ่ม: sync กับ localStorage
-      if (typeof window !== "undefined") {
-        if (accessToken) {
-          localStorage.setItem("accessToken", accessToken)
-        } else {
-          localStorage.removeItem("accessToken")
-        }
-      }
-
-      listeners.forEach((l) => l())
+export function setAccessToken(token: string | null) {
+  ensureInit()
+  store.accessToken = token
+  try {
+    if (typeof window !== "undefined") {
+      if (token) localStorage.setItem("accessToken", token)
+      else localStorage.removeItem("accessToken")
     }
-  }
+  } catch {}
+  store.listeners.forEach((l) => l())
+  try {
+    store.bc?.postMessage({ type: "accessToken", token })
+  } catch {}
+}
+export function subscribe(listener: () => void) {
+  ensureInit()
+  store.listeners.add(listener)
+  return () => store.listeners.delete(listener)
 }

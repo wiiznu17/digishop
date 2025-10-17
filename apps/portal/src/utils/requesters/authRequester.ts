@@ -13,6 +13,7 @@ import { setAccessToken } from "@/lib/tokenStore"
 // }
 export async function warmMe() {
   try {
+    console.log("access from warm")
     await axios.get("/api/auth/access")
   } catch {}
 }
