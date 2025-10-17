@@ -7,6 +7,7 @@ export async function login(
 ): Promise<{ accessToken: string }> {
   const res = await axios.post("/api/auth/login", { email, password })
   const data = res.data as { accessToken: string }
+  console.log("access tk: ", data.accessToken)
   if (data?.accessToken) setAccessToken(data.accessToken)
   return data
 }
