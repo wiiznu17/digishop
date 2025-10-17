@@ -104,7 +104,7 @@ const RegisterPage: React.FC = () => {
   };
 
   const router = useRouter();
-  const testLength = formData.password.length > 6
+  const testLength = formData.password.length >= 6
   const testCapLetter = (/[A-Z]/g).test(formData.password)
   const testLowerLetter = (/[a-z]/g).test(formData.password)
   const testNumber = (/[0-9]/g).test(formData.password)
@@ -181,30 +181,40 @@ const RegisterPage: React.FC = () => {
                 minLength={6}
                 required={true}
               />
-              <div className={`flex mt-1 ${testCapLetter? 'text-black':'text-gray-300'}`}>
+              {/* Password Requirements */}
+            <div className="bg-gray-50 rounded-lg p-4 mt-2">
+              <p className="test-xs font-medium text-gray-700 mb-2">
+                Password must contain:
+              </p>
+            <div className={`flex  items-center mt-1 ${testCapLetter? 'text-black':'text-gray-300'}`}>
                 <CircleCheck size={20}/>
-                <div>Contains one lowercase characters</div>
+                <div className="text-[16px] mx-1">Contains one Uppercase characters</div>
               </div>
-              <div className={`flex mt-1 ${testLowerLetter? 'text-black':'text-gray-300'}`}>
+              <div className={`flex items-center mt-1 ${testLowerLetter? 'text-black':'text-gray-300'}`}>
                 <CircleCheck size={20}/>
-                <div>Contains one lowercase characters</div>
+                <div className="text-[16px] mx-1">Contains one lowercase characters</div>
               </div>
-              <div className={`flex mt-1 ${testNumber? 'text-black':'text-gray-300'}`}>
+              <div className={`flex items-center mt-1 ${testNumber? 'text-black':'text-gray-300'}`}>
                 <CircleCheck size={20}/>
-                <div>Contains a number </div>
+                <div className="text-[16px] mx-1">Contains a number </div>
               </div>
-              <div className={`flex mt-1 ${testLength? 'text-black':'text-gray-300'}`}>
+              <div className={`flex items-center mt-1 ${testLength? 'text-black':'text-gray-300'}`}>
                 <CircleCheck size={20}/>
-                <div>At least 6 characters</div>
+                <div className="text-[16px] mx-1">At least 6 characters</div>
               </div>
+              
+            </div>
+              
             </div>
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
             </div>
+              
               <h2 className="text-xl font-semibold text-gray-900 border-b mb-4">
-              Address Information
+              Address Information (option)
               </h2>
+
               <button onClick={() => setAddAddress(true)} hidden={addAddress} className={`flex justify-center items-center w-full border border-black h-11 rounded-lg `}>
                 <Plus color='black'/>
               </button>
@@ -243,6 +253,7 @@ const RegisterPage: React.FC = () => {
                   value={formData.address_number}
                   onChange={handleInputChange}
                   placeholder="address number"
+                  required
                 />
                 <InputField
                   label="Building"
@@ -266,7 +277,6 @@ const RegisterPage: React.FC = () => {
                   value={formData.subStreet}
                   onChange={handleInputChange}
                   placeholder="subStreet"
-                  required={true}
                 />
                 <InputField
                   label="District"

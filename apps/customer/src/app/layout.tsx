@@ -1,6 +1,5 @@
 import { AuthProvider } from '@/contexts/auth-context';
 import './globals.css'
-import { Rubik, Ubuntu } from "next/font/google"
 export const metadata = {
     title: "Next.js",
 };

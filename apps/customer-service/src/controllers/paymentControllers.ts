@@ -1,14 +1,5 @@
-import { CheckOut } from "@digishop/db/src/models/CheckOut";
-import { Order } from "@digishop/db/src/models/Order";
-import { OrderStatusHistory } from "@digishop/db/src/models/OrderStatusHistory";
-import { Payment } from "@digishop/db/src/models/Payment";
-import { PaymentGatewayEvent } from "@digishop/db/src/models/PaymentGatewayEvent";
-import {
-  ActorType,
-  OrderStatus,
-  PaymentStatus,
-} from "@digishop/db/src/types/enum";
-import axios from "axios";
+
+import { ActorType, CheckOut, Order, OrderStatus, OrderStatusHistory, Payment, PaymentGatewayEvent, PaymentStatus } from "@digishop/db";
 import { Request, Response } from "express";
 export const getNotify = async (req: Request, res: Response) => {
   const {
@@ -24,14 +15,14 @@ export const getNotify = async (req: Request, res: Response) => {
     bank_reference,
     authorize_token,
   } = req.body;
-  console.log('status',status)
+  console.log('req',req.body)
   try {
     const findPaymentId = await Payment.findOne({
       where: { providerRef: reference },
       attributes: ["id","checkoutId"],
     });
-    const checkOutId = findPaymentId.checkoutId
-    const paymentId = findPaymentId.id
+    const checkOutId = findPaymentId?.checkoutId
+    const paymentId = findPaymentId?.id
     const findOrder = await Order.findAll({
       where: { checkoutId: checkOutId},
       attributes: ["id"]

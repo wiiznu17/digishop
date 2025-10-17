@@ -102,7 +102,7 @@ export default function OrderPage() {
     };
     const handleOnConfirmAddress = async (e: React.FormEvent): Promise<void> => {
       const axiosData = { ...address, userId: user?.id };
-      const res = await createAddress(axiosData);
+      const res = (await createAddress(axiosData)) as Address;
       if (res.data) {
         setIsShowAddress(false);
         window.location.reload()
@@ -358,7 +358,10 @@ useEffect(() => {
                         {values.items?.map((value, index) => (
                           <div key={index}>
                             <div className="flex gap-4 relative mb-2">
-                              <div className="w-[100px] h-[100px] bg-amber-700"></div>
+                              <img
+                                src={values.items[0].productItem.productItemImage.url}
+                                className="object-fill w-[100px] h-[100px] "
+                              /> 
                               <div>
                                 <div className="flex-1">
                                   <div>{value.productItem.product.name}</div>
@@ -402,7 +405,10 @@ useEffect(() => {
                   {
                     addresses?.length === 0 && (
                       //address form
-                      <Button onClick={handleOnClickAddress} border="border-black">create address</Button>
+                      <div className="mb-4">
+                        <Button className="mb-2" onClick={handleOnClickAddress} border="border-black" >create address</Button>
+                        <p className='text-xs text-red-600'>* create shipping address</p>
+                      </div>
 
                     )
                   }
@@ -430,7 +436,7 @@ useEffect(() => {
                   </div>
                   }
                   
-                  <div className="">select your shipping type {selectShippingTypeId}</div>
+                  <div className="">select your shipping type </div>
 
                   {shipping?.map((item: Shipping, index: number) => (
                     <div
@@ -527,7 +533,7 @@ useEffect(() => {
                               <Image src={creditMethodLogo} alt='credit method pricture' width={300} className="py-4"/>
                             }
                             {
-                              config.label === 'QR'&&
+                              config.label === 'PROMPT PAY'&&
                               <Image src={qrLogo} alt='qr method pricture' width={100} className="pt-4"/>
 
                             }
@@ -544,11 +550,11 @@ useEffect(() => {
               </div>
               {/* buttonb  */}
 
-              <div className="flex justify-end">
+              <div className=" flex justify-end ">
                 <Button
                   onClick={handleOrder}
-                  color={`${!paymentMethod ? "bg-gray-300 hover:bg-gray-300" : "bg-green-400 hover:bg-green-600"}`}
-                  disabled={!paymentMethod}
+                  color={`${!selectAddress  ? "bg-gray-300 hover:bg-gray-300" : "bg-green-400 hover:bg-green-600"}`}
+                  disabled={!selectAddress}
                 >
                   confirm
                 </Button>

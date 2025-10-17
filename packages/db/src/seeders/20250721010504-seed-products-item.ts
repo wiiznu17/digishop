@@ -7,8 +7,8 @@ export default {
 
     await q.bulkInsert("PRODUCT_ITEMS", [
       // Smartphone X (product_id: 1001) —500
-      { uuid: uuidv4(), product_id: 1001, sku: "X-BLK-128", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
-      { uuid: uuidv4(), product_id: 1001, sku: "X-SLV-256", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1001, sku: "X-BLK-128", stock_quantity: 0, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
+      { uuid: uuidv4(), product_id: 1001, sku: "X-SLV-256", stock_quantity: 1, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
       { uuid: uuidv4(), product_id: 1001, sku: "X-BLK-256", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
       { uuid: uuidv4(), product_id: 1001, sku: "X-SLV-128", stock_quantity: 50, price_minor: 50_000,  is_enable: true,  image_url: null, created_at: now, updated_at: now, deleted_at: null },
 

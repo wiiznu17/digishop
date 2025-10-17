@@ -4,7 +4,7 @@ import {
     RefundStatus
 } from "../../../../../packages/db/src/types/enum";
 import { Address } from "./addressProp";
-import { Configurations, Store } from "./productProp";
+import { Configurations, ProductItemImages, Store } from "./productProp";
 //ข้อมูลการจ่ายเงิน ที่อยู่จัดส่ง ก่อนจ่ายเงิน
 export interface OrderDetail {
   id: number;
@@ -126,6 +126,7 @@ export interface ProductItemProps {
   priceMinor: number;
   image_url?: string | undefined;
   configurations: Configurations[]
+  productItemImage: ProductItemImages
   product: {
     id: number;
     uuid: string;
@@ -171,7 +172,7 @@ export interface Payment {
   updated_at: Date
   expiryAt: string
   providerRef: string
-  paid_at?: Date;
+  paidAt?: Date;
   createdAt?: Date;
 }
 //order before paid

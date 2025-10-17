@@ -14,6 +14,7 @@ import {
   logoutUser
 } from "../utils/requestUtils/requestLoginUtils"
 import { usePathname } from "next/navigation"
+import { setAccessToken } from "@/lib/tokenStore"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await logoutUser()
     setUser(null)
+    setAccessToken(null)
   }
 
   return (
