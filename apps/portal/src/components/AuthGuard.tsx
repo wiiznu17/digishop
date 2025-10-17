@@ -48,21 +48,13 @@ export function useAuth() {
 
     try {
       const m = await fetchAuth()
-      // ถ้า response เก่าหรือ component unmounted ให้ทิ้ง
-      if (activeRef.current !== mySeq || !mountedRef.current) {
-        console.log("activeRef.current !== mySeq || !mountedRef.current")
-        return
-      }
+      if (activeRef.current !== mySeq || !mountedRef.current) return // ทิ้งผลเก่า
       setMe(m)
     } catch (e: unknown) {
-      // log สำคัญ: โหลด session ล้มเหลว
-      console.error("[useAuth] fetchAuth failed", e)
       if (activeRef.current !== mySeq || !mountedRef.current) return
       setErr(e instanceof Error ? e : new Error("fetchAuth failed"))
     } finally {
-      if (activeRef.current === mySeq && mountedRef.current) {
-        setLoading(false)
-      }
+      if (mountedRef.current) setLoading(false)
     }
   }
 
@@ -120,17 +112,24 @@ export default function AuthGuard({
   const allowed = useCan(needPerms, me)
 
   useEffect(() => {
-    if (loading || redirectedRef.current) return
+    if (redirectedRef.current) return
 
-    // ยังไม่ล็อกอิน → ไปหน้า login
-    if (!me) {
+    // ยังโหลดอยู่ → รอ
+    if (loading) return
+
+    // ✅ ยังไม่มี me แต่มี token อยู่ → อย่า redirect (รอโหลดรอบถัดไป)
+    const hasToken = !!getAccessToken()
+    if (!me && hasToken) return
+
+    // ไม่มี me และไม่มี token → ไป login
+    if (!me && !hasToken) {
       redirectedRef.current = true
       router.replace(redirectTo)
       return
     }
 
     // ล็อกอินแล้วแต่สิทธิ์ไม่พอ → 403
-    if (!allowed) {
+    if (me && !allowed) {
       redirectedRef.current = true
       router.replace("/403")
       return
