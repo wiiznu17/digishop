@@ -336,6 +336,7 @@ function Guard({ children }: { children: React.ReactNode }) {
 }
 
 export default function Page() {
+  console.log("Hi from order page")
   return (
     <Guard>
       <AdminOrdersPage />
