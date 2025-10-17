@@ -13,7 +13,6 @@ import {
 import { Rubik } from "next/font/google";
 import { SetStateAction, useEffect, useState } from "react";
 import StateConfig from '@/master/statusOrderConfig.json'
-import { create } from "domain";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -30,11 +29,12 @@ export default function OrderStatus() {
   const [selectShowCancel, setSelectShowCancel] = useState<
     CancelProp | undefined
   >();
-  const [selectStatus, setSelectStatus] = useState<string>("PENDING");
+
+  const [selectStatus, setSelectStatus] = useState<keyof typeof StateConfig>("PENDING");
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const data = await fetchUserOrders(user.id);
+      const data = (await fetchUserOrders(user.id)) as ({ body: OrderDetail[], count: number });
       const { body, count } = data;
       setOrders(body);
     };
@@ -49,29 +49,30 @@ export default function OrderStatus() {
         ...order,
         timeStamp: Date.parse(order.created_at)
       }))
-      .filter((order) =>
-        StateConfig[selectStatus].status.includes(order.status)
-      );
+      .filter((order) => {
+        const cfg = StateConfig[selectStatus];
+        const statuses = Array.isArray(cfg.status) ? cfg.status : [cfg.status];
+        return statuses.includes(order.status);
+      });
   };
-  
-  const filterOrder = getFilterOrder()?.sort((a,b) => b.timeStamp - a.timeStamp);
-  const handleChangeState = (state: string) => {
+  const handleChangeState = (state: keyof typeof StateConfig) => {
     setIsShowCancel({shown: false, id: undefined})
     setIsShowRefund({shown: false, id: undefined})
     setSelectStatus(state);
     setSelectShowDetail(undefined);
     setSelectShowCancel(undefined);
   };
-  const handleShowDetail = (order: OrderDetail) => {
+   const filterOrder = getFilterOrder() ? getFilterOrder() : null;
+   const handleShowDetail = (order: OrderDetail) => {
     setSelectShowDetail(order);
   };
   return (
-    <div className="mx-20">
-      <div className="flex sticky top-0 items-center bg-white justify-center space-x-20 p-3 z-100">
+    <div className="">
+      <div className="flex sticky top-0 items-center bg-white justify-between space-x-20 py-3 px-60 z-100 border-b mb-5">
         {Object.entries(StateConfig).map(([state, config]) => (
           <div key={state}>
             <Button
-              onClick={() => handleChangeState(state)}
+              onClick={() => handleChangeState(state as keyof typeof StateConfig)}
               className={`${state == selectStatus ? "bg-blue-300" : "bg-green-200"} ${rubik.className} `}
             >
               {config.label}
@@ -81,33 +82,19 @@ export default function OrderStatus() {
       </div>   
 
 
-      <div className="grid grid-cols-2">
         <div className="flex justify-center">
-            <div className="flex flex-col">
-                {filterOrder.length > 0 ? (
-                filterOrder.map((order, index: number) => (
-                    <div key={index} 
-                    >
-                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} setIsShowCancel={setIsShowCancel} setIsShowRefund={setIsShowRefund} setSelectShowCancel={setSelectShowCancel} selectShowCancel={selectShowCancel} isShowCancel={isShowCancel} isShowRefund={isShowRefund} />
-                    </div>
-                ))
-                ) : (
-                <div>no info</div>
-                )}
-            </div>
+            {filterOrder ? (
+              filterOrder.map((order, index: number) => (
+                  <div key={index} 
+                  >
+                    <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} setIsShowCancel={setIsShowCancel} setIsShowRefund={setIsShowRefund} setSelectShowCancel={setSelectShowCancel} selectShowCancel={selectShowCancel} isShowCancel={isShowCancel} isShowRefund={isShowRefund} />
+                  </div>
+              ))
+              ) : (
+              <div>no info</div>
+              )}
         </div>
-        <div >
-          {
-            selectShowCancel != undefined && (
-              <div>{selectShowCancel.reason}</div>
-            )
-          }
-          {/* {selectShowDetail != undefined && (
-            <OrderDetailPage order={selectShowDetail} />
-          )} */}
-
-        </div>
-      </div>      
+           
     </div>
   );
   // return (

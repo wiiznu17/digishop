@@ -1,16 +1,7 @@
 import { Op } from "sequelize";
 import { NextFunction, Request, Response } from "express";
-import { Product } from "@digishop/db/src/models/Product";
-import { Category } from "@digishop/db/src/models/Category";
-import { ProductImage } from "@digishop/db/src/models/ProductImage";
-import { Store } from "@digishop/db/src/models/Store";
-import { ProductItem } from "@digishop/db/src/models/ProductItem";
-import { ProductItemImage } from "@digishop/db/src/models/ProductItemImage";
-import { ProductConfiguration } from "@digishop/db/src/models/ProductConfiguration";
-import { VariationOption } from "@digishop/db/src/models/VariationOption";
-import { Variation } from "@digishop/db/src/models/Variation";
-import { ProductStatus, StoreStatus } from "@digishop/db/src/types/enum";
-import sequelize from "@digishop/db";
+import { Category, Product, ProductConfiguration, ProductImage, ProductItem, ProductItemImage, ProductStatus, Store, StoreStatus, Variation, VariationOption } from "@digishop/db";
+
 
 export const searchProduct = async (
   req: Request,
@@ -211,10 +202,12 @@ export const getStoreProduct = async (
             {
             model: ProductItem,
             as: "items",
-            include: [{
+            include: [
+              {
                 model: ProductItemImage,
                 as: "productItemImage",
-              },]
+              }
+              ,]
             },
             {
             model: Category,

@@ -20,13 +20,23 @@ import CancelReasonMaster from "../master/cancelReason.json";
 import {
   updateOrderStatus,
   revokeCancelOrder,
+  customerCancel,
 } from "@/utils/requestUtils/requestOrderUtils";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { Configurations } from "@/types/props/productProp";
-import { formatAddress, formatSku, formatTime, formatTimeZoneTH } from "@/lib/function";
-import { OrderStatus, RefundStatus } from "../../../../packages/db/src/types/enum";
+import {
+  formatAddress,
+  formatSku,
+  formatTime,
+  formatTimeZoneTH,
+} from "@/lib/function";
+import {
+  OrderStatus,
+  RefundStatus,
+} from "../../../../packages/db/src/types/enum";
 import PaymentMethodMaster from "../master/paymentMethod.json";
+
 
 interface OrderCard {
   item: OrderDetail;
@@ -36,7 +46,7 @@ interface OrderCard {
   setIsShowRefund: React.Dispatch<SetStateAction<CancelRefundProps>>;
   isShowCancel: CancelRefundProps;
   isShowRefund: CancelRefundProps;
-  setSelectShowCancel: React.Dispatch<SetStateAction<CancelProp>>;
+  setSelectShowCancel: React.Dispatch<SetStateAction<CancelProp|undefined>>;
   selectShowCancel: CancelProp | undefined;
 }
 
@@ -59,14 +69,20 @@ export default function OrderCard({
   const [isShow, setIsShow] = useState<boolean>(false);
   const [isShowRefundDetail, setIsShowRefundDetail] = useState<boolean>(false);
   const [refundId, setRefundId] = useState<number>(0);
-  const [now, setNow] = useState<number|null>(null);
-  // const [end, setEnd] = useState<number|null>(null);
+  const [now, setNow] = useState<number | null>(null);
   const handleRevokeCancel = async (id: number) => {
-    const data = await revokeCancelOrder(id);
+    const data = (await revokeCancelOrder(id)) as {data:string}; //check return
     if (data.data) {
       window.location.reload();
     }
   };
+  // const handleCustomerCancel = async(id:number) => {
+  //   console.log('id',id)
+  //   const res = await customerCancel(id)
+  //   if(res.data){
+  //     window.location.reload()
+  //   }
+  // }
   const handleOnCancel = () => {
     setIsShowCancel({ shown: false, id: undefined });
     setIsShowRefund({ shown: false, id: undefined });
@@ -75,32 +91,20 @@ export default function OrderCard({
     setDetail("");
   };
   const handleConfirmed = async () => {
-    const data = await updateOrderStatus(item.id);
+    const data = (await updateOrderStatus(item.id)) as {data:string}; //check return
     if (data.data) {
       window.location.reload();
     }
   };
- useEffect(() => {
-//     if (!firstOrder) {
-//       redirect('/', RedirectType.replace);
-//       return ;
-//     }
-//     if (!orderDetail || !firstOrder?.checkout ) return;
-//   const shouldOpen = localStorage.getItem("openPayment");
-//   if (shouldOpen === "true" && orderDetail) {
-//     paymentWeb(firstOrder.checkout.payment?.url_redirect)
-//     localStorage.removeItem("openPayment");
-//   }
-  // if (orderDetail && firstOrder.checkout.payment?.pgw_status === "PENDING") {
-  //   const expiry = new Date(item.checkout.payment.expiry_at).getTime();
-  //   setEnd(expiry);
-  // }
-}, []);
-  const end = item.checkout.payment?.expiryAt ? new Date(item.checkout.payment.expiryAt).getTime() : null;
-  const remaining: null | number = (end !== null && now !== null) ? end - now : null;
+
+  const end = item.checkout.payment?.expiryAt
+    ? new Date(item.checkout.payment.expiryAt).getTime()
+    : null;
+  const remaining: null | number =
+    end !== null && now !== null ? end - now : null;
   useEffect(() => {
-      const interval = setInterval(() => setNow(Date.now()), 1000);
-      return () => clearInterval(interval);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
   }, []);
   if (!user) return;
   return (
@@ -115,7 +119,7 @@ export default function OrderCard({
               )
             }
           >
-            <div className="mx-4">
+            <div className="pt-2">
               {item.items[0].productItem.product.store.storeName}
             </div>
           </button>
@@ -133,7 +137,10 @@ export default function OrderCard({
                 }
               >
                 <div className="flex gap-4 relative mb-2">
-                  <div className="w-[100px] h-[100px] bg-amber-700"></div>
+                  <img
+                    src={item.items[0].productItem.productItemImage.url}
+                    className="object-fill w-[100px] h-[100px] "
+                  /> 
                   <div>
                     <div className="flex-1">
                       <div className="flex justify-start mb-1">
@@ -158,48 +165,57 @@ export default function OrderCard({
             )}
           </div>
         ))}
-        {item.status !== "PENDING" && (
-          <div>
-            <div className="flex justify-end border-b mb-2 pb-2">
+        {item.grand_total_minor > 0 && (
+          <div className="flex justify-end border-b mb-2 pb-2">
             total ฿{" "}
             {(item.grand_total_minor / 100)
               .toString()
               .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
           </div>
-          
+        )}
+
+        {item.status !== "PENDING" && (
+          <div>
+            <div className="flex justify-between items-center">
+              <div className="">
+                {
+                  OrderStatusConfig[
+                    item.status as keyof typeof OrderStatusConfig
+                  ].label
+                }
+              </div>
+            </div>
           </div>
         )}
         {/* ราคาที่จ่าย */}
       </div>
-      <div className="flex justify-between items-center">
-        <div className="">
-          {
-            OrderStatusConfig[item.status as keyof typeof OrderStatusConfig]
-              .label
-          }
-        </div>
-      </div>
-      {
-        item.status === "PENDING" && (
-          (
-              <div>
-                <div>{end}</div>
-                {/* <div>{now}</div>  */}
-                <div className="flex">
-                  <div className="mr-2">
-                    ref: {item.checkout.payment?.providerRef} paid in 
-                  </div>
-                  <div className="">
-                  {
-                    remaining && formatTime(remaining / 1000)
-                  } 
-                </div>
-                </div>
-                
+
+      {item.status === "PENDING" &&
+        item.checkout.payment?.pgw_status === "PENDING" && (
+          <div>
+            <div className="flex">
+              <div className="mr-2">
+                ref: {item.checkout.payment?.providerRef} paid in
               </div>
-          )
-        )
-      }
+              <div className="">
+                {remaining && formatTime(remaining / 1000)}
+              </div>
+            </div>
+          </div>
+        )}
+
+      {item.checkout.payment === null && (
+        <div className="flex justify-end mt-2">
+          <Button
+            className="mr-2"
+            onClick={() => router.push(`/order/${item.checkout.orderCode}`)}
+          >
+            continue order
+          </Button>
+          {/* <Button onClick={() =>  handleCustomerCancel(item.id)}>cancel order</Button>  */}
+        </div>
+      )}
+
       {isShow && (
         <div className="">
           <div className=" bg-amber-50 rounded-2xl mb-2 ">
@@ -243,25 +259,37 @@ export default function OrderCard({
                 </div>
               </div>
             </div> */}
-          {item.checkout.payment?.paid_at && (
-            <div className="">
-              <div className="border-b py-2 text-2xl font-bold mb-2">
-                Payment
+          {/* {!item.checkout.payment?.paidAt && (
+              <div className="">
+                <div className="border-b py-2 text-2xl font-bold mb-2">
+                  Payment
+                </div>
+                <div>paid by {PaymentMethodMaster[item.checkout.payment?.payment_method].label}</div>
+                <div className="flex justify-center "> waiting to pay </div>
               </div>
-              {item.checkout.payment?.payment_method == "CREDIT_CARD" && (
-                <div>paid by {PaymentMethodMaster["CREDIT_CARD"].label}</div>
-              )}
-              {item.checkout.payment?.payment_method == "QR" && (
-                <div>paid by {PaymentMethodMaster["QR"].label}</div>
-              )}
-              
-              <div className="my-2">
-                transaction : {formatTimeZoneTH(item.checkout.payment.paid_at)}
-              </div>
+            )
+
+            } */}
+
+          <div className="">
+            <div className="border-b py-2 text-2xl font-bold mb-2">Payment</div>
+            <div>
+              {
+                typeof item.checkout.payment?.payment_method === 'number' &&
+                <div>
+                  paid by { PaymentMethodMaster[item.checkout.payment?.payment_method].label }
+                </div> 
                 
-              
+              }
             </div>
-          )}
+            <div className="my-2">
+              transaction :{" "}
+              {item.checkout.payment?.paidAt
+                ? formatTimeZoneTH(item.checkout.payment.paidAt.toString())
+                : item.status === OrderStatus.PENDING? "waiting to pay": "-"}
+            </div>
+          </div>
+
           {item.refundOrders.length > 0 && (
             <div>
               <div>
@@ -286,16 +314,18 @@ export default function OrderCard({
                       </div>
                     )}
                     <div className="flex">
-                      {item.refundOrders[refundId].status == RefundStatus.REQUESTED &&
+                      {item.refundOrders[refundId].status ==
+                        RefundStatus.REQUESTED &&
                         typeof item.refundOrders[item.refundOrders.length - 1]
                           .id == "number" && (
                           <Button
                             size="sm"
-                            onClick={() =>
-                              handleRevokeCancel(
-                                item.refundOrders[refundId].id
-                              )
-                            }
+                            onClick={() => {
+                              const refundOrderId = item.refundOrders[refundId].id;
+                              if (typeof refundOrderId === "number") {
+                                handleRevokeCancel(refundOrderId);
+                              }
+                            }}
                           >
                             cancel refund
                           </Button>
@@ -365,6 +395,7 @@ export default function OrderCard({
         <div className="flex justify-center items-center">
           <button
             onClick={() => setIsShow(!isShow)}
+            hidden={item.checkout.payment === null}
             className={`hover:cursor-pointer hover:bg-gray-300 trtransition-transform duration-300 ${isShow ? "rotate-180" : ""} `}
           >
             <ChevronDown />

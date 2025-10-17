@@ -1,4 +1,4 @@
-import { User } from "@digishop/db/src/models/User";
+import { User } from "@digishop/db";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
@@ -9,7 +9,7 @@ export interface AuthenticatedRequest extends Request {
 
 export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction) {
   const hdr = req.headers.authorization || "";
-  const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : "";
+  const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : ""; //access token ไม่ได้ใส่ Bearer 
   const expected = process.env.MERCHANT_SERVICE_TOKEN || "";
   console.log("hdr in service Auth: ", hdr)
   console.log("Token in service Auth: ", token)
@@ -40,6 +40,7 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    console.log('decoded',decoded)
     console.log("try to decode")
     if (typeof decoded === "string") return res.status(401).json({ error: "Invalid token" });
     req.user = decoded;
@@ -93,6 +94,26 @@ export function requireApprovedUser(opts?: { allowAdminBypass?: boolean; allowSe
   };
 }
 
+export const authenticateToken  = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const token = req.headers["authorization"];
+  const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey'
+  console.log('token',token)
+  if (token == null) {
+    res.sendStatus(401);
+    return;
+  }
+  //เทียบ token อยู่ใน header ต้อง decode ได้ JWT_SECRET ที่เราใช้ gen ตอนแรก
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) {
+      res.sendStatus(403);
+      return;
+    }
+    req.user = user;
+    next();
+  });
+};
+
+
 /** รวม serviceAuth + authenticate: service มาก่อน, ไม่ผ่านค่อยเช็ค cookie */
 export function eitherAuth(stack: Array<(req: AuthenticatedRequest, res: Response, next: NextFunction) => any>) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -105,3 +126,5 @@ export function eitherAuth(stack: Array<(req: AuthenticatedRequest, res: Respons
     step();
   };
 }
+
+

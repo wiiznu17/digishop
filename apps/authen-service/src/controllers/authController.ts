@@ -1,8 +1,7 @@
 import { Request, Response } from "express"
-import { signToken, verifyToken } from "../utils/jwt"
+import { accessToken, signToken, verifyToken } from "../utils/jwt"
 import bcrypt from "bcrypt"
 import { User } from "@digishop/db"
-
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body
@@ -28,15 +27,19 @@ export const login = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role
     })
-
+    const accesstoken = accessToken({
+      sub: user.id,
+      email: user.email,
+      role: user.role
+    });
     res.cookie("token", token, {
       httpOnly: true,
       secure: true, // เปลี่ยนเป็น true ถ้าใช้ HTTPS
       sameSite: "none",
       path: "/"
     })
-    console.log('login success')
-    res.json({ message: "Logged in", role: user.role, user: { id: user.id, email: user.email, role: user.role } })
+
+    res.json({ message: "Logged in", accessToken: accesstoken ,role: user.role, user: { id: user.id, email: user.email, role: user.role } })
 
   } catch (error) {
     console.error("Login error:", error)
@@ -93,3 +96,4 @@ export const me = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" })
   }
 }
+

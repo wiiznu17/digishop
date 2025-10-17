@@ -9,7 +9,8 @@ import {AddressCardForOrder} from "./addressCard";
 import { Noto_Sans_Thai_Looped } from "next/font/google";
 import Button from "./button";
 const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400'
+  weight:'400',
+  subsets: ['thai']
 })
 interface SelectAddress {
   isShown: boolean

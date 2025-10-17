@@ -11,7 +11,7 @@ export type CancelJob = {
   correlationId?: string;
   reason?: string;
 };
-export async function startAutoCancelWorker(connection: IORedis) {
+export function startAutoCancelWorker(connection: IORedis) {
   const queueName = ENV.CANCEL_QUEUE_NAME;
   const worker = new Worker<CancelJob>(
     queueName,
@@ -30,11 +30,11 @@ export async function startAutoCancelWorker(connection: IORedis) {
       if (!unpaid) return { skipped: true, reason: "ALREADY_PAID" };
       // เรียก merchant-service → CUSTOMER_CANCELED
       const res = 
-      await http.patch(
-        `/api/merchant/orders/${orderId}`,
-        { status: "CUSTOMER_CANCELED", reason: "Auto-cancel due to unpaid timeout" },
-        { headers: svcHeaders(correlationId ?? String(job.id)) }
-      );
+      // await http.patch(
+      //   `/api/merchant/orders/${orderId}`,
+      //   { status: "CUSTOMER_CANCELED", reason: "Auto-cancel due to unpaid timeout" },
+        // { headers: svcHeaders(correlationId ?? String(job.id)) }
+      // );
       await http.patch(
         `/api/customer/order/customer/cancel/${orderId}`
       );

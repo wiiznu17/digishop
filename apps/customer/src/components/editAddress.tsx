@@ -7,7 +7,8 @@ import { Noto_Sans_Thai_Looped } from "next/font/google";
 import { updateAddress, deleteAddress } from "@/utils/requestUtils/requestUserUtils";
 import { useAuth } from "@/contexts/auth-context";
 const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400'
+  weight:'400',
+  subsets: ['thai']
 })
 interface editAddressProp {
   item: Address;
