@@ -11,7 +11,8 @@ async function main() {
     const app = express()
 
     app.use(cors({
-      origin: process.env.ALLOW_CORS,
+      // origin: process.env.ALLOW_CORS,
+      origin: ["http://localhosthost:3001"],
       credentials: true
     }))
     app.use(cookieParser())

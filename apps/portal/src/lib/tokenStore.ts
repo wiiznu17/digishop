@@ -13,13 +13,17 @@ export function getAccessToken(): string | null {
 }
 
 export function setAccessToken(token: string | null): void {
+  console.log("Access token to set: ", token)
   accessToken = token
 
   // เพิ่ม: sync กับ localStorage
   if (typeof window !== "undefined") {
+    console.log("type window is not undefinded ")
     if (token) {
+      console.log("Access token to set: ", token)
       localStorage.setItem("accessToken", token)
     } else {
+      console.log("Access token to remove: ", token)
       localStorage.removeItem("accessToken")
     }
   }
