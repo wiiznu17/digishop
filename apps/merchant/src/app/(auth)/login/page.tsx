@@ -29,7 +29,7 @@ export default function LoginPage() {
     const ok = await login(formData.email, formData.password)
     if (ok) {
       console.log("push", ok)
-      router.push("/")
+      router.push("/orders")
     } else {
       setIsLoadingLocal(false)
       alert("Invalid credentials")

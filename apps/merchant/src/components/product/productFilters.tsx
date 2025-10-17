@@ -382,7 +382,7 @@ export function ProductFilters({
                 <SelectItem value="createdAt">Created</SelectItem>
                 <SelectItem value="updatedAt">Updated</SelectItem>
                 <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="price">Price (min)</SelectItem>
+                <SelectItem value="price">Price</SelectItem>
               </SelectContent>
             </Select>
           </div>
