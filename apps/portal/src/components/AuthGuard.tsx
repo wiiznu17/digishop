@@ -28,6 +28,7 @@ export function useAuth() {
     const token = getAccessToken()
     console.log("Get token in auth guard: ", token)
     if (token == null) {
+      console.log("token is null")
       // ไม่มี token → เคลียร์ state
       if (mountedRef.current) {
         setMe(null)
@@ -48,7 +49,10 @@ export function useAuth() {
     try {
       const m = await fetchAuth()
       // ถ้า response เก่าหรือ component unmounted ให้ทิ้ง
-      if (activeRef.current !== mySeq || !mountedRef.current) return
+      if (activeRef.current !== mySeq || !mountedRef.current) {
+        console.log("activeRef.current !== mySeq || !mountedRef.current")
+        return
+      }
       setMe(m)
     } catch (e: unknown) {
       // log สำคัญ: โหลด session ล้มเหลว
