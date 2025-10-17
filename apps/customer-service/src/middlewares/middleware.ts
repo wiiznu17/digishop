@@ -40,6 +40,7 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    console.log("try to decode")
     if (typeof decoded === "string") return res.status(401).json({ error: "Invalid token" });
     req.user = decoded;
     req.authMode = "user";
@@ -84,6 +85,7 @@ export function requireApprovedUser(opts?: { allowAdminBypass?: boolean; allowSe
       if (!user) return res.status(404).json({ error: "User not found" });
       
       (req as any).user = user;
+      console.log("pass pass")
       return next();
     } catch {
       return res.status(500).json({ error: "Failed to verify store status" });
