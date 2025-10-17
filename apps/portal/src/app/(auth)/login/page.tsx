@@ -42,6 +42,7 @@ function LoginInner() {
 
     try {
       await login(email.trim(), password)
+      console.log("nextpath: ", nextPath)
       router.replace(nextPath)
     } catch (err: unknown) {
       const msg =
