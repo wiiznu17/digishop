@@ -104,31 +104,32 @@ export default function AuthGuard({
   requiredPerms?: string[]
   redirectTo?: string
 }) {
+  console.log("reqire permission: ", requiredPerms)
   const { me, loading } = useAuth()
   const router = useRouter()
   const redirectedRef = useRef(false) // กัน redirect ซ้ำ
-
   const needPerms = useMemo(() => requiredPerms ?? [], [requiredPerms])
   const allowed = useCan(needPerms, me)
 
+  console.log("me: ", me)
+  console.log("redirectedRef: ", redirectedRef)
+  console.log("needPerms: ", needPerms)
+  console.log("allowed: ", allowed)
   useEffect(() => {
     if (redirectedRef.current) return
 
-    // ยังโหลดอยู่ → รอ
     if (loading) return
 
-    // ✅ ยังไม่มี me แต่มี token อยู่ → อย่า redirect (รอโหลดรอบถัดไป)
     const hasToken = !!getAccessToken()
     if (!me && hasToken) return
 
-    // ไม่มี me และไม่มี token → ไป login
     if (!me && !hasToken) {
+      console.log("!me && !hasToken")
       redirectedRef.current = true
       router.replace(redirectTo)
       return
     }
 
-    // ล็อกอินแล้วแต่สิทธิ์ไม่พอ → 403
     if (me && !allowed) {
       redirectedRef.current = true
       router.replace("/403")
