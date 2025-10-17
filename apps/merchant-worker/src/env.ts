@@ -4,6 +4,8 @@ export const ENV = {
   REFUND_QUEUE_NAME: process.env.REFUND_QUEUE_NAME || "refund-auto-approve",
   CANCEL_QUEUE_NAME: process.env.CANCEL_QUEUE_NAME || "auto-cancel-unpaid", 
   COMPLETE_QUEUE_NAME: process.env.COMPLETE_QUEUE_NAME || "auto-complete",
+  REFRESH_TOKEN: process.env.REFRESH_TOKEN || "refresh-token",
+
 
   MERCHANT_BASE: process.env.MERCHANT_BASE || "http://localhost:4000",
   MERCHANT_SERVICE_TOKEN: process.env.MERCHANT_SERVICE_TOKEN || "super-secret-service-token",
