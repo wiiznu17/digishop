@@ -61,7 +61,7 @@ export function CategoryFormDialog({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="เช่น Electronics"
+              placeholder="eg. Electronics"
             />
           </div>
           {/* <div>

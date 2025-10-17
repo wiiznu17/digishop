@@ -117,7 +117,7 @@ export default function AdminRolesPage() {
                 <PopoverAnchor asChild>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Name / slug"
+                      placeholder="Role name"
                       value={qDraft}
                       onChange={(e) => setQDraft(e.target.value)}
                       onKeyDown={(e) => {

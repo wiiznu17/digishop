@@ -395,7 +395,7 @@ export default function AccountLinking() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-muted-foreground">
-              <div className="flex items-start gap-2">
+              {/* <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
                 <span>Bank-level security encryption</span>
               </div>
@@ -406,7 +406,7 @@ export default function AccountLinking() {
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
                 <span>Full account numbers are encrypted and secure</span>
-              </div>
+              </div> */}
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
                 <span>Support for all major Thai banks</span>

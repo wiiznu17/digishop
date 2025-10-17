@@ -33,7 +33,8 @@ export function DeleteOrMoveDialog({
   const open = !!item
   const [target, setTarget] = useState<string>("")
 
-  // filter: ห้ามเลือกตัวเอง/ลูกหลานตัวเอง (ตรงนี้ assume backend กันอีกชั้น)
+  // filter: do not allow selecting itself/its descendants
+  // (assume backend also enforces this)
   const filtered = options.filter((o) => o.uuid !== item?.uuid)
 
   return (
@@ -42,20 +43,22 @@ export function DeleteOrMoveDialog({
         <DialogHeader>
           <DialogTitle>Delete Category</DialogTitle>
           <DialogDescription>
-            ลบไม่ได้ — มีสินค้าอยู่ในหมวดนี้ (รวมลูกหมวด)
-            ต้องย้ายสินค้าไปหมวดอื่นก่อนลบ
+            Cannot delete — there are products in this category (including its
+            subcategories). Move the products to another category before
+            deleting.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="text-sm">
-            หมวดที่จะลบ: <span className="font-medium">{item?.name}</span>
+            Category to delete:{" "}
+            <span className="font-medium">{item?.name}</span>
           </div>
           <div>
-            <label className="block text-sm mb-1">ย้ายสินค้าไปหมวด</label>
+            <label className="block text-sm mb-1">Move products to</label>
             <Select value={target} onValueChange={setTarget}>
               <SelectTrigger>
-                <SelectValue placeholder="เลือกหมวดปลายทาง" />
+                <SelectValue placeholder="Select destination category" />
               </SelectTrigger>
               <SelectContent className="max-h-[280px]">
                 {filtered.map((c) => (
@@ -77,7 +80,7 @@ export function DeleteOrMoveDialog({
             disabled={!target}
             onClick={() => target && onMoveAndDelete(target)}
           >
-            Move & Delete
+            Move &amp; Delete
           </Button>
         </DialogFooter>
       </DialogContent>
