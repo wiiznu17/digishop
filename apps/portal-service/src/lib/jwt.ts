@@ -43,13 +43,13 @@ const REFRESH_PUBLIC  = toPublicKey ("JWT_REFRESH_PUBLIC_KEY",  "JWT_REFRESH_PUB
 // ---- options ----
 const baseAccessSign: SignOptions = {
   algorithm: "RS256",
-  expiresIn: "10m",
+  expiresIn: "15m",
   issuer: ISS,
   audience: AUD,
 };
 const baseRefreshSign: SignOptions = {
   algorithm: "RS256",
-  expiresIn: "1h",
+  expiresIn: "30d",
   issuer: ISS,
   audience: AUD,
 };
