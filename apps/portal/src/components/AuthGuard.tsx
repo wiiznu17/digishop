@@ -26,6 +26,7 @@ export function useAuth() {
 
   async function loadMe() {
     const token = getAccessToken()
+    console.log("Get token in auth guard: ", token)
     if (token == null) {
       // ไม่มี token → เคลียร์ state
       if (mountedRef.current) {

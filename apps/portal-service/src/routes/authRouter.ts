@@ -8,7 +8,6 @@ import { zodValidate } from "../lib/zod/validate";
 
 const router: express.Router = express.Router();
 
-// ระบุ type ชัดเจนเพื่อกัน TS งอแงเรื่อง overload
 const loginLimiter: RequestHandler = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 20,

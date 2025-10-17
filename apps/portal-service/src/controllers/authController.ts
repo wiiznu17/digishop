@@ -7,14 +7,11 @@ import { AdminPermission, AdminRole, AdminSession, AdminUser } from "@digishop/d
 const RTK_NAME = process.env.JWT_COOKIE_NAME || "rtk";
 const IS_PROD = process.env.NODE_ENV === "production";
 
-// สำหรับ cross-site: ต้อง None
 const COOKIE_OPTS: import("express").CookieOptions = {
   httpOnly: true,
-  sameSite: "none",        // สำคัญ: ให้ข้ามโดเมนได้
-  secure: true,            // สำคัญ: ต้องเป็น https เท่านั้น
+  sameSite: "none",
+  secure: true,
   path: "/",
-  // CHIPS (ช่วยในยุคที่เบราว์เซอร์บล็อก third-party cookies เป็น default)
-  // type ยัง experimental → cast เป็น any
   ...(IS_PROD ? { partitioned: true as any } : {}),
 };
 export const login = async (req: Request, res: Response) => {
