@@ -1,9 +1,4 @@
 import { AuthProvider } from "@/contexts/auth-context";
-import { Rubik } from "next/font/google";
-const rubik = Rubik({
-  subsets: ["latin"],
-  weight: "300"
-})
 
 export const metadata = {
     title: "Next.js",

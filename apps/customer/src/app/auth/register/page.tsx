@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import Button from "../../../components/button";
 import InputField from "../../../components/inputField";
-import { UserPlus, Home, Building, CircleCheck, Plus, Minus } from "lucide-react";
+import { CircleCheck, Plus } from "lucide-react";
 import { createUser } from "@/utils/requestUtils/requestAuthUtils";
-import { FormRegister } from "@/types/props/userProp";
+import { FormRegister, Profile } from "@/types/props/userProp";
 import { useRouter } from "next/navigation";
 
 const RegisterPage: React.FC = () => {
@@ -55,8 +55,7 @@ const RegisterPage: React.FC = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const res = await createUser(formData);
-      console.log(res)
+      const res = (await createUser(formData)) as {data: Profile};
       if (res.data) {
         router.push("/auth");
       }

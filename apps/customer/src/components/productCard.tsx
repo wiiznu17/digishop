@@ -1,18 +1,14 @@
 "use client";
-import { Product, ProductImages, ProductItem } from "@/types/props/productProp";
+import { Product, ProductImages } from "@/types/props/productProp";
 import Image from "next/image";
-import pic1 from "./../app/digishopLogo.jpg";
 import { useState } from "react";
+import { minPrice } from "@/lib/function";
 
 interface cardProp {
   data: Product;
 }
 
-const minPrice = (data: [ProductItem]) => {
-  const price = data.map((item) => item.priceMinor);
-  const minPrice = Math.min(...price);
-  return (minPrice / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-};
+
 const findMain = (images: ProductImages[]) =>
   images.filter((image) => image.isMain == true);
 export const Card = ({ data }: cardProp) => {
@@ -21,7 +17,7 @@ export const Card = ({ data }: cardProp) => {
     <div>
       <button className="relative text-black bg-white cursor-pointer border hover:scale-105 duration-120 rounded-b-2xl">
         {/* <Image src={data.images[0].url} alt={data.images[0].blobName} width={100} height={100} /> */}
-        <img
+        <Image
           src={shownPic.url}
           alt={shownPic.fileName}
           className="object-contain h-80 w-96 "
@@ -29,7 +25,7 @@ export const Card = ({ data }: cardProp) => {
         <div className="flex">
           {data.images.map((image, index) => (
             <div key={index}>
-              <img
+              <Image
                 src={image.url}
                 alt={image.fileName}
                 width="100"
@@ -58,7 +54,7 @@ export const CardStore = ({ data }: cardProp) => {
     <div>
       <button className="relative text-black bg-white cursor-pointer border hover:scale-105 duration-120 rounded-b-2xl">
         {/* <Image src={data.images[0].url} alt={data.images[0].blobName} width={100} height={100} /> */}
-        <img
+        <Image
           src={shownPic.url}
           alt={shownPic.fileName}
           className="object-contain h-80 w-96"
@@ -66,7 +62,7 @@ export const CardStore = ({ data }: cardProp) => {
         <div className="flex">
           {data.images.map((image, index) => (
             <div key={index}>
-              <img
+              <Image
                 src={image.url}
                 alt={image.fileName}
                 onMouseEnter={() => setShownPic(image)}

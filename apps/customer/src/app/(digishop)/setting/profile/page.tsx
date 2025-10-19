@@ -21,13 +21,10 @@ import { DialogAddress } from "@/components/createAddress";
 import {AddressCardForSetting} from "@/components/addressCard";
 import Button from "@/components/button";
 import InputField from "@/components/inputField";
-import { middleware } from "@/middleware";
-import { formatTime } from "@/lib/function";
 
 const UserProfilePage = () => {
   const [currentUser, setCurrentUser] = useState<Profile>();
   const [addressUser, setAddressUser] = useState<Address[]>();
-  const [time, setTime] = useState<number| null>()
   const [address, setAddress] = useState<Address>({
     recipientName: "",
     phone: "",
@@ -54,13 +51,13 @@ const UserProfilePage = () => {
   const [isEditName, setIsEditName] = useState(false)
   const handleChangeName = async() => {
     if(!user || !name) return
-    const changeData = await updateUserName(user.id , name)
+    const changeData = (await updateUserName(user.id , name)) as {data: string}
     setIsEditName(false)
     if(changeData.data){
       window.location.reload()
     }
   }
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName({...name, [e.target.name]: e.target.value })
   }
   const handleOnClickAddress = (): void => {
@@ -84,10 +81,10 @@ const UserProfilePage = () => {
       addressType: "HOME",
     });
   };
-  const handleOnConfirmAddress = async (e: React.FormEvent): Promise<void> => {
+  const handleOnConfirmAddress = async (): Promise<void> => {
     const axiosData = { ...address, userId: user?.id };
     console.log("data add", axiosData);
-    const res = await createAddress(axiosData);
+    const res = (await createAddress(axiosData)) as {data: Address};
     if (res.data) {
       setIsShowAddress(false);
     }
@@ -97,21 +94,11 @@ const UserProfilePage = () => {
     await logoutUser();
     router.replace("/");
   };
-  useEffect(() => {
-      let interval;
-        if(time > 0 && typeof time === 'number') {
-          interval = setInterval(()=> {
-            setTime((time) => time - 1);
-          },1000)
-        }
-      return () => {
-        clearInterval(interval);
-      }
-    },[time])
+  
   useEffect(() => {
     const fetchData = async () => {
-      const resUser = await getUserDetail(user?.id);
-      const resAddress = await getAddress(user?.id);
+      const resUser = (await getUserDetail(user?.id)) as { data: Profile};
+      const resAddress = (await getAddress(user?.id)) as { data: Address[]};
       setCurrentUser(resUser.data);
       setAddressUser(resAddress.data);
       

@@ -1,9 +1,8 @@
 "use client";
 
-import { JSX, SetStateAction, useState } from "react";
+import { JSX, SetStateAction } from "react";
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import InputField from "@/components/inputField";
-import { Home } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
 import { Noto_Sans_Thai_Looped } from "next/font/google";
 import Button from "./button";
@@ -210,19 +209,19 @@ export const DialogAddress = ({
                           </select>
                         </div>
                       </div>
+                      
                     </form>
                   </div>
                 </div>
               </div>
               <div className="bg-gray-700/25 px-4 py-1 sm:flex sm:flex-row-reverse sm:px-6">
-                <Button
-                  size="sm"
+                <button
                   onClick={handleOnConfirm}
                   disabled={!validateForm()}
-                  className={`${!validateForm() ? "bg-gray-300" : "bg-green-500 hover:bg-red-400"} text-sm  text-white sm:ml-3 sm:w-auto`}
+                  className={`${!validateForm() ? "bg-gray-300" : "bg-green-500 hover:bg-red-400"}  text-white sm:ml-3 sm:w-auto px-4 py-2 text-sm font-medium hover:cursor-pointer rounded-full border `}
                 >
                   Confirm
-                </Button>
+                </button>
                 <Button
                   size="sm"
                   onClick={handleOnCancel}

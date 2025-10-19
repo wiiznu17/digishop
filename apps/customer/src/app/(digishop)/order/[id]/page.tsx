@@ -4,7 +4,6 @@ import { Address } from "@/types/props/addressProp";
 import {
   Order,
   OrderDetail,
-  ProductItemProps,
   Shipping,
   ShoppingCartProps
 } from "@/types/props/orderProp";
@@ -15,9 +14,8 @@ import {
   deleteOrder,
   createWishList,
 } from "@/utils/requestUtils/requestOrderUtils";
-import { customerCancel} from "@/utils/requestUtils/requestOrderUtils"
 import { createAddress, getAddress } from "@/utils/requestUtils/requestUserUtils";
-import { redirect, RedirectType, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ShippingCardDetail from "@/components/shippingCard";
 import { DialogSelectAddress } from "@/components/dialogSelectAddress";
@@ -30,9 +28,7 @@ import PaymentMethodMaster from "../../../../master/paymentMethod.json";
 import creditMethodLogo from '../../../creaditMethod.png'
 import qrLogo from '../../../qrLogo.png'
 import Image from "next/image";
-import { Configurations } from "@/types/props/productProp";
-import { formatAddress, formatSku, formatTime, sumPriceTotal, sumPrice } from "@/lib/function";
-import OrderStatus from "../status/page";
+import { formatAddress, formatSku, sumPriceTotal, sumPrice } from "@/lib/function";
 import { DialogAddress } from "@/components/createAddress";
 export default function OrderPage() {
   const { id } = useParams();
@@ -48,7 +44,6 @@ export default function OrderPage() {
     productprice: 0,
     shippingfee: 0,
   });
-  const [price, setPrice] = useState<number[]>([]);
   const [note, setNote] = useState<string>("");
   const [addresses, setAddresses] = useState<Address[]>();
   const [selectAddress, setSelectAddress] = useState<Address>();
@@ -60,8 +55,6 @@ export default function OrderPage() {
   const [nextPath, setNextPath] = useState<string | null>("/");
   const [showModal, setShowModel] = useState(false);
   // const [windows, setWindow] = useState<Window| null>();
-  const [now, setNow] = useState<number|null>(null);
-  const [end, setEnd] = useState<number|null>(null);
   const [cart, setCart] = useState<ShoppingCartProps>()
   const [isShowAddress, setIsShowAddress] = useState(false);
   const [address, setAddress] = useState<Address>({
@@ -100,9 +93,9 @@ export default function OrderPage() {
         addressType: "HOME",
       });
     };
-    const handleOnConfirmAddress = async (e: React.FormEvent): Promise<void> => {
+    const handleOnConfirmAddress = async (): Promise<void> => {
       const axiosData = { ...address, userId: user?.id };
-      const res = (await createAddress(axiosData)) as Address;
+      const res = (await createAddress(axiosData)) as {data: Address};
       if (res.data) {
         setIsShowAddress(false);
         window.location.reload()
@@ -111,9 +104,9 @@ export default function OrderPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const resProduct = await fetchOrders(orderCode, user.id);
-      const resAddress = await getAddress(user?.id);
-      const resShipping = await getShippingType();
+      const resProduct = (await fetchOrders(orderCode, user.id)) as { body: OrderDetail[]};
+      const resAddress = (await getAddress(user?.id)) as {data: Address[] };
+      const resShipping = (await getShippingType()) as {data: Shipping[]};
       setOrderDetail(resProduct.body);
       setAddresses(resAddress.data);
       setShipping(resShipping.data);
@@ -160,7 +153,6 @@ export default function OrderPage() {
     user,
     orderDetail,
     selectAddress,
-    price,
     selectShippingTypeId,
     note,
     paymentMethod,
@@ -184,27 +176,9 @@ export default function OrderPage() {
 //   }
 // }, [orderDetail]);
 
-useEffect(() => {
-  const interval = setInterval(() => setNow(Date.now()), 1000);
-  return () => clearInterval(interval);
-}, []);
-  // useEffect(() => {
-  //   const paymentTimeOut = localStorage.getItem("timeOut")
-  //   if(paymentTimeOut === "true"){
-  //     windows?.location.reload()
-  //   }
-  //   localStorage.removeItem("timeOut")
-  // },[windows])
-    
-  const remaining: null | number = (end !== null && now !== null) ? end - now : null;
-  useEffect(() => {
-  if (orderDetail && firstOrder?.checkout?.payment?.pgw_status === "PENDING" && end && now && end < now ) {
-    window.location.reload();
-  }
-}, [orderDetail, end , now]);
   useEffect(() => {
     window.history.pushState(null, "", window.location.pathname);
-    const handlePopStateBeforePayment = (e) => {
+    const handlePopStateBeforePayment = () => {
       setShowModel(true);
       setNextPath("/");
     };
@@ -224,19 +198,16 @@ useEffect(() => {
     // del order
     if(!cart)return
     console.log(cart)
-    const cancel = await deleteOrder(orderCode);
-    const addCart = await createWishList(cart)
+    const cancel = (await deleteOrder(orderCode)) as {data: string};
+    const addCart = (await createWishList(cart)) as {data: {cartId: number,
+            productItemId: number,
+            quantity: number,
+            unitPriceMinor: number }}
     if (nextPath && cancel.data && addCart.data) {
       router.push(nextPath);
     }
   };
-  const handleCancelOrder = async(id:number) => {
-    const data = await customerCancel(id)
-    if(data.data){
-      windows?.close()
-      window.location.reload()
-    }
-  }
+  
   // useEffect(() => {
   //   if(windows?.close){
   //     console.log(orderCode, 'close')
@@ -273,8 +244,7 @@ useEffect(() => {
   const handleOrder = async () => {
     if (!order) return;
     console.log(order)
-    const res = await createOrder(order);
-    console.log(res)
+    const res = (await createOrder(order)) as {data: { redirect_url: string}};
     if (res.data.redirect_url) {
       router.push(res.data.redirect_url)
       // localStorage.setItem("openPayment", "true");
@@ -296,7 +266,7 @@ useEffect(() => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNote(e.target.value);
   };
-  const handlePayment = (e) => {
+  const handlePayment = (e:string) => {
     setPaymentMethod(e);
   };
   if (!shipping || !user  ) return;
@@ -358,10 +328,14 @@ useEffect(() => {
                         {values.items?.map((value, index) => (
                           <div key={index}>
                             <div className="flex gap-4 relative mb-2">
-                              <img
-                                src={values.items[0].productItem.productItemImage.url}
+                              { values.items[0].productItem.productItemImage &&
+                                <Image
+                                src={values.items[0].productItem.productItemImage?.url}
+                                alt={values.items[0].productItem.productItemImage?.blobName}
                                 className="object-fill w-[100px] h-[100px] "
                               /> 
+                              }
+                              
                               <div>
                                 <div className="flex-1">
                                   <div>{value.productItem.product.name}</div>
@@ -442,7 +416,11 @@ useEffect(() => {
                     <div
                       key={index}
                       className=""
-                      onClick={() => setSelectShippingTypeId(item.id)}
+                      onClick={() => {
+                        if(typeof item.id === 'number'){
+                          setSelectShippingTypeId(item.id)}
+                        }
+                      }
                     >
                       <ShippingCardDetail
                         item={item}

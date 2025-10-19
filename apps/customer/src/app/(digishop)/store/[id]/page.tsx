@@ -16,7 +16,6 @@ export default function StorePage() {
   const [showProduct, setShowProduct] = useState<Product[]>();
     const handleSearch = (query = searchQuery) => {
       if (!query.trim()) return;
-      console.log(query)
       if(!products) return
       const filterProduct = products.products.filter((product => product.name.toLowerCase().includes(query.toLowerCase())))
       setShowProduct(filterProduct)
@@ -39,8 +38,7 @@ export default function StorePage() {
   },[searchQuery,products])
   useEffect(() => {
     const fetchData = async () => {
-      console.log("id", id);
-      const data = await getStoreProduct(String(id));
+      const data = (await getStoreProduct(String(id))) as {data: StoreProduct};
       setProducts(data.data);
     };
     fetchData();
@@ -50,7 +48,7 @@ export default function StorePage() {
     setShowProduct(products.products)
   },[products])
   console.log(products);
-  if (!products) return;
+  if (!products || !loading) return;
 
   return (
     <div className="flex justify-center items-center pt-2">

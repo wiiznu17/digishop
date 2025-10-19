@@ -17,7 +17,7 @@ interface SelectAddress {
   setIsShown: React.Dispatch<SetStateAction<boolean>>
   handleOnCancel: () => void
   addresses?: Address[]
-  selectAddress: Address
+  selectAddress: Address|undefined
   setSelectAddress: React.Dispatch<SetStateAction<Address| undefined>>
 }
 export const DialogSelectAddress = ({
@@ -28,7 +28,7 @@ export const DialogSelectAddress = ({
     selectAddress,
     setSelectAddress,
 }: SelectAddress ) => {
-    const [select,setSelect] = useState<Address>(selectAddress)
+    const [select,setSelect] = useState<Address|undefined>(selectAddress)
     const handleOnConfirm = () => {
       setSelectAddress(select)
       setIsShown(false)

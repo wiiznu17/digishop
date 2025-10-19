@@ -4,7 +4,6 @@ import { useParams } from "next/navigation";
 import { getProduct } from "@/utils/requestUtils/requestProduct";
 import {
   Choices,
-  Configurations,
   Product,
   ProductItem,
 } from "@/types/props/productProp";
@@ -17,6 +16,8 @@ import {
 import { OrderIdProp, ShoppingCartProps } from "@/types/props/orderProp";
 import { useAuth } from "@/contexts/auth-context";
 import { Minus, Plus } from "lucide-react";
+import Image from "next/image";
+
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -34,10 +35,12 @@ export default function ProductDetailPage() {
   const [options, setOptions] = useState<string[]>([]);
   const [selected, setSelected] = useState<ProductItem | null>();
   const [amount, setAmount] = useState(1);
-  const [loading, setLoading] = useState<boolean>();
   useEffect(() => {
     const fetchData = async () => {
-      const res = await getProduct(productId);
+      const res = (await getProduct(productId)) as {
+        data: Product;
+        choices: Choices;
+      };
       setProduct(res.data);
       setChoices(res.choices);
     };
@@ -133,7 +136,7 @@ export default function ProductDetailPage() {
     } else {
       if (!data) return;
       console.log(data);
-      const res = await createOrderId(data);
+      const res = (await createOrderId(data)) as { data: string };
       if (res) {
         // window.open(`/order/${res.data}`,'_blank')
         router.push(`/order/${res.data}`);
@@ -145,7 +148,14 @@ export default function ProductDetailPage() {
       alert("Please log in before add cart");
     } else {
       if (!wishList) return;
-      const res = await createWishList(wishList);
+      const res = (await createWishList(wishList)) as {
+        data: {
+          cartId: number;
+          productItemId: number;
+          quantity: number;
+          unitPriceMinor: number;
+        };
+      };
       if (res.data) {
         alert("Item successfully added to cart");
       }
@@ -160,14 +170,14 @@ export default function ProductDetailPage() {
               {/* {product.images} */}
             </div>
           )}
-          {selected && (
+          {selected?.productItemImage && (
             <div className="flex items-center justify-center">
-              <img
-              src={selected.productItemImage.url}
-              alt={selected.productItemImage.fileName}
-              className="object-contain w-[500px] h-[600px] "
-            /> 
-              
+
+              <Image
+                src={selected.productItemImage.url}
+                alt={selected.productItemImage.fileName}
+                className="object-contain w-[500px] h-[600px] "
+              />
             </div>
           )}
           <div className="mx-3 flex flex-col justify-between">
@@ -176,15 +186,6 @@ export default function ProductDetailPage() {
               <p className="text-gray-500 mb-2 border-b p-1">
                 category: {product.category.name}
               </p>
-              {/* {product.items.map((item, index) => (
-                <button
-                  key={index}
-                  className={` ${selected == item ? "border-black text-black" : "border-gray-400 text-gray-400"} border-1 rounded-md p-3 m-3`}
-                  onClick={() => handleSelected(item)}
-                >
-                  {item.sku}
-                </button>
-              ))} */}
               {choices?.variations.map((choice, indexs) => (
                 <div key={indexs}>
                   <div>{choice.name}</div>
@@ -199,9 +200,10 @@ export default function ProductDetailPage() {
                       </button>
                     ))}
                   </div>
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))
+              }
+            
             {selected && (
               <div>
                 <div className="flex items-center justify-center text-8xl">
@@ -213,10 +215,9 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
                 <div>
-                  {
-                    selected.stockQuantity > 0 && (
-                      <div>
-                        <div className="relative flex items-center justify-center mb-5">
+                  {selected.stockQuantity > 0 && (
+                    <div>
+                      <div className="relative flex items-center justify-center mb-5">
                         <div>
                           <div className=" flex mt-4 ">
                             <button
@@ -245,34 +246,35 @@ export default function ProductDetailPage() {
                         </div>
                       </div>
                       <div className="flex items-center justify-center">
-                      <Button
-                        size="lg"
-                        onClick={handleAddShoppingCart}
-                        color="border-gray-500"
-                        className="w-[200px]"
-                        disabled={
-                          selected?.stockQuantity !== undefined &&
-                          selected.stockQuantity < 0
-                        }
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        size="lg"
-                        onClick={handleBuy}
-                        color="bg-green-500"
-                        className="w-[200px] ml-10"
-                        // hidden={selected.stockQuantity === 0}
-                        disabled={selected.stockQuantity === 0}
-                      >
-                        Buy
-                      </Button>
-                    </div>
+                        <Button
+                          size="lg"
+                          onClick={handleAddShoppingCart}
+                          color="border-gray-500"
+                          className="w-[200px]"
+                          disabled={
+                            selected?.stockQuantity !== undefined &&
+                            selected.stockQuantity < 0
+                          }
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          size="lg"
+                          onClick={handleBuy}
+                          color="bg-green-500"
+                          className="w-[200px] ml-10"
+                          // hidden={selected.stockQuantity === 0}
+                          disabled={selected.stockQuantity === 0}
+                        >
+                          Buy
+                        </Button>
                       </div>
-                    )
-                  }
+                    </div>
+                  )}
                   {selected.stockQuantity === 0 && (
-                    <div className="flex items-center justify-center text-md mt-6">Product out of stock</div>
+                    <div className="flex items-center justify-center text-md mt-6">
+                      Product out of stock
+                    </div>
                   )}
                 </div>
               </div>
@@ -298,6 +300,7 @@ export default function ProductDetailPage() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   ) : (
     <h1 className="text-black">not found</h1>
