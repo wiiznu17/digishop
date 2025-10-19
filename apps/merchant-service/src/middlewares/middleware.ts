@@ -1,54 +1,87 @@
 import { Store, StoreStatus } from "@digishop/db";
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { redis } from "../lib/redis/client";
+import { verifyAccess, type AccessPayload } from "../lib/jwtVerfify";
 
 export interface AuthenticatedRequest extends Request {
   user?: any;
   authMode?: "service" | "user";
 }
-// ตรวจ Bearer ที่ส่งมาจาก queue
+
+// ===== Service-to-service auth (คงเดิม) =====
 export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction) {
   const hdr = req.headers.authorization || "";
   const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : "";
   const expected = process.env.MERCHANT_SERVICE_TOKEN || "";
-  console.log("hdr in service Auth: ", hdr)
-  console.log("Token in service Auth: ", token)
-  console.log("Expect in service Auth: ", expected)
-  console.log("is service: ", !expected || !token || token !== expected)
-  if (!expected || !token || token !== expected) return next(); // ไม่ตัดทิ้ง ปล่อยให้ไปลอง auth แบบ user ต่อ
 
-  // ใส่ principal แบบ service (ไม่มี cookie / ไม่มี store binding)
-  req.user = {
-    id: 0,
-    sub: 0,
-    role: "SERVICE",
-    email: "merchant-worker@system"
-  };
+  if (!expected || !token || token !== expected) return next();
+
+  req.user = { id: 0, sub: 0, role: "SERVICE", email: "merchant-worker@system" };
   req.authMode = "service";
-  console.log("set req.authMode: ", req.authMode)
   return next();
 }
 
-// ตรวจ cookies
-export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  // ถ้า serviceAuth ผ่านมาแล้ว ก็ไม่ต้องเช็ค cookie
-  console.log("User in authenticae: ", req.authMode)
+// ===== Helper: ดึง access token จาก header/cookie =====
+function readAccessToken(req: Request) {
+  const hdr = req.headers.authorization || "";
+  if (hdr.startsWith("Bearer ")) return hdr.slice(7).trim();
+  // fallback เป็น cookie (กำหนดชื่อ cookie access ตามระบบของคุณ)
+  return (req as any).cookies?.["a_t"] || (req as any).cookies?.["token"] || "";
+}
+
+// ===== ตรวจ access JWT + session (Redis) =====
+// - ใช้ jti จาก access เพื่อผูกกับ refresh-session ปัจจุบัน
+// - ตรวจว่าคีย์ session ยังอยู่ใน Redis และไม่ถูก revoke/rotate
+// NOTE: ตั้ง prefix ผ่าน ENV ได้ (เช่น "usr:rt", "mer:rt"); ค่าเริ่มต้น "usr:rt"
+const SESSION_PREFIX = process.env.SESSION_PREFIX || "usr:rt";
+const sessKey = (jti: string) => `${SESSION_PREFIX}:${jti}`;
+
+export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  // ถ้า serviceAuth ผ่านแล้ว ก็ไม่ต้องเช็คต่อ
   if (req.authMode === "service") return next();
 
-  const token = req.cookies?.token;
-  console.log("token: ", token)
+  const token = readAccessToken(req);
   if (!token) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    console.log(decoded)
-    if (typeof decoded === "string") return res.status(401).json({ error: "Invalid token" });
-    console.log(decoded)
-    req.user = decoded;
+    const payload = verifyAccess<AccessPayload>(token);
+    // ตรวจ session ใน Redis ด้วย jti
+    const key = sessKey(payload.jti);
+    const raw = await redis.get(key);
+    if (!raw) return res.status(401).json({ error: "SESSION_REVOKED" });
+
+    const sess = JSON.parse(raw) as {
+      adminId?: number | string; // ถ้า service public อาจใช้ userId แทนชื่อฟิลด์
+      userId?: number | string;
+      jti: string;
+      revokedAt?: number | null;
+      rotatedAt?: number | null;
+      expiresAt?: number;
+    };
+
+    if (sess.revokedAt) return res.status(401).json({ error: "SESSION_REVOKED" });
+    if (sess.rotatedAt) return res.status(401).json({ error: "REFRESH_TOKEN_REUSED" });
+    if (sess.expiresAt && sess.expiresAt < Date.now()) {
+      return res.status(401).json({ error: "SESSION_EXPIRED" });
+    }
+
+    // ปรับ mapping id ให้เข้ากับระบบ merchant
+    // - ถ้า authen-service สำหรับ public เก็บเป็น userId ให้ใช้ userId
+    // - ถ้าร่วมกับ admin-style ให้ใช้ adminId
+    const principalId =
+      (sess as any).userId ?? (sess as any).adminId ?? payload.sub;
+
+    req.user = {
+      sub: principalId,
+      id: principalId,
+      jti: payload.jti,
+      // เติมข้อมูลอื่น ๆ จาก payload ถ้ามี (เช่น email/roles/storeId)
+      ...payload,
+    };
     req.authMode = "user";
     return next();
-  } catch {
-    console.log("authenticate error")
+  } catch (e) {
+    // verify fail / redis error
     return res.status(401).json({ error: "Unauthorized" });
   }
 };
@@ -62,10 +95,7 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
 
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      console.log("User in require Approve: ", req.user)
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      console.log("Bypass in require Approve: ", allowServiceBypass)
-      console.log("Bypass in require Approve: ", req.user.role)
 
       // Bypass: service principal
       if (allowServiceBypass && req.user.role === "SERVICE") return next();
@@ -88,7 +118,6 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
         if (owned.status !== StoreStatus.APPROVED) {
           return res.status(403).json({ error: "Store status is not APPROVED" });
         }
-        // เก็บติด req เผื่อ controller ใช้
         (req as any).store = owned;
         return next();
       }
@@ -106,7 +135,7 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
   };
 }
 
-/** รวม serviceAuth + authenticate: service มาก่อน, ไม่ผ่านค่อยเช็ค cookie */
+/** รวม serviceAuth + authenticate: service มาก่อน, ไม่ผ่านค่อยเช็ค access JWT + Redis */
 export function eitherAuth(stack: Array<(req: AuthenticatedRequest, res: Response, next: NextFunction) => any>) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     let i = 0;

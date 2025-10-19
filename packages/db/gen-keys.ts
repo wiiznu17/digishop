@@ -14,4 +14,4 @@ function gen(name: string) {
 }
 
 gen("access");
-gen("refresh"); // ถ้าอยากใช้ชุดเดียวกัน ลบบรรทัดนี้แล้วคัดลอก access → refresh ก็ได้
+gen("refresh");

@@ -11,8 +11,7 @@ async function main() {
     const app = express()
 
     app.use(cors({
-      // origin: process.env.ALLOW_CORS,
-      origin: ["http://localhosthost:3001"],
+      origin: process.env.ALLOW_CORS,
       credentials: true
     }))
     app.use(cookieParser())
@@ -21,12 +20,12 @@ async function main() {
     
     app.use("/api/auth", authRoutes)
     app.use((req, res, next) => {
-      console.log('[MERCHANT] Incoming', req.url)
+      console.log('[AUTH] Incoming', req.url)
       next()
     })
     const PORT = process.env.PORT
     app.listen(PORT, () => {
-      console.log(`Auth Service running on http://localhost:${PORT}`)
+      console.log(`Auth Service running on port ${PORT}`)
     })
 
   } catch (err) {
