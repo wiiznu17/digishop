@@ -2,7 +2,7 @@ import { House, Phone, User } from "lucide-react";
 import { Address } from "@/types/props/addressProp";
 import { Pen, Pin , Trash2} from 'lucide-react'
 import { EditAddress } from "./editAddress";
-import { SetStateAction, useState } from "react";
+import { useState } from "react";
 import { Rubik } from "next/font/google";
 import { deleteAddress } from "@/utils/requestUtils/requestUserUtils";
 const rubik = Rubik({
@@ -30,13 +30,13 @@ export function AddressCardForSetting({ item }: AddressCardForSetting) {
   }
   const [editAddShow,setEditAddShow] = useState(false)
   const handleDelete = async(id: number| undefined) => {
-    const delData = await deleteAddress(id)
+    const delData = (await deleteAddress(id)) as {data: string}
     if(delData.data){
       window.location.reload()
     }
   }
   return (
-    <div className={`relative border  rounded-2xl mb-3 p-4 `}>
+    <div className={`relative border  rounded-2xl mb-3 p-4 ${rubik.className}`}>
       <div
          className="" 
       > 
@@ -107,7 +107,7 @@ export function AddressCardForSetting({ item }: AddressCardForSetting) {
 
 interface AddressCardForOrderProps {
   item: Address
-  select: Address
+  select: Address|undefined
 }
 
 export function AddressCardForOrder({ item , select }: AddressCardForOrderProps) {
@@ -126,16 +126,15 @@ export function AddressCardForOrder({ item , select }: AddressCardForOrderProps)
       .filter(Boolean)
       .join(' ')
   }
-  const [editAddShow,setEditAddShow] = useState(false)
-  const handleDelete = async(id: number| undefined) => {
-    const delData = await deleteAddress(id)
-    if(delData.data){
-      window.location.reload()
-    }
-  }
+  // const handleDelete = async(id: number| undefined) => {
+  //   const delData = (await deleteAddress(id)) as {data: string}
+  //   if(delData.data){
+  //     window.location.reload()
+  //   }
+  // }
   return (
-    <div className={`relative border  rounded-2xl mb-3 p-4 ${item.id !== select.id? ' border-gray-400':''}`}>
-      <div className={`${item.id !== select.id? 'text-gray-400':''}`}
+    <div className={`relative border  rounded-2xl mb-3 p-4 ${item.id !== select?.id? ' border-gray-400':''}`}>
+      <div className={`${item.id !== select?.id? 'text-gray-400':''}`}
       > 
         <div className="flex">
           <h5 className="font-bold mb-6 ">{item.addressType}</h5>

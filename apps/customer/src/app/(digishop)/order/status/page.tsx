@@ -2,16 +2,13 @@
 
 import Button from "@/components/button";
 import OrderCard from "@/components/orderCard";
-import OrderDetailPage from "@/components/orderDetail";
 import { useAuth } from "@/contexts/auth-context";
-import { CancelProp, CancelRefundProps, Order, OrderDetail, Orders } from "@/types/props/orderProp";
-import {CancelOrder} from "@/components/orderCancelCard";
+import { CancelProp, CancelRefundProps, OrderDetail } from "@/types/props/orderProp";
 import {
-  fetchOrders,
   fetchUserOrders,
 } from "@/utils/requestUtils/requestOrderUtils";
 import { Rubik } from "next/font/google";
-import { SetStateAction, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import StateConfig from '@/master/statusOrderConfig.json'
 
 const rubik = Rubik({
@@ -35,7 +32,7 @@ export default function OrderStatus() {
     const fetchData = async () => {
       if (!user) return;
       const data = (await fetchUserOrders(user.id)) as ({ body: OrderDetail[], count: number });
-      const { body, count } = data;
+      const { body } = data;
       setOrders(body);
     };
     fetchData();
@@ -97,13 +94,4 @@ export default function OrderStatus() {
            
     </div>
   );
-  // return (
-  //   <div>
-  //     <div className="w-full max-w-2xl">
-  //       <div className="bg-white rounded-lg overflow-hidden">
-
-  //       </div>
-  //     </div>
-  //   </div>
-  // )
 }

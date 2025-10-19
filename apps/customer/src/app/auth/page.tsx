@@ -1,30 +1,26 @@
 "use client";
 // pages/auth.tsx or app/auth/page.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "../../components/button";
-import { ShoppingBag, ArrowRight, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import Link from "next/link";
-import { FormRegister } from "@/types/props/userProp";
 import { useRouter } from "next/navigation";
 import InputField from "@/components/inputField";
 import { useAuth } from "@/contexts/auth-context";
-import { Rubik, Ubuntu } from "next/font/google";
+import { Rubik } from "next/font/google";
 import icon from "../shopping.png";
 import Image from "next/image";
 const rubik = Rubik({
   subsets: ["latin"],
   weight: "300",
 });
-const ubuntu = Ubuntu({
-  subsets: ["latin"],
-  weight: "300",
-});
+
 const AuthPage: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const { login, isLoading, user } = useAuth();
+  const { login, isLoading } = useAuth();
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,8 +43,7 @@ const AuthPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
   const router = useRouter();
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!validateForm()) return;
     const success = await login(formData.email, formData.password);
     if (success) {

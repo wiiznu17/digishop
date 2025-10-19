@@ -1,18 +1,19 @@
 "use client";
 
-import { JSX, SetStateAction, useEffect, useState } from "react";
-import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
+import { SetStateAction, useEffect, useState } from "react";
 import InputField from "@/components/inputField";
-import { Home } from "lucide-react";
-import { Address } from "@/types/props/addressProp";
-import { Noto_Sans_Thai_Looped, Rubik } from "next/font/google";
+import { Noto_Sans_Thai_Looped } from "next/font/google";
 import Button from "./button";
 import { CancelProp, CancelRefundProps, OrderDetail } from "@/types/props/orderProp";
 import CancelReasonMaster from "../master/cancelReason.json";
 import RefundReasonMaster from "../master/refundReason.json"
 import { cancelOrder } from "@/utils/requestUtils/requestOrderUtils";
-import { describe } from "node:test";
+import { OrderStatus } from "../../../../packages/db/src/types/enum";
 
+const notoSanLoop = Noto_Sans_Thai_Looped({
+  weight:'400',
+  subsets: ['thai']
+})
 interface CancelOrderProps {
   isShowCancel: CancelRefundProps;
   email: string
@@ -38,7 +39,7 @@ export const CancelOrder = ({
 }: CancelOrderProps) => {
   useEffect(() => {
     setCancelData({
-        reason: CancelReasonMaster[reason].label,
+        reason: CancelReasonMaster[reason as keyof typeof CancelReasonMaster].label,
         description: detail,
         contactEmail: email
     });
@@ -48,7 +49,7 @@ export const CancelOrder = ({
     if (!reason) return;
     setIsShowCancel({...isShowCancel, ['shown']: false})
       if(cancelData){
-        const updateCancelOrder = await cancelOrder(order.id , cancelData)
+        const updateCancelOrder = (await cancelOrder(order.id , cancelData)) as {data: string }
         if(updateCancelOrder.data){
             window.location.reload()
           }
@@ -63,7 +64,7 @@ export const CancelOrder = ({
   };
   if (isShowCancel.shown)
     return (
-      <div>
+      <div className={`${notoSanLoop.className}`}>
         <div className=" m-1 pt-2 bg-white border-t">
           <div>I want to cancel this order</div>
         </div>
@@ -150,7 +151,7 @@ export const RefundOrder = ({
   const [refundData, setRefundData] = useState<CancelProp>();
   useEffect(() => {
     setRefundData({
-      reason: RefundReasonMaster[reason].label,
+      reason: RefundReasonMaster[reason as keyof typeof RefundReasonMaster].label,
       description: detail,
       contactEmail: email
     });
@@ -159,8 +160,7 @@ export const RefundOrder = ({
     if (!reason) return
     setIsShowRefund({ ...isShowRefund, ['shown']: false})
       if(refundData){
-        const updateCancelOrder = await cancelOrder(order.id , refundData)
-          console.log('updateCancelOrder',updateCancelOrder)
+        const updateCancelOrder = (await cancelOrder(order.id , refundData)) as {data: { id: number, status: OrderStatus }  }
           if(updateCancelOrder.data){
               window.location.reload()
             }

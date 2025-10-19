@@ -1,6 +1,6 @@
 import axios from "@/lib/axios"
 import { Address } from "@/types/props/addressProp"
-export const getUserDetail = async(id:number) => {
+export const getUserDetail = async(id:number|undefined) => {
     if( typeof(id) == undefined){
         return console.log('id is undefined')
     }

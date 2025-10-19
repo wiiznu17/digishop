@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, X, Clock, TrendingUp, Key } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import {useRouter} from 'next/navigation';
 import { Rubik } from 'next/font/google';
 import { searchProduct } from '@/utils/requestUtils/requestProduct';
