@@ -7,7 +7,7 @@ export interface ProductItem {
     priceMinor: number;
     imageUrl?: string | undefined;
     configurations: Configurations[]
-    productItemImage: ProductItemImages
+    productItemImage?: ProductItemImages
 }
 export interface Configurations {
   id: number

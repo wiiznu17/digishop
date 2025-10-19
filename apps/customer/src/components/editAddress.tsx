@@ -4,7 +4,7 @@ import { SetStateAction, useState } from "react";
 import InputField from "./inputField";
 import Button from "./button";
 import { Noto_Sans_Thai_Looped } from "next/font/google";
-import { updateAddress, deleteAddress } from "@/utils/requestUtils/requestUserUtils";
+import { updateAddress } from "@/utils/requestUtils/requestUserUtils";
 import { useAuth } from "@/contexts/auth-context";
 const notoSanLoop = Noto_Sans_Thai_Looped({
   weight:'400',
@@ -26,7 +26,7 @@ export function EditAddress({
   const handleOnConfirm = async () => {
     // patch address
     if(!user) return
-    const updateAdd = await updateAddress(user.id,address)
+    const updateAdd = (await updateAddress(user.id,address)) as {data: string }
     if(updateAdd.data){
       setEditAddShow(false)
       window.location.reload()
@@ -35,7 +35,7 @@ export function EditAddress({
   const handleIsDefault = () => {
     setAddress({ ...address, isDefault: true });
   }
-  const handleInputChange = (e) => {
+  const handleInputChange = (e:React.ChangeEvent<HTMLInputElement>|React.ChangeEvent<HTMLSelectElement> ) => {
     setAddress({ ...address, [e.target.name]: e.target.value });
   };
   const handleOnCancel = () => {

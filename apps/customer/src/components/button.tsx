@@ -1,12 +1,12 @@
 // components/Button.tsx
-import React from 'react';
+import React, { FormEvent } from 'react';
 
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
   children: React.ReactNode;
   size?: ButtonSize;
-  onClick?: () => void;
+  onClick?:  (e?: React.FormEvent<Element>) => void | Promise<void>;
   disabled?: boolean;
   className?: string;
   color?: string;

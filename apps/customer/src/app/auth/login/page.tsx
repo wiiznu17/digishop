@@ -12,7 +12,7 @@ export default function LoginPage() {
     email: '',
     password: ''
   });
-  const {login, isLoading, user} = useAuth()
+  const {login, isLoading} = useAuth()
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value} = e.target;

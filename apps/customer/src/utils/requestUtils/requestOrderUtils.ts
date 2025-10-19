@@ -1,8 +1,5 @@
 import axios from "@/lib/axios"
-import crypto from 'crypto'
 import { CancelProp, Order, OrderIdProp, ShoppingCartProps } from "@/types/props/orderProp"
-import { ParamValue } from "next/dist/server/request/params"
-import { resolve } from "path"
 export const getShippingType = async() => {
     return await new Promise((resolve, reject) => {
         axios

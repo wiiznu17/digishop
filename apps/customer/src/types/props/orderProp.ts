@@ -126,7 +126,7 @@ export interface ProductItemProps {
   priceMinor: number;
   image_url?: string | undefined;
   configurations: Configurations[]
-  productItemImage: ProductItemImages
+  productItemImage?: ProductItemImages
   product: {
     id: number;
     uuid: string;

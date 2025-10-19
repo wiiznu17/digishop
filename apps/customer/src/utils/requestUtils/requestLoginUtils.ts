@@ -21,7 +21,7 @@ export async function loginUser(
       { email, password },
       { withCredentials: true }
     )
-    const {accessToken , refreshtoken ,user } = res.data
+    const {accessToken ,user } = res.data
     if(accessToken) setAccessToken(accessToken)
     return user
   } catch (error) {

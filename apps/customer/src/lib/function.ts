@@ -1,12 +1,17 @@
 import { Address } from "@/types/props/addressProp";
 import { OrderDetail, ProductItemProps } from "@/types/props/orderProp";
-import { Configurations } from "@/types/props/productProp"
+import { Configurations, ProductItem } from "@/types/props/productProp"
 
 export const formatSku = (configs : Configurations[]) => {
 const str = configs.map(config => `${config.variationOption.variation.name}: ${config.variationOption.value}`).join(',')
 return str
 }
 
+export const minPrice = (data: ProductItem[]) => {
+  const price = data.map((item) => item.priceMinor);
+  const minPrice = Math.min(...price);
+  return (minPrice / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
 export const formatAddress = (items: Address): string => {
     return [
       items.address_number,

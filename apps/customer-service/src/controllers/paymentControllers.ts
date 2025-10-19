@@ -180,9 +180,8 @@ export const getCallBack = async (req: Request, res: Response) => {
   const orderCode = await CheckOut.findOne({
     where: {id: findId?.checkoutId} , attributes: ["orderCode"]
   })
-  //res.send(window.location.replace(`http://localhost:3000/order/${String(findId.id)}`))
-  const linkResult = JSON.stringify(`http://localhost:3000/order/${String(orderCode?.orderCode)}`)
-  const link = JSON.stringify('http://localhost:3000')
+  const linkResult = JSON.stringify(`${process.env.WEBSITE_CUSTOMER_URL}/order/${String(orderCode?.orderCode)}`)
+  const link = JSON.stringify(process.env.WEBSITE_CUSTOMER_URL)
   if (process_status == "true") {
     if (findId) {
       res.send(`
