@@ -9,12 +9,12 @@ export default function ForgotPasswordPage() {
   const router = useRouter()
   useEffect(() => {
   },[page])
-  const handleEmailSubmit = async(e) => {
+  const handleEmailSubmit = async(e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // ไม่ได้ verified
     console.log('email in submit',email)
     if(email !== ''){
-      const res = await sendResetPassword(email)
+      const res = (await sendResetPassword(email)) as {data: string}
       if(res.data){
         setPage("success");
       }
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
               </div>
 
               <button
-                onClick={handleEmailSubmit}
+                // onClick={handleEmailSubmit}
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
               >
                 Send Reset Link

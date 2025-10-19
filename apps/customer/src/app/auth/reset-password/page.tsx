@@ -1,13 +1,12 @@
 'use client'
 import { useState } from "react";
-import { Mail, Lock, ArrowLeft, CheckCircle, CircleCheck } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import {  Lock,CircleCheck } from "lucide-react";
+// import { useSearchParams } from "next/navigation";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const handleResetSubmit = (e) => {
-    e.preventDefault();
+  const handleResetSubmit = () => {
     // Password reset logic would go here
     if((!testLength || !testCapLetter || !testLowerLetter || !testNumber )||(password !== confirmPassword)){
       alert("Password reset not successful!");
@@ -15,8 +14,8 @@ export default function ResetPassword() {
       alert("Password reset successful!");
     }
   };
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  // const searchParams = useSearchParams();
+  // const token = searchParams.get("token");
   const testLength = password.length > 6
   const testCapLetter = (/[A-Z]/g).test(password)
   const testLowerLetter = (/[a-z]/g).test(password)

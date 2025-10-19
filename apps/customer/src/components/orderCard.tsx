@@ -4,7 +4,7 @@ import {
   CancelRefundProps,
   CancelProp,
 } from "@/types/props/orderProp";
-import Link from "next/link";
+import Image from "next/image";
 import Button from "./button";
 import { CancelOrder, RefundOrder } from "./orderCancelCard";
 import { SetStateAction, useEffect, useState } from "react";
@@ -12,19 +12,14 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Slash,
-  SquareChevronRight,
 } from "lucide-react";
 import OrderStatusConfig from "../master/statusOrderDetail.json";
-import CancelReasonMaster from "../master/cancelReason.json";
 import {
   updateOrderStatus,
   revokeCancelOrder,
-  customerCancel,
 } from "@/utils/requestUtils/requestOrderUtils";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { Configurations } from "@/types/props/productProp";
 import {
   formatAddress,
   formatSku,
@@ -52,14 +47,10 @@ interface OrderCard {
 
 export default function OrderCard({
   item,
-  handleShowDetail,
-  selectShowDetail,
   isShowCancel,
   isShowRefund,
   setIsShowCancel,
   setIsShowRefund,
-  setSelectShowCancel,
-  selectShowCancel,
 }: OrderCard) {
   const router = useRouter();
   const { user } = useAuth();
@@ -137,10 +128,15 @@ export default function OrderCard({
                 }
               >
                 <div className="flex gap-4 relative mb-2">
-                  <img
+                  {
+                    item.items[0].productItem.productItemImage && (
+                      <Image
+                      alt={item.items[0].productItem.productItemImage.blobName}
                     src={item.items[0].productItem.productItemImage.url}
                     className="object-fill w-[100px] h-[100px] "
                   /> 
+                    )
+                  }
                   <div>
                     <div className="flex-1">
                       <div className="flex justify-start mb-1">
@@ -277,7 +273,7 @@ export default function OrderCard({
               {
                 typeof item.checkout.payment?.payment_method === 'number' &&
                 <div>
-                  paid by { PaymentMethodMaster[item.checkout.payment?.payment_method].label }
+                  paid by { PaymentMethodMaster[item.checkout.payment?.payment_method as keyof typeof PaymentMethodMaster].label }
                 </div> 
                 
               }

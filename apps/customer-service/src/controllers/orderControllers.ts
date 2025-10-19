@@ -22,6 +22,7 @@ const apiKey =
 const partnerId = process.env.MERCHANRT_PARTNER_ID ?? "1754627921";
 
 const contentSignature = (body: Object) => {
+  console.log('data',body)
   const hmac = crypto.createHmac(
     "sha256",
     Buffer.from(String(signKey), "base64")
@@ -528,20 +529,20 @@ export const createOrder = async (
         // description: productName,
         amount: grandTotalMinor / 100,
         expiry: 15,
-        url_redirect: "http://localhost:4000/api/customer/payment/callback",
-        url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
+        url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
+        url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`,
       });
       paymentResponse = await axios.request({
         method: "post",
-        url: "http://localhost:4002/payment",
+        url: `${process.env.WEBSITE_PAYMENT_URL}/payment`,
         data: {
           mid: midCard,
           order_id: orderCode,
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4000/api/customer/payment/callback",
-          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
+          url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
+          url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`, 
         },
         headers: {
           "X-API-ID": apiId,
@@ -578,8 +579,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4000/api/customer/payment/callback",
-          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
+          url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
+          url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`, 
         },
         resJson: paymentResponse.data,
       });
@@ -592,8 +593,8 @@ export const createOrder = async (
         // description: productName,
         amount: grandTotalMinor / 100,
         expiry: 15,
-        url_redirect: "http://localhost:4000/api/customer/payment/callback",
-        url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
+        url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
+        url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`, //web เรา
         qrcode: {
           biller_reference_1: `REF${orderId[0].id}`,
         },
