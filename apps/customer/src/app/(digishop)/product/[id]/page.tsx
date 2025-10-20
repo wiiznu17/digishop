@@ -287,7 +287,7 @@ export default function ProductDetailPage() {
           <button
             className="flex p-6 rounded-2xl w-2xl bg-gray-200 border-b cursor-pointer"
             onClick={() =>
-              router.push(`http://localhost:3000/store/${product.store.uuid}`)
+              router.push(`/store/${product.store.uuid}`)
             }
           >
             <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>

@@ -10,16 +10,12 @@ import { enqueueRefundAutoApprove } from "../queues/refundQueue";
 
 import { ActorType, Address, CheckOut, Order, OrderItem, OrderPolicy, OrderStatus, OrderStatusHistory, Payment, PaymentGatewayEvent, PaymentMethod, PaymentStatus, Product, ProductConfiguration, ProductImage, ProductItem, ProductItemImage, RefundOrder, RefundStatus, RefundStatusHistory, sequelize, ShippingInfo, ShippingStatus, ShippingType, ShoppingCart, ShoppingCartItem, Store, User, Variation, VariationOption } from "@digishop/db";
 const signKey =
-  process.env.MERCHANRT_SIGN_KEY ??
-  "5LxvCzMEgCYb6kv+v23M3D1d4lnOHE1CiuA+uO8QTpM=";
-const midCard = process.env.MERCHANRT_MID_CARD ?? "0691001119";
-const midQR30 = process.env.MERCHANRT_MID_QR30 ?? "1772438656";
-const apiId =
-  process.env.MERCHANRT_API_ID ?? "Etx4MmvXsHf9JeJ3ScaLqWrgWgnwUIGSwz_n_mF9q2w";
-const apiKey =
-  process.env.MERCHANRT_API_KEY ??
-  "ApFbpLSXApOHFB2fTlqn0zWg3HjqucQVChYmxtpOarw";
-const partnerId = process.env.MERCHANRT_PARTNER_ID ?? "1754627921";
+  process.env.MERCHANRT_SIGN_KEY ||"";
+const midCard = process.env.MERCHANRT_MID_CARD || "";
+const midQR30 = process.env.MERCHANRT_MID_QR30 || "";
+const apiId = process.env.MERCHANRT_API_ID || "";
+const apiKey = process.env.MERCHANRT_API_KEY ||"";
+const partnerId = process.env.MERCHANRT_PARTNER_ID || "";
 
 const contentSignature = (body: Object) => {
   console.log('data',body)
@@ -601,15 +597,15 @@ export const createOrder = async (
       });
       paymentResponse = await axios.request({
         method: "post",
-        url: "http://localhost:4002/payment",
+        url: `${process.env.WEBSITE_PAYMENT_URL}/payment`,
         data: {
           mid: midQR30,
           order_id: orderCode,
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4000/api/customer/payment/callback",
-          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
+          url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
+          url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`, //web เรา
           qrcode: {
             biller_reference_1: `REF${orderId[0].id}`,
           },
@@ -649,8 +645,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: "http://localhost:4000/api/customer/payment/callback",
-          url_notify: "http://localhost:4000/api/customer/payment/notify", //web เรา
+          url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
+          url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`, //web เรา
           qrcode: {
             biller_reference_1: `REF${orderCode}`,
           },
