@@ -197,7 +197,7 @@ export default function SearchResult({
                         key={index}
                         onClick={() =>
                           router.push(
-                            `http://localhost:3000/store/${store.uuid}`
+                            `/store/${store.uuid}`
                           )
                         }
                       >
