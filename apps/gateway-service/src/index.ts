@@ -10,7 +10,7 @@ import { customerProxy } from "./proxies/customer"
 const cookieParser = require("cookie-parser")  // ใช้ require แทน
 
 const app = express()
-
+app.set("trust proxy", 1);
 // Middlewares
 app.use(corsMiddleware)
 app.use(loggerMiddleware)
