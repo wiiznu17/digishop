@@ -585,7 +585,28 @@ export default function EditProductPage() {
               <VariationEditor
                 value={variationsDraft}
                 onChange={setVariationsDraft}
+                // ส่งรายการ items (เฉพาะแถวที่ไม่ถูกลบ) ให้ Editor ใช้เติม SKU
+                items={itemEdits
+                  .filter((r) => !r.toBeDeleted)
+                  .map((r) => ({
+                    key: r.key,
+                    optionCids: r.optionKeys, // map ชื่อให้ตรงกับที่ VariationEditor ใช้
+                    sku: r.sku,
+                    label: r.label
+                  }))}
+                // ให้ Editor อัปเดตกลับเฉพาะค่า SKU ที่ถูกเติม
+                onItemsChange={(next) =>
+                  setItemEdits((prev) =>
+                    prev.map((r) => {
+                      const found = next.find((n) => n.key === r.key)
+                      return found ? { ...r, sku: found.sku } : r
+                    })
+                  )
+                }
+                // prefix สำหรับสร้าง SKU (จะใช้ชื่อสินค้าก็ได้ หรือมีฟิลด์ code ก็ส่งอันนั้น)
+                skuPrefix={name}
               />
+
               <p className="text-xs text-muted-foreground">
                 • แก้ชื่อ/เพิ่ม/ลบ และลากเรียงตัวเลือกได้ —
                 ระบบจะบันทึกจริงตอนกด Save เท่านั้น

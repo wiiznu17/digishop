@@ -6,6 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { GripVertical, Trash2, Plus, Check, X } from "lucide-react"
 
+// SKU: สำหรับเชื่อมกับ items ภายนอก (optional)
+type ItemLike = {
+  key: string
+  optionCids: string[]
+  sku: string
+  label: string
+}
+
 export type VariationDraftOption = {
   clientId: string
   uuid?: string // ไม่มีแปลว่าเป็นของใหม่
@@ -23,12 +31,42 @@ export type VariationDraft = {
 type Props = {
   value: VariationDraft[]
   onChange: (next: VariationDraft[]) => void
+  // NEW: เพิ่ม optional items + onItemsChange + skuPrefix สำหรับเติม SKU
+  items?: ItemLike[]
+  onItemsChange?: (next: ItemLike[]) => void
+  skuPrefix?: string
 }
 
 const uid = () =>
   globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
 
-export function VariationEditor({ value, onChange }: Props) {
+// NEW: ฟังก์ชันผลิตโค้ดสั้น
+const hashString = (s: string) => {
+  let h = 0
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i)
+    h |= 0
+  }
+  return h
+}
+const toCode = (s: string, max = 4) => {
+  const t = s
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "")
+    .slice(0, max)
+  if (t) return t
+  return Math.abs(hashString(s)).toString(36).toUpperCase().slice(0, max) || "X"
+}
+
+export function VariationEditor({
+  value,
+  onChange,
+  items,
+  onItemsChange,
+  skuPrefix
+}: Props) {
   // inline editing state (UI only)
   const [editingVarId, setEditingVarId] = useState<string | null>(null)
   const [editingVarName, setEditingVarName] = useState<string>("")
@@ -193,10 +231,64 @@ export function VariationEditor({ value, onChange }: Props) {
     })
   }
 
+  const buildOptionLabelMap = () => {
+    const m = new Map<string, string>()
+    for (const v of value) {
+      for (const o of v.options) {
+        if (o.uuid) m.set(o.uuid, o.value)
+        m.set(o.clientId, o.value)
+      }
+    }
+    return m
+  }
+
+  // NEW: เติม SKU เฉพาะช่องว่าง สำหรับ items ที่ส่งมาผ่าน props
+  const fillEmptySkus = () => {
+    if (!items || !onItemsChange) return
+    const optionLabelById = buildOptionLabelMap()
+    const seen = new Set(
+      items
+        .map((r) => (r.sku || "").trim())
+        .filter(Boolean)
+        .map((s) => s.toUpperCase())
+    )
+    const prefix = toCode((skuPrefix ?? "").trim(), 6) || "PRD"
+
+    const next = items.map((r) => {
+      if ((r.sku || "").trim()) return r
+      const optCodes = r.optionCids.map((id) =>
+        toCode(optionLabelById.get(id) ?? "OPT", 3)
+      )
+      let base = [prefix, ...optCodes].join("-").replace(/-+/g, "-")
+      base = base.slice(0, 28)
+      let candidate = base
+      let i = 1
+      while (seen.has(candidate.toUpperCase())) {
+        candidate = `${base}-${i++}`
+      }
+      seen.add(candidate.toUpperCase())
+      return { ...r, sku: candidate }
+    })
+
+    onItemsChange(next)
+  }
+
   return (
     <Card className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium">Variations</div>
+        <div className="text-sm font-medium">Variastions</div>
+
+        {/* NEW: โชว์ปุ่มเฉพาะเมื่อมี items + onItemsChange */}
+        {items && onItemsChange && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={fillEmptySkus}
+            title="Fill SKU for new/empty only"
+          >
+            Fill empty SKUs
+          </Button>
+        )}
       </div>
 
       {/* Input สำหรับ add variation ใหม่ (อยู่ใน UI) */}

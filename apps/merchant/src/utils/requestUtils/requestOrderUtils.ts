@@ -75,9 +75,10 @@ export type OrderSummary = {
   processing: number
   handedOver: number
   refundRequests: number
+  canceledOrders: number
   totalRevenue: number
-  totalRevenueMinor: number
-  completedToday?: number
+  refundSuccessOrders: number
+  completed: number
 }
 
 export async function fetchOrderSummary(

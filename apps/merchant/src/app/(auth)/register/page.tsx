@@ -29,6 +29,9 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function RegisterPage() {
+  const DIGISHOP_URL =
+    process.env.NEXT_PUBLIC_DIGISHOP_URL ?? "http://localhost:3000"
+
   const [formData, setFormData] = useState({
     storeName: "",
     ownerName: "",
@@ -250,7 +253,7 @@ export default function RegisterPage() {
                       //   router.push("/login")
                       // }}
                     >
-                      <Link href="/">Back to Digishop</Link>
+                      <a href={DIGISHOP_URL}>Back to Digishop</a>
                     </Button>
                     <Button
                       type="button"
