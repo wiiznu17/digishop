@@ -15,7 +15,7 @@ async function main() {
       .split(",")
       .map(s => s.trim())
       .filter(Boolean);
-
+    console.log("CORS allowlist:", allowlist);
     app.use(
       cors({
         origin(origin, callback) {
