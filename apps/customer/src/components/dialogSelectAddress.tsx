@@ -6,11 +6,11 @@ import {
   DialogPanel,
 } from "@headlessui/react";
 import {AddressCardForOrder} from "./addressCard";
-import { Noto_Sans_Thai_Looped } from "next/font/google";
+import { Rubik } from "next/font/google";
 import Button from "./button";
-const notoSanLoop = Noto_Sans_Thai_Looped({
+const rubik = Rubik({
   weight:'400',
-  subsets: ['thai']
+  subsets: ['latin']
 })
 interface SelectAddress {
   isShown: boolean
@@ -45,7 +45,7 @@ export const DialogSelectAddress = ({
                   className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
                 />
         
-                <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${notoSanLoop.className} text-black`}>
+                <div className={`fixed inset-0 z-100 bg-black/50 w-screen overflow-y-auto ${rubik.className} text-black`}>
                   <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <DialogPanel
                       transition
@@ -54,7 +54,7 @@ export const DialogSelectAddress = ({
                       <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div className="sm:flex sm:items-start">
                           <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <div className="mb-4">Select your shipping address</div>
+                            <div className="mb-4 text-xl font-medium">Select your shipping address</div>
                             {
                                 addresses?.map((item, index) => (
                                     <button key={index} onClick={() => setSelect(item)}>
@@ -65,18 +65,18 @@ export const DialogSelectAddress = ({
                           </div>
                         </div>
                       </div>
-                      <div className="bg-gray-700/25 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                      <div className="bg-white px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                         <Button
                           size="sm"
                           onClick={handleOnConfirm}
-                          className="bg-green-500 hover:bg-red-400 mx-2"
+                          className="bg-green-500 text-white"
                         >
                           Confirm
                         </Button>
                         <Button
                           size="sm"
                           onClick={handleOnCancel}
-                          className="justify-center bg-white "
+                          className="justify-center text-white mr-2 bg-red-500"
                         >
                           Cancel
                         </Button>

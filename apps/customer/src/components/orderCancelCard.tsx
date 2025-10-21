@@ -2,7 +2,6 @@
 
 import { SetStateAction, useEffect, useState } from "react";
 import InputField from "@/components/inputField";
-import { Noto_Sans_Thai_Looped } from "next/font/google";
 import Button from "./button";
 import { CancelProp, CancelRefundProps, OrderDetail } from "@/types/props/orderProp";
 import CancelReasonMaster from "../master/cancelReason.json";
@@ -10,10 +9,6 @@ import RefundReasonMaster from "../master/refundReason.json"
 import { cancelOrder } from "@/utils/requestUtils/requestOrderUtils";
 import { OrderStatus } from "../../../../packages/db/src/types/enum";
 
-const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400',
-  subsets: ['thai']
-})
 interface CancelOrderProps {
   isShowCancel: CancelRefundProps;
   email: string
@@ -55,7 +50,7 @@ export const CancelOrder = ({
           }
       }
   };
-
+  
   const handleSelectReson = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setReason(e.target.value);
   };
@@ -64,34 +59,34 @@ export const CancelOrder = ({
   };
   if (isShowCancel.shown)
     return (
-      <div className={`${notoSanLoop.className}`}>
-        <div className=" m-1 pt-2 bg-white border-t">
-          <div>I want to cancel this order</div>
+      <div className='text-xl'>
+        <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">Cancel</div>
+        <div className=" m-1 pt-2 bg-white ">
+          <div>I want to cancel this order because</div>
         </div>
         <div className="mb-3 px-4 rounded-md bg-white">
-          <div>because</div>
           <select
             name="reason"
             value={reason}
             onChange={handleSelectReson}
             className="border border-gray-500 p-3 mt-2 rounded-2xl "
           >
-            <option id="1" value="CC01" className="mx-3">
+            <option id="1" value="CC01" className="mx-3 font-light">
               I don&apos;t want this the order.
             </option>
-            <option id="2" value="CC02" className="mx-3">
+            <option id="2" value="CC02" className="mx-3 font-light">
               I ordered the wrong item.
             </option>
-            <option id="3" value="CC03" className="mx-3">
+            <option id="3" value="CC03" className="mx-3 font-light">
               I need to change the shipping address.
             </option>
-            <option id="4" value="CC04" className="mx-3">
+            <option id="4" value="CC04" className="mx-3 font-light">
               I found a store with a better price.
             </option>
-            <option id="5" value="CC05" className="mx-3">
+            <option id="5" value="CC05" className="mx-3 font-light">
               I found a better product.
             </option>
-            <option id="6" value="CC00" className="mx-3">
+            <option id="6" value="CC00" className="mx-3 font-light">
               other
             </option>
           </select>
@@ -100,12 +95,13 @@ export const CancelOrder = ({
           >
             <div className="">
               <InputField
-                label=""
+                label="Detail"
                 placeholder="cancel reason detail"
                 name="detail"
                 value={detail}
                 className="h-auto"
                 onChange={handleInputDetail}
+                required={ reason ==="CC00"}
               />
             </div>
           </div>
@@ -114,11 +110,11 @@ export const CancelOrder = ({
           <Button
             size="sm"
             onClick={handleOnCancel}
-            className=" bg-red-300  mx-2"
+            className=" bg-red-500 text-white  mx-2"
           >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleOnConfirm} color="bg-green-300">
+          <Button size="sm" onClick={handleOnConfirm} className={`${reason ==="CC00" &&  detail.trim() === '' ? 'bg-gray-500 text-white':'bg-green-500 text-white'} `} disabled={reason ==="CC00" && reason.length === 0}>
             Confirm
           </Button>
         </div>
@@ -175,9 +171,9 @@ export const RefundOrder = ({
   };
   if(isShowRefund.shown)
     return (
-      <div>
-        <div>{order.id}</div>
-        <div className=" m-1 pt-2 bg-white border-t">
+      <div className='text-xl'>
+        <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">Refund</div>
+        <div className=" m-1 pt-2 bg-white">
           <div>I want to refund this order</div>
         </div>
         <div className="mb-3 px-4 rounded-md bg-white">
@@ -188,25 +184,25 @@ export const RefundOrder = ({
             onChange={handleSelectReson}
             className="border border-gray-500 p-3 mt-2 rounded-2xl "
           >
-            <option id="1" value="RF01" className="mx-3">
+            <option id="1" value="RF01" className="mx-3 font-ligh">
               I don&apos;t want this the order.
             </option>
-            <option id="2" value="RF02" className="mx-3">
+            <option id="2" value="RF02" className="mx-3 font-ligh">
               The item arrived damaged.
             </option>
-            <option id="3" value="RF03" className="mx-3">
+            <option id="3" value="RF03" className="mx-3 font-ligh">
               The order is incomplete.
             </option>
-            <option id="4" value="RF04" className="mx-3">
+            <option id="4" value="RF04" className="mx-3 font-ligh">
               I received the wrong item.
             </option>
-            <option id="5" value="RF05" className="mx-3">
+            <option id="5" value="RF05" className="mx-3 font-ligh">
               The delivery was delayed.
             </option>
-            <option id="6" value="RF06" className="mx-3">
+            <option id="6" value="RF06" className="mx-3 font-ligh">
               I am not satisfied with the product.
             </option>
-            <option id="7" value="RF00" className="mx-3">
+            <option id="7" value="RF00" className="mx-3 font-ligh">
               other
             </option>
           </select>
@@ -215,11 +211,12 @@ export const RefundOrder = ({
           >
             <div className="">
               <InputField
-                label=""
+                label="Detail"
                 placeholder="refund reason detail"
                 name="detail"
                 value={detail}
                 onChange={handleInputDetail}
+                required={ reason === "RF00"}
               />
             </div>
           </div>
@@ -228,11 +225,11 @@ export const RefundOrder = ({
           <Button
             size="sm"
             onClick={handleOnCancel}
-            className=" bg-red-300  mx-2"
+            className=" bg-red-500 text-white mx-2"
           >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleOnConfirm} color="bg-green-300">
+          <Button size="sm" onClick={handleOnConfirm} className={`${reason ==="RF00" &&  detail.trim() === '' ? 'bg-gray-500 text-white':'bg-green-500 text-white'}`}  disabled={reason ==="RF00" && reason.length === 0}>
             Confirm
           </Button>
         </div>

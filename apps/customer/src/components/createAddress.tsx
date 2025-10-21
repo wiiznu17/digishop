@@ -4,11 +4,11 @@ import { JSX, SetStateAction } from "react";
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import InputField from "@/components/inputField";
 import { Address } from "@/types/props/addressProp";
-import { Noto_Sans_Thai_Looped } from "next/font/google";
+import { Rubik } from "next/font/google";
 import Button from "./button";
-const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400',
-  subsets:['thai']
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "500"
 })
 interface CreateAddress {
   isShowAddress: boolean;
@@ -63,18 +63,18 @@ export const DialogAddress = ({
       <Dialog
         open={isShowAddress}
         onClose={() => setIsShowAddress(false)}
-        className="relative z-100"
+        className="relative z-100 "
       >
         <DialogBackdrop
           transition
-          className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+          className="bg-black/50 fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
 
-        <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${notoSanLoop.className}`}>
+        <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${rubik.className}`}>
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <DialogPanel
               transition
-              className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+              className="relative transform overflow-hidden rounded-lg  bg-white text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
             >
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
@@ -93,7 +93,7 @@ export const DialogAddress = ({
                             name="recipientName"
                             value={address.recipientName}
                             onChange={handleInputChange}
-                            placeholder="Enter your last name"
+                            // placeholder="Enter your last name"
                             type="text"
                             required
                           />
@@ -103,7 +103,7 @@ export const DialogAddress = ({
                             name="phone"
                             value={address.phone}
                             onChange={handleInputChange}
-                            placeholder="Phone number"
+                            // placeholder="Phone number"
                             maxLength={10}
                             minLength={10}
                             required
@@ -116,7 +116,7 @@ export const DialogAddress = ({
                             name="address_number"
                             value={address.address_number}
                             onChange={handleInputChange}
-                            placeholder="address number"
+                            // placeholder="address number"
                             required
                           />
                           <InputField
@@ -124,7 +124,7 @@ export const DialogAddress = ({
                             name="building"
                             value={address.building}
                             onChange={handleInputChange}
-                            placeholder="building"
+                            // placeholder="building"
                             required
                           />
                           <InputField
@@ -132,7 +132,7 @@ export const DialogAddress = ({
                             name="street"
                             value={address.street}
                             onChange={handleInputChange}
-                            placeholder="street"
+                            // placeholder="street"
                             required
                           />
                           <InputField
@@ -140,14 +140,14 @@ export const DialogAddress = ({
                             name="subStreet"
                             value={address.subStreet}
                             onChange={handleInputChange}
-                            placeholder="subStreet"
+                            // placeholder="subStreet"
                           />
                           <InputField
                             label="District"
                             name="district"
                             value={address.district}
                             onChange={handleInputChange}
-                            placeholder="district"
+                            // placeholder="district"
                             required
                           />
                           <InputField
@@ -155,14 +155,14 @@ export const DialogAddress = ({
                             name="subdistrict"
                             value={address.subdistrict}
                             onChange={handleInputChange}
-                            placeholder="sub district"
+                            // placeholder="sub district"
                           />
                           <InputField
                             label="Province"
                             name="province"
                             value={address.province}
                             onChange={handleInputChange}
-                            placeholder="Province"
+                            // placeholder="Province"
                             type="text"
                             required
                           />
@@ -172,7 +172,7 @@ export const DialogAddress = ({
                             type="num"
                             value={address.postalCode}
                             onChange={handleInputChange}
-                            placeholder="Postal code"
+                            // placeholder="Postal code"
                             maxLength={5}
                             minLength={5}
                             required
@@ -182,7 +182,7 @@ export const DialogAddress = ({
                             name="country"
                             value={address.country}
                             onChange={handleInputChange}
-                            placeholder="Country"
+                            // placeholder="Country"
                             type="text"
                             required
                           />
@@ -214,18 +214,18 @@ export const DialogAddress = ({
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-700/25 px-4 py-1 sm:flex sm:flex-row-reverse sm:px-6">
+              <div className=" px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6 ">
                 <button
                   onClick={handleOnConfirm}
                   disabled={!validateForm()}
-                  className={`${!validateForm() ? "bg-gray-300" : "bg-green-500 hover:bg-red-400"}  text-white sm:ml-3 sm:w-auto px-4 py-2 text-sm font-medium hover:cursor-pointer rounded-full border `}
+                  className={`${!validateForm() ? "bg-gray-300 text-black" : "bg-green-500 text-white "}  sm:ml-3 sm:w-auto px-4 py-2 text-sm font-medium hover:cursor-pointer rounded-full  `}
                 >
                   Confirm
                 </button>
                 <Button
                   size="sm"
                   onClick={handleOnCancel}
-                  className=" bg-white"
+                  className=" bg-red-500 text-white "
                 >
                   Cancel
                 </Button>

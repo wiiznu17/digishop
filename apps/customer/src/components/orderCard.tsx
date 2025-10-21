@@ -8,11 +8,7 @@ import Image from "next/image";
 import Button from "./button";
 import { CancelOrder, RefundOrder } from "./orderCancelCard";
 import { SetStateAction, useEffect, useState } from "react";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Truck } from "lucide-react";
 import OrderStatusConfig from "../master/statusOrderDetail.json";
 import {
   updateOrderStatus,
@@ -32,7 +28,6 @@ import {
 } from "../../../../packages/db/src/types/enum";
 import PaymentMethodMaster from "../master/paymentMethod.json";
 
-
 interface OrderCard {
   item: OrderDetail;
   handleShowDetail: (item: OrderDetail) => void;
@@ -41,7 +36,7 @@ interface OrderCard {
   setIsShowRefund: React.Dispatch<SetStateAction<CancelRefundProps>>;
   isShowCancel: CancelRefundProps;
   isShowRefund: CancelRefundProps;
-  setSelectShowCancel: React.Dispatch<SetStateAction<CancelProp|undefined>>;
+  setSelectShowCancel: React.Dispatch<SetStateAction<CancelProp | undefined>>;
   selectShowCancel: CancelProp | undefined;
 }
 
@@ -62,7 +57,7 @@ export default function OrderCard({
   const [refundId, setRefundId] = useState<number>(0);
   const [now, setNow] = useState<number | null>(null);
   const handleRevokeCancel = async (id: number) => {
-    const data = (await revokeCancelOrder(id)) as {data:string}; //check return
+    const data = (await revokeCancelOrder(id)) as { data: string }; //check return
     if (data.data) {
       window.location.reload();
     }
@@ -82,7 +77,7 @@ export default function OrderCard({
     setDetail("");
   };
   const handleConfirmed = async () => {
-    const data = (await updateOrderStatus(item.id)) as {data:string}; //check return
+    const data = (await updateOrderStatus(item.id)) as { data: string }; //check return
     if (data.data) {
       window.location.reload();
     }
@@ -99,7 +94,7 @@ export default function OrderCard({
   }, []);
   if (!user) return;
   return (
-    <div className="px-4 py-2 mb-5 border w-md rounded-2xl">
+    <div className="px-4 py-2 mb-5 border w-2xl rounded-2xl">
       <div>
         {item.items[0].productItem && (
           <button
@@ -110,7 +105,7 @@ export default function OrderCard({
               )
             }
           >
-            <div className="pt-2">
+            <div className="pt-2 text-2xl font-medium">
               {item.items[0].productItem.product.store.storeName}
             </div>
           </button>
@@ -128,27 +123,27 @@ export default function OrderCard({
                 }
               >
                 <div className="flex gap-4 relative mb-2">
-                  {
-                    item.items[0].productItem.productItemImage && (
-                      <Image
+                  {item.items[0].productItem.productItemImage && (
+                    <Image
                       alt={item.items[0].productItem.productItemImage.blobName}
-                    src={item.items[0].productItem.productItemImage.url}
-                    className="object-fill w-[100px] h-[100px] "
-                  /> 
-                    )
-                  }
+                      src={item.items[0].productItem.productItemImage.url}
+                      width={200}
+                      height={200}
+                      className="object-fill w-[120px] h-[120px] "
+                    />
+                  )}
                   <div>
                     <div className="flex-1">
-                      <div className="flex justify-start mb-1">
+                      <div className="flex justify-start mb-1 text-2xl font-medium">
                         {items.productItem.product.name}
                       </div>
-                      <div className="flex justify-start text-xs text-gray-500 ">
+                      <div className="flex justify-start font-ligth text-lg text-gray-500 ">
                         {formatSku(items.productItem.configurations)}
                       </div>
-                      <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
+                      <div className="absolute bottom-0 right-0 text-lg  text-gray-500 ">
                         x {String(items.quantity)}
                       </div>
-                      <div className="absolute bottom-5 right-0  text-gray-500 ">
+                      <div className="absolute bottom-7 right-0  text-gray-500 text-2xl">
                         ฿{" "}
                         {(items.unitPriceMinor / 100)
                           .toString()
@@ -162,18 +157,35 @@ export default function OrderCard({
           </div>
         ))}
         {item.grand_total_minor > 0 && (
-          <div className="flex justify-end border-b mb-2 pb-2">
+          <>
+            <div>
+              <div className="flex justify-end items-center text-gray-500 text-2xl">
+                <Truck size={25} className="mr-2"/>
+                <div>
+                  ฿ {(item.shippingInfo.shippingType.price / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+
+                </div>
+              
+              </div>
+            <div className=" flex justify-end text-2xl font-medium  my-2 pb-2">
             total ฿{" "}
             {(item.grand_total_minor / 100)
               .toString()
               .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
           </div>
+            </div>
+            
+            
+          </>
+          
         )}
 
         {item.status !== "PENDING" && (
-          <div>
+          <div className={`px-5 py-7 rounded-2xl  ${OrderStatusConfig[
+                    item.status as keyof typeof OrderStatusConfig
+                  ].color}`}>
             <div className="flex justify-between items-center">
-              <div className="">
+              <div className="text-xl">
                 {
                   OrderStatusConfig[
                     item.status as keyof typeof OrderStatusConfig
@@ -189,7 +201,7 @@ export default function OrderCard({
       {item.status === "PENDING" &&
         item.checkout.payment?.pgw_status === "PENDING" && (
           <div>
-            <div className="flex">
+            <div className="flex text-lg">
               <div className="mr-2">
                 ref: {item.checkout.payment?.providerRef} paid in
               </div>
@@ -201,10 +213,11 @@ export default function OrderCard({
         )}
 
       {item.checkout.payment === null && (
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end mt-2 ">
           <Button
-            className="mr-2"
-            onClick={() => router.push(`/order/${item.checkout.orderCode}`)}
+            className="mr-2 text-xl"
+            onClick={() => router.push(`/order/${item.checkout.orderCode}`)
+          }
           >
             continue order
           </Button>
@@ -220,14 +233,26 @@ export default function OrderCard({
               </div> */}
           </div>
           <div className=" rounded-2xl mb-2">
-            <div className="border-b py-2 text-2xl font-bold mb-2">Address</div>
-            <div className="font-bold">
+            <div className="border-b w-fit py-2 text-2xl font-medium mb-2">Address</div>
+            <div className="text-xl pl-3">
+              <div className="font-medium">
               {item.shippingInfo.address.recipientName}
             </div>
             <div className="ml-5">
               <p>{formatAddress(item.shippingInfo.address)}</p>
               <p>{item.shippingInfo.address.phone}</p>
             </div>
+            <div className="flex">
+              <div className="font-medium">
+              Shipping Type
+            </div>
+            <div className="ml-4">
+              {item.shippingInfo.shippingType.name}
+            </div>
+            </div>
+           
+            </div>
+            
           </div>
 
           {/* <div className="bg-amber-50 rounded-2xl p-4 mb-2">
@@ -268,28 +293,37 @@ export default function OrderCard({
             } */}
 
           <div className="">
-            <div className="border-b py-2 text-2xl font-bold mb-2">Payment</div>
-            <div>
-              {
-                typeof item.checkout.payment?.payment_method === 'number' &&
+            <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">Payment</div>
+            <div className="text-xl pl-2">
+              <div >
+              {typeof item.checkout.payment?.payment_method === "number" && (
                 <div>
-                  paid by { PaymentMethodMaster[item.checkout.payment?.payment_method as keyof typeof PaymentMethodMaster].label }
-                </div> 
-                
-              }
+                  paid by{" "}
+                  {
+                    PaymentMethodMaster[
+                      item.checkout.payment
+                        ?.payment_method as keyof typeof PaymentMethodMaster
+                    ].label
+                  }
+                </div>
+              )}
             </div>
-            <div className="my-2">
+            <div className="my-2 ">
               transaction :{" "}
               {item.checkout.payment?.paidAt
                 ? formatTimeZoneTH(item.checkout.payment.paidAt.toString())
-                : item.status === OrderStatus.PENDING? "waiting to pay": "-"}
+                : item.status === OrderStatus.PENDING
+                  ? "waiting to pay"
+                  : "-"}
             </div>
+            </div>
+            
           </div>
 
           {item.refundOrders.length > 0 && (
             <div>
               <div>
-                <div className="flex border-b py-2 text-2xl font-bold mb-2 ">
+                <div className="flex border-b py-2 text-2xl font-medium mb-2 w-fit">
                   <div>Refund</div>
                   <button
                     onClick={() => setIsShowRefundDetail(!isShowRefundDetail)}
@@ -299,11 +333,11 @@ export default function OrderCard({
                   </button>
                 </div>
                 {isShowRefundDetail && (
-                  <div className="relative">
+                  <div className="relative text-xl">
                     <div className="absolute top-0 right-0">
                       {item.refundOrders[refundId].status}
                     </div>
-                    <div>reson: {item.refundOrders[refundId].reason}</div>
+                    <div>reason: {item.refundOrders[refundId].reason}</div>
                     {item.refundOrders[refundId].description && (
                       <div>
                         description: {item.refundOrders[refundId].description}
@@ -315,9 +349,11 @@ export default function OrderCard({
                         typeof item.refundOrders[item.refundOrders.length - 1]
                           .id == "number" && (
                           <Button
-                            size="sm"
+                            size="md"
+                            className="text-lg mt-2 bg-red-500 text-white flex justify-end items-end"
                             onClick={() => {
-                              const refundOrderId = item.refundOrders[refundId].id;
+                              const refundOrderId =
+                                item.refundOrders[refundId].id;
                               if (typeof refundOrderId === "number") {
                                 handleRevokeCancel(refundOrderId);
                               }
@@ -359,7 +395,7 @@ export default function OrderCard({
             .cancel == "cancel" && (
             <>
               <Button
-                color="bg-red-300"
+                color="bg-red-500 text-white"
                 hidden={isShowCancel.shown}
                 onClick={() => setIsShowCancel({ shown: true, id: item.id })}
               >
@@ -371,14 +407,14 @@ export default function OrderCard({
             .cancel == "refund" && (
             <>
               <Button
-                color="bg-red-300"
+                color="bg-red-500 text-white "
                 hidden={isShowRefund.shown}
                 onClick={() => setIsShowRefund({ shown: true, id: item.id })}
               >
                 Refund
               </Button>
               <Button
-                color="bg-green-300"
+                color="bg-green-500 text-white"
                 hidden={isShowRefund.shown}
                 className="ml-4"
                 onClick={handleConfirmed}
@@ -388,15 +424,7 @@ export default function OrderCard({
             </>
           )}
         </div>
-        <div className="flex justify-center items-center">
-          <button
-            onClick={() => setIsShow(!isShow)}
-            hidden={item.checkout.payment === null}
-            className={`hover:cursor-pointer hover:bg-gray-300 trtransition-transform duration-300 ${isShow ? "rotate-180" : ""} `}
-          >
-            <ChevronDown />
-          </button>
-        </div>
+        
       </div>
       {(item.id === isShowCancel.id || item.id === isShowRefund.id) && (
         <div>
@@ -424,6 +452,15 @@ export default function OrderCard({
           />
         </div>
       )}
+      <div className="flex justify-center items-center">
+          <button
+            onClick={() => setIsShow(!isShow)}
+            hidden={item.checkout.payment === null}
+            className={`hover:cursor-pointer hover:bg-gray-300 trtransition-transform duration-300 ${isShow ? "rotate-180" : ""} `}
+          >
+            <ChevronDown />
+          </button>
+        </div>
     </div>
   );
 }

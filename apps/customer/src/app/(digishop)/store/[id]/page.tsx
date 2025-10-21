@@ -12,7 +12,6 @@ export default function StorePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchEngine, setSearchEngine] = useState<string[] | undefined>(undefined);
-  const [loading, setLoading] = useState(false)
   const [showProduct, setShowProduct] = useState<Product[]>();
     const handleSearch = (query = searchQuery) => {
       if (!query.trim()) return;
@@ -32,7 +31,6 @@ export default function StorePage() {
       }else{
         setSearchEngine(undefined)
       }
-      setLoading(false)
     },500)
     return () => clearTimeout(timeout)
   },[searchQuery,products])
@@ -48,29 +46,28 @@ export default function StorePage() {
     setShowProduct(products.products)
   },[products])
   console.log(products);
-  if (!products || !loading) return;
+  if (!products) return;
 
   return (
     <div className="flex justify-center items-center pt-2">
-      <div className=" w-5xl ">
+      <div className=" w-7xl ">
       <div>
         <div className="flex p-6 rounded-2xl bg-gray-200 border-b ">
           <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
           <div className="px-4">
             <h1 className="text-6xl font-extrabold">{products.storeName}</h1>
-            <h6 className="mt-4">{products.description}</h6>
+            <h6 className="mt-4 text-xl">{products.description}</h6>
           </div>
         </div>
       </div>
       <div className="mt-4">
         <div className="flex justify-center my-2">
-          <div className="relative min-w-full ">
+          <div className="relative min-w-full py-5">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setLoading(true)
                 }}
                 placeholder= {`Find products in ${products.storeName} ...`}
                 className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-full focus:border-blue-500 focus:outline-none  text-black bg-white"
@@ -103,7 +100,7 @@ export default function StorePage() {
             </div>
         </div>
         <div className="">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[20px] m-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[20px] ">
           {showProduct &&
             showProduct.map((item: Product, index: number) => (
               <div

@@ -9,7 +9,6 @@ export type RefreshTokenJob = {
  refreshToken: string
 };
 
-
 const connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
 const queue = new Queue<RefreshTokenJob>(REFRESH_TOKEN, { connection });
 
