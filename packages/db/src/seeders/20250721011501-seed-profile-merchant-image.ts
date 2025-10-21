@@ -7,7 +7,7 @@ export = {
       {
         uuid: uuidv4(),
         store_id: 1,
-        url: "https://example.com/images/store1-main.jpg",
+        url: 'https://digishop.blob.core.windows.net/product/products/9ddb9d37-69ec-4725-8ae1-203c838ea093/items/4def94a4-5720-4945-aaf9-415f15c87863/d047e37a-02fc-4205-b583-b97c71d2e3fb.jpg',
         blobName: "store1-main-blob",
         fileName: "store1-main.jpg",
         created_at: new Date(),
@@ -16,7 +16,7 @@ export = {
       {
         uuid: uuidv4(),
         store_id: 1,
-        url: "https://example.com/images/store1-secondary.jpg",
+        url: 'https://digishop.blob.core.windows.net/product/products/9ddb9d37-69ec-4725-8ae1-203c838ea093/items/4def94a4-5720-4945-aaf9-415f15c87863/d047e37a-02fc-4205-b583-b97c71d2e3fb.jpg',
         blobName: "store1-secondary-blob",
         fileName: "store1-secondary.jpg",
         created_at: new Date(),

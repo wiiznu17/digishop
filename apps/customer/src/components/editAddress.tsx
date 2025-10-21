@@ -3,12 +3,12 @@ import { DialogBackdrop, DialogPanel, Dialog } from "@headlessui/react";
 import { SetStateAction, useState } from "react";
 import InputField from "./inputField";
 import Button from "./button";
-import { Noto_Sans_Thai_Looped } from "next/font/google";
+import { Rubik } from "next/font/google";
 import { updateAddress } from "@/utils/requestUtils/requestUserUtils";
 import { useAuth } from "@/contexts/auth-context";
-const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400',
-  subsets: ['thai']
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "500"
 })
 interface editAddressProp {
   item: Address;
@@ -52,11 +52,11 @@ export function EditAddress({
           transition
           className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         >
-          <div className={`fixed inset-0 z-100 w-screen overflow-y-auto  ${notoSanLoop.className}`}>
+          <div className={`fixed inset-0 z-100 w-screen overflow-y-auto  ${rubik.className} bg-black/50`}>
             <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
               <DialogPanel 
               transition
-              className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+              className="relative transform overflow-hidden rounded-lg bg-white/100 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
               >
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
@@ -75,7 +75,7 @@ export function EditAddress({
                               name="recipientName"
                               value={address.recipientName}
                               onChange={handleInputChange}
-                              placeholder="Enter your last name"
+                              // placeholder="Enter your last name"
                               type="text"
                               required
                             />
@@ -85,7 +85,7 @@ export function EditAddress({
                               name="phone"
                               value={address.phone}
                               onChange={handleInputChange}
-                              placeholder="Phone number"
+                              // placeholder="Phone number"
                               maxLength={10}
                               minLength={10}
                               required
@@ -98,49 +98,49 @@ export function EditAddress({
                               name="address_number"
                               value={address.address_number}
                               onChange={handleInputChange}
-                              placeholder="address number"
+                              // placeholder="address number"
                             />
                             <InputField
                               label="Building"
                               name="building"
                               value={address.building}
                               onChange={handleInputChange}
-                              placeholder="building"
+                              // placeholder="building"
                             />
                             <InputField
                               label="Street"
                               name="street"
                               value={address.street}
                               onChange={handleInputChange}
-                              placeholder="street"
+                              // placeholder="street"
                             />
                             <InputField
                               label="Sub Street"
                               name="subStreet"
                               value={address.subStreet}
                               onChange={handleInputChange}
-                              placeholder="subStreet"
+                              // placeholder="subStreet"
                             />
                             <InputField
                               label="District"
                               name="district"
                               value={address.district}
                               onChange={handleInputChange}
-                              placeholder="district"
+                              // placeholder="district"
                             />
                             <InputField
                               label="Sub district"
                               name="subdistrict"
                               value={address.subdistrict}
                               onChange={handleInputChange}
-                              placeholder="sub district"
+                              // placeholder="sub district"
                             />
                             <InputField
                               label="Province"
                               name="province"
                               value={address.province}
                               onChange={handleInputChange}
-                              placeholder="Province"
+                              // placeholder="Province"
                               type="text"
                               required
                             />
@@ -150,7 +150,7 @@ export function EditAddress({
                               type="num"
                               value={address.postalCode}
                               onChange={handleInputChange}
-                              placeholder="Postal code"
+                              // placeholder="Postal code"
                               maxLength={5}
                               minLength={5}
                               required
@@ -160,7 +160,7 @@ export function EditAddress({
                               name="country"
                               value={address.country}
                               onChange={handleInputChange}
-                              placeholder="Country"
+                              // placeholder="Country"
                               type="text"
                               required
                             />
@@ -189,9 +189,9 @@ export function EditAddress({
                           {
                             !item.isDefault && (
                             <div className="text-black">
-                              <div>This address is default</div>
+                              <div className="pb-2">This address is default</div>
                               <input type="checkbox" name="isDefault" onChange={handleIsDefault}/>
-                              <label htmlFor="isDefault">yes</label>
+                              <label htmlFor="isDefault" className="ml-4 ">Yes</label>
                             </div>
                             )
                           }
@@ -200,18 +200,18 @@ export function EditAddress({
                     </div>
                   </div>
                 </div>
-                  <div className="bg-gray-700/25 px-4 py-1 sm:flex sm:flex-row-reverse sm:px-6">
+                  <div className=" px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6">
                     <Button
                       size="sm"
                       onClick={handleOnConfirm}
-                      className={`text-sm text-white bg-green-600 sm:ml-3 sm:w-auto`}
+                      className={`text-sm text-white bg-green-500 sm:ml-3 sm:w-auto`}
                     >
                       Confirm
                     </Button>
                     <Button
                       size="sm"
                       onClick={handleOnCancel}
-                      className=" bg-white"
+                      className=" text-white bg-red-500"
                     >
                       Cancel
                     </Button>

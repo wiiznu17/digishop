@@ -22,6 +22,7 @@ const AuthPage: React.FC = () => {
   });
   const { login, isLoading } = useAuth();
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loginFail, setLoginFail] = useState<boolean>(false);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -49,14 +50,7 @@ const AuthPage: React.FC = () => {
     if (success) {
       router.push("/");
     } else {
-      try {
-        const success = await login(formData.email, formData.password);
-        if (success) {
-          router.replace("/");
-        }
-      } catch (error) {
-        console.log("error", error);
-      }
+      setLoginFail(true)
     }
   };
   return (
@@ -64,14 +58,19 @@ const AuthPage: React.FC = () => {
       className={`grid grid-cols-2 min-h-screen bg-white ${rubik.className}`}
     >
       <div className="flex justify-center items-center">
-        <Image src={icon} width={100} height={100} alt="Shpping" />
+        <Image src={icon} width={600} height={600} alt="Shpping" />
       </div>
       <div className="flex justify-center items-center">
-        <div className="w-1/2">
+        <div className="w-lg">
           <div
            
-            className=" bg-white px-4  "
+            className=" bg-white px-4 relative"
           >
+            {
+              loginFail && (
+                <p className="absolute top-[-40] text-red-500 bg-red-500/10 px-4 text-lg font-bold">Incorrect email or password</p>
+              )
+            }
             <div className="relative space-y-6">
             {/* Email Field */}
             <InputField
@@ -99,13 +98,16 @@ const AuthPage: React.FC = () => {
             />
 
             </div>
-            <button className="mb-6 mt-2 text-red-500 cursor-pointer" onClick={() => router.push('/auth/forgot-password')}>forgot password ?</button>
+            <button className="flex justify-end items-end mb-6 mt-2  cursor-pointer " onClick={() => router.push('/auth/forgot-password')}>
+              <div className=" text-base text-black font-normal">forgot password ?</div>
+            </button>
+            
             {/* Submit Button */}
             <Button
               size="lg"
               className="w-full group"
               disabled={isLoading}
-              color="bg-gray"
+              color="bg-blue-600/80 text-white"
               onClick={handleSubmit}
             >
               {isLoading ? (
@@ -133,7 +135,7 @@ const AuthPage: React.FC = () => {
           </div>
           <Link href="/auth/register">
             <div className="px-4">
-              <Button size="lg" className="w-full" color="bg-blue-200">
+              <Button size="lg" className="w-full" border="border-blue-600/80" >
                 Create Account
               </Button>
             </div>

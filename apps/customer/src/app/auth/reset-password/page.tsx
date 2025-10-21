@@ -1,27 +1,45 @@
 'use client'
-import { useState } from "react";
-import {  Lock,CircleCheck } from "lucide-react";
-// import { useSearchParams } from "next/navigation";
+import { Suspense, use, useState } from "react";
+import {  Lock,CircleCheck, CheckCircle, ArrowLeft } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { resetPassword } from "@/utils/requestUtils/requestAuthUtils";
+import InputField from "@/components/inputField";
+import { Rubik } from "next/font/google";
+import Button from "@/components/button";
+import { useRouter } from "next/navigation";
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "300"
+})
 
-export default function ResetPassword() {
+export default function ResetPassword({ searchParams} : {searchParams: Promise<{ [key: string]: string }> }){
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const handleResetSubmit = () => {
+  const [page, setPage] = useState('success');
+  const router = useRouter()
+  const handleResetSubmit = async() => {
     // Password reset logic would go here
+
     if((!testLength || !testCapLetter || !testLowerLetter || !testNumber )||(password !== confirmPassword)){
-      alert("Password reset not successful!");
     }else{
-      alert("Password reset successful!");
+      const res = (await resetPassword( password , token)) as {data: boolean}
+      console.log('res',res)
+      if(res.data){
+        setPage('success')
+      }else{
+        alert('reset password failed')
+      }
     }
   };
-  // const searchParams = useSearchParams();
-  // const token = searchParams.get("token");
+  const { token } = use(searchParams);
+  // const token = searchParams.get("token") ?? '';
   const testLength = password.length > 6
   const testCapLetter = (/[A-Z]/g).test(password)
   const testLowerLetter = (/[a-z]/g).test(password)
   const testNumber = (/[0-9]/g).test(password)
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+  if(page === 'reset'){
+    return (
+    <div className={`min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 ${rubik.className}`}>
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Icon */}
@@ -43,50 +61,54 @@ export default function ResetPassword() {
           {/* Form */}
           <div className="space-y-6">
             <div>
-              <label
+              {/* <label
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
                 New Password
-              </label>
+              </label> */}
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="password"
+                {/* <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
+                <InputField
+                  // id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter new password"
+                  // placeholder="Enter new password"
                   required
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                />
+                  // className="text-black w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
+                  label="New Password"
+                  name="password"              
+                  />
               </div>
             </div>
 
             <div>
-              <label
+              {/* <label
                 htmlFor="confirmPassword"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
                 Confirm Password
-              </label>
+              </label> */}
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="confirmPassword"
+                {/* <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
+                <InputField
+                  // id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
+                  // placeholder="Confirm new password"
                   required
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  // className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
+                  label="Confirm Password" 
+                  name="confirmPassword"               
                 />
               </div>
             </div>
 
             {/* Password Requirements */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-xs font-medium text-gray-700 mb-2">
+              <p className="text-base font-medium text-gray-700 mb-2">
                 Password must contain:
               </p>
             <div className={`flex mt-1 ${testCapLetter? 'text-black':'text-gray-300'}`}>
@@ -108,16 +130,44 @@ export default function ResetPassword() {
               
             </div>
 
-            <button
+            <Button
               onClick={handleResetSubmit}
               disabled={(!testLength || !testCapLetter || !testLowerLetter || !testNumber )||(password !== confirmPassword)}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+              className={` ${(!testLength || !testCapLetter || !testLowerLetter || !testNumber )||(password !== confirmPassword) ? 'bg-gray-500':'bg-blue-600'} w-full  text-white py-3 rounded-lg font-medium  transition`}
             >
               Reset Password
-            </button>
+            </Button>
           </div>
         </div>
       </div>
     </div>
   );
 }
+if(page === 'success'){
+   return <div className="min-h-screen bg-green-50  flex items-center justify-center p-5">
+        <div className="max-w-md w-full ">
+          <div className="bg-white rounded-2xl shadow-2xl p-5 text-center">
+            {/* Success Animation */}
+            <div className="relative inline-block mb-6">
+              <div className="absolute inset-0 bg-green-100 rounded-full  opacity-75"></div>
+              <div className="relative bg-green-500 rounded-full p-4">
+                <CheckCircle className="w-16 h-16 text-white" />
+              </div>
+            </div>
+
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">
+              Password reset successfully
+            </h1>
+            <button
+              onClick={() => router.replace('/auth')}
+              className="w-full mt-3 flex items-center text-xl justify-start text-gray-600 hover:text-gray-900 transition"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2 " />
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+}
+  }
+  

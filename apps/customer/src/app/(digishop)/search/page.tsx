@@ -10,8 +10,9 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
-  ArrowUp,
   ArrowDown,
+  ArrowUp,
+ 
 } from "lucide-react";
 import {
   Product,
@@ -120,7 +121,7 @@ export default function SearchResult({
               setLoading(true);
             }}
             placeholder="Search for products, brands, or categories..."
-            className={`w-full px-6 py-4 text-lg border-2 z-50 border-gray-200 ${searchResult && searchQuery ? "rounded-t-4xl" : "rounded-full"} focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
+            className={`w-full px-6 py-4 text-xl border-2 z-50 border-gray-200 ${searchResult && searchQuery ? "rounded-t-4xl" : "rounded-full"} focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
           />
           {searchQuery && hover && (
             <div className="absolute right-0 z-100 w-full">
@@ -128,7 +129,7 @@ export default function SearchResult({
                 <button
                   key={index}
                   onClick={() => handleSearch(result)}
-                  className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 border-gray-200 hover:bg-gray-300 ${index === searchResult.length - 1 ? "rounded-b-4xl" : ""}`}
+                  className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 text-xl border-gray-200 hover:bg-gray-300 ${index === searchResult.length - 1 ? "rounded-b-4xl" : ""}`}
                 >
                   {result}
                 </button>
@@ -162,7 +163,7 @@ export default function SearchResult({
             {(products?.length ?? 0) > 0 && (
               <div className="flex justify-end items-center mb-2">
                 <div className="flex mx-3">
-                  <div className="mx-3">price</div>
+                 
                   {filter == "ASC" ? (
                     <button
                       onClick={() => setFilter("DESC")}
@@ -180,9 +181,9 @@ export default function SearchResult({
                   )}
                 </div>
                 {products?.length && (
-                  <div className="">
+                  <div className="text-xl">
                     <div>
-                      {(page - 1) * 10 + products.length} / {count}
+                      amount : {(page - 1) * 10 + products.length} / {count}
                     </div>
                   </div>
                 )}
@@ -195,19 +196,20 @@ export default function SearchResult({
                     stores.map((store, index) => (
                       <button
                         key={index}
+                        className="cursor-pointer"
                         onClick={() =>
                           router.push(
                             `http://localhost:3000/store/${store.uuid}`
                           )
                         }
                       >
-                        <div className="flex p-6 rounded-2xl bg-gray-200 border-b ">
+                        <div className="flex p-6 rounded-2xl bg-white border ">
                           <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
                           <div className="px-4">
-                            <h1 className="text-2xl font-extrabold">
+                            <h1 className="text-2xl font-medium">
                               {store.storeName}
                             </h1>
-                            <h6 className="mt-4">{store.description}</h6>
+                            <h6 className="mt-4 text-lg">{store.description}</h6>
                           </div>
                         </div>
                       </button>
@@ -229,7 +231,8 @@ export default function SearchResult({
                 </div>
               </div>
             </div>
-            <div className=" flex justify-center items-center mt-15 border-t py-5">
+            <div className=" flex justify-center items-center text-xl mt-15 py-5">
+              <span>Page</span>
               <button
                 onClick={() => setPage(page + 1)}
                 className={`${page == 1 ? "opacity-0" : "opacity-100"}`}

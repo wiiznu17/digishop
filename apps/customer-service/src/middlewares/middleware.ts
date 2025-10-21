@@ -56,10 +56,10 @@ export function requireApprovedUser(opts?: { allowAdminBypass?: boolean; allowSe
 
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      console.log("User in require Approve: ", req.user)
+      // console.log("User in require Approve: ", req.user)
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      console.log("Bypass in require Approve: ", allowServiceBypass)
-      console.log("Bypass in require Approve: ", req.user.role)
+      // console.log("Bypass in require Approve: ", allowServiceBypass)
+      // console.log("Bypass in require Approve: ", req.user.role)
 
       // Bypass: service principal
       if (allowServiceBypass && req.user.role === "SERVICE") return next();
