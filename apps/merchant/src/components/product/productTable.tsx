@@ -164,9 +164,9 @@ export function ProductTable({
                     <div className="text-xs text-muted-foreground truncate max-w-xs">
                       {product.description || "-"}
                     </div>
-                    <div className="text-[10px] text-neutral-500">
+                    {/* <div className="text-[10px] text-neutral-500">
                       UUID: {product.uuid}
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </TableCell>

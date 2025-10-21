@@ -31,7 +31,8 @@ import {
   MerchantProfileFormValues,
   MerchantProfileProps,
   ProfileMerchantImage,
-  MerchantAddressForm
+  MerchantAddressForm,
+  AddressType
 } from "@/types/props/userProp"
 import { ProfileLogoUpload } from "@/components/profile/profileUpload"
 import {
@@ -62,10 +63,91 @@ export default function ProfilePage() {
   const [editingAddress, setEditingAddress] =
     useState<MerchantAddressForm | null>(null)
 
+  // states สำหรับ Add Address
+  const [addOpen, setAddOpen] = useState(false)
+  const [draftNewAddress, setDraftNewAddress] =
+    useState<MerchantAddressForm | null>(null)
+
   // useEffect for fetch merchant detail
   useEffect(() => {
     void handleFetchMerchantProfile()
   }, [])
+  const emptyAddress = (): MerchantAddressForm => ({
+    // id: undefined, // ใหม่ยังไม่มี id
+    ownerName: "",
+    phone: "",
+    address_number: "",
+    subStreet: "",
+    street: "",
+    building: "",
+    subdistrict: "",
+    district: "",
+    province: "",
+    postalCode: "",
+    addressType: AddressType.HOME,
+    country: "Thailand",
+    isDefault: profileData.store.addresses.length === 0 // อันแรกให้ default
+  })
+  const openAddDialog = () => {
+    // อันแรกให้ default = true ตามเดิม
+    const base = emptyAddress()
+    setDraftNewAddress(base)
+    setAddOpen(true)
+  }
+
+  // เมื่อกด Save ใน Add Dialog
+  const submitAddAddress = () => {
+    if (!draftNewAddress) return
+    setProfileData((prev) => {
+      const list = [...prev.store.addresses]
+
+      // ถ้าติ๊กเป็น default ให้เคลียร์ default อื่นก่อน
+      const nextList = draftNewAddress.isDefault
+        ? list.map((a) => ({ ...a, isDefault: false }))
+        : list
+
+      // ถ้าเป็นแอดเดรสแรกและยังไม่มี default -> บังคับ true
+      const isFirst = nextList.length === 0
+      const newAddr: MerchantAddressForm = {
+        ...draftNewAddress,
+        id: undefined,
+        isDefault: draftNewAddress.isDefault || isFirst
+      }
+
+      nextList.push(newAddr)
+      return {
+        ...prev,
+        store: { ...prev.store, addresses: nextList }
+      }
+    })
+    setAddOpen(false)
+    setDraftNewAddress(null)
+  }
+
+  const addAddress = () => {
+    setProfileData((prev) => ({
+      ...prev,
+      store: {
+        ...prev.store,
+        addresses: [...prev.store.addresses, emptyAddress()]
+      }
+    }))
+  }
+
+  const removeAddressByIndex = (index: number) => {
+    setProfileData((prev) => {
+      const list = [...prev.store.addresses]
+      const removed = list.splice(index, 1)
+
+      // ถ้าลบอันที่เป็น default ออกไป ให้ตั้ง default ใหม่เป็น index 0 ถ้ามีเหลือ
+      if (removed[0]?.isDefault && list.length > 0) {
+        list[0] = { ...list[0], isDefault: true }
+        for (let i = 1; i < list.length; i++)
+          list[i] = { ...list[i], isDefault: false }
+      }
+      return { ...prev, store: { ...prev.store, addresses: list } }
+    })
+  }
 
   const handleFetchMerchantProfile = async () => {
     try {
@@ -170,9 +252,16 @@ export default function ProfilePage() {
     setEditingAddress(addr)
     setEditOpen(true)
   }
-
   const submitEditAddress = async () => {
     if (!editingAddress) return
+
+    // Guard: ensure we have an id to update
+    if (editingAddress.id == null) {
+      // handle this case: either create new address or show an error
+      alert("Cannot update address: missing id.")
+      return
+    }
+
     try {
       await updateMerchantAddressRequester(editingAddress.id, editingAddress)
       setEditOpen(false)
@@ -258,7 +347,13 @@ export default function ProfilePage() {
 
               {/* Address list */}
               <div className="space-y-2">
-                <Label>Business Addresses</Label>
+                <div className="flex items-center justify-between mb-4">
+                  <Label>Merchant Addresses</Label>
+                  <Button variant="outline" onClick={openAddDialog}>
+                    + Add Address
+                  </Button>
+                </div>
+
                 <RadioGroup
                   value={String(
                     profileData.store.addresses.findIndex((a) => a.isDefault) ??
@@ -300,6 +395,19 @@ export default function ProfilePage() {
                           onClick={() => openEditDialog(addr)}
                         >
                           <Edit className="h-4 w-4 mr-1" /> Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeAddressByIndex(idx)}
+                          disabled={profileData.store.addresses.length <= 1}
+                          title={
+                            profileData.store.addresses.length <= 1
+                              ? "Must keep at least one address"
+                              : "Delete"
+                          }
+                        >
+                          Delete
                         </Button>
                       </div>
                     ))}
@@ -447,7 +555,7 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="businessType">Business Type</Label>
+                  <Label htmlFor="businessType">Merchant Type</Label>
                   <Select
                     value={profileData.store.businessType}
                     onValueChange={(value) =>
@@ -711,6 +819,176 @@ export default function ProfilePage() {
               Cancel
             </Button>
             <Button onClick={submitEditAddress}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Add Address Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Address</DialogTitle>
+          </DialogHeader>
+
+          {draftNewAddress && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Owner Name</Label>
+                  <Input
+                    value={draftNewAddress.ownerName}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        ownerName: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input
+                    value={draftNewAddress.phone}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        phone: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Address Number</Label>
+                  <Input
+                    value={draftNewAddress.address_number}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        address_number: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>SubStreet</Label>
+                  <Input
+                    value={draftNewAddress.subStreet}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        subStreet: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Street</Label>
+                  <Input
+                    value={draftNewAddress.street}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        street: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Building</Label>
+                  <Input
+                    value={draftNewAddress.building}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        building: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Subdistrict</Label>
+                  <Input
+                    value={draftNewAddress.subdistrict}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        subdistrict: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>District</Label>
+                  <Input
+                    value={draftNewAddress.district}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        district: e.target.value
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Province</Label>
+                  <Input
+                    value={draftNewAddress.province}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        province: e.target.value
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Postal Code</Label>
+                  <Input
+                    value={draftNewAddress.postalCode}
+                    onChange={(e) =>
+                      setDraftNewAddress({
+                        ...draftNewAddress,
+                        postalCode: e.target.value
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="flex items-end">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={draftNewAddress.isDefault}
+                      onChange={(e) =>
+                        setDraftNewAddress({
+                          ...draftNewAddress,
+                          isDefault: e.target.checked
+                        })
+                      }
+                    />
+                    <Label>Set as default</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitAddAddress}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
