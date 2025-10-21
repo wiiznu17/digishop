@@ -1,23 +1,19 @@
 import { Store, StoreStatus } from "@digishop/db";
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { redis } from "../lib/redis/client";
+import { verifyAccess, type JWTPayload } from "../lib/jwtVerfify";
 
 export interface AuthenticatedRequest extends Request {
   user?: any;
   authMode?: "service" | "user";
 }
-// ตรวจ Bearer ที่ส่งมาจาก queue
+
+// service bypass from bullMQ worker
 export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction) {
   const hdr = req.headers.authorization || "";
-  const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : "";
-  const expected = process.env.MERCHANT_SERVICE_TOKEN || "";
-  console.log("hdr in service Auth: ", hdr)
-  console.log("Token in service Auth: ", token)
-  console.log("Expect in service Auth: ", expected)
-  console.log("is service: ", !expected || !token || token !== expected)
-  if (!expected || !token || token !== expected) return next(); // ไม่ตัดทิ้ง ปล่อยให้ไปลอง auth แบบ user ต่อ
-
-  // ใส่ principal แบบ service (ไม่มี cookie / ไม่มี store binding)
+  const token = hdr.startsWith("Bearer ") ? hdr.slice(7).trim() : "";
+  const expected = (process.env.MERCHANT_SERVICE_TOKEN || "").trim();
+  if (!expected || !token || token !== expected) return next();
   req.user = {
     id: 0,
     sub: 0,
@@ -25,52 +21,59 @@ export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: Nex
     email: "merchant-worker@system"
   };
   req.authMode = "service";
-  console.log("set req.authMode: ", req.authMode)
   return next();
 }
 
-// ตรวจ cookies
-export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  // ถ้า serviceAuth ผ่านมาแล้ว ก็ไม่ต้องเช็ค cookie
-  console.log("User in authenticae: ", req.authMode)
+function readAccessToken(req: Request) {
+  const hdr = req.headers.authorization || "";
+  if (hdr.startsWith("Bearer ")) return hdr.slice(7).trim();
+  return null;
+}
+
+const SESSION_PREFIX = process.env.SESSION_PREFIX || "";
+const sessKey = (jti: string) => `${SESSION_PREFIX}:${jti}`;
+
+export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   if (req.authMode === "service") return next();
 
-  const token = req.cookies?.token;
-  console.log("token: ", token)
+  const token = readAccessToken(req);
   if (!token) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    console.log(decoded)
-    if (typeof decoded === "string") return res.status(401).json({ error: "Invalid token" });
-    console.log(decoded)
-    req.user = decoded;
+    const payload = verifyAccess<JWTPayload>(token);
+    if (!payload?.jti) return res.status(401).json({ error: "Unauthorized" });
+
+    const raw = await redis.get(sessKey(payload.jti));
+    if (!raw) return res.status(401).json({ error: "SESSION_REVOKED" });
+
+    const sess = JSON.parse(raw) as {
+      userId?: number | string;
+      jti: string;
+      expiresAt?: number
+    };
+    if (sess.expiresAt && sess.expiresAt < Date.now()) return res.status(401).json({ error: "SESSION_EXPIRED" });
+
+    const principalId = (sess.userId ?? payload.sub) as number | string;
+
+    req.user = {
+      ...payload,              // ข้อมูลใน JWT email, role,
+      id: principalId,         // เพิ่ม id (mapping จาก userId)
+      sub: principalId,        // แทน sub เดิมด้วย principalId
+    };
     req.authMode = "user";
     return next();
   } catch {
-    console.log("authenticate error")
     return res.status(401).json({ error: "Unauthorized" });
   }
 };
 
-/**
- * ตรวจว่าร้าน APPROVED
- * - ผ่านเสมอถ้ามาจาก serviceAuth (role=SERVICE)
- */
 export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowServiceBypass?: boolean }) {
   const { allowServiceBypass = true } = opts ?? {};
-
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      console.log("User in require Approve: ", req.user)
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      console.log("Bypass in require Approve: ", allowServiceBypass)
-      console.log("Bypass in require Approve: ", req.user.role)
-
-      // Bypass: service principal
       if (allowServiceBypass && req.user.role === "SERVICE") return next();
 
-      // หา storeId
       let storeId: number | undefined =
         (req.user.storeId as number | undefined) ??
         (req.params as any)?.storeId ??
@@ -80,24 +83,22 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
       if (!storeId) {
         const ownerUserId = Number(req.user.sub);
         if (!Number.isFinite(ownerUserId)) return res.status(400).json({ error: "Missing storeId" });
-
-        const owned = await Store.findOne({ where: { userId: ownerUserId }, attributes: ["id", "status"] });
+        const owned = await Store.findOne({
+          where: { userId: ownerUserId },
+          attributes: ["id", "status"]
+        });
         if (!owned) return res.status(404).json({ error: "Store not found" });
-
-        storeId = owned.id;
-        if (owned.status !== StoreStatus.APPROVED) {
-          return res.status(403).json({ error: "Store status is not APPROVED" });
-        }
-        // เก็บติด req เผื่อ controller ใช้
+        if (owned.status !== StoreStatus.APPROVED) return res.status(403).json({ error: "Store status is not APPROVED" });
         (req as any).store = owned;
         return next();
       }
 
-      const store = await Store.findOne({ where: { id: storeId }, attributes: ["id", "status"] });
+      const store = await Store.findOne({
+        where: { id: storeId },
+        attributes: ["id", "status"]
+      });
       if (!store) return res.status(404).json({ error: "Store not found" });
-      if (store.status !== StoreStatus.APPROVED) {
-        return res.status(403).json({ error: "Store status is not APPROVED" });
-      }
+      if (store.status !== StoreStatus.APPROVED) return res.status(403).json({ error: "Store status is not APPROVED" });
       (req as any).store = store;
       return next();
     } catch {
@@ -106,7 +107,6 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
   };
 }
 
-/** รวม serviceAuth + authenticate: service มาก่อน, ไม่ผ่านค่อยเช็ค cookie */
 export function eitherAuth(stack: Array<(req: AuthenticatedRequest, res: Response, next: NextFunction) => any>) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     let i = 0;
