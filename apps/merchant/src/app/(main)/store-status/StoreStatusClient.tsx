@@ -10,16 +10,16 @@ import { useAuth } from "@/contexts/auth-context"
 
 const statusTextMap: Record<string, { title: string; desc: string }> = {
   PENDING: {
-    title: "ร้านค้าของคุณกำลังรอการอนุมัติ",
-    desc: "ทีมงานกำลังตรวจสอบข้อมูลร้านค้าของคุณ โปรดรอการยืนยัน หากเกินกำหนดโปรดติดต่อฝ่ายสนับสนุน"
+    title: "Your store is pending approval",
+    desc: "Our team is reviewing your store information. Please wait for confirmation. If it takes too long, please contact support."
   },
   REJECTED: {
-    title: "ร้านค้าของคุณถูกปฏิเสธการอนุมัติ",
-    desc: "ขออภัย ขณะนี้ร้านค้าไม่ผ่านการอนุมัติ โปรดตรวจสอบข้อมูลและยื่นคำขอใหม่ หรือติดต่อฝ่ายสนับสนุน"
+    title: "Your store has been rejected",
+    desc: "Sorry, your store application was not approved. Please review your information and resubmit your request or contact support for assistance."
   },
   SUSPENDED: {
-    title: "ร้านค้าของคุณถูกระงับชั่วคราว",
-    desc: "บัญชีร้านค้าถูกระงับการใช้งาน โปรดติดต่อฝ่ายสนับสนุนเพื่อขอรายละเอียดเพิ่มเติม"
+    title: "Your store has been suspended",
+    desc: "Your store account has been temporarily suspended. Please contact support for more details."
   }
 }
 
@@ -30,7 +30,7 @@ export default function StoreStatusPage() {
 
   const queryStatus = (sp.get("status") || "").toUpperCase()
 
-  // ถ้ากลับมา approved แล้ว ให้พากลับหน้าแรกของ merchant
+  // If the store becomes approved, redirect to merchant home
   useEffect(() => {
     if (!isLoading && storeStatus === "APPROVED") {
       router.replace("/")
@@ -39,7 +39,7 @@ export default function StoreStatusPage() {
 
   const info =
     statusTextMap[queryStatus] ??
-    statusTextMap[storeStatus ?? "PENDING"] ?? // fallback PENDING
+    statusTextMap[storeStatus ?? "PENDING"] ??
     statusTextMap["PENDING"]
 
   return (
@@ -53,19 +53,19 @@ export default function StoreStatusPage() {
             onClick={() => router.refresh()}
             className="px-4 py-2 rounded-lg border"
           >
-            ลองตรวจสอบอีกครั้ง
+            Check Again
           </button>
           <a
             href="mailto:support@example.com"
             className="px-4 py-2 rounded-lg border"
           >
-            ติดต่อฝ่ายสนับสนุน
+            Contact Support
           </a>
           <button
             onClick={() => router.replace("/")}
             className="px-4 py-2 rounded-lg border"
           >
-            กลับหน้าแรก
+            Back to Home
           </button>
         </div>
       </div>
