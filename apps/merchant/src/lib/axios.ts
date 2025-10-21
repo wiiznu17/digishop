@@ -1,8 +1,102 @@
-import axios from "axios"
+import Axios, {
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosRequestHeaders
+} from "axios"
+import { getAccessToken, setAccessToken } from "./tokenStore"
 
-const instance = axios.create({
+type RetriableAxiosRequestConfig = AxiosRequestConfig & { _retry?: boolean }
+
+const axios = Axios.create({
+  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL,
+  withCredentials: true
+})
+const refreshClient = Axios.create({
   baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL,
   withCredentials: true
 })
 
-export default instance
+// อย่าพยายาม refresh เมื่อปลายทางเป็น endpoint เหล่านี้ (กันลูป)
+const REFRESH_SKIP = [
+  /^\/api\/auth\/refresh$/,
+  /^\/api\/auth\/login$/,
+  /^\/api\/auth\/logout$/
+]
+
+let interceptorsAttached = false
+
+if (!interceptorsAttached) {
+  interceptorsAttached = true
+
+  let isRefreshing = false
+  let pendingQueue: Array<() => void> = []
+
+  axios.interceptors.request.use((config) => {
+    const t = getAccessToken()
+    if (t) {
+      const headers: AxiosRequestHeaders = (config.headers ??
+        {}) as AxiosRequestHeaders
+      headers.Authorization = `Bearer ${t}`
+      config.headers = headers
+    }
+    return config
+  })
+
+  axios.interceptors.response.use(
+    (r) => r,
+    async (error: AxiosError) => {
+      const status = error.response?.status
+      const original = (error.config ?? {}) as RetriableAxiosRequestConfig
+
+      const path = original?.url || ""
+      if (REFRESH_SKIP.some((re) => re.test(path))) {
+        return Promise.reject(error)
+      }
+
+      if (status === 401 && !original._retry) {
+        if (isRefreshing) {
+          await new Promise<void>((resolve) => pendingQueue.push(resolve))
+          original._retry = true
+          const t = getAccessToken()
+          const headers: AxiosRequestHeaders = (original.headers ??
+            {}) as AxiosRequestHeaders
+          if (t) headers.Authorization = `Bearer ${t}`
+          original.headers = headers
+          return axios(original)
+        }
+
+        try {
+          isRefreshing = true
+          original._retry = true
+
+          const res = await refreshClient.post("/api/auth/refresh")
+          const newAccess = (res.data as { accessToken?: string })?.accessToken
+          if (!newAccess) throw new Error("no_access")
+
+          setAccessToken(newAccess)
+          pendingQueue.forEach((fn) => fn())
+          pendingQueue = []
+
+          const headers: AxiosRequestHeaders = (original.headers ??
+            {}) as AxiosRequestHeaders
+          headers.Authorization = `Bearer ${newAccess}`
+          original.headers = headers
+
+          return axios(original)
+        } catch (e) {
+          // refresh ไม่ผ่าน → ล้าง access; AuthProvider (ผ่าน subscribe) จะ redirect /login เอง
+          setAccessToken(null)
+          pendingQueue.forEach((fn) => fn())
+          pendingQueue = []
+          return Promise.reject(e)
+        } finally {
+          isRefreshing = false
+        }
+      }
+
+      return Promise.reject(error)
+    }
+  )
+}
+
+export default axios

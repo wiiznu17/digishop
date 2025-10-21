@@ -55,7 +55,7 @@ export default function RegisterPage() {
       if (!user) {
         router.push("/login")
       } else if (user.role === "MERCHANT") {
-        router.push("/")
+        router.push("/orders")
       }
     }
   }, [user, isLoading, router])
