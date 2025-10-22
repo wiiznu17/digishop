@@ -4,9 +4,9 @@ import { FormLogin } from "@/types/props/userProp"
 export async function fetchUser(): Promise<FormLogin | null> {
   try {
     const res = await axios.get(`/api/auth/me`, { withCredentials: true })
-    return res.data.user
+    return res.data
   } catch (error) {
-    console.error("Error fetching user:", error)
+    console.error("Error fetching user:",error )
     return null
   }
 }
@@ -33,9 +33,9 @@ export async function loginUser(
 
 export async function logoutUser(): Promise<void> {
   try {
-    await axios.post(`/api/auth/logout`, null, { withCredentials: true })
-  } catch (error) {
-    console.error("Logout error:", error)
+    await axios.post("/api/auth/logout")
+  } finally {
+    setAccessToken(null)
   }
 }
 

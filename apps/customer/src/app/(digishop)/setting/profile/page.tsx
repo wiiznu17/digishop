@@ -24,6 +24,12 @@ import InputField from "@/components/inputField";
 import { sendResetPassword } from "@/utils/requestUtils/requestAuthUtils";
 
 const UserProfilePage = () => {
+  const router = useRouter();
+  const { user } = useAuth();
+  const WEBSITE_MERCHANT_URL = process.env.WEBSITE_MERCHANT_URL ?? ''
+  const WEBSITE_MERCHANT_REGISTER = process.env.WEBSITE_MERCHANT_REGISTER ?? ''
+  const [isShowAddress, setIsShowAddress] = useState(false);
+  const [isEditName, setIsEditName] = useState(false)
   const [currentUser, setCurrentUser] = useState<Profile>();
   const [addressUser, setAddressUser] = useState<Address[]>();
   const [address, setAddress] = useState<Address>({
@@ -46,10 +52,7 @@ const UserProfilePage = () => {
     lastName: '',
     middleName: ''
   })
-  const router = useRouter();
-  const { user } = useAuth();
-  const [isShowAddress, setIsShowAddress] = useState(false);
-  const [isEditName, setIsEditName] = useState(false)
+  
   const handleChangeName = async() => {
     if(!user || !name) return
     const changeData = (await updateUserName(user.id , name)) as {data: string}
@@ -84,7 +87,6 @@ const UserProfilePage = () => {
   };
   const handleOnConfirmAddress = async (): Promise<void> => {
     const axiosData = { ...address, userId: user?.id };
-    console.log("data add", axiosData);
     const res = (await createAddress(axiosData)) as {data: Address};
     if (res.data) {
       setIsShowAddress(false);
@@ -264,13 +266,13 @@ const UserProfilePage = () => {
                   <div className="border-b py-2 text-xl">Merchant Profile</div>
                   {
                     currentUser?.role === 'CUSTOMER' && (
-                      <Button className="mt-3 text-lg bg-blue-600/80 text-white">create merchant profile</Button>
+                      <Button className="mt-3 text-lg bg-blue-600/80 text-white" onClick={() => router.push(WEBSITE_MERCHANT_REGISTER)}>create merchant profile</Button>
                     )
                   }
                 </div>
                   {
                     currentUser?.role === 'MERCHANT' && (
-                      <Button className="mt-3">switch to merchant profile</Button>
+                      <Button className="mt-3" onClick={() => router.push(WEBSITE_MERCHANT_URL)}>switch to merchant profile</Button>
                     )
                   }
               </div>
@@ -282,7 +284,6 @@ const UserProfilePage = () => {
               {addressUser?.map((item: Address, index: number) => (
                 <div
                   key={index}
-                  // onClick={() => }
                 >
                   <AddressCardForSetting item={item} />
                 </div>

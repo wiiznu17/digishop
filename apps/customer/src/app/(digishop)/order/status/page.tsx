@@ -62,13 +62,11 @@ export default function OrderStatus() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="flex overflow-x-auto border-b border-gray-200">
             {Object.entries(StateConfig).map(([state, config]) => {
-              // const Icon = status.icon;
               const isActive = state === selectStatus;
               
               return (
                 <button
                   key={state}
-                  // onClick={() => setActiveStatus(status.id)}
                    onClick={() => handleChangeState(state as keyof typeof StateConfig)}
                   className={`
                     grid grid-cols-4 lg:grid-cols-8 items-center gap-2 px-15 py-6 font-medium text-sm whitespace-nowrap

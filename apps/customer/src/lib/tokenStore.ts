@@ -1,54 +1,38 @@
-let accessToken: string | null = null
-const listeners = new Set<() => void>()
-const bc: BroadcastChannel | null =
-  typeof window !== "undefined" ? new BroadcastChannel("auth") : null
+let token: string | null = null
 
-// เพิ่ม: โหลด token จาก localStorage ตอน init
-if (typeof window !== "undefined") {
-  accessToken = localStorage.getItem("accessToken")
+// use BraodcastChannel to sync token across tabs
+const ch =
+  typeof window !== "undefined"
+    ? new BroadcastChannel("merchant_access_token")
+    : null
+
+type Listener = () => void
+let listeners: Listener[] = []
+
+export function getAccessToken() {
+  return token
 }
 
-export function getAccessToken(): string | null {
-  return accessToken
+export function setAccessToken(t: string | null) {
+  token = t ?? null
+  // warn listeners
+  listeners.forEach((fn) => fn())
+  // broadcast for other tabs
+  if (ch) ch.postMessage({ type: "access_changed", token })
 }
 
-export function setAccessToken(token: string | null): void {
-  accessToken = token
-
-  // เพิ่ม: sync กับ localStorage
-  if (typeof window !== "undefined") {
-    if (token) {
-      localStorage.setItem("accessToken", token)
-    } else {
-      localStorage.removeItem("accessToken")
-    }
+export function subscribe(fn: Listener) {
+  listeners.push(fn)
+  return () => {
+    listeners = listeners.filter((x) => x !== fn)
   }
-
-  listeners.forEach((l) => l())
-  bc?.postMessage({ type: "accessToken", token })
 }
 
-export function subscribe(listener: () => void): () => void {
-  listeners.add(listener)
-  return () => listeners.delete(listener)
-}
-
-if (bc) {
-  bc.onmessage = (e: MessageEvent) => {
-    const data = e.data as { type?: string; token?: string | null }
-    if (data?.type === "accessToken") {
-      accessToken = data.token ?? null
-
-      // เพิ่ม: sync กับ localStorage
-      if (typeof window !== "undefined") {
-        if (accessToken) {
-          localStorage.setItem("accessToken", accessToken)
-        } else {
-          localStorage.removeItem("accessToken")
-        }
-      }
-
-      listeners.forEach((l) => l())
+if (ch) {
+  ch.onmessage = (e) => {
+    if (e?.data?.type === "access_changed") {
+      token = e.data.token ?? null
+      listeners.forEach((fn) => fn())
     }
   }
 }

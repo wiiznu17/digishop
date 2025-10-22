@@ -68,7 +68,6 @@ export default function OrderPage() {
   const [orderDetail, setOrderDetail] = useState<OrderDetail[]>();
   const [nextPath, setNextPath] = useState<string | null>("/");
   const [showModal, setShowModel] = useState(false);
-  // const [windows, setWindow] = useState<Window| null>();
   const [cart, setCart] = useState<ShoppingCartProps>();
   const [isShowAddress, setIsShowAddress] = useState(false);
   const [address, setAddress] = useState<Address>({
@@ -136,7 +135,6 @@ export default function OrderPage() {
       setSelectAddress(isMain[0]);
     }
   }, [addresses]);
-  console.log("items", firstOrder?.items);
   useEffect(() => {
     if (
       !user ||
@@ -181,23 +179,6 @@ export default function OrderPage() {
     firstOrder,
   ]);
 
-  //   useEffect(() => {
-  //     if (!firstOrder) {
-  //       redirect('/', RedirectType.replace);
-  //       return ;
-  //     }
-  //     if (!orderDetail || !firstOrder?.checkout ) return;
-  //   const shouldOpen = localStorage.getItem("openPayment");
-  //   if (shouldOpen === "true" && orderDetail) {
-  //     paymentWeb(firstOrder.checkout.payment?.url_redirect)
-  //     localStorage.removeItem("openPayment");
-  //   }
-  //   if (orderDetail &&firstOrder.checkout.payment?.pgw_status === "PENDING") {
-  //     const expiry = new Date(firstOrder.checkout.payment.expiry_at).getTime();
-  //     setEnd(expiry);
-  //   }
-  // }, [orderDetail]);
-
   useEffect(() => {
     window.history.pushState(null, "", window.location.pathname);
     const handlePopStateBeforePayment = () => {
@@ -207,19 +188,14 @@ export default function OrderPage() {
 
     if (!orderDetail) return;
     window.addEventListener("popstate", handlePopStateBeforePayment);
-    // window.addEventListener("beforeunload", (e) => {
-    //   e.preventDefault()
-    //   deleteOrder(orderCode);
-    // });
+
   }, [orderDetail, router, showModal, orderCode]);
   const handleCancel = () => {
     setShowModel(false);
   };
   const handleConfirmCancel = async () => {
     setShowModel(false);
-    // del order
     if (!cart) return;
-    console.log(cart);
     const cancel = (await deleteOrder(orderCode)) as { data: string };
     const addCart = (await createWishList(cart)) as {
       data: {
@@ -234,57 +210,17 @@ export default function OrderPage() {
     }
   };
 
-  // useEffect(() => {
-  //   if(windows?.close){
-  //     console.log(orderCode, 'close')
-  //   }
-  // },[windows, orderCode])
-  // const sumPrice = (
-  //   items: [
-  //     {
-  //       quantity: number;
-  //       unitPriceMinor: number;
-  //       lineTotalMinor: number;
-  //       productItem: ProductItemProps;
-  //       productNameSnapshot: string;
-  //     },
-  //   ]
-  // ) => {
-  //   let sum = 0;
-  //   for (let i = 0; i < items.length; i++) {
-  //     sum += items[i].quantity * items[i].productItem.priceMinor;
-  //   }
-  //   return sum / 100;
-  // };
-  // const sumPriceTotal = (items: OrderDetail[]) => {
-  //   let sum = 0;
-  //   for (let i = 0; i < items.length; i++) {
-  //     for (let j = 0; j < items[i].items.length; j++) {
-  //       sum +=
-  //         items[i].items[j].quantity * items[i].items[j].productItem.priceMinor;
-  //     }
-  //   }
-  //   return sum / 100;
-  // };
-
   const handleOrder = async () => {
     if (!order) return;
-    console.log(order);
     const res = (await createOrder(order)) as {
       data: { redirect_url: string };
     };
     if (res.data.redirect_url) {
       router.push(res.data.redirect_url);
-      // localStorage.setItem("openPayment", "true");
-      // window.location.reload()
+      
     }
   };
 
-  // const paymentWeb = (url:string| undefined) => {
-  //   if(!orderDetail ||  !firstOrder?.checkout?.payment) return
-  //   const windowOpen = window.open(url,'_blank')
-  //   setWindow(windowOpen)
-  // }
   const handleOnClickSelectAddress = (): void => {
     setIsShowSelectAddress(true);
   };
@@ -299,11 +235,7 @@ export default function OrderPage() {
   };
   if (!shipping || !user) return;
 
-  if (!firstOrder) {
-    //redirect('/', RedirectType.replace)
-    //console.log('no first order')
-    return;
-  }
+  if (!firstOrder) return;
   return !firstOrder.checkout?.payment ? (
     <div className="">
       {firstOrder.status == "PENDING" && (
@@ -629,32 +561,7 @@ export default function OrderPage() {
   ) : (
     <div>
       {firstOrder.checkout.payment.pgw_status == "PENDING" && (
-        // <div className="w-full min-h-full p-6">
-        //   <div className="flex justify-center items-center p-4 ">
-        //     <div>
-        //       <div className="flex mb-3">
-        //         <div className="text-4xl m-3 p-3">Order is error</div>
-        //         <p>Please order again</p>
-        //       </div>
-        //       <div className="flex justify-center">
-        //         <div className="flex">
-        //           <Button
-        //             onClick={() => router.replace("/order/status")}
-        //             className="p-3  cursor-pointer text-black"
-        //           >
-        //             see order status
-        //           </Button>
-        //           <Button
-        //             onClick={() => router.replace("/")}
-        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
-        //           >
-        //             back first page
-        //           </Button>
-        //         </div>
-        //       </div>
-        //     </div>
-        //   </div>
-        // </div>
+
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -704,56 +611,11 @@ export default function OrderPage() {
                 </button>
               </div>
             </div>
-
-            {/* <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Common Issues:</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>• Payment method declined</li>
-                <li>• Network connection timeout</li>
-                <li>• Item out of stock</li>
-                <li>• Invalid shipping address</li>
-              </ul>
-            </div>
-          </div>
-          
-          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 py-2">
-            <ShoppingBag className="w-4 h-4" />
-            Continue Shopping
-          </button>
-        </div> */}
+ 
           </div>
         </div>
       )}
       {firstOrder.checkout.payment.pgw_status == "APPROVED" && (
-        // <div>
-        //   <div className="flex justify-center items-center p-4 ">
-        //     <div>
-        //       <div className="flex mb-3">
-        //         <ClipboardCheck size={100} color="green" />
-        //         <div className="text-4xl m-3 p-3">Order is successful</div>
-        //       </div>
-        //       <div className="flex justify-center">
-        //         <div className="flex">
-        //           <Button
-        //             onClick={() => router.replace("/order/status")}
-        //             className="p-3  cursor-pointer text-black"
-        //           >
-        //             see order status
-        //           </Button>
-        //           <Button
-        //             onClick={() => router.replace("/")}
-        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
-        //           >
-        //             back first page
-        //           </Button>
-        //         </div>
-        //       </div>
-        //     </div>
-        //   </div>
-        // </div>
         <div className="min-h-screen bg- bg-green-500/40 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -804,32 +666,6 @@ export default function OrderPage() {
         </div>
       )}
       {firstOrder.checkout.payment.pgw_status == "CANCELED" && (
-        // <div>
-        //   <div className="flex justify-center items-center p-4 ">
-        //     <div>
-        //       <div className="flex mb-3">
-        //         <div className="text-4xl m-3 p-3">Order is failed</div>
-        //         <p>you are cancel this order</p>
-        //       </div>
-        //       <div className="flex justify-center">
-        //         <div className="flex">
-        //           <Button
-        //             onClick={() => router.replace("/order/status")}
-        //             className="p-3  cursor-pointer text-black"
-        //           >
-        //             see order status
-        //           </Button>
-        //           <Button
-        //             onClick={() => router.replace("/")}
-        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
-        //           >
-        //             back first page
-        //           </Button>
-        //         </div>
-        //       </div>
-        //     </div>
-        //   </div>
-        // </div>
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -879,60 +715,10 @@ export default function OrderPage() {
                 </button>
               </div>
             </div>
-
-            {/* <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Common Issues:</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>• Payment method declined</li>
-                <li>• Network connection timeout</li>
-                <li>• Item out of stock</li>
-                <li>• Invalid shipping address</li>
-              </ul>
-            </div>
-          </div>
-          
-          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 py-2">
-            <ShoppingBag className="w-4 h-4" />
-            Continue Shopping
-          </button>
-        </div> */}
           </div>
         </div>
       )}
       {firstOrder.checkout.payment.pgw_status == "FAILED" && (
-        // <div>
-        //   <div className="flex justify-center items-center p-4 ">
-        //     <div>
-        //       <div className="flex mb-3">
-        //         <div className="text-4xl m-3 p-3">Order is failed</div>
-        //         <p>bank authorized failed</p>
-        //       </div>
-        //       <div className="flex justify-center">
-        //         <div className="flex">
-        //           <Button
-        //             onClick={() =>
-        //               router.replace(
-        //                 `/product/${firstOrder.items[0].productItem.product.uuid}`
-        //               )
-        //             }
-        //             className="p-3  cursor-pointer text-black"
-        //           >
-        //             buy product again
-        //           </Button>
-        //           <Button
-        //             onClick={() => router.replace("/")}
-        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
-        //           >
-        //             back first page
-        //           </Button>
-        //         </div>
-        //       </div>
-        //     </div>
-        //   </div>
-        // </div>
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -945,7 +731,6 @@ export default function OrderPage() {
                 </div>
               </div>
 
-              {/* Error Message */}
               <h1 className="text-3xl font-bold text-gray-900 mb-3">
                 Order Error
               </h1>
@@ -981,27 +766,7 @@ export default function OrderPage() {
                   Back First Page
                 </button>
               </div>
-            </div>
-
-            {/* <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Common Issues:</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>• Payment method declined</li>
-                <li>• Network connection timeout</li>
-                <li>• Item out of stock</li>
-                <li>• Invalid shipping address</li>
-              </ul>
-            </div>
-          </div>
-          
-          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 py-2">
-            <ShoppingBag className="w-4 h-4" />
-            Continue Shopping
-          </button>
-        </div> */}
+            </div> 
           </div>
         </div>
       )}

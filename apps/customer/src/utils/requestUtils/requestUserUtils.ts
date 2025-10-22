@@ -1,9 +1,7 @@
 import axios from "@/lib/axios"
 import { Address } from "@/types/props/addressProp"
 export const getUserDetail = async(id:number|undefined) => {
-    if( typeof(id) == undefined){
-        return console.log('id is undefined')
-    }
+    if( typeof(id) == undefined) return
     return await new Promise((resolve, reject) => {
         axios
             .get(`/api/customer/detail/${id}`)
@@ -29,9 +27,7 @@ export const createAddress = async(data: Address) => {
     })
 }
 export const getAddress = async(id:number|undefined ) => {
-    if( typeof(id) == undefined){
-        return console.log('id is undefined')
-    }
+    if( typeof(id) == undefined)return
     return await new Promise((resolve, reject) => {
         axios
             .get(`/api/customer/address/${id}`)
@@ -83,16 +79,3 @@ export const updateUserName = async(id: number, data: {firstName: string, lastNa
     })
 
 }
-
-// export const customerCancel = async(id: number) => {
-//     return await new Promise((resolve,reject) => {
-//         axios
-//             .patch(`/api/customer/customer/cancel/${id}`)
-//             .then((res) => {
-//                 resolve(res.data)
-//             })
-//             .catch((err) => {
-//                 reject(err)
-//             })
-//     })
-// }

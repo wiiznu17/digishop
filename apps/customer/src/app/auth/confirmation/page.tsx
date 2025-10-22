@@ -5,12 +5,8 @@ import { useRouter } from "next/navigation";
 import {  use, useState } from "react";
 import { Mail, CheckCircle, ArrowRight} from "lucide-react";
 
-// import { useEffect } from "react";
-
-
 export  default function ConfirmMail({ searchParams }: { searchParams: Promise<{ [key: string]: string }>}) {
-  // const searchParams = useSearchParams();
-  // const token = searchParams.get("token") ?? '';
+
     const { token } = use(searchParams);
   const [isVerified, setIsVerified] = useState(false);
   const router = useRouter()
