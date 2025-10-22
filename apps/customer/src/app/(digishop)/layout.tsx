@@ -4,15 +4,15 @@ import Logo from "./../logo.png";
 import Image from "next/image";
 import { CircleUser, ClipboardList, ShoppingCart } from "lucide-react";
 import { AuthProvider, useAuth  } from "@/contexts/auth-context";
-import { Noto_Sans_Thai_Looped } from "next/font/google";
+import {  Rubik } from "next/font/google";
 import { usePathname, useRouter } from "next/navigation";
 import Button from "@/components/button";
 
-const notoSanLoop = Noto_Sans_Thai_Looped({
-  weight:'400',
-  subsets: ['thai']
-
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: "300"
 })
+
 export default function MainLayout({
   children,
 }: Readonly<{
@@ -59,9 +59,9 @@ export default function MainLayout({
               }
               {
                 !user && (
-                  <nav className="hidden md:flex space-x-6">
-                    <Button onClick={() => router.push('/auth')}>Log in</Button>
-                    <Button onClick={() => router.push('/auth/register')}>Register</Button>
+                  <nav className={`hidden md:flex space-x-6 ${rubik.className}`}>
+                    <Button size="lg" color="bg-blue-600/80 text-white" onClick={() => router.push('/auth')}>Log in</Button>
+                    <Button size="lg" border="border-blue-600/80" onClick={() => router.push('/auth/register')}>Register</Button>
                   </nav>
                 )
               }
@@ -69,7 +69,7 @@ export default function MainLayout({
           </div>
         </header>
       }
-      <div className={`min-h-screen bg-white text-black ${notoSanLoop.className}`}>{children}</div>
+      <div className={`min-h-screen bg-white text-black ${rubik.className}`}>{children}</div>
       <footer className="bg-white text-black py-5 border border-t border-gray-300">
         <div className="max-w-7xl mx-auto text-center">
           <p>&copy; 2025 Digishop. All rights reserved. </p>

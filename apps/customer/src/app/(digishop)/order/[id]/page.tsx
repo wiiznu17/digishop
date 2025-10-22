@@ -5,7 +5,7 @@ import {
   Order,
   OrderDetail,
   Shipping,
-  ShoppingCartProps
+  ShoppingCartProps,
 } from "@/types/props/orderProp";
 import {
   createOrder,
@@ -14,7 +14,10 @@ import {
   deleteOrder,
   createWishList,
 } from "@/utils/requestUtils/requestOrderUtils";
-import { createAddress, getAddress } from "@/utils/requestUtils/requestUserUtils";
+import {
+  createAddress,
+  getAddress,
+} from "@/utils/requestUtils/requestUserUtils";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ShippingCardDetail from "@/components/shippingCard";
@@ -22,13 +25,24 @@ import { DialogSelectAddress } from "@/components/dialogSelectAddress";
 import { PaymentMethod } from "../../../../../../../packages/db/src/types/enum";
 import InputField from "@/components/inputField";
 import Button from "@/components/button";
-import { ClipboardCheck} from "lucide-react";
+import {
+  CircleCheck,
+  ClipboardList,
+  Home,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import PaymentMethodMaster from "../../../../master/paymentMethod.json";
-import creditMethodLogo from '../../../creaditMethod.png'
-import qrLogo from '../../../qrLogo.png'
+import creditMethodLogo from "../../../creaditMethod.png";
+import qrLogo from "../../../qrLogo.png";
 import Image from "next/image";
-import { formatAddress, formatSku, sumPriceTotal, sumPrice } from "@/lib/function";
+import {
+  formatAddress,
+  formatSku,
+  sumPriceTotal,
+  sumPrice,
+} from "@/lib/function";
 import { DialogAddress } from "@/components/createAddress";
 export default function OrderPage() {
   const { id } = useParams();
@@ -55,12 +69,31 @@ export default function OrderPage() {
   const [nextPath, setNextPath] = useState<string | null>("/");
   const [showModal, setShowModel] = useState(false);
   // const [windows, setWindow] = useState<Window| null>();
-  const [cart, setCart] = useState<ShoppingCartProps>()
+  const [cart, setCart] = useState<ShoppingCartProps>();
   const [isShowAddress, setIsShowAddress] = useState(false);
   const [address, setAddress] = useState<Address>({
+    recipientName: "",
+    phone: "",
+    province: "",
+    address_number: "",
+    building: "",
+    subStreet: "",
+    street: "",
+    subdistrict: "",
+    district: "",
+    country: "",
+    postalCode: "",
+    isDefault: false,
+    addressType: "HOME",
+  });
+  const handleOnClickAddress = (): void => {
+    setIsShowAddress(true);
+  };
+  const handleOnCancelAddress = (): void => {
+    setIsShowAddress(false);
+    setAddress({
       recipientName: "",
       phone: "",
-      province: "",
       address_number: "",
       building: "",
       subStreet: "",
@@ -68,45 +101,28 @@ export default function OrderPage() {
       subdistrict: "",
       district: "",
       country: "",
+      province: "",
       postalCode: "",
       isDefault: false,
       addressType: "HOME",
     });
-  const handleOnClickAddress = (): void => {
-      setIsShowAddress(true);
-    };
-    const handleOnCancelAddress = (): void => {
+  };
+  const handleOnConfirmAddress = async (): Promise<void> => {
+    const axiosData = { ...address, userId: user?.id };
+    const res = (await createAddress(axiosData)) as { data: Address };
+    if (res.data) {
       setIsShowAddress(false);
-      setAddress({
-        recipientName: "",
-        phone: "",
-        address_number: "",
-        building: "",
-        subStreet: "",
-        street: "",
-        subdistrict: "",
-        district: "",
-        country: "",
-        province: "",
-        postalCode: "",
-        isDefault: false,
-        addressType: "HOME",
-      });
-    };
-    const handleOnConfirmAddress = async (): Promise<void> => {
-      const axiosData = { ...address, userId: user?.id };
-      const res = (await createAddress(axiosData)) as {data: Address};
-      if (res.data) {
-        setIsShowAddress(false);
-        window.location.reload()
-      }
-    };
+      window.location.reload();
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const resProduct = (await fetchOrders(orderCode, user.id)) as { body: OrderDetail[]};
-      const resAddress = (await getAddress(user?.id)) as {data: Address[] };
-      const resShipping = (await getShippingType()) as {data: Shipping[]};
+      const resProduct = (await fetchOrders(orderCode, user.id)) as {
+        body: OrderDetail[];
+      };
+      const resAddress = (await getAddress(user?.id)) as { data: Address[] };
+      const resShipping = (await getShippingType()) as { data: Shipping[] };
       setOrderDetail(resProduct.body);
       setAddresses(resAddress.data);
       setShipping(resShipping.data);
@@ -120,6 +136,7 @@ export default function OrderPage() {
       setSelectAddress(isMain[0]);
     }
   }, [addresses]);
+  console.log("items", firstOrder?.items);
   useEffect(() => {
     if (
       !user ||
@@ -129,15 +146,19 @@ export default function OrderPage() {
       !shipping ||
       !orderDetail
     )
-    return;
-    const productItemsId = orderDetail[0].items.map(item => item.productItem.id).filter((id): id is number => typeof id === 'number')
-    const productItemsquatity = orderDetail[0].items.map(item => item.quantity).filter((id): id is number => typeof id === 'number')
-    if(!productItemsId)return
+      return;
+    const productItemsId = firstOrder?.items
+      .map((item) => item.productItem.id)
+      .filter((id): id is number => typeof id === "number");
+    const productItemsquatity = firstOrder?.items
+      .map((item) => item.quantity)
+      .filter((id): id is number => typeof id === "number");
+    if (!productItemsId || !productItemsquatity) return;
     setCart({
       customerId: user.id,
       productItemId: productItemsId,
-      quantity: productItemsquatity
-    })
+      quantity: productItemsquatity,
+    });
     setOrder({
       orderCode: orderCode,
       customerId: user.id,
@@ -157,24 +178,25 @@ export default function OrderPage() {
     note,
     paymentMethod,
     shipping,
+    firstOrder,
   ]);
 
-//   useEffect(() => {
-//     if (!firstOrder) {
-//       redirect('/', RedirectType.replace);
-//       return ;
-//     }
-//     if (!orderDetail || !firstOrder?.checkout ) return;
-//   const shouldOpen = localStorage.getItem("openPayment");
-//   if (shouldOpen === "true" && orderDetail) {
-//     paymentWeb(firstOrder.checkout.payment?.url_redirect)
-//     localStorage.removeItem("openPayment");
-//   }
-//   if (orderDetail &&firstOrder.checkout.payment?.pgw_status === "PENDING") {
-//     const expiry = new Date(firstOrder.checkout.payment.expiry_at).getTime();
-//     setEnd(expiry);
-//   }
-// }, [orderDetail]);
+  //   useEffect(() => {
+  //     if (!firstOrder) {
+  //       redirect('/', RedirectType.replace);
+  //       return ;
+  //     }
+  //     if (!orderDetail || !firstOrder?.checkout ) return;
+  //   const shouldOpen = localStorage.getItem("openPayment");
+  //   if (shouldOpen === "true" && orderDetail) {
+  //     paymentWeb(firstOrder.checkout.payment?.url_redirect)
+  //     localStorage.removeItem("openPayment");
+  //   }
+  //   if (orderDetail &&firstOrder.checkout.payment?.pgw_status === "PENDING") {
+  //     const expiry = new Date(firstOrder.checkout.payment.expiry_at).getTime();
+  //     setEnd(expiry);
+  //   }
+  // }, [orderDetail]);
 
   useEffect(() => {
     window.history.pushState(null, "", window.location.pathname);
@@ -182,32 +204,36 @@ export default function OrderPage() {
       setShowModel(true);
       setNextPath("/");
     };
-    
+
     if (!orderDetail) return;
     window.addEventListener("popstate", handlePopStateBeforePayment);
     // window.addEventListener("beforeunload", (e) => {
     //   e.preventDefault()
     //   deleteOrder(orderCode);
     // });
-  }, [orderDetail, router, showModal,orderCode]);
+  }, [orderDetail, router, showModal, orderCode]);
   const handleCancel = () => {
     setShowModel(false);
   };
-  const handleConfirmCancel = async() => {
+  const handleConfirmCancel = async () => {
     setShowModel(false);
     // del order
-    if(!cart)return
-    console.log(cart)
-    const cancel = (await deleteOrder(orderCode)) as {data: string};
-    const addCart = (await createWishList(cart)) as {data: {cartId: number,
-            productItemId: number,
-            quantity: number,
-            unitPriceMinor: number }}
+    if (!cart) return;
+    console.log(cart);
+    const cancel = (await deleteOrder(orderCode)) as { data: string };
+    const addCart = (await createWishList(cart)) as {
+      data: {
+        cartId: number;
+        productItemId: number;
+        quantity: number;
+        unitPriceMinor: number;
+      };
+    };
     if (nextPath && cancel.data && addCart.data) {
       router.push(nextPath);
     }
   };
-  
+
   // useEffect(() => {
   //   if(windows?.close){
   //     console.log(orderCode, 'close')
@@ -243,10 +269,12 @@ export default function OrderPage() {
 
   const handleOrder = async () => {
     if (!order) return;
-    console.log(order)
-    const res = (await createOrder(order)) as {data: { redirect_url: string}};
+    console.log(order);
+    const res = (await createOrder(order)) as {
+      data: { redirect_url: string };
+    };
     if (res.data.redirect_url) {
-      router.push(res.data.redirect_url)
+      router.push(res.data.redirect_url);
       // localStorage.setItem("openPayment", "true");
       // window.location.reload()
     }
@@ -266,57 +294,59 @@ export default function OrderPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNote(e.target.value);
   };
-  const handlePayment = (e:string) => {
+  const handlePayment = (e: string) => {
     setPaymentMethod(e);
   };
-  if (!shipping || !user  ) return;
+  if (!shipping || !user) return;
 
   if (!firstOrder) {
     //redirect('/', RedirectType.replace)
     //console.log('no first order')
-    return
-  }  
-  return !firstOrder.checkout?.payment? (
-    <div>
+    return;
+  }
+  return !firstOrder.checkout?.payment ? (
+    <div className="">
       {firstOrder.status == "PENDING" && (
-        <div className="flex justify-center p-2 ">
+        <div className="flex justify-center p-2 bg-gradient-to-br from-blue-100 to-slate-100 ">
           {showModal && (
-            <div className="fixed inset-0 flex items-center justify-center z-100000">
+            <div className="fixed inset-0 flex items-center justify-center z-100000 bg-black/50">
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
                 <h2 className="text-xl font-bold mb-4">Confirm Navigation</h2>
                 <p className="mb-4">This order will be canceled</p>
                 <div className="flex justify-end space-x-4">
-                  <button
+                  <Button
+                    size="sm"
                     onClick={handleCancel}
-                    className="px-4 pu-2 bg-gray-200 rounded"
+                    className=" bg-red-500 text-white"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="sm"
                     onClick={handleConfirmCancel}
-                    className="px-4 pu-2 bg-blue-500 text-white rounded"
+                    className="bg-green-500 text-white"
                   >
                     Confirm
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
           )}
-          <div className="min-h-screen p-3 ">
+          <div className="w-4xl p-3 ">
             <>
               {/* store info */}
-              <div className="p-4">
+              <div className="p-4 ">
                 <div className="border-b text-4xl mb-2 py-4 font-extrabold">
                   Product
                 </div>
 
-                <div className="rounded-lg shadow-md py-4 px-2">
+                <div className="rounded-lg shadow-md p-6 bg-white">
                   <div>
                     {orderDetail.map((values, index) => (
                       <div key={index} className=" p-5 mb-4 border rounded-2xl">
                         <div className="flex items-center mb-2 ">
                           <div className="mx-4 w-[70px] h-[70px] rounded-full bg-amber-300"></div>
-                          <div className="">
+                          <div className="text-xl font-medium">
                             {
                               values.items[0].productItem.product.store
                                 .storeName
@@ -328,27 +358,39 @@ export default function OrderPage() {
                         {values.items?.map((value, index) => (
                           <div key={index}>
                             <div className="flex gap-4 relative mb-2">
-                              { values.items[0].productItem.productItemImage &&
+                              {values.items[0].productItem.productItemImage && (
                                 <Image
-                                src={values.items[0].productItem.productItemImage?.url}
-                                alt={values.items[0].productItem.productItemImage?.blobName}
-                                className="object-fill w-[100px] h-[100px] "
-                              /> 
-                              }
-                              
+                                  src={
+                                    values.items[0].productItem.productItemImage
+                                      ?.url
+                                  }
+                                  alt={
+                                    values.items[0].productItem.productItemImage
+                                      ?.blobName
+                                  }
+                                  height={100}
+                                  width={100}
+                                  className="object-fill w-[100px] h-[100px] "
+                                />
+                              )}
+
                               <div>
                                 <div className="flex-1">
-                                  <div>{value.productItem.product.name}</div>
-                                  <div className="absolute text-xs text-gray-500">
-                                    { formatSku(value.productItem.configurations)}
+                                  <div className="text-xl font-medium">
+                                    {value.productItem.product.name}
                                   </div>
-                                  <div className="absolute bottom-5 right-0  text-gray-500 ">
+                                  <div className="absolute text- font-light text-gray-500">
+                                    {formatSku(
+                                      value.productItem.configurations
+                                    )}
+                                  </div>
+                                  <div className="absolute bottom-7 right-0 text-xl text-gray-500 ">
                                     ฿{" "}
                                     {(value.unitPriceMinor / 100)
                                       .toString()
                                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                                   </div>
-                                  <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
+                                  <div className="absolute bottom-0 right-0 text-base text-gray-500 ">
                                     x {String(value.quantity)}
                                   </div>
                                 </div>
@@ -357,7 +399,7 @@ export default function OrderPage() {
                           </div>
                         ))}
                         <div className="flex justify-end items-end">
-                          <span className="flex justify-end items-end border-t w-fit">
+                          <span className="flex justify-end items-end text-xl font-medium border-t w-fit">
                             total ฿{" "}
                             {sumPrice(values.items)
                               .toString()
@@ -372,55 +414,65 @@ export default function OrderPage() {
 
               <div className=" p-4">
                 {/* address info*/}
-                <div className="border-b text-4xl mb-2 py-4 font-extrabold">
+                <div className="border-b text-4xl mb-2 p-4 font-extrabold">
                   Address
                 </div>
-                <div className="rounded-lg shadow-md py-4 px-2">
-                  {
-                    addresses?.length === 0 && (
-                      //address form
-                      <div className="mb-4">
-                        <Button className="mb-2" onClick={handleOnClickAddress} border="border-black" >create address</Button>
-                        <p className='text-xs text-red-600'>* create shipping address</p>
-                      </div>
 
-                    )
-                  }
-                  {
-                    selectAddress &&
-                  <div>
-                    <div className="bg-gray-200 p-3 rounded-2xl max-w-xl mb-2">
-                      <div className="font-bold">
-                        {selectAddress.recipientName}
-                      </div>
-                      <div className="mx-4">
-                        <p>{formatAddress(selectAddress)}</p>
-                        <p>{selectAddress.phone}</p>
-                      </div>
-                      <div className="flex justify-end">
-                        <Button
-                          size="sm"
-                          onClick={handleOnClickSelectAddress}
-                          color="bg-white"
-                        >
-                          change address
-                        </Button>
+                <div className="rounded-lg shadow-md p-6  bg-white">
+                  <div className="text-xl font-medium pb-3 ">
+                    select your shipping address{" "}
+                  </div>
+                  {addresses?.length === 0 && (
+                    //address form
+                    <div className="mb-4">
+                      <Button
+                        className="mb-2 text-lg"
+                        onClick={handleOnClickAddress}
+                        border="border-black"
+                      >
+                        create address
+                      </Button>
+                      <p className="text-base text-red-600">
+                        * create shipping address
+                      </p>
+                    </div>
+                  )}
+                  {selectAddress && (
+                    <div>
+                      <div className="bg-gray-200 py-3 p-7  rounded-2xl text-xl max-w-xl mb-2">
+                        <div className=" font-medium">
+                          {selectAddress.recipientName}
+                        </div>
+                        <div className="mx-4">
+                          <p>{formatAddress(selectAddress)}</p>
+                          <p>{selectAddress.phone}</p>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            onClick={handleOnClickSelectAddress}
+                            color="bg-white"
+                          >
+                            change address
+                          </Button>
+                        </div>
                       </div>
                     </div>
+                  )}
+
+                  <div className="text-xl font-medium">
+                    select your shipping type{" "}
                   </div>
-                  }
-                  
-                  <div className="">select your shipping type </div>
 
                   {shipping?.map((item: Shipping, index: number) => (
                     <div
                       key={index}
                       className=""
                       onClick={() => {
-                        if(typeof item.id === 'number'){
-                          setSelectShippingTypeId(item.id)}
+                        if (typeof item.id === "number") {
+                          setSelectShippingTypeId(item.id);
                         }
-                      }
+                      }}
                     >
                       <ShippingCardDetail
                         item={item}
@@ -428,7 +480,7 @@ export default function OrderPage() {
                       />
                     </div>
                   ))}
-                  <div className="mb-3 w-full">
+                  <div className="mb-3 w-full text-lg">
                     <InputField
                       label="Order Note"
                       name="note"
@@ -441,13 +493,13 @@ export default function OrderPage() {
               </div>
 
               <div className="p-2">
-                <div className="border-b text-4xl mb-2 py-4 font-extrabold">
+                <div className="border-b text-4xl mb-2 p-6 font-extrabold">
                   Total
                 </div>
-                <div className="bg-white rounded-lg shadow-sm p-4  mt-4">
+                <div className="bg-white rounded-lg shadow-sm p-6 text-lg mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Product</span>
-                    <span className="font-medium">
+                    <span className="text-lg font-medium">
                       {sumPriceTotal(orderDetail)
                         .toString()
                         .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -485,14 +537,19 @@ export default function OrderPage() {
               </div>
 
               <div className="p-2">
-                <div className="border-b text-4xl mb-2 py-4 font-extrabold">
+                <div className="border-b text-4xl mb-2 p-6 font-extrabold">
                   Payment
                 </div>
-                <div className="rounded-lg shadow-md py-4 px-2 ">
-                  <div>select your payment method</div>
+                <div className="rounded-lg shadow-md py-4 px-6 bg-white">
+                  <div className="text-xl font-medium">
+                    select your payment method
+                  </div>
                   {Object.entries(PaymentMethodMaster).map(
                     ([payment, config]) => (
-                      <div key={payment} className={`flex m-2 border p-3 rounded-xs w-1/2 items-start ${!config.valid ? 'border-gray-300': ''}`}>
+                      <div
+                        key={payment}
+                        className={`flex m-2 border p-3 rounded-xs w-1/2 items-start ${!config.valid ? "border-gray-300" : ""}`}
+                      >
                         <input
                           type="radio"
                           id={config.label}
@@ -503,35 +560,45 @@ export default function OrderPage() {
                           onChange={() => handlePayment(config.value)}
                           className=""
                         />
-                        <label htmlFor="config.label" className={`${!config.valid ? 'text-gray-300': ''}`}>
+                        <label
+                          htmlFor="config.label"
+                          className={`${!config.valid ? "text-gray-300" : ""}`}
+                        >
                           <div className="ml-2">
-                            <div>{config.label}</div>
-                            {
-                              config.label === 'CREDIT CARD'&&
-                              <Image src={creditMethodLogo} alt='credit method pricture' width={300} className="py-4"/>
-                            }
-                            {
-                              config.label === 'PROMPT PAY'&&
-                              <Image src={qrLogo} alt='qr method pricture' width={100} className="pt-4"/>
-
-                            }
+                            <div className="text-lg">{config.label}</div>
+                            {config.label === "CREDIT CARD" && (
+                              <Image
+                                src={creditMethodLogo}
+                                alt="credit method pricture"
+                                width={300}
+                                className="py-4"
+                              />
+                            )}
+                            {config.label === "PROMPT PAY" && (
+                              <Image
+                                src={qrLogo}
+                                alt="qr method pricture"
+                                width={100}
+                                className="pt-4"
+                              />
+                            )}
                           </div>
                           <p></p>
-                        {
-                          !config.valid && <p className=" text-red-600">* not available</p>
-                        }
+                          {!config.valid && (
+                            <p className=" text-red-600">* not available</p>
+                          )}
                         </label>
                       </div>
                     )
                   )}
-                  </div>
+                </div>
               </div>
               {/* buttonb  */}
 
               <div className=" flex justify-end ">
                 <Button
                   onClick={handleOrder}
-                  color={`${!selectAddress  ? "bg-gray-300 hover:bg-gray-300" : "bg-green-400 hover:bg-green-600"}`}
+                  color={`${!selectAddress ? "bg-gray-300 hover:bg-gray-300" : "bg-green-400 hover:bg-green-600"}`}
                   disabled={!selectAddress}
                 >
                   confirm
@@ -549,132 +616,392 @@ export default function OrderPage() {
             />
           </div>
           <DialogAddress
-              isShowAddress={isShowAddress}
-              setIsShowAddress={setIsShowAddress}
-              handleOnCancel={handleOnCancelAddress}
-              handleOnConfirm={handleOnConfirmAddress}
-              address={address}
-              setAddress={setAddress}
-            />
+            isShowAddress={isShowAddress}
+            setIsShowAddress={setIsShowAddress}
+            handleOnCancel={handleOnCancelAddress}
+            handleOnConfirm={handleOnConfirmAddress}
+            address={address}
+            setAddress={setAddress}
+          />
         </div>
       )}
     </div>
-  ) 
-  : (
+  ) : (
     <div>
       {firstOrder.checkout.payment.pgw_status == "PENDING" && (
-        <div className="w-full min-h-full p-6">
-          <div className="flex justify-center items-center p-4 ">
-            <div>
-              <div className="flex mb-3">
-                <div className="text-4xl m-3 p-3">Order is error</div>
-                <p>Please order again</p>
-              </div>
-              <div className="flex justify-center">
-                <div className="flex">
-                  <Button
-                    onClick={() => router.replace("/order/status")}
-                    className="p-3  cursor-pointer text-black"
-                  >
-                    see order status
-                  </Button>
-                  <Button
-                    onClick={() => router.replace("/")}
-                    className="ml-6 p-4 bg-blue-300 cursor-pointer"
-                  >
-                    back first page
-                  </Button>
+        // <div className="w-full min-h-full p-6">
+        //   <div className="flex justify-center items-center p-4 ">
+        //     <div>
+        //       <div className="flex mb-3">
+        //         <div className="text-4xl m-3 p-3">Order is error</div>
+        //         <p>Please order again</p>
+        //       </div>
+        //       <div className="flex justify-center">
+        //         <div className="flex">
+        //           <Button
+        //             onClick={() => router.replace("/order/status")}
+        //             className="p-3  cursor-pointer text-black"
+        //           >
+        //             see order status
+        //           </Button>
+        //           <Button
+        //             onClick={() => router.replace("/")}
+        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
+        //           >
+        //             back first page
+        //           </Button>
+        //         </div>
+        //       </div>
+        //     </div>
+        //   </div>
+        // </div>
+        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            {/* Error Card */}
+            <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+              {/* Animated Error Icon */}
+              <div className="relative inline-block mb-6">
+                <div className="absolute inset-0 bg-red-100 rounded-full "></div>
+                <div className="relative bg-red-500 rounded-full p-4">
+                  <XCircle className="w-16 h-16 text-white" />
                 </div>
               </div>
+
+              {/* Error Message */}
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                Order Error
+              </h1>
+
+              <p className="text-gray-600 mb-2 text-base">Please order again</p>
+
+              <p className="text-lg text-gray-500 mb-8">
+                We encountered an issue processing your order. Don&apos;t worry,
+                no charges were made.
+              </p>
+
+              {/* Order ID */}
+              <div className="bg-gray-100 rounded-lg p-4 mb-6">
+                <p className="text-xs text-gray-00 mb-1">Order Reference</p>
+                <p className="text-sm font-mono text-gray-700">{orderCode}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.replace(`/product/${firstOrder.items[0].productItem.product.uuid}`)}
+                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                  buy product again
+                </button>
+
+                <button
+                  onClick={() => router.replace("/")}
+                  className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
+                >
+                  <Home className="w-5 h-5" />
+                  Back First Page
+                </button>
+              </div>
+            </div>
+
+            {/* <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Common Issues:</h3>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>• Payment method declined</li>
+                <li>• Network connection timeout</li>
+                <li>• Item out of stock</li>
+                <li>• Invalid shipping address</li>
+              </ul>
             </div>
           </div>
-        </div>
-      )} 
-      {firstOrder.checkout.payment.pgw_status == "APPROVED" && (
-        <div>
-          <div className="flex justify-center items-center p-4 ">
-            <div>
-              <div className="flex mb-3">
-                <ClipboardCheck size={100} color="green" />
-                <div className="text-4xl m-3 p-3">Order is successful</div>
-              </div>
-              <div className="flex justify-center">
-                <div className="flex">
-                  <Button
-                    onClick={() => router.replace("/order/status")}
-                    className="p-3  cursor-pointer text-black"
-                  >
-                    see order status
-                  </Button>
-                  <Button
-                    onClick={() => router.replace("/")}
-                    className="ml-6 p-4 bg-blue-300 cursor-pointer"
-                  >
-                    back first page
-                  </Button>
-                </div>
-              </div>
-            </div>
+          
+          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 py-2">
+            <ShoppingBag className="w-4 h-4" />
+            Continue Shopping
+          </button>
+        </div> */}
           </div>
         </div>
       )}
-      {firstOrder.checkout.payment.pgw_status == "CANCELED"  && (
-        <div>
-          <div className="flex justify-center items-center p-4 ">
-            <div>
-              <div className="flex mb-3">
-                <div className="text-4xl m-3 p-3">Order is failed</div>
-                <p>you are cancel this order</p>
-              </div>
-              <div className="flex justify-center">
-                <div className="flex">
-                  <Button
-                    onClick={() => router.replace("/order/status")}
-                    className="p-3  cursor-pointer text-black"
-                  >
-                    see order status
-                  </Button>
-                  <Button
-                    onClick={() => router.replace("/")}
-                    className="ml-6 p-4 bg-blue-300 cursor-pointer"
-                  >
-                    back first page
-                  </Button>
+      {firstOrder.checkout.payment.pgw_status == "APPROVED" && (
+        // <div>
+        //   <div className="flex justify-center items-center p-4 ">
+        //     <div>
+        //       <div className="flex mb-3">
+        //         <ClipboardCheck size={100} color="green" />
+        //         <div className="text-4xl m-3 p-3">Order is successful</div>
+        //       </div>
+        //       <div className="flex justify-center">
+        //         <div className="flex">
+        //           <Button
+        //             onClick={() => router.replace("/order/status")}
+        //             className="p-3  cursor-pointer text-black"
+        //           >
+        //             see order status
+        //           </Button>
+        //           <Button
+        //             onClick={() => router.replace("/")}
+        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
+        //           >
+        //             back first page
+        //           </Button>
+        //         </div>
+        //       </div>
+        //     </div>
+        //   </div>
+        // </div>
+        <div className="min-h-screen bg- bg-green-500/40 flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            {/* Error Card */}
+            <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+              {/* Animated Error Icon */}
+              <div className="relative inline-block mb-6">
+                <div className="absolute inset-0 bg-red-100 rounded-full "></div>
+                <div className="relative bg-green-500 rounded-full p-4">
+                  <CircleCheck className="w-16 h-16 text-white" />
                 </div>
               </div>
+
+              {/* Error Message */}
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                Order is successful
+              </h1>
+
+              <p className="text-lg text-gray-500 mb-8">
+                Waiting merchant to approve your order. Order will be update in the status page.
+              </p>
+
+              {/* Order ID */}
+              <div className="bg-gray-100 rounded-lg p-4 mb-6">
+                <p className="text-xs text-gray-00 mb-1">Order Reference</p>
+                <p className="text-sm font-mono text-gray-700">{orderCode}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.replace("/order/status")}
+                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  See Order Status
+                </button>
+
+                <button
+                  onClick={() => router.replace("/")}
+                  className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
+                >
+                  <Home className="w-5 h-5" />
+                  Back First Page
+                </button>
+              </div>
             </div>
+        </div>
+        </div>
+      )}
+      {firstOrder.checkout.payment.pgw_status == "CANCELED" && (
+        // <div>
+        //   <div className="flex justify-center items-center p-4 ">
+        //     <div>
+        //       <div className="flex mb-3">
+        //         <div className="text-4xl m-3 p-3">Order is failed</div>
+        //         <p>you are cancel this order</p>
+        //       </div>
+        //       <div className="flex justify-center">
+        //         <div className="flex">
+        //           <Button
+        //             onClick={() => router.replace("/order/status")}
+        //             className="p-3  cursor-pointer text-black"
+        //           >
+        //             see order status
+        //           </Button>
+        //           <Button
+        //             onClick={() => router.replace("/")}
+        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
+        //           >
+        //             back first page
+        //           </Button>
+        //         </div>
+        //       </div>
+        //     </div>
+        //   </div>
+        // </div>
+        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            {/* Error Card */}
+            <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+              {/* Animated Error Icon */}
+              <div className="relative inline-block mb-6">
+                <div className="absolute inset-0 bg-red-100 rounded-full "></div>
+                <div className="relative bg-red-500 rounded-full p-4">
+                  <XCircle className="w-16 h-16 text-white" />
+                </div>
+              </div>
+
+              {/* Error Message */}
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                Order Error
+              </h1>
+
+              <p className="text-gray-600 mb-2 text-base">you are cancel this order</p>
+
+              {/* <p className="text-lg text-gray-500 mb-8">
+                We encountered an issue processing your order. Don&apos;t worry,
+                no charges were made.
+              </p> */}
+
+              {/* Order ID */}
+              <div className="bg-gray-100 rounded-lg p-4 mb-6">
+                <p className="text-xs text-gray-00 mb-1">Order Reference</p>
+                <p className="text-sm font-mono text-gray-700">{orderCode}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.replace("/order/status")}
+                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  See Order Status
+                </button>
+
+                <button
+                  onClick={() => router.replace("/")}
+                  className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
+                >
+                  <Home className="w-5 h-5" />
+                  Back First Page
+                </button>
+              </div>
+            </div>
+
+            {/* <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Common Issues:</h3>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>• Payment method declined</li>
+                <li>• Network connection timeout</li>
+                <li>• Item out of stock</li>
+                <li>• Invalid shipping address</li>
+              </ul>
+            </div>
+          </div>
+          
+          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 py-2">
+            <ShoppingBag className="w-4 h-4" />
+            Continue Shopping
+          </button>
+        </div> */}
           </div>
         </div>
       )}
       {firstOrder.checkout.payment.pgw_status == "FAILED" && (
-        <div>
-          <div className="flex justify-center items-center p-4 ">
-            <div>
-              <div className="flex mb-3">
-                <div className="text-4xl m-3 p-3">Order is failed</div>
-                <p>bank authorized failed</p>
-              </div>
-              <div className="flex justify-center">
-                <div className="flex">
-                  <Button
-                    onClick={() =>
-                      router.replace(
-                        `/product/${firstOrder.items[0].productItem.product.uuid}`
-                      )
-                    }
-                    className="p-3  cursor-pointer text-black"
-                  >
-                    buy product again
-                  </Button>
-                  <Button
-                    onClick={() => router.replace("/")}
-                    className="ml-6 p-4 bg-blue-300 cursor-pointer"
-                  >
-                    back first page
-                  </Button>
+        // <div>
+        //   <div className="flex justify-center items-center p-4 ">
+        //     <div>
+        //       <div className="flex mb-3">
+        //         <div className="text-4xl m-3 p-3">Order is failed</div>
+        //         <p>bank authorized failed</p>
+        //       </div>
+        //       <div className="flex justify-center">
+        //         <div className="flex">
+        //           <Button
+        //             onClick={() =>
+        //               router.replace(
+        //                 `/product/${firstOrder.items[0].productItem.product.uuid}`
+        //               )
+        //             }
+        //             className="p-3  cursor-pointer text-black"
+        //           >
+        //             buy product again
+        //           </Button>
+        //           <Button
+        //             onClick={() => router.replace("/")}
+        //             className="ml-6 p-4 bg-blue-300 cursor-pointer"
+        //           >
+        //             back first page
+        //           </Button>
+        //         </div>
+        //       </div>
+        //     </div>
+        //   </div>
+        // </div>
+        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            {/* Error Card */}
+            <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+              {/* Animated Error Icon */}
+              <div className="relative inline-block mb-6">
+                <div className="absolute inset-0 bg-red-100 rounded-full "></div>
+                <div className="relative bg-red-500 rounded-full p-4">
+                  <XCircle className="w-16 h-16 text-white" />
                 </div>
               </div>
+
+              {/* Error Message */}
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                Order Error
+              </h1>
+
+              <p className="text-gray-600 mb-2 text-base">Please order again</p>
+
+              <p className="text-lg text-gray-500 mb-8">
+                We encountered an issue processing your order. Don&apos;t worry,
+                no charges were made.
+              </p>
+
+              {/* Order ID */}
+              <div className="bg-gray-100 rounded-lg p-4 mb-6">
+                <p className="text-xs text-gray-00 mb-1">Order Reference</p>
+                <p className="text-sm font-mono text-gray-700">{orderCode}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.replace(`/product/${firstOrder.items[0].productItem.product.uuid}`)}
+                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                  buy product again
+                </button>
+
+                <button
+                  onClick={() => router.replace("/")}
+                  className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
+                >
+                  <Home className="w-5 h-5" />
+                  Back First Page
+                </button>
+              </div>
             </div>
+
+            {/* <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Common Issues:</h3>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>• Payment method declined</li>
+                <li>• Network connection timeout</li>
+                <li>• Item out of stock</li>
+                <li>• Invalid shipping address</li>
+              </ul>
+            </div>
+          </div>
+          
+          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 py-2">
+            <ShoppingBag className="w-4 h-4" />
+            Continue Shopping
+          </button>
+        </div> */}
           </div>
         </div>
       )}

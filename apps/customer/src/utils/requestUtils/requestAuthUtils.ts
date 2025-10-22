@@ -10,7 +10,7 @@ export interface sendResetProps {
 export const createUser = async (data: FormRegister) => {
   return await new Promise((resolve, reject) => {
     axios
-      .post(`/api/customer/register`, data)
+      .post(`/api/customer/verified-email`, data)
       .then((res) => {
         resolve(res.data);
       })
@@ -21,12 +21,26 @@ export const createUser = async (data: FormRegister) => {
 };
 
 export const resetPassword = async (
-  data: resetPasswordProps,
+  data: string,
   token: string
 ) => {
   return await new Promise((resolve, reject) => {
     axios
-      .patch(`/api/customer/refresh-password/${token}`, data)
+      .patch(`/api/customer/reset-password`, {password: data , token})
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+};
+export const verifiedEmail = async (
+  token: string
+) => {
+  return await new Promise((resolve, reject) => {
+    axios
+      .post(`/api/customer/register`, {token})
       .then((res) => {
         resolve(res.data);
       })
@@ -40,7 +54,7 @@ export const sendResetPassword = async (data: string) => {
   console.log("data in util", data);
   return await new Promise((resolve, reject) => {
     axios
-      .post("/api/customer/forgot-password", data)
+      .post('/api/customer/forgot-password', {email: data})
       .then((res) => {
         resolve(res.data);
       })
@@ -49,3 +63,4 @@ export const sendResetPassword = async (data: string) => {
       });
   });
 };
+

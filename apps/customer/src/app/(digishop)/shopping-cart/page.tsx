@@ -28,6 +28,7 @@ export default function ShoppingCart() {
   const [deleteDialogItemId, setDeleteDialogItemId] = useState<number | null>(
     null
   );
+  
   const [order, setOrder] = useState<OrderIdProp>({
     customerId: user?.id ?? 0,
     orderData: [],
@@ -106,7 +107,14 @@ export default function ShoppingCart() {
   };
   const handleBuy = async () => {
     if (!user) return;
-    setOrder({...order, customerId: user.id , orderData: select})
+    order.customerId = user.id;
+    order.orderData = select;
+    setOrder(prev => ({
+    ...prev,
+    customerId: user.id,
+    orderData: select
+    }));
+
     const cardIds = select.map((item) => item.id);
     const res = (await createOrderId(order)) as { data: string };
     handleDelete(cardIds);
@@ -123,15 +131,18 @@ export default function ShoppingCart() {
       </div>
     );
   return data?.length > 0 ? (
-    <div className="grid grid-cols-2">
+    <div className={`pt-5 grid grid-cols-2 `}>
       <div className="flex justify-center ">
         <div>
           {Object.entries(cartData).map(([key, values]) => (
-            <div key={key} className=" px-5 py-3 mb-5 border w-md rounded-2xl">
-              <div className="flex items-center mb-3">
-                <div className="mx-4 w-[70px] h-[70px] rounded-full bg-amber-300"></div>
-                <div className="">{key}</div>
-              </div>
+            <div key={key} className=" px-5 py-3 mb-5 border w-2xl rounded-2xl">
+              <Link href={`/store/${values[0].productItem.product.store.uuid}`}>
+                <div className="flex items-center mb-3">
+                  <div className="mx-4 w-[60px] h-[60px] rounded-full bg-amber-300"></div>
+                  <div className="text-2xl font-bold">{key}</div>
+                </div>
+              </Link>
+              
               {values &&
                 values.map((value: ShoppingDetail, index: number) => (
                   <div key={index}>
@@ -150,7 +161,9 @@ export default function ShoppingCart() {
                         <Image
                           src={value.productItem.productItemImage.url}
                           alt={value.productItem.productItemImage.blobName}
-                          className="object-fill w-[100px] h-[100px] "
+                          height={200}
+                          width={200}
+                          className="object-fill w-[150px] h-[150px] "
                         />
                       )}
 
@@ -158,15 +171,15 @@ export default function ShoppingCart() {
                         <div className="flex-1">
                           <Link
                             href={`/product/${value.productItem.product.uuid}`}
-                            className="cursor-pointer hover:bg-gray-300 rounded-2xl"
+                            className="cursor-pointer hover:bg-gray-300 rounded-2xl text-xl font-medium"
                           >
                             {value.productItem.product.name}
                           </Link>
                           <div className="flex justify-between items-center">
-                            <div className=" text-xs text-gray-500">
+                            <div className="pt-3  text-gray-500 font-ligth text-base">
                               {formatSku(value.productItem.configurations)}
                             </div>
-                            <div className="flex gap-2 items-center absolute right-0 bottom-9">
+                            <div className="flex gap-2 items-center absolute right-0 bottom-12 text-base font-normal">
                               <button
                                 onClick={() => {
                                   if (value.quantity > 1) {
@@ -204,11 +217,7 @@ export default function ShoppingCart() {
                             )}
                           </div>
 
-                          {/* <div className="absolute bottom-6 left-0 text-xs text-gray-500 ">
-                            x {String(value.quantity)}
-                            </div> */}
-
-                          <div className="absolute bottom-0 right-0 ">
+                          <div className="absolute bottom-0 right-0 text-xl ">
                             ฿{" "}
                             {(
                               (value.productItem.priceMinor * value.quantity) /
@@ -237,9 +246,9 @@ export default function ShoppingCart() {
                   </div>
                 ))}
               {values && values.length > 1 && (
-                <div className="border-t flex justify-between">
-                  <div>total</div>
-                  <div className="flex justify-end">
+                <div className="border-t pt-2 flex justify-between text-2xl">
+                  <div >Total</div>
+                  <div className="flex justify-end font-medium">
                     ฿{" "}
                     {(sumPrice(values) / 100)
                       .toString()
@@ -253,9 +262,10 @@ export default function ShoppingCart() {
       </div>
 
       {select && (
-        <div className="flex flex-col w-md">
-          <div className=" p-5 mb-5 border w-md h-fit rounded-2xl">
-            <div className="flex justify-center items-center">
+        <div className="flex justify-center items-start">
+          <div className=" flex flex-col w-2xl">
+          <div className=" p-5 mb-5 border w-2xl h-fit rounded-2xl">
+            <div className="flex justify-center  text-2xl ">
               selected items
             </div>
             <div className={`border-t flex justify-end my-2`}></div>
@@ -270,20 +280,22 @@ export default function ShoppingCart() {
                           <Image
                           src={value.productItem.productItemImage.url}
                           alt={value.productItem.productItemImage.blobName}
-                          className="object-fill w-[100px] h-[100px] "
+                          height={120}
+                          width={120}
+                          className="object-fill w-[120px] h-[120px] "
                         />
                         )
                       }
                       <div>
                         <div className="flex-1">
-                          <div>{value.productItem.product.name}</div>
-                          <div className="absolute text-xs text-gray-500">
+                          <div className="text-xl font-medium">{value.productItem.product.name}</div>
+                          <div className="absolute text-gray-500 pt-2 text-base ">
                             {formatSku(value.productItem.configurations)}
                           </div>
-                          <div className="absolute bottom-0 right-0 text-xs text-gray-500 ">
+                          <div className="absolute bottom-0 right-0 text-base text-gray-500 ">
                             x {String(value.quantity)}
                           </div>
-                          <div className="absolute bottom-5 right-0  text-gray-500 ">
+                          <div className="absolute bottom-7 right-0 text-xl  text-gray-500 ">
                             ฿{" "}
                             {(value.productItem.priceMinor / 100)
                               .toString()
@@ -299,33 +311,33 @@ export default function ShoppingCart() {
           </div>
           <div className={`${price === 0 ? "opacity-0" : "opacity-100"} `}>
             <div className="flex justify-evenly items-center mb-6">
-              <div>Total</div>
-              <div>
+              <div className="text-2xl">Total</div>
+              <div className="text-2xl font-medium">
                 ฿{" "}
                 {(sumPrice(select) / 100)
                   .toString()
                   .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
               </div>
             </div>
-            <div className="mb-3">I want to </div>
             <div className="flex justify-between items-center">
+            <div className="mb-3 text-2xl ">I want to </div>
               <div className="pt-2">
                 <Button
                   size="lg"
                   onClick={handleDel}
                   color="bg-red-500"
-                  className="w-[150px] "
+                  className="w-[150px] text-white"
                 >
                   Delete
                 </Button>
               </div>
-              <div>or</div>
+              <div className="text-2xl ">or</div>
               <div className="pt-2">
                 <Button
                   size="lg"
                   onClick={handleBuy}
                   color="bg-green-500"
-                  className="w-[150px] "
+                  className="w-[150px] text-white"
                 >
                   Buy
                 </Button>
@@ -333,6 +345,8 @@ export default function ShoppingCart() {
             </div>
           </div>
         </div>
+        </div>
+        
       )}
     </div>
   ) : (
@@ -364,31 +378,32 @@ const DialogDeletShopingCartItem = ({
         >
           <DialogBackdrop
             transition
-            className="fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+            className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
           >
             <div className={`fixed inset-0 z-100 w-screen overflow-y-auto `}>
               <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <DialogPanel
                   transition
-                  className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+                  className="relative transform overflow-hidden rounded-lg  text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
                 >
-                  <div className="bg-gray-400 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div>Do you want to delete {data.id}?</div>
+                  <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="text-black text-lg">Do you want to delete {data.productItem.product.name} ?</div>
+                    <div className="text-black text-base pt-2 ">detail {formatSku(data.productItem.configurations) ?? '-'}</div>
                   </div>
-                  <div className="bg-gray-700/25 px-4 py-1 sm:flex sm:flex-row-reverse sm:px-6">
+                  <div className="bg-white px-4 py-1 sm:flex sm:flex-row-reverse sm:px-6">
                     <Button
                       size="sm"
-                      className={`text-sm text-white bg-green-600 sm:ml-3 sm:w-auto`}
+                      className={`text-sm text-white bg-green-500 sm:ml-3 sm:w-auto`}
                       onClick={() => handleDeletCartItem(data.id)}
                     >
-                      yes
+                      Confirm
                     </Button>
                     <Button
                       size="sm"
-                      className=" bg-white"
+                      className=" text-white bg-red-500"
                       onClick={() => setAleartDeletItem(false)}
                     >
-                      no
+                      Cancel
                     </Button>
                   </div>
                 </DialogPanel>

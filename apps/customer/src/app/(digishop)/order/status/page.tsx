@@ -1,20 +1,15 @@
 "use client";
 
-import Button from "@/components/button";
 import OrderCard from "@/components/orderCard";
 import { useAuth } from "@/contexts/auth-context";
 import { CancelProp, CancelRefundProps, OrderDetail } from "@/types/props/orderProp";
 import {
   fetchUserOrders,
 } from "@/utils/requestUtils/requestOrderUtils";
-import { Rubik } from "next/font/google";
 import {  useEffect, useState } from "react";
 import StateConfig from '@/master/statusOrderConfig.json'
 
-const rubik = Rubik({
-  subsets: ["latin"],
-  weight: "300"
-})
+
 export default function OrderStatus() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<OrderDetail[]>();
@@ -37,7 +32,6 @@ export default function OrderStatus() {
     };
     fetchData();
   }, [user]);
-  console.log(orders)
   if (!orders) return;
   const getFilterOrder = () => {
     if (!orders) return;
@@ -64,33 +58,50 @@ export default function OrderStatus() {
     setSelectShowDetail(order);
   };
   return (
-    <div className="">
-      <div className="flex sticky top-0 items-center bg-white justify-between space-x-20 py-3 px-60 z-100 border-b mb-5">
-        {Object.entries(StateConfig).map(([state, config]) => (
-          <div key={state}>
-            <Button
-              onClick={() => handleChangeState(state as keyof typeof StateConfig)}
-              className={`${state == selectStatus ? "bg-blue-300" : "bg-green-200"} ${rubik.className} `}
-            >
-              {config.label}
-            </Button>
+    <div >
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="flex overflow-x-auto border-b border-gray-200">
+            {Object.entries(StateConfig).map(([state, config]) => {
+              // const Icon = status.icon;
+              const isActive = state === selectStatus;
+              
+              return (
+                <button
+                  key={state}
+                  // onClick={() => setActiveStatus(status.id)}
+                   onClick={() => handleChangeState(state as keyof typeof StateConfig)}
+                  className={`
+                    grid grid-cols-4 lg:grid-cols-8 items-center gap-2 px-15 py-6 font-medium text-sm whitespace-nowrap
+                    border-b-2 transition-all duration-300
+                    ${isActive 
+                      ? "border-blue-600 text-blue-600 bg-blue-50" 
+                      : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }
+                  `}
+                >
+                  {/* <Icon className="w-4 h-4" /> */}
+                  <span className="text-xl font-bold">{config.label}</span>
+                  
+                </button>
+              );
+            })}
           </div>
-        ))}
-      </div>   
-
-
-        <div className="flex justify-center">
+          </div>
+        <div className="flex justify-center items-center mt-5">
+           <div >
             {filterOrder ? (
               filterOrder.map((order, index: number) => (
                   <div key={index} 
                   >
-                    <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} setIsShowCancel={setIsShowCancel} setIsShowRefund={setIsShowRefund} setSelectShowCancel={setSelectShowCancel} selectShowCancel={selectShowCancel} isShowCancel={isShowCancel} isShowRefund={isShowRefund} />
+                      <OrderCard item={order} handleShowDetail={handleShowDetail} selectShowDetail={selectShowDetail} setIsShowCancel={setIsShowCancel} setIsShowRefund={setIsShowRefund} setSelectShowCancel={setSelectShowCancel} selectShowCancel={selectShowCancel} isShowCancel={isShowCancel} isShowRefund={isShowRefund} />
                   </div>
               ))
               ) : (
               <div>no info</div>
               )}
         </div>
+        </div>
+       
            
     </div>
   );

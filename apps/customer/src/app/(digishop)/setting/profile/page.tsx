@@ -21,6 +21,7 @@ import { DialogAddress } from "@/components/createAddress";
 import {AddressCardForSetting} from "@/components/addressCard";
 import Button from "@/components/button";
 import InputField from "@/components/inputField";
+import { sendResetPassword } from "@/utils/requestUtils/requestAuthUtils";
 
 const UserProfilePage = () => {
   const [currentUser, setCurrentUser] = useState<Profile>();
@@ -122,6 +123,15 @@ const UserProfilePage = () => {
       .filter(Boolean)
       .join(' ')
   }
+  
+  const handleEmailSubmit = async() => {
+      if(currentUser){
+        const res = (await sendResetPassword(currentUser.email)) as {data: string}
+        if(res){
+          alert( 'Check Your Email Click the link in the email to reset your password. The link will expire in 15 minutes.' )
+        }
+      }
+    };
   const username = formatName(currentUser?.firstName , currentUser?.middleName, currentUser?.lastName)
   return (
     <div>
@@ -136,7 +146,7 @@ const UserProfilePage = () => {
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-semibold text-gray-800 text-center">
+              <h2 className="text-4xl font-bold text-gray-800 text-center">
                 {username}
               </h2>
             </div>
@@ -145,20 +155,20 @@ const UserProfilePage = () => {
           {/* Profile Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 justify-evenly">
             <div className="px-8 py-6">
-              <h3 className="text-lg font-medium text-gray-800 mb-6 text-center">
+              <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">
                 Profile Information
               </h3>
 
               <div className="space-y-6">
                 {currentUser && (
                   <>
-                    <div className="border-b py-2 ">Customer Profile</div>
+                    <div className="border-b py-2 text-xl">Customer Profile</div>
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                         <User size={18} className="text-gray-600" />
                       </div>
                       <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-base font-medium text-gray-700 mb-1">
                           User Name
                         </label>
                         {
@@ -226,7 +236,7 @@ const UserProfilePage = () => {
                         <Mail size={18} className="text-gray-600" />
                       </div>
                       <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block font-medium text-gray-700 mb-1 text-base">
                           Email Address
                         </label>
                         <p className="text-gray-800 text-lg">
@@ -240,21 +250,21 @@ const UserProfilePage = () => {
                         <Lock size={18} className="text-gray-600" />
                       </div>
                       <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-base font-medium text-gray-700 mb-1">
                           Password
                         </label>
-                        <p className="text-gray-800 text-lg">
+                        <Button className="text-gray-800 text-lg" onClick={handleEmailSubmit}>
                           reset password
-                        </p>
+                        </Button>
                       </div>
                     </div>
                   </>
                 )}
                 <div>
-                  <div className="border-b py-2 ">Merchant Profile</div>
+                  <div className="border-b py-2 text-xl">Merchant Profile</div>
                   {
                     currentUser?.role === 'CUSTOMER' && (
-                      <Button className="mt-3">create merchant profile</Button>
+                      <Button className="mt-3 text-lg bg-blue-600/80 text-white">create merchant profile</Button>
                     )
                   }
                 </div>
@@ -266,7 +276,7 @@ const UserProfilePage = () => {
               </div>
             </div>
             <div className="px-8 py-6">
-              <h3 className="text-lg font-medium text-gray-800 mb-6 text-center">
+              <h3 className=" font-bold text-gray-800 mb-6 text-center text-2xl">
                 Address Information
               </h3>
               {addressUser?.map((item: Address, index: number) => (

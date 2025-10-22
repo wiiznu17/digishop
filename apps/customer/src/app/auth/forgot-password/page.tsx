@@ -4,7 +4,7 @@ import { Mail, Lock, ArrowLeft, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { sendResetPassword } from "@/utils/requestUtils/requestAuthUtils";
 export default function ForgotPasswordPage() {
-  const [page, setPage] = useState("success"); // 'email', 'success', 'reset'
+  const [page, setPage] = useState("email"); // 'email', 'success', 'reset'
   const [email, setEmail] = useState("");
   const router = useRouter()
   useEffect(() => {
@@ -20,7 +20,6 @@ export default function ForgotPasswordPage() {
       }
     }
   };
-    console.log('email',email)
 
   if (page === "email") {
     return (
@@ -61,7 +60,7 @@ export default function ForgotPasswordPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     required
-                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full pl-11 pr-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                 </div>
               </div>
@@ -108,19 +107,13 @@ export default function ForgotPasswordPage() {
             <p className="text-gray-600 mb-2">
               We&apos;ve sent a password reset link to
             </p>
-            <p className="font-medium text-gray-900 mb-8">{email}</p>
+            <p className="font-medium text-gray-900 my-8">{email}</p>
             <p className="text-sm text-gray-500 mb-8">
               Click the link in the email to reset your password. The link will
-              expire in 1 hours.
+              expire in 15 minutes.
             </p>
 
-            {/* Actions */}
-            {/* <button
-              onClick={() => alert("Resend email")}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition mb-3"
-            >
-              Resend Email
-            </button> */}
+            
 
             <button
               onClick={() => router.replace('/auth')}

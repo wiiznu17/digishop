@@ -73,13 +73,13 @@ const SearchPage = () => {
                     setLoading(true)
                   }}
                   placeholder="Search for products, brands, or categories..."
-                  className={ `w-full px-6 py-4 text-lg border-2 z-50 border-gray-200 ${searchResult && searchQuery? 'rounded-t-4xl':'rounded-full' } focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
+                  className={ `w-full px-6 py-4 text-xl border-2 z-50 border-gray-200 ${searchResult && searchQuery? 'rounded-t-4xl':'rounded-full' } focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
                 />
                 {searchQuery && (
                   <div className='absolute  w-full '>
                     {
                       searchResult?.map((result,index) => (
-                          <button key={index} onClick={() => handleSearch(result)} className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 border-gray-200 hover:bg-gray-300 ${index === searchResult.length -1 ? 'rounded-b-4xl':''}`}>{result}</button>
+                          <button key={index} onClick={() => handleSearch(result)} className={`flex bg-white text-xl flex-row w-full p-4 border-b-2 border-x-2 border-gray-200 hover:bg-gray-300 ${index === searchResult.length -1 ? 'rounded-b-4xl':''}`}>{result}</button>
                       ))
                     }
                   </div>

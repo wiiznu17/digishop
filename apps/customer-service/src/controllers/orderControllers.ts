@@ -21,7 +21,7 @@ const contentSignature = (body: Object) => {
   console.log('data',body)
   const hmac = crypto.createHmac(
     "sha256",
-    Buffer.from(String(signKey), "base64")
+    Buffer.from(String(signKey.toString()), "base64")
   );
   return hmac.update(JSON.stringify(body)).digest("base64");
 };
@@ -374,7 +374,6 @@ export const createOrderId = async (
   next: NextFunction
 ) => {
   const { customerId, orderData } = req.body;
-  console.log(req.body)
   const user = await User.findByPk(customerId);
   const groupStoreId = orderData.reduce((acc: any, item: any) => {
     const key = item.productItem.product.storeId;
@@ -395,7 +394,6 @@ export const createOrderId = async (
         let sum = 0;
         for (let i = 0; i < data.length; i++) {
           sum += data[i].lineTotalMinor;
-          console.log(sum);
         }
         return sum;
       };
@@ -435,7 +433,6 @@ export const createOrderId = async (
       res.json({ data: orderCod });
     }
   } catch (error:any) {
-    console.log(error.message);
     res.json({ error: error });
   }
 };
@@ -523,6 +520,7 @@ export const createOrder = async (
         mid: midCard,
         order_id: orderCode,
         // description: productName,
+        // amount:100,
         amount: grandTotalMinor / 100,
         expiry: 15,
         url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
@@ -536,6 +534,7 @@ export const createOrder = async (
           order_id: orderCode,
           // description: productName,
           amount: grandTotalMinor / 100,
+          // amount: 100,
           expiry: 15,
           url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
           url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`, 
@@ -547,6 +546,7 @@ export const createOrder = async (
           "X-Content-Signature": contentSigCard,
         },
       });
+      
       await Order.update(
         {
           reference: paymentResponse.data.reference,
@@ -575,8 +575,8 @@ export const createOrder = async (
           // description: productName,
           amount: grandTotalMinor / 100,
           expiry: 15,
-          url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/callback`,
-          url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/customer/payment/notify`, 
+          url_redirect: `${process.env.NEXT_PUBLIC_GATEWAY_URL}api/customer/payment/callback`,
+          url_notify: `${process.env.NEXT_PUBLIC_GATEWAY_URL}api/customer/payment/notify`, 
         },
         resJson: paymentResponse.data,
       });
@@ -656,7 +656,6 @@ export const createOrder = async (
       paymentStatus.save();
     }
     if(paymentResponse) {
-      console.log(paymentResponse)
       res.status(200).json({ data: paymentResponse.data , queue: true});
       await enqueueAutoCancel({
         orderId: orderId[0].id, //send checkout id not order id
