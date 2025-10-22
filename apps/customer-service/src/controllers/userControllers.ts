@@ -7,10 +7,14 @@ import { sendMailForgotPassword, sendMailVerified } from "../util/mailUtil";
 import { enqueueRefreshToken } from "../queues/tokenQueue";
 import { accessToken } from "../util/jwt";
 import { Address, Op, User, UserRole } from "@digishop/db";
-import Redis from "ioredis";
+// import Redis from "ioredis";
+// const redis = new Redis();
+import IORedis from "ioredis";
 const JWT_SECRET = process.env.JWT_SECRET ?? "";
-const SALT_PASSWORD = process.env.SALT_PASSWORD ?? 10;
-const redis = new Redis();
+const SALT_PASSWORD = process.env.SALT_PASSWORD ?? "10";
+const REDIS_URL = process.env.REDIS_URL||"" ;
+const connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
+
 
 
 
@@ -42,7 +46,6 @@ export const createAddress = async (req: Request, res: Response) => {
       },
     });
     let isDefault;
-    console.log("has", hasDefaultAdd);
     if (hasDefaultAdd.length === 0) {
       isDefault = true;
     } else {
@@ -174,20 +177,19 @@ export const updateAddress = async (req: Request, res: Response) => {
     );
     res.json({ data: "success" });
   } catch (error: any) {
-    console.log(error.message);
+    res.json({ error: error });
   }
 };
 
 export const deleteAddress = async (req: Request, res: Response) => {
   const id = req.params.id;
-  console.log(id);
   try {
     await Address.destroy({
       where: { id: id },
     });
     res.json({ data: "success" });
   } catch (error: any) {
-    console.log(error.message);
+    res.json({ error: error });
   }
 };
 
@@ -205,7 +207,7 @@ export const updateUserName = async (req: Request, res: Response) => {
     );
     res.json({ data: "success" });
   } catch (error: any) {
-    console.log(error.message);
+     res.json({ error: error });
   }
 };
 
@@ -220,14 +222,12 @@ export const refreshTokenAuth = async (req: Request, res: Response) => {
   try {
     // Replace with correct method to get job by refreshToken
     const job = await enqueueRefreshToken(refreshToken);
-    console.log("job", job.data);
     if (!job) {
       res.status(403).json({ error: "Invalid or expired refresh token" });
       return;
     }
 
     const { userId } = job.data;
-    console.log("user id", userId);
     const user = await User.findByPk(userId);
 
     if (!user) {
@@ -250,7 +250,6 @@ export const refreshTokenAuth = async (req: Request, res: Response) => {
     });
     res.json({ accessToken: accesstoken, refreshToken: newrefreshtoken });
   } catch (error) {
-    console.error("Error refreshing token", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -259,9 +258,9 @@ export const resetPassword = async (req: Request, res: Response) => {
   const { password, token } = req.body;
   try {
     const { email } = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    const redisToken = await redis.get(`reset-password:${email}`);
+    const redisToken = await connection.get(`reset-password:${email}`);
     if (redisToken !== token) throw new Error("Invalid token");
-    await redis.del(`reset-password:${email}`);
+    await connection.del(`reset-password:${email}`);
     const updatePassword = await User.findAll({ where: { email } });
     if (updatePassword.length === 1) {
       const passwordHash = await bcrypt.hash(password, 10);
@@ -269,7 +268,6 @@ export const resetPassword = async (req: Request, res: Response) => {
     }
     res.json({ data: "success" });
   } catch (err) {
-    console.error("Invalid or expired token:", err);
     res.json({ err: "Invalid or expired token" });
   }
 };
@@ -301,7 +299,6 @@ export const sendMailResetPassword = async (req: Request, res: Response) => {
   try {
     const findEmail = await User.findAll({ where: { email } });
     if (findEmail.length === 1) {
-      console.log("in here");
       const response = await sendMailForgotPassword(email);
       if (response) {
         res.json({ data: response });
@@ -310,7 +307,6 @@ export const sendMailResetPassword = async (req: Request, res: Response) => {
       }
     }
   } catch (error: any) {
-    console.log(error.message);
     res.json({ error: error });
   }
 };
@@ -363,25 +359,21 @@ export const sendvaildateEmail = async (req: Request, res: Response) => {
     isDefault,
     addressType,
   };
-  await redis.set(
+  await connection.set(
     `register:user:${email}`,
     JSON.stringify(userData),
     "EX",
     3600 
   );
-  const redisData = await redis.get(`register:user:${email}`);
-    console.log('redisData in send mail', redisData)
+  const redisData = await connection.get(`register:user:${email}`);
   try {
     const response = await sendMailVerified(email);
     if (response) {
-      console.log('send mail')
       res.json({ data: response });
     } else {
-      console.log('not send mail')
       res.json({ error: "not send mail" });
     }
   } catch (error: any) {
-    console.log(error.message);
     res.json({ error: error });
   }
 };
@@ -389,12 +381,11 @@ export const createUser = async (req: Request, res: Response) => {
   const { token } = req.body;
   try {
     const { email } = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    const redisData = await redis.get(`register:user:${email}`);
+    const redisData = await connection.get(`register:user:${email}`);
     if(!redisData)  return res.status(400).json({ success: false, message: "Verification expired or not found" });
     const redisDataRaw = JSON.parse(redisData);
-    console.log('redisData', redisDataRaw.email , email)
     if (redisDataRaw.email !== email || !redisData) return res.status(400).json({ success: false, message: "Invalid verification link" });
-    await redis.del(`register:user:${email}`);
+    await connection.del(`register:user:${email}`);
     const {
     firstName,
     middleName,
@@ -456,7 +447,6 @@ export const createUser = async (req: Request, res: Response) => {
     }
     res.json({ data: true })
   } catch (err: any) {
-    console.log(err.message);
     res.status(400).json({ error: err });
   }
 };
