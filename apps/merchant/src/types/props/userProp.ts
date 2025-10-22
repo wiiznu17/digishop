@@ -43,7 +43,7 @@ export interface RegisterData {
 }
 
 export interface MerchantAddressForm {
-  id: number
+  id?: number
   ownerName: string
   phone: string
   address_number: string
@@ -53,6 +53,7 @@ export interface MerchantAddressForm {
   subdistrict: string
   district: string
   province: string
+  country?: string
   addressType: AddressType
   postalCode: string
   isDefault: boolean

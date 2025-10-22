@@ -96,7 +96,7 @@ export function requireApprovedUser(opts?: { allowAdminBypass?: boolean; allowSe
 
 export const authenticateToken  = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const token = req.headers["authorization"];
-  const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey'
+  const JWT_SECRET = process.env.JWT_SECRET || ''
   console.log('token',token)
   if (token == null) {
     res.sendStatus(401);
