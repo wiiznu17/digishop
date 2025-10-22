@@ -199,7 +199,7 @@ export default function SearchResult({
                         className="cursor-pointer"
                         onClick={() =>
                           router.push(
-                            `http://localhost:3000/store/${store.uuid}`
+                            `/store/${store.uuid}`
                           )
                         }
                       >

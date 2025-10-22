@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Pagination } from "@/components/order/pagination"
 import { Eye } from "lucide-react"
 import { Order, OrderStatus } from "@/types/props/orderProp"
-
+import { useRouter } from "next/navigation"
 interface OrdersTableProps {
   // data
   orders: Order[]
@@ -52,6 +52,7 @@ export function OrdersTable({
   getStatusBadgeColor,
   getStatusText
 }: OrdersTableProps) {
+  const router = useRouter()
   // formatters
   const fmtTHB = (n: number) =>
     new Intl.NumberFormat("th-TH", {
@@ -144,7 +145,10 @@ export function OrdersTable({
                       <TableRow
                         key={order.id}
                         className="hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => onViewDetails(order)}
+                        onClick={() => {
+                          if (!order.id) return
+                          router.push(`/orders/${String(order.id)}`)
+                        }}
                       >
                         <TableCell className="font-mono font-medium">
                           <div className="flex flex-col">

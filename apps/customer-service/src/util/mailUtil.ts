@@ -113,10 +113,8 @@ export const sendMailForgotPassword = async (email:string): Promise<boolean> => 
     </div>
   `,
     });
-    console.log("Email sent");
     return true;
   } catch (error: any) {
-    console.log("Email not sent", error.message);
     return false;
   }
 };

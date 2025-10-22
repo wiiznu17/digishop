@@ -108,7 +108,6 @@ export const getMerchantProfile = async (req: AuthenticatedRequest, res: Respons
   }
 };
 
-
 export const updateMerchantProfile = async (req: AuthenticatedRequest, res: Response) => {
   const transaction = await sequelize.transaction();
   try {
@@ -119,6 +118,8 @@ export const updateMerchantProfile = async (req: AuthenticatedRequest, res: Resp
     }
     const profileData = JSON.parse(profileDataString);
     const files = req.files as Express.Multer.File[];
+    console.log("Received profileData:", profileData);
+    console.log("Received files:", files);
 
     // 1. หา user + store
     const user = await User.findByPk(profileData.id, { transaction });
@@ -143,79 +144,141 @@ export const updateMerchantProfile = async (req: AuthenticatedRequest, res: Resp
       status: profileData.store.status
     }, { transaction });
 
-    // 3. รูปโปรไฟล์ (รูปเดียว) — ลบของเก่าก่อนแล้วค่อยสร้างใหม่
-    if (files && files.length > 0) {
+    // 3. รูปโปรไฟล์ (รูปเดียว) — ถ้าไม่มีไฟล์ใหม่ ให้ลบของเก่าทิ้ง
+    // แต่ถ้ามีไฟล์ใหม่: ลบเก่าก่อนแล้วค่อยสร้างใหม่
+    {
       const existing = await ProfileMerchantImage.findAll({
         where: { storeId: storeRecord.id },
-        transaction
-      })
+        transaction,
+      });
 
-      if (existing.length > 0) {
+      const deleteExisting = async () => {
+        if (existing.length === 0) return;
+
         for (const image of existing) {
-          if ((image as any).blobName) {
+          const blobName = (image as any).blobName;
+          if (blobName) {
             try {
-              await azureBlobService.deleteImage((image as any).blobName);
+              await azureBlobService.deleteImage(blobName);
             } catch (error) {
-              console.error(`Failed to delete blob ${ (image as any).blobName}:`, error);
+              console.error(`Failed to delete blob ${blobName}:`, error);
             }
           }
         }
         await ProfileMerchantImage.destroy({
           where: { storeId: storeRecord.id },
-          transaction
-        })
+          transaction,
+        });
+      };
+
+      if (files && files.length > 0) {
+        // มีไฟล์ใหม่ → ลบเก่าแล้วอัปโหลดใหม่
+        console.log("Updating profile image with file:", files[0].originalname);
+        await deleteExisting();
+
+        const file = files[0];
+        const { url, blobName } = await azureBlobService.uploadImage(
+          file,
+          `stores/${storeRecord.id}`
+        );
+
+        await ProfileMerchantImage.create(
+          {
+            storeId: storeRecord.id,
+            url,
+            blobName,
+            fileName: file.originalname,
+          },
+          { transaction }
+        );
+      } else {
+        // ไม่มีไฟล์ใหม่ → ลบของเก่าทิ้งเฉย ๆ
+        console.log("No new profile image uploaded. Deleting existing images…");
+        await deleteExisting();
       }
-
-      const file = files[0]
-      const { url, blobName } = await azureBlobService.uploadImage(
-        file,
-        `stores/${storeRecord.id}`
-      )
-
-      await ProfileMerchantImage.create({
-        storeId: storeRecord.id,
-        url,
-        blobName,
-        fileName: file.originalname,
-      }, { transaction })
     }
 
-    // 4. ที่อยู่ — update/create และบังคับ default เดียว
+
+    // 4) ที่อยู่ — ซิงก์ทั้งก้อน: ลบที่หายไปจาก payload, อัปเดตที่มี id, เพิ่มที่ไม่มี id และบังคับ default เดียว
     if (Array.isArray(profileData.store.addresses)) {
-      // เคลียร์ default ทั้งหมดก่อน ถ้ามีรายการใด ๆ ส่งมาเป็น default
-      const hasDefault = profileData.store.addresses.some((a: any) => !!a.isDefault)
-      if (hasDefault) {
-        await MerchantAddress.update(
-          { isDefault: false },
-          { where: { storeId: storeRecord.id }, transaction }
-        )
+      const addresses = profileData.store.addresses as any[];
+
+      // เตรียมให้มี default ได้แค่หนึ่ง
+      const firstDefaultIdx = addresses.findIndex(a => !!a.isDefault);
+      let defaultAssigned = false;
+
+      // ดึง id เดิมใน DB
+      const existingRows = await MerchantAddress.findAll({
+        where: { storeId: storeRecord.id },
+        attributes: ["id"],
+        transaction
+      });
+      const existingIds = new Set<number>(existingRows.map(r => (r as any).id as number));
+
+      // id ที่ส่งมาจาก frontend (เฉพาะที่เป็นเลข)
+      const payloadIds = new Set<number>(
+        addresses.map(a => Number(a.id)).filter(n => Number.isFinite(n))
+      );
+
+      // 4.1 ลบที่อยู่ที่ "ไม่มี" ใน payload (ถือว่า user ลบทิ้งจากหน้า แล้วกด Save)
+      const idsToDelete = [...existingIds].filter(id => !payloadIds.has(id));
+      if (idsToDelete.length > 0) {
+        await MerchantAddress.destroy({
+          where: { storeId: storeRecord.id, id: idsToDelete },
+          transaction
+        });
       }
 
-      for (const addr of profileData.store.addresses) {
-        const payload = {
-          ownerName: addr.ownerName,
-          address_number: addr.address_number,
-          street: addr.street,
-          building: addr.building,
-          subStreet: addr.subStreet,
-          subdistrict: addr.subdistrict,
-          district: addr.district,
-          province: addr.province,
-          postalCode: addr.postalCode,
-          addressType: addr.addressType,
-          isDefault: !!addr.isDefault
-        }
+      // 4.2 อัปเดต/เพิ่ม ที่เหลือใน payload
+      for (let i = 0; i < addresses.length; i++) {
+        const addr = addresses[i];
 
-        if (addr.id) {
-          await MerchantAddress.update(
-            payload,
-            { where: { id: addr.id, storeId: storeRecord.id }, transaction }
-          )
+        const payload = {
+          ownerName: addr.ownerName ?? null,
+          address_number: addr.address_number ?? null,
+          street: addr.street ?? null,
+          building: addr.building ?? null,
+          subStreet: addr.subStreet ?? null,
+          subdistrict: addr.subdistrict ?? null,
+          district: addr.district ?? null,
+          province: addr.province ?? null,
+          postalCode: addr.postalCode ?? null,
+          addressType: addr.addressType ?? "Business",
+          phone: addr.phone ?? profileData.store.phone ?? null,
+          country: addr.country ?? "Thailand",
+          // อนุญาต default ได้แค่อันแรกที่เป็น true
+          isDefault: !!addr.isDefault && !defaultAssigned
+        } as any;
+
+        if (payload.isDefault) defaultAssigned = true;
+
+        if (Number.isFinite(Number(addr.id))) {
+          // update
+          await MerchantAddress.update(payload, {
+            where: { id: Number(addr.id), storeId: storeRecord.id },
+            transaction
+          });
         } else {
+          // create
           await MerchantAddress.create(
-            { storeId: storeRecord.id, phone: profileData.store.phone, country: 'Thailand', ...payload },
+            { storeId: storeRecord.id, ...payload },
             { transaction }
-          )
+          );
+        }
+      }
+
+      // 4.3 ถ้าไม่มีอันไหนเป็น default เลย ให้ set รายการแรก (ถ้ามี) เป็น default
+      if (!defaultAssigned) {
+        const anyRow = await MerchantAddress.findOne({
+          where: { storeId: storeRecord.id },
+          order: [["id", "ASC"]],
+          transaction
+        });
+        if (anyRow) {
+          await MerchantAddress.update(
+            { isDefault: true },
+            { where: { id: (anyRow as any).id, storeId: storeRecord.id }, transaction }
+          );
         }
       }
     }

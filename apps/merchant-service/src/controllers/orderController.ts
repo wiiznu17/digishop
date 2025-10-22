@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import axios from "axios"
 import crypto from "crypto"
-import { IncludeOptions, Op, WhereOptions, literal, Transaction } from "sequelize"
+import { IncludeOptions, Op, WhereOptions, literal, Transaction, Sequelize } from "sequelize"
 
 import {
   ReturnShipmentStatus,
@@ -421,7 +421,6 @@ function serializeOrder(order: any) {
 }
 
 // GET /orders/summary
-
 export async function getOrdersSummary(req: Request, res: Response) {
   try {
     const { storeId, startDate, endDate } = req.query as Record<string, string>
@@ -437,48 +436,43 @@ export async function getOrdersSummary(req: Request, res: Response) {
 
     const totalOrders = await Order.count({ where: orderWhere })
     const pendingPayment = await Order.count({ where: { ...orderWhere, status: "PENDING" } })
+    const paidOrders = await Order.count({ where: { ...orderWhere, status: "PAID" } })
 
-    const paidOrders = await OrderStatusHistory.count({
-      distinct: true,
-      col: "orderId",
+    const processing = await Order.count({
+      where: { ...orderWhere, status: ["PROCESSING", "READY_TO_SHIP"] }
+    })
+
+    const handedOver = await Order.count({
+      where: { ...orderWhere, status: ["HANDED_OVER", "SHIPPED", "TRANSIT_LACK", "RE_TRANSIT"] }
+    })
+
+    const refunds = await Order.count({
       where: {
-        toStatus: "PAID",
-        ...(storeId
-          ? {
-              orderId: literal(
-                `EXISTS (SELECT 1 FROM ORDERS o WHERE o.id = "OrderStatusHistory"."orderId" AND o.store_id = ${storeId})`
-              ),
-            }
-          : {}),
-        ...(startDate || endDate
-          ? {
-              createdAt: {
-                ...(startDate ? { [Op.gte]: new Date(startDate) } : {}),
-                ...(endDate ? { [Op.lte]: new Date(endDate) } : {}),
-              },
-            }
-          : {}),
-      },
+        ...orderWhere,
+        status: [
+          "REFUND_REQUEST",
+          "AWAITING_RETURN",
+          "RETURN_VERIFIED",
+          "REFUND_APPROVED",
+          "REFUND_REJECTED",
+          "REFUND_FAIL",
+          "REFUND_RETRY",
+          "REFUND_SUCCESS"
+        ]
+      }
     })
 
-    const processing = await OrderStatusHistory.count({
-      distinct: true,
-      col: "orderId",
-      where: { toStatus: { [Op.in]: ["PROCESSING", "READY_TO_SHIP"] } },
+    // NEW: ยอดออเดอร์ที่คืนเงินสำเร็จ (status = REFUND_SUCCESS)
+    const refundSuccessOrders = await Order.count({
+      where: { ...orderWhere, status: "REFUND_SUCCESS" }
     })
 
-    const handedOver = await OrderStatusHistory.count({
-      distinct: true,
-      col: "orderId",
-      where: { toStatus: "HANDED_OVER" },
+    // ยอดออเดอร์ที่ถูกยกเลิก
+    const canceledOrders = await Order.count({
+      where: { ...orderWhere, status: ["CUSTOMER_CANCELED", "MERCHANT_CANCELED"] }
     })
 
-    const refunds = await OrderStatusHistory.count({
-      distinct: true,
-      col: "orderId",
-      where: { toStatus: { [Op.like]: "REFUND%" } },
-    })
-
+    // รายได้รวม (ตัดยกเลิก และตัดออเดอร์ที่ REFUND_SUCCESS)
     const revenueOrders = await Order.findAll({
       attributes: ["grandTotalMinor"],
       where: {
@@ -494,11 +488,11 @@ export async function getOrdersSummary(req: Request, res: Response) {
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    const completedToday = await Order.count({
+    const completed = await Order.count({
       where: {
         ...orderWhere,
         status: { [Op.in]: ["DELIVERED", "COMPLETE"] },
-        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+        // createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
       },
     })
 
@@ -510,9 +504,11 @@ export async function getOrdersSummary(req: Request, res: Response) {
         processing,
         handedOver,
         refundRequests: refunds,
+        refundSuccessOrders,
+        canceledOrders,
         totalRevenueMinor,
         totalRevenue: minorTo(totalRevenueMinor, 2),
-        completedToday,
+        completed
       },
     })
   } catch (err) {

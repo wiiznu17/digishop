@@ -21,6 +21,8 @@ export async function updateMerchantProfileRequester(
   images: File[] = []
 ): Promise<MerchantProfileFormValues | null> {
   try {
+    console.log("updateMerchantProfileRequester profileData:", profileData)
+    console.log("updateMerchantProfileRequester images:", images)
     const formData = new FormData()
     formData.append("profileData", JSON.stringify(profileData))
 
@@ -42,7 +44,7 @@ export async function updateMerchantProfileRequester(
   }
 }
 
-// 🔹 แก้ไขที่อยู่เฉพาะรายการ
+// แก้ไขที่อยู่เฉพาะรายการ
 export async function updateMerchantAddressRequester(
   addressId: number,
   payload: Partial<MerchantAddressForm>
