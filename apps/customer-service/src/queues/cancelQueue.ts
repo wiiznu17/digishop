@@ -14,12 +14,12 @@ export async function removeCancelJobById(q: Queue, jobId: string) {
   if (job) await job.remove();
 }
 
-const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
-const CANCEL_QUEUE_NAME = process.env.CANCEL_QUEUE_NAME || "auto-cancel-unpaid";
+const REDIS_URL = process.env.REDIS_URL||"" ;
+const CANCEL_QUEUE_NAME = process.env.CANCEL_QUEUE_NAME || "";
 
 const connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
 
-const cancelQueue= new Queue<CancelJob>(CANCEL_QUEUE_NAME,{ connection });
+const cancelQueue= new Queue<CancelJob>(CANCEL_QUEUE_NAME ,{ connection });
 
 export async function enqueueAutoCancel(job: CancelJob, opts?: { delayMs?: number }) {
   const delay = opts?.delayMs ?? Number(process.env.DELIVERED_AUTOCOMPLETE_AFTER_MS || 604_800_000); // 7 day

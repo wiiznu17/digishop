@@ -106,7 +106,7 @@ export default function OrderCard({
             className="flex items-center mb-3 hover:cursor-pointer w-full"
             onClick={() =>
               router.push(
-                `http://localhost:3000/store/${item.items[0].productItem.product.store.uuid}`
+                `/store/${item.items[0].productItem.product.store.uuid}`
               )
             }
           >
@@ -123,7 +123,7 @@ export default function OrderCard({
                 className="w-full hover:cursor-pointer"
                 onClick={() =>
                   router.push(
-                    `http://localhost:3000/product/${item.items[0].productItem.product.uuid}`
+                    `/product/${item.items[0].productItem.product.uuid}`
                   )
                 }
               >

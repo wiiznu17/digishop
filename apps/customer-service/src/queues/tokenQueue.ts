@@ -1,8 +1,8 @@
 import { delay, Queue } from "bullmq";
 import IORedis from "ioredis";
 
-const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
-const REFRESH_TOKEN = process.env.REFRESH_TOKEN || "refresh-token";
+const REDIS_URL = process.env.REDIS_URL || "";
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN || "";
 
 export type RefreshTokenJob = {
  userId: number
