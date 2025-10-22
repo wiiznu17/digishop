@@ -11,8 +11,6 @@ export default function ForgotPasswordPage() {
   },[page])
   const handleEmailSubmit = async(e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // ไม่ได้ verified
-    console.log('email in submit',email)
     if(email !== ''){
       const res = (await sendResetPassword(email)) as {data: string}
       if(res.data){

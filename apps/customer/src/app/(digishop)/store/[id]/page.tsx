@@ -45,7 +45,6 @@ export default function StorePage() {
     if(!products) return
     setShowProduct(products.products)
   },[products])
-  console.log(products);
   if (!products) return;
 
   return (

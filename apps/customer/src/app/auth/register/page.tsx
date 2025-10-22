@@ -55,13 +55,11 @@ const RegisterPage: React.FC = () => {
     });
   };
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log(formData);
     e.preventDefault();
     if (!validateForm()) return;
     setIsLoading(true);
     try {
       const res = (await createUser(formData)) as { data: boolean };
-      console.log(res.data)
       if (res.data) {
         setPage('email')
       }
@@ -194,8 +192,6 @@ const RegisterPage: React.FC = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                // placeholder="Create a strong password"
-                // error={errors.password}
                 minLength={6}
                 required={true}
               />
@@ -388,7 +384,6 @@ const RegisterPage: React.FC = () => {
             color="bg-blue-600/80 text-white"
           >
             Create Account
-            {/* <Link href='/register-merchant'></Link> */}
           </Button>
           {failed && (
             <div className="absolute text-lg bottom-25 p-2 bg-red-500/20 text-red-500">

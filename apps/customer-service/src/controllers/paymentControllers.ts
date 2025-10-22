@@ -15,7 +15,6 @@ export const getNotify = async (req: Request, res: Response) => {
     bank_reference,
     authorize_token,
   } = req.body;
-  console.log('req notify',req.body)
   try {
     const findPaymentId = await Payment.findOne({
       where: { providerRef: reference },

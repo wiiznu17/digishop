@@ -95,17 +95,7 @@ export interface Order {
   createdAt?: Date;
   updatedAt?: Date;
 }
-// export interface OrderIdProps {
-//     customerId: number,
-//     storeId: number[],
-//     product: number[],
-//     productItemId: number[],
-//     productName: string[],
-//     storeName: string[],
-//     unitPrice: number[],
-//     sku: string[],
-//     quantity: number[],
-// }
+
 
 export interface ShoppingDetail {
   id?: number;

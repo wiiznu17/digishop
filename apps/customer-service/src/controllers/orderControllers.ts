@@ -18,7 +18,6 @@ const apiKey = process.env.MERCHANRT_API_KEY ||"";
 const partnerId = process.env.MERCHANRT_PARTNER_ID || "";
 
 const contentSignature = (body: Object) => {
-  console.log('data',body)
   const hmac = crypto.createHmac(
     "sha256",
     Buffer.from(String(signKey.toString()), "base64")
@@ -83,7 +82,6 @@ export const findOrder = async (
         {
           model: OrderItem,
           as: "items",
-          // attributes: ["quantity", "unit_price_minor","line_total_minor","discount_minor"],
           include: [
             {
               model: ProductItem,
@@ -127,7 +125,6 @@ export const findOrder = async (
     });
     return res.status(200).json({ body: getOrders });
   } catch (error) {
-    console.log("error", error);
   }
 };
 export const findUserOrder = async (
@@ -256,7 +253,6 @@ export const findUserOrder = async (
       .status(200)
       .json({ body: getUserOrders.rows, count: getUserOrders.count });
   } catch (error:any) {
-    console.log("error", error);
   }
 };
 
@@ -266,7 +262,6 @@ export const findUserCart = async (
   next: NextFunction
 ) => {
   const id = req.params.id;
-  console.log(id);
   try {
     const cartId = await ShoppingCart.findOne({ where: { userId: id } });
     if (cartId) {
@@ -334,7 +329,6 @@ export const deleteChart = async (
     }
     res.json({ message: `del ${item}` });
   } catch (error:any) {
-    console.log();
     res.json({ error: error });
   }
 };
@@ -347,7 +341,6 @@ interface ShoppingDetail {
   cartId?: number;
   productItemId: number;
   quantity: number;
-  // unitprice ใช้จากตาราง productItem
   discountMinor: number;
   lineTotalMinor: number;
   productItem: ProductItemProps;
@@ -758,7 +751,6 @@ export const updateOrderStatus = async (
   const id = req.params.id;
   const order = await Order.findByPk(id);
   try {
-    console.log(order?.status,order?.status == OrderStatus.DELIVERED )
     if (order && (order.status == OrderStatus.DELIVERED || order.status === OrderStatus.CANCELED_REFUND)) {
       const createStatus = await OrderStatusHistory.create({
         orderId: order.id,
@@ -779,74 +771,7 @@ export const updateOrderStatus = async (
   }
 };
 
-// export const cancelOrder = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   const id = req.params.id;
-//   const { reason, description, contactEmail, url } = req.body;
-//   const findOrder = await Order.findByPk(id);
-//   const findPayment = await Payment.findOne({
-//     where: { checkoutId: findOrder?.checkoutId },
-//   });
-//   console.log( findOrder?.status === OrderStatus.CANCELED_REFUND, findOrder?.status)
-//   if (
-//     findOrder && (findOrder.status === OrderStatus.PAID ||findOrder.status === OrderStatus.DELIVERED || findOrder.status === OrderStatus.CANCELED_REFUND) &&
-//     findPayment
-//   ) {
-//     try {
-//       const cancelRequest = await RefundOrder.create({
-//         orderId: Number(id),
-//         paymentId: findPayment.id,
-//         reason,
-//         status: RefundStatus.REQUESTED,
-//         amountMinor: findOrder.grandTotalMinor,
-//         currencyCode: findOrder.currencyCode,
-//         description,
-//         contactEmail,
-//         requestedBy: "CUSTOMER",
-//       });
-//       await RefundStatusHistory.create({
-//         refundOrderId: cancelRequest.id,
-//         toStatus: RefundStatus.REQUESTED,
-//         reason,
-//         changedByType: ActorType.CUSTOMER,
-//         source: "WEBSITE",
-//       });
-//       await OrderStatusHistory.create({
-//         orderId: findOrder.id,
-//         fromStatus: findOrder.status,
-//         toStatus: OrderStatus.REFUND_REQUEST,
-//         changedByType: ActorType.CUSTOMER,
-//         source: "WEB",
-//       });
-//       await PaymentGatewayEvent.update(
-//         {
-//           refundOrderId: cancelRequest.id,
-//         },
-//         {
-//           where: {
-//             [Op.and]: {
-//               checkoutId: findOrder.checkoutId,
-//               paymentId: findPayment.id,
-//             },
-//           },
-//         }
-//       );
-//       await Order.update(
-//         {
-//           status: OrderStatus.REFUND_REQUEST,
-//         },
-//         { where: { id: id } }
-//       );
-//       res.json({ data: "success" });
-//     } catch (error) {
-//       console.log(error.message)
-//       res.json({ error: error });
-//     }
-//   }
-// };
+
 
 export const customerCancel = async (
   req: Request,
@@ -854,7 +779,6 @@ export const customerCancel = async (
   next: NextFunction
 ) => {
   const id = req.params.id;
-  console.log('in customer cancel', id)
   const findOrder = await Order.findAll({
     where: { checkoutId: id },
     attributes: ["id"],
@@ -1006,7 +930,6 @@ export const cancelOrder = async (req: Request, res: Response) => {
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid orderId" });
 
   const { order, deliveredAt } = await getOrderTimes(id);
-  console.log("order: ", order?.status)
   if (!order) return res.status(404).json({ error: "Order not found" });
 
   // status ที่ไม่อนุญาตให้ customer-service ทำ cancel/refund
@@ -1035,7 +958,6 @@ export const cancelOrder = async (req: Request, res: Response) => {
     // อาจเพิ่มอีก
   ];
   if (transitStatuses.includes(order.status as OrderStatus)) {
-    console.log("not allow")
     return res.status(422).json({
       error:
         "Cancellation/refund not allowed in this status.",
@@ -1070,7 +992,6 @@ export const cancelOrder = async (req: Request, res: Response) => {
   order.status === OrderStatus.DELIVERED ||
   order.status === OrderStatus.CANCELED_REFUND;
 
-  console.log("Is delivered status: ", isDelivered)
   if (isDelivered) {
     // no time stamp
     if (!deliveredAt) {
@@ -1202,7 +1123,6 @@ export const cancelOrder = async (req: Request, res: Response) => {
     if (!hasDelivered) {
       // correlation id format : cust-${order.id}-${Date.now()}
       const corr = (req.headers["x-request-id"] as string) || `cust-${order.id}-${Date.now()}`;
-      console.log("correlation id: ", corr)
       await enqueueRefundAutoApprove({
         orderId: order.id,
         requestedAt: new Date().toISOString(),

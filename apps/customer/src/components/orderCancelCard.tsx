@@ -143,7 +143,6 @@ export const RefundOrder = ({
   setDetail,
   handleOnCancel
 }: RefundOrderProps) => {
-  console.log('shown')
   const [refundData, setRefundData] = useState<CancelProp>();
   useEffect(() => {
     setRefundData({

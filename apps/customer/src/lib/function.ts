@@ -33,7 +33,6 @@ export const sumprice = (data: OrderDetail|undefined) => {
     let sum = 0;
       for (let i = 0; i < data.items.length; i++) {
         sum += (data.items[i].lineTotalMinor)
-        console.log(sum)
       }
       return sum
   }

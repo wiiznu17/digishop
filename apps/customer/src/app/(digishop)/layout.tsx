@@ -18,7 +18,6 @@ export default function MainLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // const { pathname } = req.nextUrl
   const {user} = useAuth()
   const pathName = usePathname()
   const orderPage = "/order/D"
