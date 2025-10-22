@@ -6,6 +6,7 @@ import orderRouter from "./routes/orderRouter";
 import storeRouter from "./routes/storeRouter";
 import carrierRouter from "./routes/carrierRouter";
 import ReturnCarrierRouter from "./routes/returnCarrierRouter";
+import DashboardRouter from "./routes/dashboardRouter";
 import { sequelize } from "@digishop/db";
 
 const router: express.Router = express.Router();
@@ -28,5 +29,6 @@ router.use("/merchant/orders", orderRouter);
 router.use("/merchant/store", storeRouter);
 router.use("/merchant/transit", carrierRouter);
 router.use("/merchant/return-transit", ReturnCarrierRouter);
+router.use("/merchant/dashboard", DashboardRouter);
 
 export default router;

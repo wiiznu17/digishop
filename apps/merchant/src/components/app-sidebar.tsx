@@ -41,7 +41,7 @@ type NavItem = {
 }
 
 const items: NavItem[] = [
-  // { title: "Dashboard", url: "/", icon: Home },
+  { title: "Dashboard", url: "/", icon: Home },
   { title: "Orders", url: "/orders", icon: ShoppingCart },
   { title: "Products", url: "/products", icon: Package },
   // { title: "Customers", url: "/customers", icon: Users },
