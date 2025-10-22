@@ -9,7 +9,7 @@ class AzureBlobService {
   
   constructor() {
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
-    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'product-images'
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || ""
     
     if (!connectionString) {
       throw new Error('Azure Storage connection string is not configured')

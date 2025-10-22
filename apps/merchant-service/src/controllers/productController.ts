@@ -850,14 +850,14 @@ export const suggestProducts = async (req: AuthenticatedRequest, res: Response) 
   }
 };
 
-/** GET /merchant/products/list */
+// GET /merchant/products/list
 export const getProductList = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // 1) ตรวจร้านของ merchant
+    // 1) find store
     const store = await Store.findOne({ where: { userId: req.user?.sub } });
     if (!store) return res.status(404).json({ error: "No store found for this merchant" });
 
-    // 2) พารามิเตอร์
+    // 2) parse query params
     const {
       q,
       categoryUuid,
@@ -908,7 +908,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
-    // 4.2 main image เท่านั้น (สำหรับแสดง thumbnail)
+    // 4.2 main image for thumbnail
     include.push({
       model: ProductImage,
       as: "images",
@@ -923,7 +923,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       ],
     });
 
-    // 4.3 items (ไว้สรุป stock/price และค้น SKU)
+    // 4.3 items for stock/price
     include.push({
       model: ProductItem,
       as: "items",
@@ -936,8 +936,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
     const sumStockExpr = fn("COALESCE", fn("SUM", col("items.stock_quantity")), 0);
     const minPriceExpr = fn("MIN", col("items.price_minor"));
 
-    // 5.1 นับจำนวนรูปทั้งหมด (product + item)
-    // NOTE: ใช้ subquery ตรง ๆ เพื่อลด join ซ้ำ
+    // 5.1 count images
     const productImageCountExpr = literal(
       "(SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = `Product`.`id`)"
     );
@@ -1017,6 +1016,7 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
       },
     });
   } catch (err) {
+    console.error("getProductList error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
