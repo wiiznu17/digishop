@@ -7,90 +7,12 @@ import { sendMailForgotPassword, sendMailVerified } from "../util/mailUtil";
 import { enqueueRefreshToken } from "../queues/tokenQueue";
 import { accessToken } from "../util/jwt";
 import { Address, Op, User, UserRole } from "@digishop/db";
-const JWT_SECRET = process.env.JWT_SECRET ?? "supersecretkey";
+import Redis from "ioredis";
+const JWT_SECRET = process.env.JWT_SECRET ?? "";
+const SALT_PASSWORD = process.env.SALT_PASSWORD ?? 10;
+const redis = new Redis();
 
-export const createUser = async (req: Request, res: Response) => {
-  const {
-    firstName,
-    middleName,
-    lastName,
-    email,
-    password,
-    recipientName,
-    phone,
-    address_number,
-    building,
-    subStreet,
-    street,
-    subdistrict,
-    district,
-    country,
-    province,
-    postalCode,
-    isDefault,
-    addressType,
-  } = req.body;
-  const addressValide = [
-    recipientName,
-    phone,
-    address_number,
-    street,
-    district,
-    country,
-    province,
-    postalCode,
-  ];
-  try {
-    // หา user จาก userId
-    const user = await User.findByPk(email);
-    if (user) {
-      return res
-        .status(404)
-        .json({ error: "This email already have an account" });
-    }
-    const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      firstName,
-      middleName,
-      lastName,
-      email,
-      password: passwordHash,
-      role: UserRole.CUSTOMER,
-    });
-    await newUser.save();
-    if (addressValide.every((x) => x !== "")) {
-      const address = await Address.create({
-        userId: newUser.id,
-        recipientName,
-        phone,
-        addressNumber: address_number,
-        building,
-        subStreet,
-        street,
-        subdistrict,
-        district,
-        country,
-        province,
-        postalCode,
-        isDefault: true,
-        addressType,
-      });
-      await address.save();
-    }
-    const payload = {
-      firstName: newUser.firstName,
-      middleName: newUser.middleName,
-      lastName: newUser.lastName,
-      email: newUser.email,
-    };
-    // sendMailVerified(payload)
-    const token = await jwt.sign(payload, JWT_SECRET, { expiresIn: "1H" });
-    res.json({ data: newUser, token: token });
-  } catch (err: any) {
-    console.log(err.message);
-    res.status(400).json({ error: err });
-  }
-};
+
 
 export const createAddress = async (req: Request, res: Response) => {
   const {
@@ -333,29 +255,24 @@ export const refreshTokenAuth = async (req: Request, res: Response) => {
   }
 };
 
-// export const refreshPassword = async() => (req: Request, res: Response) => {
-//   const tokenConfig.resetPasswordToken.secret:string = '' ค่าใน catch ที่เก้บไว้มาเทียบกับฝั่งหน้าบ้าน
-//   const token = req.query.token || req.body.token
-//   const {email, password} = req.body
-//   jwt.verify(token, tokenConfig.resetPasswordToken.secret, (err) => {
-//     if (err) {
-//       // if (err.name === 'TokenExpiredError') {
-//       //   next(new ServiceError(userError.ERR_USER_RESET_PASSWORD_TOKEN_EXPIRED))
-//       // } else {
-//       //   next(new ServiceError(userError.ERR_USER_INVALID_RESET_PASSWORD_TOKEN))
-//       // }
-//     } else {
-//       try {
-//         const updatePassword = await User.findAll({where: {email}})
-//         if(updatePassword.length === 1){
-//           await User.update({ password }, {where: {email}})
-//         }
-//         res.json({ data: 'success'})
-//       } catch (error) {
-//         res.json({ error: error})
-//       }
-//   }})
-// }
+export const resetPassword = async (req: Request, res: Response) => {
+  const { password, token } = req.body;
+  try {
+    const { email } = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const redisToken = await redis.get(`reset-password:${email}`);
+    if (redisToken !== token) throw new Error("Invalid token");
+    await redis.del(`reset-password:${email}`);
+    const updatePassword = await User.findAll({ where: { email } });
+    if (updatePassword.length === 1) {
+      const passwordHash = await bcrypt.hash(password, 10);
+      await User.update({ password: passwordHash }, { where: { email } });
+    }
+    res.json({ data: "success" });
+  } catch (err) {
+    console.error("Invalid or expired token:", err);
+    res.json({ err: "Invalid or expired token" });
+  }
+};
 
 //       const query = {
 //         include: [
@@ -381,10 +298,10 @@ export const refreshTokenAuth = async (req: Request, res: Response) => {
 
 export const sendMailResetPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
-  // const {email} = req.body
   try {
     const findEmail = await User.findAll({ where: { email } });
     if (findEmail.length === 1) {
+      console.log("in here");
       const response = await sendMailForgotPassword(email);
       if (response) {
         res.json({ data: response });
@@ -397,3 +314,151 @@ export const sendMailResetPassword = async (req: Request, res: Response) => {
     res.json({ error: error });
   }
 };
+
+export const sendvaildateEmail = async (req: Request, res: Response) => {
+  const {
+    firstName,
+    middleName,
+    lastName,
+    email,
+    password,
+    recipientName,
+    phone,
+    address_number,
+    building,
+    subStreet,
+    street,
+    subdistrict,
+    district,
+    country,
+    province,
+    postalCode,
+    isDefault,
+    addressType,
+  } = req.body;
+   const user = await User.findByPk(email);
+    if (user) {
+      return res
+        .status(404)
+        .json({ error: "This email already have an account" });
+    }
+  const passwordHash = await bcrypt.hash(password, 10);
+  const userData = {
+    firstName,
+    middleName,
+    lastName,
+    email,
+    password: passwordHash,
+    recipientName,
+    phone,
+    address_number,
+    building,
+    subStreet,
+    street,
+    subdistrict,
+    district,
+    country,
+    province,
+    postalCode,
+    isDefault,
+    addressType,
+  };
+  await redis.set(
+    `register:user:${email}`,
+    JSON.stringify(userData),
+    "EX",
+    3600 
+  );
+  const redisData = await redis.get(`register:user:${email}`);
+    console.log('redisData in send mail', redisData)
+  try {
+    const response = await sendMailVerified(email);
+    if (response) {
+      console.log('send mail')
+      res.json({ data: response });
+    } else {
+      console.log('not send mail')
+      res.json({ error: "not send mail" });
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.json({ error: error });
+  }
+};
+export const createUser = async (req: Request, res: Response) => {
+  const { token } = req.body;
+  try {
+    const { email } = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const redisData = await redis.get(`register:user:${email}`);
+    if(!redisData)  return res.status(400).json({ success: false, message: "Verification expired or not found" });
+    const redisDataRaw = JSON.parse(redisData);
+    console.log('redisData', redisDataRaw.email , email)
+    if (redisDataRaw.email !== email || !redisData) return res.status(400).json({ success: false, message: "Invalid verification link" });
+    await redis.del(`register:user:${email}`);
+    const {
+    firstName,
+    middleName,
+    lastName,
+    password,
+    recipientName,
+    phone,
+    address_number,
+    building,
+    subStreet,
+    street,
+    subdistrict,
+    district,
+    country,
+    province,
+    postalCode,
+    isDefault,
+    addressType,
+    } = JSON.parse(redisData);
+    
+  const addressValide = [
+    recipientName,
+    phone,
+    address_number,
+    street,
+    district,
+    country,
+    province,
+    postalCode,
+  ];
+
+    const newUser = await User.create({
+      firstName,
+      middleName,
+      lastName,
+      email,
+      password,
+      role: UserRole.CUSTOMER,
+    });
+    await newUser.save();
+    if (addressValide.every((x) => x !== "")) {
+      const address = await Address.create({
+        userId: newUser.id,
+        recipientName,
+        phone,
+        addressNumber: address_number,
+        building,
+        subStreet,
+        street,
+        subdistrict,
+        district,
+        country,
+        province,
+        postalCode,
+        isDefault: true,
+        addressType,
+      });
+      await address.save();
+    }
+    res.json({ data: true })
+  } catch (err: any) {
+    console.log(err.message);
+    res.status(400).json({ error: err });
+  }
+};
+
+  

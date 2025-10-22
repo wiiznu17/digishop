@@ -36,7 +36,7 @@ export function AddressCardForSetting({ item }: AddressCardForSetting) {
     }
   }
   return (
-    <div className={`relative border  rounded-2xl mb-3 p-4 ${rubik.className}`}>
+    <div className={`relative border  text-lg rounded-2xl mb-3 p-4 ${rubik.className}`}>
       <div
          className="" 
       > 
@@ -55,7 +55,7 @@ export function AddressCardForSetting({ item }: AddressCardForSetting) {
               <User size={18} className="text-gray-600" />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-base font-medium text-gray-700 mb-1">
                 Recipient Name
               </label>
               <p className="text-gray-800 text-lg">{item.recipientName}</p>
@@ -66,7 +66,7 @@ export function AddressCardForSetting({ item }: AddressCardForSetting) {
               <House size={18} className="text-gray-600" />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-base font-medium text-gray-700 mb-1">
                 Address
               </label>
               <p className="text-gray-800 text-lg">
@@ -79,7 +79,7 @@ export function AddressCardForSetting({ item }: AddressCardForSetting) {
               <Phone size={18} className="text-gray-600" />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-base font-medium text-gray-700 mb-1">
                 Phone Number
               </label>
               <p className="text-gray-800 text-lg">{item.phone}</p>
@@ -133,7 +133,7 @@ export function AddressCardForOrder({ item , select }: AddressCardForOrderProps)
   //   }
   // }
   return (
-    <div className={`relative border  rounded-2xl mb-3 p-4 ${item.id !== select?.id? ' border-gray-400':''}`}>
+    <div className={`relative border text-lg rounded-2xl mb-3 p-4 ${item.id !== select?.id? ' border-gray-400':''}`}>
       <div className={`${item.id !== select?.id? 'text-gray-400':''}`}
       > 
         <div className="flex">
@@ -145,10 +145,10 @@ export function AddressCardForOrder({ item , select }: AddressCardForOrderProps)
               <User size={18} className="" />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium  mb-1">
+              <label className="block font-medium  mb-1">
                 Recipient Name
               </label>
-              <p className="text-lg">{item.recipientName}</p>
+              <p className="text-lg font-normal">{item.recipientName}</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -156,7 +156,7 @@ export function AddressCardForOrder({ item , select }: AddressCardForOrderProps)
               <House size={18} className="text-gray-60" />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium  mb-1">
+              <label className="block font-medium  mb-1">
                 Address
               </label>
               <p className=" text-lg">
@@ -169,7 +169,7 @@ export function AddressCardForOrder({ item , select }: AddressCardForOrderProps)
               <Phone size={18} className="" />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">
+              <label className="block font-medium mb-1">
                 Phone Number
               </label>
               <p className="text-lg">{item.phone}</p>

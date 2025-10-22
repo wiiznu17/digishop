@@ -15,7 +15,7 @@ export const getNotify = async (req: Request, res: Response) => {
     bank_reference,
     authorize_token,
   } = req.body;
-  console.log('req',req.body)
+  console.log('req notify',req.body)
   try {
     const findPaymentId = await Payment.findOne({
       where: { providerRef: reference },
@@ -172,18 +172,80 @@ export const getCallBack = async (req: Request, res: Response) => {
   const process_status = req.query.process_status;
   const reference = req.query.reference;
   const sign = req.query.sign;
-  const findId = await Payment.findOne({
+  const findPaymentId = await Payment.findOne({
     where: { providerRef: String(reference) },
     attributes: ["id", "checkoutId"],
   });
-  if(!findId)return
+  // ไม่มี timestamp amount
+    const checkOutId = findPaymentId?.checkoutId
+    const paymentId = findPaymentId?.id
+    const findOrder = await Order.findAll({
+      where: { checkoutId: checkOutId},
+      attributes: ["id"]
+    })
+    // if (checkOutId) {
+    //   const data = await Payment.update(
+    //     {
+    //       pgwStatus: status,
+    //       pgwPayload: {
+    //         "status": status,
+    //         "checkoutId": checkOutId
+    //       }
+    //     },
+    //     {
+    //       where: {
+    //         checkoutId: checkOutId,
+    //       },
+    //     }
+    //   );
+    // }
+  if(!findPaymentId) return
   const orderCode = await CheckOut.findOne({
-    where: {id: findId?.checkoutId} , attributes: ["orderCode"]
+    where: {id: findPaymentId?.checkoutId} , attributes: ["orderCode"]
   })
   const linkResult = JSON.stringify(`${process.env.WEBSITE_CUSTOMER_URL}/order/${String(orderCode?.orderCode)}`)
   const link = JSON.stringify(process.env.WEBSITE_CUSTOMER_URL)
   if (process_status == "true") {
-    if (findId) {
+    if (findPaymentId) {
+      // await Order.update(
+      //   {
+      //     status: OrderStatus.PAID,
+      //   },
+      //   {
+      //     where: { checkoutId: checkOutId},
+      //   }
+      // );
+      // await Payment.update(
+      //   {
+      //     status: PaymentStatus.SUCCESS,
+      //     // paidAt: timestamp
+      //   },
+      //   {
+      //     where: { checkoutId: checkOutId},
+      //   }
+      // );
+      //ต้อง loop
+      // for(let i = 0 ; i < findOrder.length ; i++){
+      //   let createLog = await OrderStatusHistory.create({
+      //     orderId: findOrder[i].id,
+      //     fromStatus: OrderStatus.PENDING,
+      //     toStatus: OrderStatus.PAID,
+      //     changedByType: ActorType.SYSTEM,
+      //     source: "API",
+      //     metadata: {},
+      //   });
+      //   createLog.save();
+      // }
+      // await PaymentGatewayEvent.create({
+      //   checkoutId: checkOutId,
+      //   paymentId: paymentId, //
+      //   type: "NOTIFY",
+      //   amountMinor: amount*100, //
+      //   provider: "DIGIPAY",
+      //   status: "SUCCESS",
+      //   reqJson: req.body,
+      //   resJson: {},
+      // });
       res.send(`
           <html>
             <body>
@@ -195,7 +257,35 @@ export const getCallBack = async (req: Request, res: Response) => {
         `);
     }
   } else if (process_status == "false") {
-    if (findId) {
+    if (findPaymentId) {
+      
+      // await Order.update(
+      //   {
+      //     status: OrderStatus.CUSTOMER_CANCELED,
+      //   },
+      //   {
+      //     where: { checkoutId: checkOutId},
+      //   }
+      // );
+      // await Payment.update(
+      //   {
+      //     status: PaymentStatus.FAILED,
+      //   },
+      //   {
+      //     where: { checkoutId: checkOutId },
+      //   }
+      // );
+      // for(let i = 0 ; i <  findOrder.length ; i++){
+      //   let createLog = await OrderStatusHistory.create({
+      //     orderId: findOrder[i].id,
+      //     fromStatus: OrderStatus.PENDING,
+      //     toStatus: OrderStatus.CUSTOMER_CANCELED,
+      //     changedByType: ActorType.SYSTEM,
+      //     source: "API",
+      //     metadata: {},
+      //   });
+      //   createLog.save();
+      // }
       res.send(`
           <html>
             <body>
@@ -205,7 +295,18 @@ export const getCallBack = async (req: Request, res: Response) => {
             </body>
           </html>
         `);
+      // await PaymentGatewayEvent.create({
+      //   checkoutId: checkOutId,
+      //   paymentId: paymentId,
+      //   type: "NOTIFY",
+      //   amountMinor: amount*100,
+      //   provider: "DIGIPAY",
+      //   status: "CANCELED",
+      //   reqJson: req.body,
+      //   resJson: {},
+      // });
     }
+
   } else {
     res.send(`
           <html>
