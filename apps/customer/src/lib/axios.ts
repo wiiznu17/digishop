@@ -17,6 +17,11 @@ const refreshClient = Axios.create({
   withCredentials: true
 })
 
+const REFRESH_SKIP = [
+  /^\/api\/auth\/refresh$/,
+  /^\/api\/auth\/login$/,
+  /^\/api\/auth\/logout$/
+]
 // avoid attaching interceptors multiple times (HMR)
 let interceptorsAttached = false
 
@@ -31,7 +36,7 @@ if (!interceptorsAttached) {
     if (token) {
       const headers: AxiosRequestHeaders = (config.headers ??
         {}) as AxiosRequestHeaders
-      headers.Authorization = `${token}`
+      headers.Authorization = `Bearer ${token}`
       config.headers = headers
     }
     return config
@@ -42,6 +47,11 @@ if (!interceptorsAttached) {
     async (error: AxiosError) => {
       const status = error.response?.status
       const original = (error.config ?? {}) as RetriableAxiosRequestConfig
+      console.log('status',status)
+      const path = original?.url || ""
+      if (REFRESH_SKIP.some((re) => re.test(path))) {
+        return Promise.reject(error)
+      }
 
       if (status === 401 && !original._retry) {
         if (isRefreshing) {
@@ -59,9 +69,8 @@ if (!interceptorsAttached) {
           isRefreshing = true
           original._retry = true
 
-          const res = await refreshClient.post("/api/customer/refresh-token")
-          const  {accesstoken } = res.data
-          const newAccess = accesstoken
+          const res = await refreshClient.post("/api/auth/refresh")
+          const newAccess = (res.data as { accessToken?: string })?.accessToken
           if (!newAccess) throw new Error("no_access")
 
           setAccessToken(newAccess)
@@ -70,7 +79,7 @@ if (!interceptorsAttached) {
 
           const headers: AxiosRequestHeaders = (original.headers ??
             {}) as AxiosRequestHeaders
-          headers.Authorization = `${newAccess}`
+          headers.Authorization = `Bearer ${newAccess}`
           original.headers = headers // i dont know
 
           return axios(original) // i dont know
