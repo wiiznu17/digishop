@@ -35,7 +35,6 @@ const SearchPage = () => {
       const  productName = res.product.map((product:Product) => product.name)
       const  storeName = res.store.map((store:Store) => store.storeName)
       const resultSearch = productName.concat(storeName)
-      console.log('resultSearch',resultSearch)
       if(resultSearch.length > 0){
         setSearchResult(resultSearch)
         setLoading(false)

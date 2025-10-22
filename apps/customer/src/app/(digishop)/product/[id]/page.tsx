@@ -40,9 +40,7 @@ export default function ProductDetailPage() {
       setChoices(res.choices);
     };
     fetchData();
-    // setSelected()
   }, [productId]);
-  console.log("product", product);
   useEffect(() => {
     if (!user || !product || !selected) return;
     setData({
@@ -78,54 +76,12 @@ export default function ProductDetailPage() {
       quantity: [amount],
     });
   }, [user, product, amount, selected]);
-  // useEffect(() => {
-  //   if (!product) return;
-  //   const firstProduct = product.items
-  // .filter((item) => item.stockQuantity > 0)
-  // .sort((a, b) => a.id - b.id);
-  //   console.log("firstProduct", firstProduct);
-  //   setSelected(firstProduct?.[0]);
-  //   setOptions(filterOption(product.items)[0]);
-  // }, [product]);
-  // // check session
-  // useEffect(() => {
-  //   const isFilter = (choices: string[]) => {
-  //     //Object.values(options) = ['black']
-  //     console.log(options);
-  //     return options.every((option) => choices.includes(option));
-  //   };
-  //   if (!product) return;
-  //   const filterChoice = allOption(product.items);
-  //   //find index ไม่ได้เพราะเกิดปัญหากรณีมี stock 0
-  //   const productIndex = filterChoice.findIndex((option) => isFilter(option));
-  //   setSelected(product.items[productIndex]);
-  // }, [options, product]);
-  // // {color: "black"}
-  // useEffect(() => {
-  //   setOptions(options);
-  //   console.log("option in use", options);
-  // }, [options]);
+ 
   const handleOption = (index: number, value: string) => {
-    //create new option
     const newOption = [...options];
     newOption[index] = value;
     setOptions(newOption);
   };
-  // // ['black','blue']
-  // const filterOption = (items: ProductItem[]) => {
-  //   const data = items
-  //     .filter((item) => item.stockQuantity > 0)
-  //     .map((item) =>
-  //       item.configurations.map((config) => config.variationOption.value)
-  //     );
-  //   return data;
-  // };
-  // const allOption = (items: ProductItem[]) => {
-  //   const data = items.map((item) =>
-  //     item.configurations.map((config) => config.variationOption.value)
-  //   );
-  //   return data;
-  // };
   useEffect(() => {
   if (!product) return;
 
@@ -163,10 +119,8 @@ useEffect(() => {
       alert("Please log in before order product");
     } else {
       if (!data) return;
-      console.log(data);
       const res = (await createOrderId(data)) as { data: string };
       if (res) {
-        // window.open(`/order/${res.data}`,'_blank')
         router.push(`/order/${res.data}`);
       }
     }
@@ -295,7 +249,6 @@ useEffect(() => {
                             onClick={handleBuy}
                             color="bg-green-500"
                             className="w-[200px] ml-10"
-                            // hidden={selected.stockQuantity === 0}
                             disabled={selected.stockQuantity === 0}
                           >
                             Buy
