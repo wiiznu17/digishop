@@ -15,15 +15,13 @@ const rubik = Rubik({
 export default function ResetPassword({ searchParams} : {searchParams: Promise<{ [key: string]: string }> }){
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [page, setPage] = useState('success');
+  const [page, setPage] = useState('reset');
   const router = useRouter()
   const handleResetSubmit = async() => {
-    // Password reset logic would go here
 
     if((!testLength || !testCapLetter || !testLowerLetter || !testNumber )||(password !== confirmPassword)){
     }else{
       const res = (await resetPassword( password , token)) as {data: boolean}
-      console.log('res',res)
       if(res.data){
         setPage('success')
       }else{
@@ -32,7 +30,6 @@ export default function ResetPassword({ searchParams} : {searchParams: Promise<{
     }
   };
   const { token } = use(searchParams);
-  // const token = searchParams.get("token") ?? '';
   const testLength = password.length > 6
   const testCapLetter = (/[A-Z]/g).test(password)
   const testLowerLetter = (/[a-z]/g).test(password)
@@ -61,22 +58,13 @@ export default function ResetPassword({ searchParams} : {searchParams: Promise<{
           {/* Form */}
           <div className="space-y-6">
             <div>
-              {/* <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                New Password
-              </label> */}
+              
               <div className="relative">
-                {/* <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
                 <InputField
-                  // id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  // placeholder="Enter new password"
                   required
-                  // className="text-black w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
                   label="New Password"
                   name="password"              
                   />
@@ -84,29 +72,19 @@ export default function ResetPassword({ searchParams} : {searchParams: Promise<{
             </div>
 
             <div>
-              {/* <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Confirm Password
-              </label> */}
+              
               <div className="relative">
-                {/* <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
                 <InputField
-                  // id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  // placeholder="Confirm new password"
                   required
-                  // className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
                   label="Confirm Password" 
                   name="confirmPassword"               
                 />
               </div>
             </div>
 
-            {/* Password Requirements */}
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-base font-medium text-gray-700 mb-2">
                 Password must contain:

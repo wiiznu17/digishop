@@ -51,7 +51,6 @@ export const verifiedEmail = async (
 };
 
 export const sendResetPassword = async (data: string) => {
-  console.log("data in util", data);
   return await new Promise((resolve, reject) => {
     axios
       .post('/api/customer/forgot-password', {email: data})

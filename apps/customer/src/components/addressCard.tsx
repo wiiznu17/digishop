@@ -126,12 +126,7 @@ export function AddressCardForOrder({ item , select }: AddressCardForOrderProps)
       .filter(Boolean)
       .join(' ')
   }
-  // const handleDelete = async(id: number| undefined) => {
-  //   const delData = (await deleteAddress(id)) as {data: string}
-  //   if(delData.data){
-  //     window.location.reload()
-  //   }
-  // }
+
   return (
     <div className={`relative border text-lg rounded-2xl mb-3 p-4 ${item.id !== select?.id? ' border-gray-400':''}`}>
       <div className={`${item.id !== select?.id? 'text-gray-400':''}`}

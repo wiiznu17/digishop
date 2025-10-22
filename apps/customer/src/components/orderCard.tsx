@@ -62,13 +62,7 @@ export default function OrderCard({
       window.location.reload();
     }
   };
-  // const handleCustomerCancel = async(id:number) => {
-  //   console.log('id',id)
-  //   const res = await customerCancel(id)
-  //   if(res.data){
-  //     window.location.reload()
-  //   }
-  // }
+  
   const handleOnCancel = () => {
     setIsShowCancel({ shown: false, id: undefined });
     setIsShowRefund({ shown: false, id: undefined });
@@ -228,9 +222,7 @@ export default function OrderCard({
       {isShow && (
         <div className="">
           <div className=" bg-amber-50 rounded-2xl mb-2 ">
-            {/* <div className="font-bold flex justify-center">
-              status : {OrderStatusConfig[item.status].label}
-              </div> */}
+            
           </div>
           <div className=" rounded-2xl mb-2">
             <div className="border-b w-fit py-2 text-2xl font-medium mb-2">Address</div>
@@ -254,44 +246,6 @@ export default function OrderCard({
             </div>
             
           </div>
-
-          {/* <div className="bg-amber-50 rounded-2xl p-4 mb-2">
-              <div className="border-b text-2xl mb-2 font-extrabold">
-                Total
-              </div>
-              <div className="">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Product</span>
-                  <span className="font-medium">
-                    {(sumPriceProduct/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">
-                    <div>{order.shippingInfo.shippingType.name}</div>
-                    <div className="ml-3">
-                      <div className="text-sm ">estimatedDays: {order.shippingInfo.shippingType.estimatedDays}</div>
-                    </div>
-                  </span>
-                  <span className="font-medium">{(order.shippingInfo.shippingType.price/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
-                </div>
-                <div className="border-t border-gray-400 pt-2 flex justify-end items-center">
-                  <span className="text-lg font-semibold">฿ {(order.grand_total_minor/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
-                </div>
-              </div>
-            </div> */}
-          {/* {!item.checkout.payment?.paidAt && (
-              <div className="">
-                <div className="border-b py-2 text-2xl font-bold mb-2">
-                  Payment
-                </div>
-                <div>paid by {PaymentMethodMaster[item.checkout.payment?.payment_method].label}</div>
-                <div className="flex justify-center "> waiting to pay </div>
-              </div>
-            )
-
-            } */}
-
           <div className="">
             <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">Payment</div>
             <div className="text-xl pl-2">
