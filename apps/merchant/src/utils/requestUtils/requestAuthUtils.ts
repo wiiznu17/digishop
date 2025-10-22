@@ -9,9 +9,7 @@ export const createMerchant = async (data: RegisterData) => {
       .then((res) => {
         resolve(res.data)
       })
-      .catch((err) => {
-        reject(err)
-      })
+      .catch(reject)
   })
 }
 
@@ -20,10 +18,8 @@ export async function fetchUser(): Promise<UserAuth | null> {
   if (!has) return null
   try {
     const res = await axios.get("/api/auth/me")
-    console.log("fetchUser response:", res.data)
     return res.data ?? null
-  } catch (error) {
-    console.error("Error fetching user:", error)
+  } catch {
     return null
   }
 }
@@ -35,11 +31,7 @@ export async function loginUser(
   try {
     const res = await axios.post("/api/auth/login", { email, password })
     const access = res.data.accessToken as string | undefined
-    console.log("loginUser accessToken:", access)
-    if (access) {
-      setAccessToken(access)
-    }
-    console.log("loginUser response user:", res.data.user)
+    if (access) setAccessToken(access)
     return res.data.user ?? null
   } catch {
     return null
@@ -57,27 +49,22 @@ export async function logoutUser() {
 export async function fetchStoreStatus(): Promise<StoreStatus | null> {
   try {
     const res = await axios.get("/api/merchant/store/status")
-    console.log("fetchStoreStatus:", res.data.status)
     return (res.data?.status ?? null) as StoreStatus | null
-  } catch (error) {
-    console.error("Error fetching store status:", error)
+  } catch {
     return null
   }
 }
 
+// (optional) ถ้าจะมี bootstrap ใช้เองเฉพาะบาง flow; ไม่จำเป็นสำหรับ Lazy 401
 export async function bootstrapAccess(): Promise<boolean> {
-  if (getAccessToken()) return true // มี access อยู่แล้ว
+  if (getAccessToken()) return true
   try {
-    console.log("bootstrapAccess(): trying to refresh access token")
     const res = await axios.post("/api/auth/refresh", null)
     const newAccess = (res.data as { accessToken?: string })?.accessToken
-    console.log("bootstrapAccess(): refresh response accessToken:", newAccess)
     if (!newAccess) return false
     setAccessToken(newAccess)
-    console.log("bootstrapAccess(): got new access token")
     return true
-  } catch (err) {
-    console.warn("bootstrapAccess() failed:", err)
+  } catch {
     return false
   }
 }

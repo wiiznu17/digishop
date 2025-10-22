@@ -16,7 +16,6 @@ import {
   type AuthContextType,
   type StoreStatus
 } from "../types/props/userProp"
-
 import {
   fetchUser,
   fetchStoreStatus,
@@ -24,13 +23,19 @@ import {
   logoutUser
 } from "../utils/requestUtils/requestAuthUtils"
 
-import { subscribe, getAccessToken, setAccessToken } from "@/lib/tokenStore"
+import {
+  subscribe,
+  getAccessToken,
+  setAccessToken,
+  subscribeRefresh,
+  isRefreshing
+} from "@/lib/tokenStore"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// หน้า public ที่เข้าดูได้แม้ยังไม่ approved
 const PUBLIC_PATHS = ["/login", "/register", "/store-status"]
 const DEBOUNCE_MS = 80
+// รอ refresh ให้เสร็จก่อน redirect (ช่วยมือถือ/รีเฟรชรัว ๆ)
+const REDIRECT_GRACE_MS = 600
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserAuth | null>(null)
@@ -40,12 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  // guards กันยิงซ้ำ
   const mountedRef = useRef(true)
   const inflightRef = useRef(false)
   const seqRef = useRef(0)
   const activeRef = useRef(0)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function isPublicPath(p: string) {
     return PUBLIC_PATHS.some((x) => p.startsWith(x))
@@ -62,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const at = getAccessToken()
       const isPublic = isPublicPath(pathname)
 
-      // หน้า public: ถ้ามี access → เด้งเข้าหน้าหลัก, ถ้าไม่มี → ไม่ทำอะไร
+      // หน้า public: ถ้ามี access ไปหน้า orders, ถ้าไม่มีก็จบ
       if (isPublic) {
         if (at) router.replace("/orders")
         setIsLoading(false)
@@ -72,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // หน้า private:
       setIsLoading(true)
 
-      // ไม่มี access ตอนแรก → ปล่อยให้รีเควสต์จริงโดน 401 แล้ว interceptor ไป refresh ให้เอง
+      // ไม่มี access -> ให้คำขอแรกโดน 401 แล้ว interceptor refresh เอง
       if (!at) {
         setUser(null)
         setStoreStatus(null)
@@ -80,12 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // มี access แล้ว → โหลด me
+      // มี access -> ดึง me
       const currentUser = await fetchUser()
       if (activeRef.current !== mySeq || !mountedRef.current) return
       setUser(currentUser)
 
-      // ถ้า access ใช้ไม่ได้ (เช่นโดน revoke) → เคลียร์ & ให้ interceptor เป็นคน refresh ตอนยิง API
+      // access ใช้ไม่ได้ (เช่น revoke) -> เคลียร์ access
       if (!currentUser) {
         setAccessToken(null)
         setStoreStatus(null)
@@ -93,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // โหลดสถานะร้าน
+      // ดึงสถานะร้าน
       const status = await fetchStoreStatus()
       if (activeRef.current !== mySeq || !mountedRef.current) return
       setStoreStatus(status)
@@ -102,9 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.replace(`/store-status?status=${status}`)
       }
     } finally {
-      if (activeRef.current === mySeq && mountedRef.current) {
-        setIsLoading(false)
-      }
+      if (activeRef.current === mySeq && mountedRef.current) setIsLoading(false)
       inflightRef.current = false
     }
   }
@@ -113,26 +116,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mountedRef.current = true
     void loadUserAndStore()
 
-    // เมื่อ access token เปลี่ยน:
-    // - ถ้าเป็น null และเราอยู่หน้า private => แปลว่า refresh ล้มเหลว -> เด้ง login
-    // - ถ้ามีค่า => โหลด me/store ใหม่
-    const unsub = subscribe(() => {
+    const unsubToken = subscribe(() => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => {
         const at = getAccessToken()
         const isPublic = isPublicPath(pathname)
+
         if (!at && !isPublic) {
-          router.replace("/login")
+          // รอ grace ช่วงที่ interceptor อาจกำลัง refresh อยู่
+          if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
+          redirectTimerRef.current = setTimeout(() => {
+            if (!getAccessToken() && !isRefreshing()) {
+              router.replace("/login")
+            }
+          }, REDIRECT_GRACE_MS)
           return
         }
+
         void loadUserAndStore()
       }, DEBOUNCE_MS)
+    })
+
+    const unsubRefresh = subscribeRefresh(() => {
+      if (isRefreshing()) {
+        if (redirectTimerRef.current) {
+          clearTimeout(redirectTimerRef.current)
+          redirectTimerRef.current = null
+        }
+      } else {
+        if (!getAccessToken() && !isPublicPath(pathname)) {
+          router.replace("/login")
+        }
+      }
     })
 
     return () => {
       mountedRef.current = false
       if (debounceRef.current) clearTimeout(debounceRef.current)
-      unsub()
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
+      unsubToken()
+      unsubRefresh()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
