@@ -6,7 +6,7 @@ export const authProxy: RequestHandler = createProxyMiddleware({
   target: config.services.auth,
   changeOrigin: true,
   pathRewrite: { "^/api/auth": "/api/auth" },
-  cookieDomainRewrite: "localhost",
+  cookieDomainRewrite: "",
   logLevel: "debug",
 
   onProxyReq: (proxyReq, req) => {
