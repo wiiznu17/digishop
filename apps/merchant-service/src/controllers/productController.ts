@@ -937,21 +937,34 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
     const sumStockExpr = fn("COALESCE", fn("SUM", col("items.stock_quantity")), 0);
     const minPriceExpr = fn("MIN", col("items.price_minor"));
 
-    // 5.1 count images
+    // 5.1 count images (only not-deleted)
     const productImageCountExpr = literal(
-      "(SELECT COUNT(*) FROM PRODUCT_IMAGES pi WHERE pi.product_id = `Product`.`id`)"
+      "(SELECT COUNT(*) " +
+        "FROM PRODUCT_IMAGES pi " +
+        "WHERE pi.product_id = `Product`.`id` " +
+          "AND pi.deleted_at IS NULL)"
     );
+
     const itemImageCountExpr = literal(
       "(SELECT COUNT(*) " +
         "FROM PRODUCT_ITEM_IMAGES pii " +
         "JOIN PRODUCT_ITEMS pit ON pit.id = pii.product_item_id " +
-        "WHERE pit.product_id = `Product`.`id`)"
+        "WHERE pit.product_id = `Product`.`id` " +
+          "AND pii.deleted_at IS NULL " +    // รูปของ SKU ต้องไม่ถูกลบ
+          "AND pit.deleted_at IS NULL)"      // SKU เองก็ไม่ควรถูกลบ
     );
+
     const totalImageCountExpr = literal(
       "(" +
-        "(SELECT COUNT(*) FROM PRODUCT_IMAGES pi WHERE pi.product_id = `Product`.`id`)" +
-        " + " +
-        "(SELECT COUNT(*) FROM PRODUCT_ITEM_IMAGES pii JOIN PRODUCT_ITEMS pit ON pit.id = pii.product_item_id WHERE pit.product_id = `Product`.`id`)" +
+        "(SELECT COUNT(*) FROM PRODUCT_IMAGES pi " +
+          "WHERE pi.product_id = `Product`.`id` " +
+            "AND pi.deleted_at IS NULL) " +
+        "+ " +
+        "(SELECT COUNT(*) FROM PRODUCT_ITEM_IMAGES pii " +
+          "JOIN PRODUCT_ITEMS pit ON pit.id = pii.product_item_id " +
+          "WHERE pit.product_id = `Product`.`id` " +
+            "AND pii.deleted_at IS NULL " +
+            "AND pit.deleted_at IS NULL)" +
       ")"
     );
 
