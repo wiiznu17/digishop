@@ -6,7 +6,8 @@ import { Category, Product, ProductConfiguration, ProductImage, ProductItem, Pro
 import { ProductAttributes, ProductCreationAttributes } from "@digishop/db/src/models/Product";
 
 
-// ===== helper: canon/compare review-impacting footprint =====
+// helper: canon/compare review-impacting footprint
+
 const canon = (x: unknown) => JSON.stringify(x)
 
 type ReviewFootprint = {
@@ -938,19 +939,19 @@ export const getProductList = async (req: AuthenticatedRequest, res: Response) =
 
     // 5.1 count images
     const productImageCountExpr = literal(
-      "(SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = `Product`.`id`)"
+      "(SELECT COUNT(*) FROM PRODUCT_IMAGES pi WHERE pi.product_id = `Product`.`id`)"
     );
     const itemImageCountExpr = literal(
       "(SELECT COUNT(*) " +
-        "FROM product_item_images pii " +
-        "JOIN product_items pit ON pit.id = pii.product_item_id " +
+        "FROM PRODUCT_ITEM_IMAGES pii " +
+        "JOIN PRODUCT_ITEMS pit ON pit.id = pii.product_item_id " +
         "WHERE pit.product_id = `Product`.`id`)"
     );
     const totalImageCountExpr = literal(
       "(" +
-        "(SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = `Product`.`id`)" +
+        "(SELECT COUNT(*) FROM PRODUCT_IMAGES pi WHERE pi.product_id = `Product`.`id`)" +
         " + " +
-        "(SELECT COUNT(*) FROM product_item_images pii JOIN product_items pit ON pit.id = pii.product_item_id WHERE pit.product_id = `Product`.`id`)" +
+        "(SELECT COUNT(*) FROM PRODUCT_ITEM_IMAGES pii JOIN PRODUCT_ITEMS pit ON pit.id = pii.product_item_id WHERE pit.product_id = `Product`.`id`)" +
       ")"
     );
 
