@@ -2,22 +2,18 @@ import type { Request, Response, NextFunction } from "express";
 import { redis } from "../lib/redis/client";
 import { JWTPayload, verifyAccess } from "../lib/jwt";
 
-const SESSION_PREFIX = process.env.SESSION_PREFIX || "";
-const sessKey = (jti: string) => `${SESSION_PREFIX}:${jti}`;
+const SESSION_PREFIX = process.env.SESSION_PREFIX || "usr:rt";
+const ATK_NAME = process.env.JWT_ACCESS_COOKIE_NAME || "access_token";
 
-function readBearer(req: Request) {
-  const h = req.headers.authorization || "";
-  return h.startsWith("Bearer ") ? h.slice(7).trim() : "";
-}
+const sessKey = (jti: string) => `${SESSION_PREFIX}:${jti}`;
 
 export async function authenticateUser(req: Request, res: Response, next: NextFunction) {
   try {
-    const token = readBearer(req);
-    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    const token = req.cookies?.[ATK_NAME];
+    if (!token) return res.status(401).json({ error: "UNAUTHORIZED" });
 
     const payload = verifyAccess<JWTPayload>(token);
-    console.log("Access token payload verified:", payload);
-    if (!payload?.jti) return res.status(401).json({ error: "Unauthorized" });
+    if (!payload?.jti) return res.status(401).json({ error: "UNAUTHORIZED" });
 
     const raw = await redis.get(sessKey(payload.jti));
     if (!raw) return res.status(401).json({ error: "SESSION_REVOKED" });
@@ -29,6 +25,6 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
     (req as any).jwt = payload;
     next();
   } catch {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "UNAUTHORIZED" });
   }
 }
