@@ -24,46 +24,37 @@ export function serviceAuth(req: AuthenticatedRequest, _res: Response, next: Nex
   return next();
 }
 
-function readAccessToken(req: Request) {
-  const hdr = req.headers.authorization || "";
-  if (hdr.startsWith("Bearer ")) return hdr.slice(7).trim();
-  return null;
-}
-
-const SESSION_PREFIX = process.env.SESSION_PREFIX || "";
+const SESSION_PREFIX = process.env.SESSION_PREFIX || "usr:rt";
+const ATK_NAME = process.env.JWT_ACCESS_COOKIE_NAME || "access_token";
 const sessKey = (jti: string) => `${SESSION_PREFIX}:${jti}`;
 
 export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   if (req.authMode === "service") return next();
 
-  const token = readAccessToken(req);
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  const token = (req as any).cookies?.[ATK_NAME];
+  if (!token) return res.status(401).json({ error: "UNAUTHORIZED" });
 
   try {
     const payload = verifyAccess<JWTPayload>(token);
-    if (!payload?.jti) return res.status(401).json({ error: "Unauthorized" });
+    if (!payload?.jti) return res.status(401).json({ error: "UNAUTHORIZED" });
 
     const raw = await redis.get(sessKey(payload.jti));
     if (!raw) return res.status(401).json({ error: "SESSION_REVOKED" });
 
-    const sess = JSON.parse(raw) as {
-      userId?: number | string;
-      jti: string;
-      expiresAt?: number
-    };
+    const sess = JSON.parse(raw) as { userId?: number | string; jti: string; expiresAt?: number };
     if (sess.expiresAt && sess.expiresAt < Date.now()) return res.status(401).json({ error: "SESSION_EXPIRED" });
 
     const principalId = (sess.userId ?? payload.sub) as number | string;
 
     req.user = {
-      ...payload,              // ข้อมูลใน JWT email, role,
-      id: principalId,         // เพิ่ม id (mapping จาก userId)
-      sub: principalId,        // แทน sub เดิมด้วย principalId
+      ...payload,
+      id: principalId,
+      sub: principalId
     };
     req.authMode = "user";
     return next();
   } catch {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "UNAUTHORIZED" });
   }
 };
 
@@ -71,7 +62,7 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
   const { allowServiceBypass = true } = opts ?? {};
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user) return res.status(401).json({ error: "UNAUTHORIZED" });
       if (allowServiceBypass && req.user.role === "SERVICE") return next();
 
       let storeId: number | undefined =
