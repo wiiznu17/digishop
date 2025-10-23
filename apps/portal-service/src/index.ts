@@ -27,30 +27,36 @@ async function main() {
     app.use(cookieParser());
 
     // CORS: รองรับหลาย origin จาก env (คั่นด้วย comma)
-    const allowedOrigins = (process.env.ALLOW_CORS ?? '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean);
-
+    const ALLOW_ORIGIN = (process.env.ALLOW_CORS ?? "").trim();
+    console.log("Configured ALLOW_CORS:", ALLOW_ORIGIN);
     const corsMiddleware = cors({
       origin: (origin, cb) => {
-        if (!origin) return cb(null, true); // อนุญาต health check / curl
-        if (allowedOrigins.includes(origin)) return cb(null, true);
-        cb(new Error('Not allowed by CORS: ' + origin));
+        console.log("CORS origin:", origin);
+        if (!origin) return cb(null, true);
+        // อนุญาตเฉพาะ origin เดียวที่กำหนด
+        if (origin === ALLOW_ORIGIN) return cb(null, true);
+        console.warn("CORS blocked for origin:", origin);
+        return cb(new Error("Not allowed by CORS: " + origin));
       },
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Accept', 'X-Requested-With'],
-      optionsSuccessStatus: 204
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-CSRF-Token",
+        "Accept",
+        "X-Requested-With",
+      ],
+      optionsSuccessStatus: 204,
     });
 
-    app.use((req, res, next) => {
-      // ช่วยให้ CDN/proxy cache แยกตาม Origin ได้ถูกต้อง
-      res.header('Vary', 'Origin');
-      next();
-    });
+  // ให้ proxy/CDN แคชแยกตาม Origin
+  app.use((req, res, next) => {
+    res.header("Vary", "Origin");
+    next();
+  });
 
-    app.use(corsMiddleware);
+  app.use(corsMiddleware);
     // app.options('*', corsMiddleware);
 
     // ติดตั้ง rate limiter หลังจาก set('trust proxy', ...)
