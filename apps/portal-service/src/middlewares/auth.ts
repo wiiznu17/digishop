@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyAccess } from '../lib/jwt';
-import { AdminSession, sequelize } from '@digishop/db';
-// import { AdminSession, AdminUser, AdminPermission, AdminRole, AdminUserRole, AdminRolePermission } from '@digishop/db/src/index'
+import { AdminSession } from '@digishop/db';
 
 declare global {
   namespace Express {
@@ -13,12 +12,13 @@ declare global {
   }
 }
 
-// ตรวจ Bearer access token + session ยังไม่ revoke
+// อ่าน access token จาก "คุกกี้" แทน Authorization Bearer
+const ATK_NAME = process.env.JWT_ACCESS_COOKIE_NAME || "access_token";
+
+// ตรวจ access cookie + session ยังไม่ revoke
 export async function authenticateAdmin(req: Request, res: Response, next: NextFunction) {
   try {
-    const hdr = req.headers.authorization || '';
-    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : '';
-
+    const token = (req as any).cookies?.[ATK_NAME] as string | undefined;
     if (!token) return res.status(401).json({ error: 'UNAUTHORIZED' });
 
     const payload = verifyAccess(token); // throws if invalid
@@ -26,9 +26,11 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
     req.sessionJti = payload.jti;
 
     // ตรวจ session jti ใน DB
-    const sess = await AdminSession.findOne({ where: { jti: req.sessionJti, adminId: req.adminId, revokedAt: null } as any });
+    const sess = await AdminSession.findOne({
+      where: { jti: req.sessionJti, adminId: req.adminId, revokedAt: null } as any
+    });
     if (!sess) return res.status(401).json({ error: 'SESSION_REVOKED' });
-    console.log("Authen Pass")
+
     next();
   } catch {
     return res.status(401).json({ error: 'INVALID_TOKEN' });
@@ -36,6 +38,7 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
 }
 
 // ดึง permission slugs ของ admin จาก RBAC (cache ใน req ตลอด request)
+import { sequelize } from '@digishop/db';
 async function getPerms(adminId: number): Promise<Set<string>> {
   const rows = await sequelize.query(
     `
@@ -55,7 +58,6 @@ export function requirePerms(...need: string[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.adminId) return res.status(401).json({ error: 'UNAUTHORIZED' });
     if (!req.permCache) req.permCache = await getPerms(req.adminId);
-    // console.log("permission: ", req.permCache)
     const ok = need.every(s => req.permCache!.has(s));
     if (!ok) return res.status(403).json({ error: 'FORBIDDEN', required: need });
     next();

@@ -4,52 +4,66 @@ import { v4 as uuidv4 } from "uuid";
 import { signAccess, signRefresh, verifyRefresh } from "../lib/jwt";
 import { AdminPermission, AdminRole, AdminSession, AdminUser } from "@digishop/db";
 
-const RTK_NAME = process.env.JWT_COOKIE_NAME || "rtk";
 const IS_PROD = process.env.NODE_ENV === "production";
+const ATK_NAME = process.env.JWT_ACCESS_COOKIE_NAME || "access_token";
+const RTK_NAME = process.env.JWT_REFRESH_COOKIE_NAME || "refresh_token";
 
-const COOKIE_OPTS: import("express").CookieOptions = {
+const ACCESS_TTL_MS = 15 * 60 * 1000;          // 15 นาที (ปรับตาม env ได้)
+const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 วัน
+
+// ค่าคุกกี้ฐาน
+const BASE_COOKIE: import("express").CookieOptions = {
   httpOnly: true,
-  sameSite: "none",
   secure: true,
+  sameSite: "lax",          // ถ้า cross-site จริงค่อยปรับเป็น 'none'
   path: "/",
-  ...(IS_PROD ? { partitioned: true } : {}),
+  ...(IS_PROD ? ({ partitioned: true } as any) : {})
 };
+// refresh cookie ผูกเฉพาะ path /api/auth/refresh
+const REFRESH_COOKIE: import("express").CookieOptions = {
+  ...BASE_COOKIE,
+  path: "/api/auth/refresh"
+};
+
+function setAuthCookies(res: Response, accessJwt: string, refreshJwt: string) {
+  res.cookie(ATK_NAME, accessJwt, { ...BASE_COOKIE, maxAge: ACCESS_TTL_MS });
+  res.cookie(RTK_NAME, refreshJwt, { ...REFRESH_COOKIE, maxAge: REFRESH_TTL_MS });
+}
+function clearAuthCookies(res: Response) {
+  res.clearCookie(ATK_NAME, { ...BASE_COOKIE, maxAge: undefined });
+  res.clearCookie(RTK_NAME, { ...REFRESH_COOKIE, maxAge: undefined });
+}
+
 export const login = async (req: Request, res: Response) => {
-  console.log("ip: ", req.ip)
   const { email, password } = (req.body ?? {}) as { email?: string; password?: string };
   if (!email || !password) return res.status(400).json({ error: "EMAIL_PASSWORD_REQUIRED" });
 
   const user = await AdminUser.findOne({ where: { email } as any });
   if (!user) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
-  console.log("found user: ", user.dataValues.name)
   if ((user as any).status === "SUSPENDED") {
     return res.status(403).json({ error: "ACCOUNT_SUSPENDED" });
   }
   const ok = await bcrypt.compare(password, (user as any).password);
   if (!ok) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
-  console.log("password is correct: ", ok)
-  // TODO (MFA): ถ้าพบ factor ให้สร้าง challenge แล้วตอบ { mfa_required:true, challenge_id }
+
   const jti = uuidv4();
-  console.log("jti: ", jti)
   const access = signAccess({ sub: (user as any).id, jti });
   const refresh = signRefresh({ sub: (user as any).id, jti });
-  
+
   await AdminSession.create({
     adminId: (user as any).id,
     jti,
     ip: req.ip,
     userAgent: (req.headers["user-agent"] as string) || null,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 วัน
+    expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
   } as any);
-  console.log("seesion is created")
-  res.cookie(RTK_NAME, refresh, { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 });
-  console.log("set cookie: ", RTK_NAME)
-  return res.json({ accessToken: access });
+
+  setAuthCookies(res, access, refresh);
+  return res.json({ ok: true });
 };
 
 export const refresh = async (req: Request, res: Response) => {
   const token = (req as any).cookies?.[RTK_NAME];
-  console.log("refreshing token")
   if (!token) return res.status(401).json({ error: "NO_REFRESH" });
 
   try {
@@ -68,22 +82,22 @@ export const refresh = async (req: Request, res: Response) => {
       jti: newJti,
       ip: req.ip,
       userAgent: (req.headers["user-agent"] as string) || null,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
     } as any);
 
     const newAccess = signAccess({ sub: payload.sub, jti: newJti });
     const newRefresh = signRefresh({ sub: payload.sub, jti: newJti });
 
-    res.cookie(RTK_NAME, newRefresh, { ...COOKIE_OPTS, maxAge: 30 * 24 * 3600 * 1000 });
-    return res.json({ accessToken: newAccess });
+    setAuthCookies(res, newAccess, newRefresh);
+    return res.json({ ok: true }); // ไม่ต้องส่ง accessToken กลับแล้ว
   } catch {
+    clearAuthCookies(res);
     return res.status(401).json({ error: "INVALID_REFRESH" });
   }
 };
 
 export const logout = async (req: Request, res: Response) => {
   const token = (req as any).cookies?.[RTK_NAME];
-  console.log("Logout: ", token)
   try {
     if (token) {
       const payload: any = verifyRefresh(token);
@@ -95,14 +109,14 @@ export const logout = async (req: Request, res: Response) => {
   } catch {
     // ignore
   }
-  res.clearCookie(RTK_NAME, { ...COOKIE_OPTS, maxAge: undefined });
+  clearAuthCookies(res);
   return res.json({ ok: true });
 };
 
 export const access = async (req: Request, res: Response) => {
   const adminId = (req as any).adminId as number | undefined; // ใส่โดย authenticateAdmin()
-  console.log("id to get access: ", adminId)
   if (!adminId) return res.status(401).json({ error: "UNAUTHORIZED" });
+
   const user = await AdminUser.findByPk(adminId, {
     attributes: ["id", "email"],
     include: [
@@ -110,7 +124,7 @@ export const access = async (req: Request, res: Response) => {
         model: AdminRole,
         as: "roles",
         attributes: ["slug"],
-        through: { attributes: [] },     // ไม่ต้องส่งฟิลด์จากตารางกลาง
+        through: { attributes: [] },
         include: [
           {
             model: AdminPermission,
@@ -125,10 +139,7 @@ export const access = async (req: Request, res: Response) => {
 
   if (!user) return res.status(404).json({ error: "ADMIN_NOT_FOUND" });
 
-  // map roles
   const roleSlugs = (user as any).roles?.map((r: any) => r.slug) ?? [];
-
-  // flatten permissions จากทุก role แล้ว dedupe
   const permSet = new Set<string>();
   for (const r of (user as any).roles ?? []) {
     for (const p of r.permissions ?? []) {
@@ -136,7 +147,7 @@ export const access = async (req: Request, res: Response) => {
     }
   }
   const permissionSlugs = Array.from(permSet);
-  console.log(permissionSlugs)
+
   return res.json({
     id: (user as any).id,
     email: (user as any).email,

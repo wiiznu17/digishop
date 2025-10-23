@@ -10,7 +10,6 @@ import {
   FolderTree,
   Users,
   UserCog,
-  ShieldCheck,
   Shield,
   User,
   ChevronUp
@@ -37,29 +36,18 @@ import { Button } from "./ui/button"
 import { logout } from "@/utils/requesters/authRequester"
 import { useAuth } from "@/components/AuthGuard"
 import { useMemo } from "react"
+import { useRouter } from "next/navigation"
 
 type NavItem = {
   title: string
   url: string
   icon: React.ComponentType<{ className?: string }>
-  perms?: string[] // สิทธิ์ที่ต้องมีทั้งหมดเพื่อแสดงเมนูนี้ (AND)
+  perms?: string[] // สิทธิ์ที่ต้องมีทั้งหมด (AND)
 }
 
 type NavGroup = { label: string; items: NavItem[] }
 
-// กำหนดสิทธิ์ของแต่ละเมนู
 const groups: NavGroup[] = [
-  // {
-  //   label: "Platform Overview",
-  //   items: [
-  //     {
-  //       title: "Dashboard",
-  //       url: "/admin/dashboards",
-  //       icon: Home,
-  //       perms: ["DASHBOARD_VIEW"]
-  //     }
-  //   ]
-  // },
   {
     label: "Commerce",
     items: [
@@ -126,20 +114,15 @@ const groups: NavGroup[] = [
         icon: Shield,
         perms: ["ROLES_READ"]
       }
-      // {
-      //   title: "Audit Logs",
-      //   url: "/admin/audit-logs",
-      //   icon: ShieldCheck,
-      //   perms: ["AUDIT_LOGS_READ"]
-      // }
     ]
   }
 ]
 
 export function AdminSidebar() {
   const { me, loading } = useAuth()
+  const router = useRouter()
 
-  // เช็คสิทธิ์แบบ AND: ต้องมีครบทุก perm ในรายการถึงจะแสดง
+  // มีครบทุก perm ถึงจะเห็นเมนู
   const hasPerms = (need?: string[]) => {
     if (!need || need.length === 0) return true
     if (!me) return false
@@ -147,7 +130,7 @@ export function AdminSidebar() {
     return need.every((p) => set.has(p))
   }
 
-  // กรองเมนูตามสิทธิ์ (ซ่อนทั้ง item และ group ที่ว่าง)
+  // กรองเมนูตามสิทธิ์
   const visibleGroups = useMemo(() => {
     return groups
       .map((g) => ({
@@ -180,7 +163,7 @@ export function AdminSidebar() {
           </Link>
         </div>
 
-        {/* Loading state: กัน layout shift */}
+        {/* Loading state (กัน layout shift) */}
         {loading ? (
           <div className="p-3 text-xs text-muted-foreground">Loading menu…</div>
         ) : (
@@ -235,8 +218,12 @@ export function AdminSidebar() {
                     onClick={async () => {
                       try {
                         await logout()
-                      } finally {
-                        // AuthGuard จะพาออกเองเมื่อ token หาย
+                        // พาไปหน้า login ทันที
+                        router.replace("/login")
+                        // กัน state/cache ค้าง (ถ้าเพจไหนเก็บ me ไว้)
+                        window.setTimeout(() => window.location.reload(), 50)
+                      } catch {
+                        router.replace("/login")
                       }
                     }}
                   >
