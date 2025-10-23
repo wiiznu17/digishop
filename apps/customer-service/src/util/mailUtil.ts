@@ -1,10 +1,8 @@
 const nodemailer = require("nodemailer");
 const nodemailerSendgrid = require("nodemailer-sendgrid");
 import jwt from "jsonwebtoken";
-import Redis from "ioredis";
 const JWT_SECRET = process.env.JWT_SECRET ?? "";
-const redis = new Redis();
-
+import { redis } from '../lib/redis'
 
 
 const transporter = nodemailer.createTransport(
