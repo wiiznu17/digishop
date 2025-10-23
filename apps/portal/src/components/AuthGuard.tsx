@@ -1,10 +1,8 @@
-// apps/portal/src/components/AuthGuard.tsx
 "use client"
 
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { fetchAuth } from "@/utils/requesters/authRequester"
-import { subscribe, getAccessToken } from "@/lib/tokenStore"
 
 export type Me = {
   id: number
@@ -18,26 +16,12 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
   const [error, setErr] = useState<Error | null>(null)
 
-  // refs สำหรับควบคุมลำดับ/สถานะที่ไม่ทำให้ re-render
   const didRunRef = useRef(false)
   const seqRef = useRef(0)
   const activeRef = useRef(0)
-  const mountedRef = useRef(true) // track ว่ายัง mounted อยู่
+  const mountedRef = useRef(true)
 
   async function loadMe() {
-    const token = getAccessToken()
-    console.log("Get token in auth guard: ", token)
-    if (token == null) {
-      console.log("token is null")
-      // ไม่มี token → เคลียร์ state
-      if (mountedRef.current) {
-        setMe(null)
-        setErr(null)
-        setLoading(false)
-      }
-      return
-    }
-
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
 
@@ -48,10 +32,11 @@ export function useAuth() {
 
     try {
       const m = await fetchAuth()
-      if (activeRef.current !== mySeq || !mountedRef.current) return // ทิ้งผลเก่า
+      if (activeRef.current !== mySeq || !mountedRef.current) return
       setMe(m)
     } catch (e: unknown) {
       if (activeRef.current !== mySeq || !mountedRef.current) return
+      setMe(null)
       setErr(e instanceof Error ? e : new Error("fetchAuth failed"))
     } finally {
       if (mountedRef.current) setLoading(false)
@@ -60,8 +45,6 @@ export function useAuth() {
 
   useEffect(() => {
     mountedRef.current = true
-
-    // dev: ให้รันครั้งเดียวต่อ component instance
     if (process.env.NODE_ENV !== "production") {
       if (!didRunRef.current) {
         didRunRef.current = true
@@ -71,14 +54,18 @@ export function useAuth() {
       void loadMe()
     }
 
-    // เมื่อ token เปลี่ยน → reload me
-    const unsub = subscribe(() => {
-      void loadMe()
-    })
+    // รีเช็ค session เมื่อกลับมาโฟกัส/แท็บกลับมา visible
+    const onFocus = () => void loadMe()
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void loadMe()
+    }
+    window.addEventListener("focus", onFocus)
+    document.addEventListener("visibilitychange", onVisible)
 
     return () => {
       mountedRef.current = false
-      unsub()
+      window.removeEventListener("focus", onFocus)
+      document.removeEventListener("visibilitychange", onVisible)
     }
   }, [])
 
@@ -104,32 +91,24 @@ export default function AuthGuard({
   requiredPerms?: string[]
   redirectTo?: string
 }) {
-  console.log("reqire permission: ", requiredPerms)
   const { me, loading } = useAuth()
   const router = useRouter()
-  const redirectedRef = useRef(false) // กัน redirect ซ้ำ
+  const redirectedRef = useRef(false)
   const needPerms = useMemo(() => requiredPerms ?? [], [requiredPerms])
   const allowed = useCan(needPerms, me)
 
-  console.log("me: ", me)
-  console.log("redirectedRef: ", redirectedRef)
-  console.log("needPerms: ", needPerms)
-  console.log("allowed: ", allowed)
   useEffect(() => {
     if (redirectedRef.current) return
-
     if (loading) return
 
-    const hasToken = !!getAccessToken()
-    if (!me && hasToken) return
-
-    if (!me && !hasToken) {
-      console.log("!me && !hasToken")
+    // ไม่มี session → ไปหน้า login
+    if (!me) {
       redirectedRef.current = true
       router.replace(redirectTo)
       return
     }
 
+    // มี session แต่สิทธิ์ไม่พอ
     if (me && !allowed) {
       redirectedRef.current = true
       router.replace("/403")
@@ -140,6 +119,5 @@ export default function AuthGuard({
   if (loading)
     return <div className="p-6 text-sm opacity-70">Checking session…</div>
   if (!me || !allowed) return null
-
   return <>{children}</>
 }
