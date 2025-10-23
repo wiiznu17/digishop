@@ -4,7 +4,7 @@ import { config } from "../config";
 export const merchantProxy = createProxyMiddleware({
   target: config.services.merchant,
   changeOrigin: true,
-  cookieDomainRewrite: "",
+  cookieDomainRewrite: "localhost",
   pathRewrite: { "^/api/merchant": "/api/merchant" },
   logLevel: "debug", // full log
 

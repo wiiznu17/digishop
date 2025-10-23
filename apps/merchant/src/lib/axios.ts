@@ -3,7 +3,7 @@ import Axios, {
   AxiosRequestConfig,
   AxiosRequestHeaders
 } from "axios"
-import { getAccessToken, setAccessToken, setRefreshing } from "./tokenStore"
+import { getAccessToken, setAccessToken } from "./tokenStore"
 
 type RetriableAxiosRequestConfig = AxiosRequestConfig & { _retry?: boolean }
 
@@ -16,7 +16,7 @@ const refreshClient = Axios.create({
   withCredentials: true
 })
 
-// อย่าพยายาม refresh endpoint เหล่านี้
+// อย่าพยายาม refresh เมื่อปลายทางเป็น endpoint เหล่านี้ (กันลูป)
 const REFRESH_SKIP = [
   /^\/api\/auth\/refresh$/,
   /^\/api\/auth\/login$/,
@@ -24,6 +24,7 @@ const REFRESH_SKIP = [
 ]
 
 let interceptorsAttached = false
+
 if (!interceptorsAttached) {
   interceptorsAttached = true
 
@@ -48,7 +49,9 @@ if (!interceptorsAttached) {
       const original = (error.config ?? {}) as RetriableAxiosRequestConfig
 
       const path = original?.url || ""
-      if (REFRESH_SKIP.some((re) => re.test(path))) return Promise.reject(error)
+      if (REFRESH_SKIP.some((re) => re.test(path))) {
+        return Promise.reject(error)
+      }
 
       if (status === 401 && !original._retry) {
         if (isRefreshing) {
@@ -64,7 +67,6 @@ if (!interceptorsAttached) {
 
         try {
           isRefreshing = true
-          setRefreshing(true) // <<<<<< แจ้งกำลัง refresh
           original._retry = true
 
           const res = await refreshClient.post("/api/auth/refresh")
@@ -82,13 +84,13 @@ if (!interceptorsAttached) {
 
           return axios(original)
         } catch (e) {
+          // refresh ไม่ผ่าน → ล้าง access; AuthProvider (ผ่าน subscribe) จะ redirect /login เอง
           setAccessToken(null)
           pendingQueue.forEach((fn) => fn())
           pendingQueue = []
           return Promise.reject(e)
         } finally {
           isRefreshing = false
-          setRefreshing(false) // <<<<<< จบ refresh
         }
       }
 
