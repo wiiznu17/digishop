@@ -7,16 +7,34 @@ import { getAccessToken, setAccessToken } from "./tokenStore"
 
 type RetriableAxiosRequestConfig = AxiosRequestConfig & { _retry?: boolean }
 
-const axios = Axios.create({
+export const axios = Axios.create({
   baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL,
   withCredentials: true
 })
+
 const refreshClient = Axios.create({
   baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL,
   withCredentials: true
 })
 
-// อย่าพยายาม refresh เมื่อปลายทางเป็น endpoint เหล่านี้ (กันลูป)
+/**
+ * เรียก refresh แบบ one-shot โดยไม่มี interceptor (กันลูป)
+ * สำเร็จ: คืน accessToken ใหม่ และ set เข้าร้านค้า
+ * ล้มเหลว: คืน null
+ */
+export async function tryRefreshOnce(): Promise<string | null> {
+  try {
+    const res = await refreshClient.post("/api/auth/refresh")
+    const newAccess = (res.data as { accessToken?: string })?.accessToken
+    if (!newAccess) return null
+    setAccessToken(newAccess)
+    return newAccess
+  } catch {
+    return null
+  }
+}
+
+// กันการ refresh ซ้ำซ้อนกับ endpoint พิเศษพวกนี้
 const REFRESH_SKIP = [
   /^\/api\/auth\/refresh$/,
   /^\/api\/auth\/login$/,
@@ -31,6 +49,7 @@ if (!interceptorsAttached) {
   let isRefreshing = false
   let pendingQueue: Array<() => void> = []
 
+  // เติม Authorization จาก access token ปัจจุบัน ให้ทุกรีเควสต์
   axios.interceptors.request.use((config) => {
     const t = getAccessToken()
     if (t) {
@@ -42,6 +61,7 @@ if (!interceptorsAttached) {
     return config
   })
 
+  // จัดการ 401 → refresh + retry อัตโนมัติ (คิวรอถ้ามีหลายรีเควสต์ชนกัน)
   axios.interceptors.response.use(
     (r) => r,
     async (error: AxiosError) => {
@@ -69,11 +89,9 @@ if (!interceptorsAttached) {
           isRefreshing = true
           original._retry = true
 
-          const res = await refreshClient.post("/api/auth/refresh")
-          const newAccess = (res.data as { accessToken?: string })?.accessToken
+          const newAccess = await tryRefreshOnce()
           if (!newAccess) throw new Error("no_access")
 
-          setAccessToken(newAccess)
           pendingQueue.forEach((fn) => fn())
           pendingQueue = []
 
@@ -84,7 +102,7 @@ if (!interceptorsAttached) {
 
           return axios(original)
         } catch (e) {
-          // refresh ไม่ผ่าน → ล้าง access; AuthProvider (ผ่าน subscribe) จะ redirect /login เอง
+          // refresh ล้มเหลว → เคลียร์ access; ให้ AuthProvider จัดการ redirect ผ่าน subscribe
           setAccessToken(null)
           pendingQueue.forEach((fn) => fn())
           pendingQueue = []
