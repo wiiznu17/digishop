@@ -24,10 +24,7 @@ import {
   logoutUser
 } from "../utils/requestUtils/requestAuthUtils"
 
-import { subscribe, getAccessToken, setAccessToken } from "@/lib/tokenStore"
-import { tryRefreshOnce } from "@/lib/axios"
-
-const MERCHANT_HOME = "/orders" // หน้าโฮมของร้าน
+const MERCHANT_HOME = "/orders"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -49,30 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  // guards กันยิงซ้ำ / race
   const mountedRef = useRef(true)
   const inflightRef = useRef(false)
   const seqRef = useRef(0)
   const activeRef = useRef(0)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const DEBOUNCE_MS = 80
-
-  async function ensureAccessToken(): Promise<string | null> {
-    let at = getAccessToken()
-    if (!at) {
-      const maybeNew = await tryRefreshOnce()
-      if (maybeNew) at = maybeNew
-    }
-    return at || null
-  }
 
   function goToMerchantHome() {
     router.replace(MERCHANT_HOME)
   }
-
   function goToStoreStatus(status: StoreStatus | null) {
-    const s = status ?? "PENDING"
-    router.replace(`/store-status?status=${s}`)
+    router.replace(`/store-status?status=${status ?? "PENDING"}`)
   }
 
   async function loadUserIfNeeded(): Promise<UserAuth | null> {
@@ -80,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u ?? null)
     return u ?? null
   }
-
   async function loadStoreStatusIfNeeded(): Promise<StoreStatus | null> {
     const s = await fetchStoreStatus()
     setStoreStatus(s ?? null)
@@ -88,36 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function routeAccordingToRules(currentPath: string) {
-    // เพิ่ม seq กัน race
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
+    setIsLoading(true)
 
     try {
-      setIsLoading(true)
-
-      // 1) กรณี /login — อนุญาตคนไม่มี access เข้ามา
       if (isLoginPath(currentPath)) {
-        // ถ้ามี access แล้ว → ตัดสินใจตาม role
-        const at = await ensureAccessToken()
-        if (!at) {
-          // ไม่มี access ⇒ อยู่หน้า login ได้
-          return
-        }
-
         const u = await loadUserIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (!u) {
-          // access ใช้ไม่ได้ ⇒ เคลียร์ทิ้ง ปล่อยอยู่หน้า login
-          setAccessToken(null)
+          // ไม่มี session ⇒ อยู่หน้า login ได้
           return
         }
-
         if (u.role === "CUSTOMER") {
           router.replace("/register")
           return
         }
-
-        // MERCHANT
         const s = await loadStoreStatusIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (s && s !== "APPROVED") {
@@ -128,28 +96,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // 2) กรณี /register — ต้องล็อกอินแล้ว + role=CUSTOMER
       if (isRegisterPath(currentPath)) {
-        const at = await ensureAccessToken()
-        if (!at) {
-          router.replace("/login")
-          return
-        }
-
         const u = await loadUserIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (!u) {
-          setAccessToken(null)
           router.replace("/login")
           return
         }
-
         if (u.role === "CUSTOMER") {
-          // เงื่อนไขตรง ⇒ อยู่หน้า register ได้
-          return
+          return // ok อยู่หน้า register ได้
         }
-
-        // MERCHANT ⇒ พาไปตามสถานะร้าน
         const s = await loadStoreStatusIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (s && s !== "APPROVED") {
@@ -160,70 +116,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // 3) กรณี /store-status — ต้องล็อกอิน + MERCHANT ที่ยังไม่ approved
       if (isStoreStatusPath(currentPath)) {
-        const at = await ensureAccessToken()
-        if (!at) {
-          router.replace("/login")
-          return
-        }
-
         const u = await loadUserIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (!u) {
-          setAccessToken(null)
           router.replace("/login")
           return
         }
-
         if (u.role === "CUSTOMER") {
           router.replace("/register")
           return
         }
-
-        // MERCHANT ⇒ เช็คสถานะจริง
         const s = await loadStoreStatusIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (s && s !== "APPROVED") {
-          // เงื่อนไขตรง ⇒ อยู่หน้า store-status ได้
-          return
+          return // ok อยู่หน้า store-status ได้
         }
-        // approved แล้ว ⇒ ไปหน้าโฮม
         goToMerchantHome()
         return
       }
 
-      // 4) หน้าอื่นๆ (private merchant): ต้อง MERCHANT + APPROVED
-      {
-        const at = await ensureAccessToken()
-        if (!at) {
-          router.replace("/login")
-          return
-        }
-
-        const u = await loadUserIfNeeded()
-        if (activeRef.current !== mySeq || !mountedRef.current) return
-        if (!u) {
-          setAccessToken(null)
-          router.replace("/login")
-          return
-        }
-
-        if (u.role === "CUSTOMER") {
-          router.replace("/register")
-          return
-        }
-
-        // MERCHANT ⇒ ต้อง approved
-        const s = await loadStoreStatusIfNeeded()
-        if (activeRef.current !== mySeq || !mountedRef.current) return
-        if (s && s !== "APPROVED") {
-          goToStoreStatus(s)
-          return
-        }
-        // approved ⇒ อยู่หน้าปัจจุบันได้
+      // หน้าอื่นๆ (private merchant): ต้อง MERCHANT + APPROVED
+      const u = await loadUserIfNeeded()
+      if (activeRef.current !== mySeq || !mountedRef.current) return
+      if (!u) {
+        router.replace("/login")
         return
       }
+      if (u.role === "CUSTOMER") {
+        router.replace("/register")
+        return
+      }
+      const s = await loadStoreStatusIfNeeded()
+      if (activeRef.current !== mySeq || !mountedRef.current) return
+      if (s && s !== "APPROVED") {
+        goToStoreStatus(s)
+        return
+      }
+      return
     } finally {
       if (activeRef.current === mySeq && mountedRef.current) {
         setIsLoading(false)
@@ -239,26 +169,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         inflightRef.current = false
       })
     }
-
-    // เมื่อ access token เปลี่ยน:
-    // - ถ้าเป็น null และเราอยู่หน้า private => เด้ง /login
-    // - ถ้ามีค่า => ประมวลผล routing ใหม่ตามกฎ
-    const unsub = subscribe(() => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        if (!inflightRef.current) {
-          inflightRef.current = true
-          routeAccordingToRules(pathname).finally(() => {
-            inflightRef.current = false
-          })
-        }
-      }, DEBOUNCE_MS)
-    })
-
     return () => {
       mountedRef.current = false
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      unsub()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
@@ -269,6 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (loggedInUser) {
       setUser(loggedInUser)
       setIsLoading(false)
+      // ให้ routing effect จัดการ redirect ตาม path ปัจจุบัน
       return true
     }
     setIsLoading(false)
