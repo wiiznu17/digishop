@@ -17,8 +17,10 @@ const REFRESH_TTL_MS = toMillis(REFRESH_TOKEN_TTL);
 const SESSION_PREFIX = process.env.SESSION_PREFIX || "";
 const SESSION_INDEX_PREFIX = process.env.SESSION_INDEX_PREFIX || "";
 
-const sessKey = (jti: string) => `${SESSION_PREFIX}:${jti}`;
-const indexKey = (userId: string | number) => `${SESSION_INDEX_PREFIX}:${userId}`;
+const sessKey = (jti: string) => `${SESSION_PREFIX}:${jti}`; // session by jti
+// ex usr:rt:jti-abc-xyz -> { userId, jti, ip, userAgent, createdAt, expiresAt }
+const indexKey = (userId: string | number) => `${SESSION_INDEX_PREFIX}:${userId}`; // current jti pointer per user
+// ex usr:rt:idx:123 -> "jti-abc-xyz"
 
 type RefreshSession = {
   userId: number | string;
@@ -37,9 +39,12 @@ const COOKIE_OPTS: import("express").CookieOptions = {
   ...(IS_PROD ? { partitioned: true as any } : {}),
 };
 
-// LOGIN: single-session
+// LOGIN: single-session (revoke old then create new)
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = (req.body ?? {}) as { email: string; password: string };
+  const {
+    email,
+    password
+  } = (req.body ?? {}) as { email: string; password: string };
   if (!email || !password) return res.status(400).json({ error: "EMAIL_PASSWORD_REQUIRED" });
 
   const user = await User.findOne({
@@ -51,9 +56,9 @@ export const login = async (req: Request, res: Response) => {
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
 
-  const jti = uuidv4();
-  const access = signAccess({ sub: user.id, jti });
-  const refresh = signRefresh({ sub: user.id, jti });
+  const jti = uuidv4(); // session ID
+  const access = signAccess({ sub: user.id, jti }); // access token
+  const refresh = signRefresh({ sub: user.id, jti }); // refresh token
 
   const now = Date.now();
   const sess: RefreshSession = {
@@ -65,29 +70,38 @@ export const login = async (req: Request, res: Response) => {
     expiresAt: now + REFRESH_TTL_MS,
   };
 
-  const idxKey = indexKey(user.id);
-  const oldJti = await redis.get(idxKey);
-  const pipe = redis.multi();
-  if (oldJti) pipe.del(sessKey(oldJti));
-  pipe.set(sessKey(jti), JSON.stringify(sess), "PX", REFRESH_TTL_MS);
-  pipe.set(idxKey, jti, "PX", REFRESH_TTL_MS);
+  // if already logged in, revoke old session
+  const idxKey = indexKey(user.id); // key ที่เก็บ jti ปัจจุบันของ user
+  console.log("Setting session for user:", user.id, "with jti:", jti);
+  const oldJti = await redis.get(idxKey); // ดึง jti เดิม
+  const pipe = redis.multi(); // ใช้ transaction
+  if (oldJti) pipe.del(sessKey(oldJti)); // ลบ session เก่า
+  pipe.set(sessKey(jti), JSON.stringify(sess), "PX", REFRESH_TTL_MS); // สร้าง session ใหม่
+  pipe.set(idxKey, jti, "PX", REFRESH_TTL_MS); // อัปเดต jti ปัจจุบัน
   await pipe.exec();
-
+  // log session from redis
+  console.log("User logged in, session created:", sess);
   res.cookie(RTK_NAME, refresh, { ...COOKIE_OPTS, maxAge: REFRESH_TTL_MS });
   return res.json({
     accessToken: access,
-    user: { id: user.id, email: user.email, role: user.role }
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    }
   });
 };
 
-// REFRESH: rotate single-session
+// REFRESH: single-session rotate (delete old, create new)
 export const refresh = async (req: Request, res: Response) => {
   console.log("Refresh token request received");
   const token = req.cookies?.[RTK_NAME];
   if (!token) return res.status(401).json({ error: "NO_REFRESH" });
+  console.log("Refresh token from cookie:", token);
 
   try {
-    const payload = verifyRefresh<JWTPayload>(token);
+    const payload = verifyRefresh<JWTPayload>(token); // throws if invalid/expired
+    console.log("Refresh token payload verified:", payload);
     const key = sessKey(payload.jti);
     const raw = await redis.get(key);
     if (!raw) return res.status(401).json({ error: "SESSION_REVOKED" });
@@ -113,6 +127,7 @@ export const refresh = async (req: Request, res: Response) => {
 
     const idxKey = indexKey(payload.sub);
     const pipe = redis.multi();
+    // ลบ session เก่าและแทน index เป็น jti ใหม่
     pipe.del(key);
     pipe.set(sessKey(newJti), JSON.stringify(newSess), "PX", REFRESH_TTL_MS);
     pipe.set(idxKey, newJti, "PX", REFRESH_TTL_MS);
@@ -120,17 +135,17 @@ export const refresh = async (req: Request, res: Response) => {
 
     const newAccess = signAccess({ sub: payload.sub, jti: newJti });
     const newRefresh = signRefresh({ sub: payload.sub, jti: newJti });
+    console.log("Issuing new access and refresh tokens");
     res.cookie(RTK_NAME, newRefresh, { ...COOKIE_OPTS, maxAge: REFRESH_TTL_MS });
-    console.log("Refresh token rotated successfully");
     return res.json({ accessToken: newAccess });
   } catch (e) {
-    console.error("refresh error:", e);
+    console.error("Error during refresh token processing:", e);
     res.clearCookie(RTK_NAME, { ...COOKIE_OPTS, maxAge: undefined });
     return res.status(401).json({ error: "INVALID_REFRESH" });
   }
 };
 
-// LOGOUT
+// LOGOUT: delete current session and clear index if pointing to it
 export const logout = async (req: Request, res: Response) => {
   const token = (req as any).cookies?.[RTK_NAME];
   try {
@@ -145,18 +160,20 @@ export const logout = async (req: Request, res: Response) => {
       await pipe.exec();
     }
   } catch {
-    // ignore
+    // ignore invalid refresh
+    res.json({ ok: false, error: "LOGOUT_FAILED" });
   }
   res.clearCookie(RTK_NAME, { ...COOKIE_OPTS, maxAge: undefined });
   return res.json({ ok: true });
 };
 
-// /me (ต้องมี middleware ใส่ userId แล้ว)
+// ต้องมี middleware ใส่ userId ลง req
 export const access = async (req: Request, res: Response) => {
   const userId = (req as any).userId as number | undefined;
   if (!userId) return res.status(401).json({ error: "UNAUTHORIZED" });
 
   const user = await User.findByPk(userId, { attributes: ["id", "email", "role"] });
   if (!user) return res.status(404).json({ error: "USER_NOT_FOUND" });
+
   return res.json({ id: (user as any).id, email: (user as any).email, role: (user as any).role });
 };

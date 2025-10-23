@@ -4,7 +4,7 @@ import { config } from "../config";
 export const customerProxy = createProxyMiddleware({
   target: config.services.customer,
   changeOrigin: true,
-  cookieDomainRewrite: "",
+  cookieDomainRewrite: "localhost",
   pathRewrite: { "^/api/customer": "/api/customer" },
   logLevel: "debug",
 
