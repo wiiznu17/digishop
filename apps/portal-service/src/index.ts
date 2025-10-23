@@ -51,7 +51,7 @@ async function main() {
     });
 
     app.use(corsMiddleware);
-    app.options('*', corsMiddleware);
+    // app.options('*', corsMiddleware);
 
     // ติดตั้ง rate limiter หลังจาก set('trust proxy', ...)
     const limiter = rateLimit({
