@@ -25,12 +25,21 @@ import {
 } from "../utils/requestUtils/requestAuthUtils"
 
 import { subscribe, getAccessToken, setAccessToken } from "@/lib/tokenStore"
+import { tryRefreshOnce } from "@/lib/axios"
+
+const MERCHANT_HOME = "/orders" // หน้าโฮมของร้าน
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// หน้า public ที่เข้าดูได้แม้ยังไม่ approved
-const PUBLIC_PATHS = ["/login", "/register", "/store-status"]
-const DEBOUNCE_MS = 80
+function isLoginPath(p: string) {
+  return p.startsWith("/login")
+}
+function isRegisterPath(p: string) {
+  return p.startsWith("/register")
+}
+function isStoreStatusPath(p: string) {
+  return p.startsWith("/store-status")
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserAuth | null>(null)
@@ -40,92 +49,209 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  // guards กันยิงซ้ำ
+  // guards กันยิงซ้ำ / race
   const mountedRef = useRef(true)
   const inflightRef = useRef(false)
   const seqRef = useRef(0)
   const activeRef = useRef(0)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const DEBOUNCE_MS = 80
 
-  function isPublicPath(p: string) {
-    return PUBLIC_PATHS.some((x) => p.startsWith(x))
+  async function ensureAccessToken(): Promise<string | null> {
+    let at = getAccessToken()
+    if (!at) {
+      const maybeNew = await tryRefreshOnce()
+      if (maybeNew) at = maybeNew
+    }
+    return at || null
   }
 
-  async function loadUserAndStore() {
-    if (inflightRef.current) return
-    inflightRef.current = true
+  function goToMerchantHome() {
+    router.replace(MERCHANT_HOME)
+  }
 
+  function goToStoreStatus(status: StoreStatus | null) {
+    const s = status ?? "PENDING"
+    router.replace(`/store-status?status=${s}`)
+  }
+
+  async function loadUserIfNeeded(): Promise<UserAuth | null> {
+    const u = await fetchUser()
+    setUser(u ?? null)
+    return u ?? null
+  }
+
+  async function loadStoreStatusIfNeeded(): Promise<StoreStatus | null> {
+    const s = await fetchStoreStatus()
+    setStoreStatus(s ?? null)
+    return s ?? null
+  }
+
+  async function routeAccordingToRules(currentPath: string) {
+    // เพิ่ม seq กัน race
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
 
     try {
-      const at = getAccessToken()
-      const isPublic = isPublicPath(pathname)
-
-      // หน้า public: ถ้ามี access → เด้งเข้าหน้าหลัก, ถ้าไม่มี → ไม่ทำอะไร
-      if (isPublic) {
-        if (at) router.replace("/orders")
-        setIsLoading(false)
-        return
-      }
-
-      // หน้า private:
       setIsLoading(true)
 
-      // ไม่มี access ตอนแรก → ปล่อยให้รีเควสต์จริงโดน 401 แล้ว interceptor ไป refresh ให้เอง
-      if (!at) {
-        setUser(null)
-        setStoreStatus(null)
-        setIsLoading(false)
+      // 1) กรณี /login — อนุญาตคนไม่มี access เข้ามา
+      if (isLoginPath(currentPath)) {
+        // ถ้ามี access แล้ว → ตัดสินใจตาม role
+        const at = await ensureAccessToken()
+        if (!at) {
+          // ไม่มี access ⇒ อยู่หน้า login ได้
+          return
+        }
+
+        const u = await loadUserIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (!u) {
+          // access ใช้ไม่ได้ ⇒ เคลียร์ทิ้ง ปล่อยอยู่หน้า login
+          setAccessToken(null)
+          return
+        }
+
+        if (u.role === "CUSTOMER") {
+          router.replace("/register")
+          return
+        }
+
+        // MERCHANT
+        const s = await loadStoreStatusIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (s && s !== "APPROVED") {
+          goToStoreStatus(s)
+          return
+        }
+        goToMerchantHome()
         return
       }
 
-      // มี access แล้ว → โหลด me
-      const currentUser = await fetchUser()
-      if (activeRef.current !== mySeq || !mountedRef.current) return
-      setUser(currentUser)
+      // 2) กรณี /register — ต้องล็อกอินแล้ว + role=CUSTOMER
+      if (isRegisterPath(currentPath)) {
+        const at = await ensureAccessToken()
+        if (!at) {
+          router.replace("/login")
+          return
+        }
 
-      // ถ้า access ใช้ไม่ได้ (เช่นโดน revoke) → เคลียร์ & ให้ interceptor เป็นคน refresh ตอนยิง API
-      if (!currentUser) {
-        setAccessToken(null)
-        setStoreStatus(null)
-        setIsLoading(false)
+        const u = await loadUserIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (!u) {
+          setAccessToken(null)
+          router.replace("/login")
+          return
+        }
+
+        if (u.role === "CUSTOMER") {
+          // เงื่อนไขตรง ⇒ อยู่หน้า register ได้
+          return
+        }
+
+        // MERCHANT ⇒ พาไปตามสถานะร้าน
+        const s = await loadStoreStatusIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (s && s !== "APPROVED") {
+          goToStoreStatus(s)
+          return
+        }
+        goToMerchantHome()
         return
       }
 
-      // โหลดสถานะร้าน
-      const status = await fetchStoreStatus()
-      if (activeRef.current !== mySeq || !mountedRef.current) return
-      setStoreStatus(status)
+      // 3) กรณี /store-status — ต้องล็อกอิน + MERCHANT ที่ยังไม่ approved
+      if (isStoreStatusPath(currentPath)) {
+        const at = await ensureAccessToken()
+        if (!at) {
+          router.replace("/login")
+          return
+        }
 
-      if (status && status !== "APPROVED") {
-        router.replace(`/store-status?status=${status}`)
+        const u = await loadUserIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (!u) {
+          setAccessToken(null)
+          router.replace("/login")
+          return
+        }
+
+        if (u.role === "CUSTOMER") {
+          router.replace("/register")
+          return
+        }
+
+        // MERCHANT ⇒ เช็คสถานะจริง
+        const s = await loadStoreStatusIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (s && s !== "APPROVED") {
+          // เงื่อนไขตรง ⇒ อยู่หน้า store-status ได้
+          return
+        }
+        // approved แล้ว ⇒ ไปหน้าโฮม
+        goToMerchantHome()
+        return
+      }
+
+      // 4) หน้าอื่นๆ (private merchant): ต้อง MERCHANT + APPROVED
+      {
+        const at = await ensureAccessToken()
+        if (!at) {
+          router.replace("/login")
+          return
+        }
+
+        const u = await loadUserIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (!u) {
+          setAccessToken(null)
+          router.replace("/login")
+          return
+        }
+
+        if (u.role === "CUSTOMER") {
+          router.replace("/register")
+          return
+        }
+
+        // MERCHANT ⇒ ต้อง approved
+        const s = await loadStoreStatusIfNeeded()
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (s && s !== "APPROVED") {
+          goToStoreStatus(s)
+          return
+        }
+        // approved ⇒ อยู่หน้าปัจจุบันได้
+        return
       }
     } finally {
       if (activeRef.current === mySeq && mountedRef.current) {
         setIsLoading(false)
       }
-      inflightRef.current = false
     }
   }
 
   useEffect(() => {
     mountedRef.current = true
-    void loadUserAndStore()
+    if (!inflightRef.current) {
+      inflightRef.current = true
+      routeAccordingToRules(pathname).finally(() => {
+        inflightRef.current = false
+      })
+    }
 
     // เมื่อ access token เปลี่ยน:
-    // - ถ้าเป็น null และเราอยู่หน้า private => แปลว่า refresh ล้มเหลว -> เด้ง login
-    // - ถ้ามีค่า => โหลด me/store ใหม่
+    // - ถ้าเป็น null และเราอยู่หน้า private => เด้ง /login
+    // - ถ้ามีค่า => ประมวลผล routing ใหม่ตามกฎ
     const unsub = subscribe(() => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => {
-        const at = getAccessToken()
-        const isPublic = isPublicPath(pathname)
-        if (!at && !isPublic) {
-          router.replace("/login")
-          return
+        if (!inflightRef.current) {
+          inflightRef.current = true
+          routeAccordingToRules(pathname).finally(() => {
+            inflightRef.current = false
+          })
         }
-        void loadUserAndStore()
       }, DEBOUNCE_MS)
     })
 

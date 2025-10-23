@@ -11,25 +11,25 @@ async function main() {
     const app = express();
     app.set("trust proxy", 1);
 
-    const allowlist = (process.env.ALLOW_CORS ?? "")
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean);
-    console.log("CORS allowlist:", allowlist);
-    app.use(
-      cors({
-        origin(origin, callback) {
-          // กรณีไม่มี Origin (เช่น curl/same-origin) ให้ผ่าน
-          if (!origin) return callback(null, true);
-          if (allowlist.includes(origin)) return callback(null, true);
-          return callback(new Error("Not allowed by CORS"));
-        },
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-        optionsSuccessStatus: 204
-      })
-    );
+    // const allowlist = (process.env.ALLOW_CORS ?? "")
+    //   .split(",")
+    //   .map(s => s.trim())
+    //   .filter(Boolean);
+    // console.log("CORS allowlist:", allowlist);
+    // app.use(
+    //   cors({
+    //     origin(origin, callback) {
+    //       // กรณีไม่มี Origin (เช่น curl/same-origin) ให้ผ่าน
+    //       if (!origin) return callback(null, true);
+    //       if (allowlist.includes(origin)) return callback(null, true);
+    //       return callback(new Error("Not allowed by CORS"));
+    //     },
+    //     credentials: true,
+    //     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    //     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    //     optionsSuccessStatus: 204
+    //   })
+    // );
 
     // app.options("*", cors())
 
@@ -48,7 +48,7 @@ async function main() {
     const PORT = Number(process.env.PORT)
     app.listen(PORT, () => {
       console.log(`Auth Service running on port ${PORT}`);
-      console.log("CORS allowlist:", allowlist);
+      // console.log("CORS allowlist:", allowlist);
     });
   } catch (err) {
     console.error("❌ Server failed to start:", err);
