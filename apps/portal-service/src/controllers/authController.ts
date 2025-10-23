@@ -15,7 +15,7 @@ const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 วัน
 const BASE_COOKIE: import("express").CookieOptions = {
   httpOnly: true,
   secure: true,
-  sameSite: "lax",          // ถ้า cross-site จริงค่อยปรับเป็น 'none'
+  sameSite: "none",          // ถ้า cross-site จริงค่อยปรับเป็น 'none'
   path: "/",
   ...(IS_PROD ? ({ partitioned: true } as any) : {})
 };
