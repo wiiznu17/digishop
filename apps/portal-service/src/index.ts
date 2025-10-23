@@ -62,7 +62,7 @@ async function main() {
     // ติดตั้ง rate limiter หลังจาก set('trust proxy', ...)
     const limiter = rateLimit({
       windowMs: 15 * 60 * 1000,     // 15 นาที
-      max: 300,                     // ปรับตามทราฟฟิก
+      max: 30000,                     // ปรับตามทราฟฟิก
       standardHeaders: true,
       legacyHeaders: false
       // ไม่ต้อง config อื่น ๆ ก็พอ—express-rate-limit จะใช้ req.ip ที่ถูกต้องแล้ว
