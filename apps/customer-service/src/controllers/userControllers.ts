@@ -2,18 +2,13 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import nodemailer from "nodemailer";
-// import sgTransport from "nodemailer-sendgrid-transport";
 import { sendMailForgotPassword, sendMailVerified } from "../util/mailUtil";
 import { enqueueRefreshToken } from "../queues/tokenQueue";
 import { accessToken } from "../util/jwt";
 import { Address, Op, User, UserRole } from "@digishop/db";
-// import Redis from "ioredis";
-// const redis = new Redis();
-import IORedis from "ioredis";
+import { redis} from "./../lib/redis"
 const JWT_SECRET = process.env.JWT_SECRET ?? "";
 const SALT_PASSWORD = process.env.SALT_PASSWORD ?? "10";
-const REDIS_URL = process.env.REDIS_URL||"" ;
-const connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
 
 
 
@@ -258,9 +253,9 @@ export const resetPassword = async (req: Request, res: Response) => {
   const { password, token } = req.body;
   try {
     const { email } = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    const redisToken = await connection.get(`reset-password:${email}`);
+    const redisToken = await redis.get(`reset-password:${email}`);
     if (redisToken !== token) throw new Error("Invalid token");
-    await connection.del(`reset-password:${email}`);
+    await redis.del(`reset-password:${email}`);
     const updatePassword = await User.findAll({ where: { email } });
     if (updatePassword.length === 1) {
       const passwordHash = await bcrypt.hash(password, 10);
@@ -332,11 +327,12 @@ export const sendvaildateEmail = async (req: Request, res: Response) => {
     isDefault,
     addressType,
   } = req.body;
-   const user = await User.findByPk(email);
+   const user = await User.findOne({ where: { email: email} });
     if (user) {
+      console.log('')
       return res
-        .status(404)
-        .json({ error: "This email already have an account" });
+      .status(404)
+      .json({ error: "This email already has an account", data: false });
     }
   const passwordHash = await bcrypt.hash(password, 10);
   const userData = {
@@ -359,33 +355,33 @@ export const sendvaildateEmail = async (req: Request, res: Response) => {
     isDefault,
     addressType,
   };
-  await connection.set(
+
+  await redis.set(
     `register:user:${email}`,
     JSON.stringify(userData),
     "EX",
     3600 
   );
-  const redisData = await connection.get(`register:user:${email}`);
   try {
     const response = await sendMailVerified(email);
     if (response) {
-      res.json({ data: response });
+      return res.json({ data: true });
     } else {
-      res.json({ error: "not send mail" });
+      return res.status(500).json({ error: "Failed to send mail", data: false });
     }
   } catch (error: any) {
-    res.json({ error: error });
+    return res.status(500).json({ error: error.message, data: false });
   }
 };
 export const createUser = async (req: Request, res: Response) => {
   const { token } = req.body;
   try {
     const { email } = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    const redisData = await connection.get(`register:user:${email}`);
+    const redisData = await redis.get(`register:user:${email}`);
     if(!redisData)  return res.status(400).json({ success: false, message: "Verification expired or not found" });
     const redisDataRaw = JSON.parse(redisData);
     if (redisDataRaw.email !== email || !redisData) return res.status(400).json({ success: false, message: "Invalid verification link" });
-    await connection.del(`register:user:${email}`);
+    await redis.del(`register:user:${email}`);
     const {
     firstName,
     middleName,
