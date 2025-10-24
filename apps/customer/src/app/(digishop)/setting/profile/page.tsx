@@ -130,7 +130,7 @@ const UserProfilePage = () => {
       if(currentUser){
         const res = (await sendResetPassword(currentUser.email)) as {data: string}
         if(res){
-          alert( 'Check Your Email Click the link in the email to reset your password. The link will expire in 15 minutes.' )
+          alert( 'Check Your Email Click the link in the email to reset your password. The link will expire in 1 hour.' )
         }
       }
     };
