@@ -169,14 +169,14 @@ export default function SearchResult({
                       onClick={() => setFilter("DESC")}
                       className="bg-gray-200 p-1 hover:cursor-pointer"
                     >
-                      <ArrowDown />
+                      <ArrowUp />
                     </button>
                   ) : (
                     <button
                       onClick={() => setFilter("ASC")}
                       className="bg-gray-200 p-1 hover:cursor-pointer"
                     >
-                      <ArrowUp />
+                      <ArrowDown />
                     </button>
                   )}
                 </div>
