@@ -59,7 +59,10 @@ const AuthPage: React.FC = () => {
       className={`grid grid-cols-2 min-h-screen bg-white ${rubik.className}`}
     >
       <div className="flex justify-center items-center">
-        <Image src={icon} width={600} height={600} alt="Shpping" />
+        <Link href={'/'}>
+          <Image src={icon} width={600} height={600} alt="Shpping" />
+
+        </Link>
       </div>
       <div className="flex justify-center items-center">
         <div className="w-lg">

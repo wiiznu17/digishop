@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, {
   createContext,
@@ -7,147 +7,135 @@ import React, {
   useEffect,
   ReactNode,
   useRef,
-  useMemo
-} from "react"
-import { FormLogin, AuthContextType } from "../types/props/userProp"
+  useMemo,
+} from "react";
+import { FormLogin, AuthContextType } from "../types/props/userProp";
 import {
   fetchUser,
   loginUser,
-  logoutUser
-} from "../utils/requestUtils/requestLoginUtils"
-import { usePathname, useRouter } from "next/navigation"
-import { setAccessToken, getAccessToken, subscribe } from "@/lib/tokenStore"
+  logoutUser,
+} from "../utils/requestUtils/requestLoginUtils";
+import { usePathname, useRouter } from "next/navigation";
+// import { setAccessToken, getAccessToken, subscribe } from "@/lib/tokenStore"
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-  const PUBLIC_PATHS = ["/auth","/product","/search","/store"]  
-  const DEBOUNCE_MS = 80
+const PUBLIC_PATHS = ["/auth", "/product", "/search", "/store"];
+const CUSTOMER_HOME = '/'
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<FormLogin | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const pathname = usePathname()
-  const router = useRouter()
-   // guards กันยิงซ้ำ
-  const mountedRef = useRef(true)
-  const inflightRef = useRef(false)
-  const seqRef = useRef(0)
-  const activeRef = useRef(0)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  function isPublicPath(p: string) {
-    return PUBLIC_PATHS.some((x) => p.startsWith(x))
+  const [user, setUser] = useState<FormLogin | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+  // guards กันยิงซ้ำ
+  const mountedRef = useRef(true);
+  const inflightRef = useRef(false);
+  const seqRef = useRef(0);
+  const activeRef = useRef(0);
+  function goToCustomerHome() {
+    router.replace(CUSTOMER_HOME)
   }
-    
-  async function loadUserAndStore() {
-    if (inflightRef.current) return
-    inflightRef.current = true
+  function isPublicPath(p: string) {
+    return PUBLIC_PATHS.some((x) => p.startsWith(x));
+  }
+  async function loadUserIfNeeded(): Promise<FormLogin | null> {
+    const u = await fetchUser()
+    setUser(u ?? null)
+    return u ?? null
+  }
 
+  function isLoginPath(p: string) {
+  return p.startsWith("/auth")
+  }
+  async function routeAccordingToRules(currentPath: string) {
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
-
+    setIsLoading(true)
+    console.log()
     try {
-      const at = getAccessToken()
-      const isPublic = isPublicPath(pathname)
+      // if (isLoginPath(currentPath)) {
+      //   const u = await loadUserIfNeeded()
+      //   if (activeRef.current !== mySeq || !mountedRef.current) return
+      //   if (!u) {
+      //     // ไม่มี session ⇒ อยู่หน้า login ได้
+      //     return
+      //   }
+      //   if (u.role === "CUSTOMER") {
+      //     router.replace("/register")
+      //     return
+      //   }
+      //   goToCustomerHome()
+      //   return
+      // }
 
-      // หน้า public: ถ้ามี access → เด้งเข้าหน้าหลัก, ถ้าไม่มี → ไม่ทำอะไร
-      if (isPublic) {
-        if (at) router.replace("/")
-        setIsLoading(false)
+      //ดูอีกที
+      if (!isPublicPath(currentPath)) {
+        const u = await loadUserIfNeeded()
+        console.log('have u', u)
+        if (activeRef.current !== mySeq || !mountedRef.current) return
+        if (!u) {
+          console.log('redirect')
+          router.replace("/")
+          return
+        }
+        // if (u.role === "CUSTOMER") {
+        //   router.replace("/register")
+        //   return
+        // }
+        console.log('hiiii')
         return
       }
-
-      // หน้า private:
-      setIsLoading(true)
-
-      // ไม่มี access ตอนแรก → ปล่อยให้รีเควสต์จริงโดน 401 แล้ว interceptor ไป refresh ให้เอง
-      if (!at) {
-        setUser(null)
-        setIsLoading(false)
-        return
-      }
-
-      // มี access แล้ว → โหลด me
-      const currentUser = await fetchUser()
-      if (activeRef.current !== mySeq || !mountedRef.current) return
-      setUser(currentUser)
-
-      // ถ้า access ใช้ไม่ได้ (เช่นโดน revoke) → เคลียร์ & ให้ interceptor เป็นคน refresh ตอนยิง API
-      if (!currentUser) {
-        setAccessToken(null)
-        setUser(null)
-        setIsLoading(false)
-        return
-      }
-
+      return
     } finally {
       if (activeRef.current === mySeq && mountedRef.current) {
         setIsLoading(false)
       }
-      inflightRef.current = false
     }
   }
-    useEffect(() => {
-    mountedRef.current = true
-    void loadUserAndStore()
 
-    // เมื่อ access token เปลี่ยน:
-    // - ถ้าเป็น null และเราอยู่หน้า private => แปลว่า refresh ล้มเหลว -> เด้ง login
-    // - ถ้ามีค่า => โหลด me/store ใหม่
-    const unsub = subscribe(() => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        const at = getAccessToken()
-        const isPublic = isPublicPath(pathname)
-        if (!at && !isPublic) {
-          router.replace("/auth")
-          return
-        }
-        void loadUserAndStore()
-      }, DEBOUNCE_MS)
-    })
-
-    return () => {
-      mountedRef.current = false
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      unsub()
+  useEffect(() => {
+    mountedRef.current = true;
+    if (!inflightRef.current) {
+      inflightRef.current = true;
+      routeAccordingToRules(pathname).finally(() => {
+        inflightRef.current = false;
+      });
     }
+    return () => {
+      mountedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  }, [pathname]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true)
-    const loggedInUser = await loginUser(email, password)
-    console.log('loggedInUser',loggedInUser)
+    setIsLoading(true);
+    const loggedInUser = await loginUser(email, password);
+    console.log("loggedInUser", loggedInUser);
     if (loggedInUser) {
-      setUser(loggedInUser)
-      setIsLoading(false)
-      return true
+      setUser(loggedInUser);
+      setIsLoading(false);
+      return true;
     }
-    setIsLoading(false)
-    return false
-  }
-  console.log('user',user)
-  console.log('access token',getAccessToken())
+    setIsLoading(false);
+    return false;
+  };
+
 
   const logout = async () => {
-    await logoutUser()
-    setUser(null)
-    setAccessToken(null)
-  }
+    await logoutUser();
+    setUser(null);
+    goToCustomerHome()
+  };
   const value = useMemo<AuthContextType>(
-    () => ({ user, login, logout, isLoading,  }),
+    () => ({ user, login, logout, isLoading }),
     [user, isLoading]
-  )
+  );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error("useAuth must be used within an AuthProvider")
-  return context
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
 }

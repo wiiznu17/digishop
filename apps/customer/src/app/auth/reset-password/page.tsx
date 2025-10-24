@@ -1,7 +1,6 @@
 'use client'
-import { Suspense, use, useState } from "react";
+import {  use, useState } from "react";
 import {  Lock,CircleCheck, CheckCircle, ArrowLeft } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { resetPassword } from "@/utils/requestUtils/requestAuthUtils";
 import InputField from "@/components/inputField";
 import { Rubik } from "next/font/google";
@@ -140,7 +139,7 @@ if(page === 'success'){
               onClick={() => router.replace('/auth')}
               className="w-full mt-3 flex items-center text-xl justify-start text-gray-600 hover:text-gray-900 transition"
             >
-              <ArrowLeft className="w-4 h-4 mr-2 " />
+              <ArrowLeft className="w-4 h-4 mr-2 cursor-pointer" />
               Back to Login
             </button>
           </div>
