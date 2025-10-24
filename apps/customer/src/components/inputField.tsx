@@ -1,5 +1,6 @@
 // components/InputField.tsx
-import React from 'react';
+import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface InputFieldProps {
   label: string;
@@ -30,6 +31,8 @@ const InputField: React.FC<InputFieldProps> = ({
   error,
   height
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const inputType = type === 'password' && showPassword ? 'text' : type;
   const whiteListRegexText = /^[\u0E00-\u0E7Fa-zA-Z ]+$/
   const whiteListRegexTel = /^[0-9]+$/
 
@@ -42,7 +45,7 @@ const InputField: React.FC<InputFieldProps> = ({
       
       <div className="relative">
         <input
-          type={type}
+          type={inputType}
           id={name}
           name={name}
           value={value}
@@ -56,10 +59,18 @@ const InputField: React.FC<InputFieldProps> = ({
           }`}
         />
         
-        
-        {error && <p className=" absolute bottom-0 text-sm text-red-600 px-2">{error}</p>}
-        {!whiteListRegexText.test(value) && type === 'text' && value.length > 0 && <p className=" absolute bottom text-sm text-red-600 px-2">* accept only ก-ฮ, a-z, A-Z</p>}
-        {!whiteListRegexTel.test(value) && type === 'num' && value != null && value.length > 0 && <p className=" absolute bottom-0 text-sm text-red-600 px-2">* accept only number</p>}
+        {type === 'password' && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            {!showPassword ? <EyeOff size={18} className='' /> : <Eye size={18} />}
+          </button>
+        )}
+        {error && <p className="text-sm text-red-600 px-2">{error}</p>}
+        {!whiteListRegexText.test(value) && type === 'text' && value.length > 0 && <p className="text-sm text-red-600 px-2">* accept only ก-ฮ, a-z, A-Z</p>}
+        {!whiteListRegexTel.test(value) && type === 'num' && value != null && value.length > 0 && <p className="text-sm text-red-600 px-2">* accept only number</p>}
       </div>
       
     </div>
@@ -67,3 +78,5 @@ const InputField: React.FC<InputFieldProps> = ({
 };
 
 export default InputField;
+
+        
