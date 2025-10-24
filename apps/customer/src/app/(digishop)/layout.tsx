@@ -25,7 +25,7 @@ export default function MainLayout({
   return (
     <AuthProvider>
       {
-        (!pathName.includes(orderPage)) &&<header className="bg-white border-2 ">  
+        (!pathName.includes(orderPage)) &&<header className="bg-white border-2 flex-1">  
           <div className="px-20 py-5">
             <div className="flex items-center justify-between">
               {/* <h1 className="text-2xl font-bold text-gray-800">ShopSearch</h1> */}
@@ -35,23 +35,24 @@ export default function MainLayout({
               {
                 user && (
               <nav className="hidden md:flex space-x-6">
+                
                 <Link
                   href="/shopping-cart"
                   className="text-black hover:text-gray-500 text-2xl "
                 >
-                  <ShoppingCart size={40} />
+                  <ShoppingCart size={40} className={`${pathName === "/shopping-cart" ? "text-gray-500" : "text-black"}`} />
                 </Link>
                 <Link
                   href="/order/status"
                   className="text-black hover:text-gray-500 text-2xl px-10"
                 >
-                  <ClipboardList size={40} />
+                  <ClipboardList size={40} className={`${pathName === "/order/status" ? "text-gray-500" : "text-black"}`}/>
                 </Link>
                 <a
                   href="/setting/profile"
                   className="text-black hover:text-gray-500 text-2xl"
                 >
-                  <CircleUser size={40} />
+                  <CircleUser size={40} className={`${pathName === '/setting/profile' ? "text-gray-500" : "text-black"}`}/>
                 </a>
               </nav>
                 )

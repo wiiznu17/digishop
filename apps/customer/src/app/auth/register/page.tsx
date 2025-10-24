@@ -56,14 +56,16 @@ const RegisterPage: React.FC = () => {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm() || !checkPassword) return;
     setIsLoading(true);
     try {
       const res = (await createUser(formData)) as { data: boolean };
       if (res.data) {
         setPage('email')
-      }
-    } catch {
+      } else {
+      setFailed(true);
+    }
+    } catch  {
       setFailed(true);
     }
   };
@@ -116,6 +118,7 @@ const RegisterPage: React.FC = () => {
   const testCapLetter = /[A-Z]/g.test(formData.password);
   const testLowerLetter = /[a-z]/g.test(formData.password);
   const testNumber = /[0-9]/g.test(formData.password);
+  const checkPassword = (testLength && testCapLetter && testLowerLetter && testNumber )
   if(page === 'register') {
     return (
     <div className="min-h-screen bg-white py-8 px-4">
@@ -123,7 +126,7 @@ const RegisterPage: React.FC = () => {
         onClick={() => router.replace("/auth")}
         className=" flex items-center justify-start text-gray-600 hover:text-gray-900 transition"
       >
-        <ArrowLeft className="w-4 h-4 mr-2" />
+        <ArrowLeft className="w-4 h-4 mr-2 cursor-pointer" />
         Back to Login
       </button>
       <div className="max-w-2xl mx-auto ">
@@ -381,7 +384,7 @@ const RegisterPage: React.FC = () => {
             size="lg"
             className="w-full group"
             disabled={isLoading}
-            color="bg-blue-600/80 text-white"
+            color={` ${checkPassword ? 'bg-blue-600/80 text-white': 'bg-gray-400 text-white' }  `}
           >
             Create Account
           </Button>
@@ -424,7 +427,7 @@ const RegisterPage: React.FC = () => {
               onClick={() => router.replace('/auth')}
               className="w-full flex items-center justify-center text-gray-600 hover:text-gray-900 transition"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 mr-2 cursor-pointer" />
               Back to Login
             </button>
           </div>

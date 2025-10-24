@@ -1,4 +1,3 @@
-
 import { ActorType, CheckOut, Order, OrderStatus, OrderStatusHistory, Payment, PaymentGatewayEvent, PaymentStatus } from "@digishop/db";
 import { Request, Response } from "express";
 export const getNotify = async (req: Request, res: Response) => {
