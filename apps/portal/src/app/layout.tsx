@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Merchant Dashboard",
+  title: "Digishop Merchant Portal",
   description:
-    "Complete merchant management platform for products, orders, and business insights"
+    "Manage your multi-vendor commerce platform with DigiShop Merchant Portal."
 }
 
 export default function RootLayout({
