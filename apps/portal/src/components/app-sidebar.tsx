@@ -204,11 +204,11 @@ export function AdminSidebar() {
                 className="w-[--radix-popper-anchor-width]"
               >
                 <DropdownMenuItem asChild>
-                  <Link href="/admin/system/admins">Team & Roles</Link>
+                  <Link href="/admin/admins">Team & Roles</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/system/audit-logs">View Audit Logs</Link>
-                </DropdownMenuItem>
+                {/* <DropdownMenuItem asChild>
+                  <Link href="/admin/audit-logs">View Audit Logs</Link>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem asChild>
                   <Button
                     variant="destructive"

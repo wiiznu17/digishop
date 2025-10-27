@@ -40,10 +40,10 @@ export const OrdersTable = React.memo(function OrdersTable({
           <TableRow>
             <TableHead>Order</TableHead>
             <TableHead>Customer</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+            <TableHead className="text-center">Total</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead className="text-right">Action</TableHead>
+            <TableHead className="text-center">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -74,7 +74,7 @@ export const OrdersTable = React.memo(function OrdersTable({
               <TableCell>
                 <StatusBadge status={row.status} />
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-center">
                 {THB(row.grandTotalMinor)}
               </TableCell>
               <TableCell>{new Date(row.createdAt).toLocaleString()}</TableCell>

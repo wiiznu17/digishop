@@ -5,8 +5,8 @@ import { signAccess, signRefresh, verifyRefresh } from "../lib/jwt";
 import { AdminPermission, AdminRole, AdminSession, AdminUser } from "@digishop/db";
 
 const IS_PROD = process.env.NODE_ENV === "production";
-const ATK_NAME = process.env.JWT_ACCESS_COOKIE_NAME || "access_token";
-const RTK_NAME = process.env.JWT_REFRESH_COOKIE_NAME || "refresh_token";
+const ATK_NAME = process.env.JWT_ACCESS_COOKIE_NAME || "";
+const RTK_NAME = process.env.JWT_REFRESH_COOKIE_NAME || "";
 
 const ACCESS_TTL_MS = 15 * 60 * 1000;          // 15 นาที (ปรับตาม env ได้)
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 วัน
@@ -37,7 +37,7 @@ function clearAuthCookies(res: Response) {
 export const login = async (req: Request, res: Response) => {
   const { email, password } = (req.body ?? {}) as { email?: string; password?: string };
   if (!email || !password) return res.status(400).json({ error: "EMAIL_PASSWORD_REQUIRED" });
-
+  console.log("Login attempt for:", email);
   const user = await AdminUser.findOne({ where: { email } as any });
   if (!user) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
   if ((user as any).status === "SUSPENDED") {

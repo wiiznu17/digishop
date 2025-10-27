@@ -1,13 +1,3 @@
-// import type { Config } from "tailwindcss";
-
-// export default {
-//   content: [
-//     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-//     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-//     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-//   ],
-// } satisfies Config;
-
 import type { Config } from "tailwindcss";
 import plugin from "tailwindcss-animate";
 export default {
@@ -16,7 +6,12 @@ export default {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  	],
+		safelist: [
+  		{
+    		pattern: /^(bg|text|border)-(yellow|gray|green|blue|indigo|purple|emerald|orange|red|sky)-(100|200|300|500|800)$/,
+  		},
+		],
   theme: {
   	extend: {
   		colors: {

@@ -2,7 +2,7 @@ import { delay, Queue } from "bullmq";
 import IORedis from "ioredis";
 
 const REDIS_URL = process.env.REDIS_URL || "";
-const REFUND_QUEUE_NAME = process.env.REFUND_QUEUE_NAME || "";
+const REFUND_QUEUE_NAME = process.env.REFUND_QUEUE_NAME || "11";
 const AUTO_CANCEL_TIMEOUT = process.env.AUTO_CANCEL_TIMEOUT || "";
 
 export type RefundJob = {

@@ -1,7 +1,7 @@
 // apps/portal/src/components/commerce/orders/OrdersFilterBar.tsx
 "use client"
 
-import { Calendar } from "lucide-react"
+import { Calendar, CalendarDays } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -70,7 +70,7 @@ export function OrdersFilterBar({
       <div>
         <label className="block text-sm mb-1">From</label>
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
           <Input
             type="date"
             value={dateFrom}

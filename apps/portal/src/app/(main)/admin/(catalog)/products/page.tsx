@@ -225,10 +225,11 @@ function AdminProductFilters({
   }
 
   return (
-    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 md:flex-1">
+    <div className="space-y-3">
+      {/* แถบฟิลเตอร์ */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
         {/* Search + suggest (เฉพาะชื่อร้าน) */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-4">
           <label className="block text-sm mb-1">Search (Store name)</label>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverAnchor asChild>
@@ -249,9 +250,10 @@ function AdminProductFilters({
               />
             </PopoverAnchor>
             <PopoverContent
-              className="w-[520px] p-0"
               align="start"
               onOpenAutoFocus={(e) => e.preventDefault()}
+              // ให้กว้างเท่าช่อง Input
+              className="p-0 w-[--radix-popover-trigger-width] max-w-[520px]"
             >
               <div className="max-h-80 overflow-auto">
                 {loading ? (
@@ -279,7 +281,7 @@ function AdminProductFilters({
         </div>
 
         {/* Category */}
-        <div>
+        <div className="md:col-span-3">
           <label className="block text-sm mb-1">Category</label>
           <Select
             value={v.categoryUuid ?? ALL}
@@ -302,7 +304,7 @@ function AdminProductFilters({
         </div>
 
         {/* Req Status */}
-        <div>
+        <div className="md:col-span-2">
           <label className="block text-sm mb-1">Request Status</label>
           <Select
             value={v.reqStatus ?? ALL}
@@ -325,7 +327,7 @@ function AdminProductFilters({
         </div>
 
         {/* Product Status */}
-        <div>
+        <div className="md:col-span-3">
           <label className="block text-sm mb-1">Product Status</label>
           <Select
             value={v.status ?? ALL}
@@ -345,7 +347,7 @@ function AdminProductFilters({
         </div>
 
         {/* Stock */}
-        <div>
+        <div className="md:col-span-2">
           <label className="block text-sm mb-1">Stock</label>
           <Select
             value={v.stock}
@@ -354,7 +356,7 @@ function AdminProductFilters({
             }
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="in">In stock only</SelectItem>
@@ -365,54 +367,52 @@ function AdminProductFilters({
         </div>
 
         {/* Sort */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-sm mb-1">Sort by</label>
-            <Select
-              value={v.sortBy}
-              onValueChange={(val: string) =>
-                onChange({ sortBy: val as SortBy })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="createdAt">Created</SelectItem>
-                <SelectItem value="updatedAt">Updated</SelectItem>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="price">Price (min)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Direction</label>
-            <Select
-              value={v.sortDir}
-              onValueChange={(val: string) =>
-                onChange({ sortDir: val as SortDir })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desc">Desc</SelectItem>
-                <SelectItem value="asc">Asc</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="md:col-span-2">
+          <label className="block text-sm mb-1">Sort by</label>
+          <Select
+            value={v.sortBy}
+            onValueChange={(val: string) => onChange({ sortBy: val as SortBy })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Created" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt">Created</SelectItem>
+              <SelectItem value="updatedAt">Updated</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="price">Price (min)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="flex gap-2">
-        <Button onClick={applyNow} className="gap-2">
-          <Search className="h-4 w-4" /> Search
-        </Button>
-        <Button variant="outline" onClick={onReset}>
-          Clear
-        </Button>
+        {/* Direction */}
+        <div className="md:col-span-2">
+          <label className="block text-sm mb-1">Direction</label>
+          <Select
+            value={v.sortDir}
+            onValueChange={(val: string) =>
+              onChange({ sortDir: val as SortDir })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Desc" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Desc</SelectItem>
+              <SelectItem value="asc">Asc</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Actions */}
+        <div className="md:col-span-2 flex gap-2 justify-end">
+          <Button onClick={applyNow} className="gap-2">
+            <Search className="h-4 w-4" /> Search
+          </Button>
+          <Button variant="outline" onClick={onReset}>
+            Clear
+          </Button>
+        </div>
       </div>
     </div>
   )

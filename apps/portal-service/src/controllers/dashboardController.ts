@@ -1,34 +1,7 @@
 import { Request, Response } from "express"
 import { Op, fn, col, literal, WhereOptions } from "sequelize"
 import type { Order as SequelizeOrderType } from "sequelize"
-import { cacheGet, cacheSet, weakEtag } from "../lib/cache"
-import { Order, Store, User } from "@digishop/db"
-
-type OrderStatus =
-  | "PENDING"
-  | "CUSTOMER_CANCELED"
-  | "PAID"
-  | "MERCHANT_CANCELED"
-  | "PROCESSING"
-  | "READY_TO_SHIP"
-  | "HANDED_OVER"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "COMPLETE"
-  | "TRANSIT_LACK"
-  | "RE_TRANSIT"
-  | "REFUND_REQUEST"
-  | "REFUND_REJECTED"
-  | "AWAITING_RETURN"
-  | "RECEIVE_RETURN"
-  | "RETURN_VERIFIED"
-  | "RETURN_FAIL"
-  | "REFUND_APPROVED"
-  | "REFUND_PROCESSING"
-  | "REFUND_SUCCESS"
-  | "REFUND_FAIL"
-  | "REFUND_RETRY"
-
+import { Order, OrderStatus, Store, User } from "@digishop/db"
 
 type SeriesByStatus = Record<OrderStatus, number>
 
@@ -75,38 +48,23 @@ function parseRange(req: Request): { from: string; to: string } {
 }
 
 function whereBetweenCreatedAt(r: { from: string; to: string }): WhereOptions {
-  const startDate = new Date(r.from);
-  
-  // ตั้งเวลาเริ่มต้นของวัน from
-  startDate.setHours(0, 0, 0, 0);
+  const startDate = new Date(r.from)
+  startDate.setHours(0, 0, 0, 0)
 
-  const endDate = new Date(r.to);
-  
-  // ตั้งเวลาสิ้นสุดของวัน to
-  endDate.setHours(23, 59, 59, 999); 
+  const endDate = new Date(r.to)
+  endDate.setHours(23, 59, 59, 999)
 
   return {
     createdAt: { [Op.between]: [startDate, endDate] }
-  };
+  }
 }
 
-function cacheKey(prefix: string, r: { from: string; to: string }): string {
-  return `${prefix}:${r.from}:${r.to}`
-}
-
-const ORDER_BY_DAY_ASC: SequelizeOrderType = [[literal("day"), "ASC"]]
 const ORDER_BY_DATE_ASC: SequelizeOrderType = [[fn("DATE", col("Order.created_at")), "ASC"]]
-const ORDER_BY_SUM_GMV_DESC: SequelizeOrderType = [[fn("SUM", col("Order.grand_total_minor")), "DESC"]]
 
 // KPI
 export async function adminDashboardKpis(req: Request, res: Response) {
   try {
     const range = parseRange(req)
-    console.log("KPI range: ", range)
-    const key = cacheKey("dash:kpis", range)
-    const cached = await cacheGet<DashboardKpis>(key)
-    if (cached) { res.setHeader("ETag", weakEtag(cached)); return res.json(cached) }
-    console.log("No cache for kpis")
     const where = whereBetweenCreatedAt(range)
 
     const rows = (await Order.findAll({
@@ -118,7 +76,7 @@ export async function adminDashboardKpis(req: Request, res: Response) {
       where,
       raw: true
     })) as unknown as Array<{ gmvMinor: string | number; orders: string | number; activeStores: string | number }>
-    console.log("KPI rows: ", rows)
+
     const r0 = rows[0]
     const kpis: DashboardKpis = {
       gmvMinor: toNum(r0?.gmvMinor),
@@ -126,23 +84,18 @@ export async function adminDashboardKpis(req: Request, res: Response) {
       activeStores: toNum(r0?.activeStores),
       newUsers: await User.count({ where: whereBetweenCreatedAt(range) })
     }
-    console.log("Kpis: ", kpis)
-    await cacheSet(key, kpis, 60)
-    res.setHeader("ETag", weakEtag(kpis))
+
     res.json(kpis)
   } catch (e) {
     console.error("adminDashboardKpis error:", e)
     res.status(400).json({ error: "Bad request" })
   }
 }
+
 // GMV, orders
 export async function adminDashboardSeries(req: Request, res: Response) {
   try {
     const range = parseRange(req)
-    const key = cacheKey("dash:series", range)
-    const cached = await cacheGet<SeriesPoint[]>(key)
-    if (cached) { res.setHeader("ETag", weakEtag(cached)); return res.json(cached) }
-
     const where = whereBetweenCreatedAt(range)
 
     const dailyTotals = (await Order.findAll({
@@ -177,30 +130,32 @@ export async function adminDashboardSeries(req: Request, res: Response) {
 
     // map status
     const emptyStatus: SeriesByStatus = {
-      PENDING: 0,
-      PAID: 0,
-      PROCESSING: 0,
-      SHIPPED: 0,
-      DELIVERED: 0,
-      COMPLETE: 0,
-      CUSTOMER_CANCELED: 0,
-      MERCHANT_CANCELED: 0,
-      READY_TO_SHIP: 0,
-      HANDED_OVER: 0,
-      TRANSIT_LACK: 0,
-      RE_TRANSIT: 0,
-      REFUND_REQUEST: 0,
-      REFUND_REJECTED: 0,
-      AWAITING_RETURN: 0,
-      RECEIVE_RETURN: 0,
-      RETURN_VERIFIED: 0,
-      RETURN_FAIL: 0,
-      REFUND_APPROVED: 0,
-      REFUND_PROCESSING: 0,
-      REFUND_SUCCESS: 0,
-      REFUND_FAIL: 0,
-      REFUND_RETRY: 0
+      [OrderStatus.CANCELED_REFUND]: 0,
+      [OrderStatus.PENDING]: 0,
+      [OrderStatus.CUSTOMER_CANCELED]: 0,
+      [OrderStatus.PAID]: 0,
+      [OrderStatus.MERCHANT_CANCELED]: 0,
+      [OrderStatus.PROCESSING]: 0,
+      [OrderStatus.READY_TO_SHIP]: 0,
+      [OrderStatus.HANDED_OVER]: 0,
+      [OrderStatus.SHIPPED]: 0,
+      [OrderStatus.DELIVERED]: 0,
+      [OrderStatus.COMPLETE]: 0,
+      [OrderStatus.TRANSIT_LACK]: 0,
+      [OrderStatus.RE_TRANSIT]: 0,
+      [OrderStatus.REFUND_REQUEST]: 0,
+      [OrderStatus.REFUND_REJECTED]: 0,
+      [OrderStatus.AWAITING_RETURN]: 0,
+      [OrderStatus.RECEIVE_RETURN]: 0,
+      [OrderStatus.RETURN_VERIFIED]: 0,
+      [OrderStatus.RETURN_FAIL]: 0,
+      [OrderStatus.REFUND_APPROVED]: 0,
+      [OrderStatus.REFUND_PROCESSING]: 0,
+      [OrderStatus.REFUND_SUCCESS]: 0,
+      [OrderStatus.REFUND_FAIL]: 0,
+      [OrderStatus.REFUND_RETRY]: 0
     }
+
     const mapStatus = new Map<string, SeriesByStatus>()
     byStatusDaily.forEach((r) => {
       const cur = mapStatus.get(r.day) ?? { ...emptyStatus }
@@ -221,22 +176,17 @@ export async function adminDashboardSeries(req: Request, res: Response) {
       }
     })
 
-    await cacheSet(key, series, 60)
-    res.setHeader("ETag", weakEtag(series))
     res.json(series)
   } catch (e) {
     console.error("adminDashboardSeries error:", e)
     res.status(400).json({ error: "Bad request" })
   }
 }
+
 // สถานะ order
 export async function adminDashboardStatusDist(req: Request, res: Response) {
   try {
     const range = parseRange(req)
-    const key = cacheKey("dash:status", range)
-    const cached = await cacheGet<StatusDistRow[]>(key)
-    if (cached) { res.setHeader("ETag", weakEtag(cached)); return res.json(cached) }
-
     const where = whereBetweenCreatedAt(range)
 
     const rows = (await Order.findAll({
@@ -250,85 +200,70 @@ export async function adminDashboardStatusDist(req: Request, res: Response) {
     })) as unknown as Array<{ name: OrderStatus; value: string | number }>
 
     const names: OrderStatus[] = [
-      "PENDING",
-      "PAID",
-      "PROCESSING",
-      "SHIPPED",
-      "DELIVERED",
-      "COMPLETE",
-      "CUSTOMER_CANCELED",
-      "MERCHANT_CANCELED",
-      "TRANSIT_LACK",
-      "RE_TRANSIT",
-      "REFUND_REQUEST",
-      "REFUND_REJECTED",
-      "AWAITING_RETURN",
-      "RECEIVE_RETURN",
-      "RETURN_VERIFIED",
-      "RETURN_FAIL",
-      "REFUND_APPROVED",
-      "REFUND_PROCESSING",
-      "REFUND_SUCCESS",
-      "REFUND_FAIL",
-      "REFUND_RETRY",
-      "READY_TO_SHIP",
-      "HANDED_OVER"
+      OrderStatus.CANCELED_REFUND,
+      OrderStatus.PENDING,
+      OrderStatus.CUSTOMER_CANCELED,
+      OrderStatus.PAID,
+      OrderStatus.MERCHANT_CANCELED,
+      OrderStatus.PROCESSING,
+      OrderStatus.READY_TO_SHIP,
+      OrderStatus.HANDED_OVER,
+      OrderStatus.SHIPPED,
+      OrderStatus.DELIVERED,
+      OrderStatus.COMPLETE,
+      OrderStatus.TRANSIT_LACK,
+      OrderStatus.RE_TRANSIT,
+      OrderStatus.REFUND_REQUEST,
+      OrderStatus.REFUND_REJECTED,
+      OrderStatus.AWAITING_RETURN,
+      OrderStatus.RECEIVE_RETURN,
+      OrderStatus.RETURN_VERIFIED,
+      OrderStatus.RETURN_FAIL,
+      OrderStatus.REFUND_APPROVED,
+      OrderStatus.REFUND_PROCESSING,
+      OrderStatus.REFUND_SUCCESS,
+      OrderStatus.REFUND_FAIL,
+      OrderStatus.REFUND_RETRY
     ]
     const m = new Map<OrderStatus, number>()
     rows.forEach((r) => m.set(r.name, toNum(r.value)))
     const dist: StatusDistRow[] = names.map((n) => ({ name: n, value: m.get(n) ?? 0 }))
 
-    await cacheSet(key, dist, 60)
-    res.setHeader("ETag", weakEtag(dist))
     res.json(dist)
   } catch (e) {
     console.error("adminDashboardStatusDist error:", e)
     res.status(400).json({ error: "Bad request" })
   }
 }
+
 // top stores
 export async function adminDashboardTopStores(req: Request, res: Response) {
   try {
     const range = parseRange(req)
-    const key = cacheKey("dash:topstores", range)
-    const cached = await cacheGet<TopStore[]>(key)
-    if (cached) { res.setHeader("ETag", weakEtag(cached)); return res.json(cached) }
-
     const where = whereBetweenCreatedAt(range)
 
-    // สร้าง alias แล้ว order ด้วย alias เลย เพื่อตัดปัญหา ONLY_FULL_GROUP_BY
     const rows = (await Order.findAll({
       attributes: [
         [fn("SUM", col("Order.grand_total_minor")), "gmvMinor"],
         [fn("COALESCE", col("store.store_name"), col("Order.store_name_snapshot")), "name"]
       ],
-      include: [
-        { model: Store, as: "store", attributes: [], required: false }
-      ],
+      include: [{ model: Store, as: "store", attributes: [], required: false }],
       where,
-      group: [
-        col("store.id"),
-        col("store.store_name"),
-        col("Order.store_name_snapshot"),
-      ],
-      // สลับมา order ด้วย alias 'gmvMinor' แทน SUM(...), กัน SQL แปลกๆ
+      group: [col("store.id"), col("store.store_name"), col("Order.store_name_snapshot")],
       order: [[literal("gmvMinor"), "DESC"]],
       limit: 10,
       subQuery: false,
-      raw: true,
+      raw: true
     })) as unknown as Array<{ gmvMinor: string | number; name: string | null }>
 
     const data: TopStore[] = rows.map((r) => ({
       name: String(r.name ?? "Unknown"),
-      gmvMinor: Number(r.gmvMinor) || 0,
+      gmvMinor: Number(r.gmvMinor) || 0
     }))
 
-    await cacheSet(key, data, 60)
-    res.setHeader("ETag", weakEtag(data))
     res.json(data)
   } catch (e) {
     console.error("adminDashboardTopStores error:", e)
     res.status(400).json({ error: "Bad request" })
   }
 }
-
