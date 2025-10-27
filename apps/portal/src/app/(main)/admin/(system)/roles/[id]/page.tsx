@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import {
   Card,
@@ -12,12 +12,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import {
   fetchRoleDetail,
-  updateRoleMeta,
-  replaceRolePermissions,
   type AdminRoleDetail
 } from "@/utils/requesters/rolesRequester"
 
@@ -40,20 +37,13 @@ function groupByResource(perms: AdminRoleDetail["allPermissions"]): Grouped {
   }, {} as Grouped)
 }
 
-export default function RoleEditPage() {
+export default function RoleViewPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [data, setData] = useState<AdminRoleDetail | null>(null)
   const [loading, setLoading] = useState(false)
-  const [savingMeta, setSavingMeta] = useState(false)
-  const [savingPerms, setSavingPerms] = useState(false)
 
-  // meta draft
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-
-  // permission state
-  const [granted, setGranted] = useState<Set<number>>(new Set())
+  // สำหรับแสดงผลเท่านั้น
   const [filterText, setFilterText] = useState("")
 
   useEffect(() => {
@@ -64,9 +54,6 @@ export default function RoleEditPage() {
         const res = await fetchRoleDetail(Number(id))
         if (!alive) return
         setData(res)
-        setName(res.name)
-        setDescription(res.description ?? "")
-        setGranted(new Set(res.permissions.map((p) => p.id)))
       } finally {
         setLoading(false)
       }
@@ -80,6 +67,12 @@ export default function RoleEditPage() {
     () => groupByResource(data?.allPermissions ?? []),
     [data]
   )
+
+  const grantedSet = useMemo(
+    () => new Set((data?.permissions ?? []).map((p) => p.id)),
+    [data]
+  )
+
   const filteredGroups = useMemo(() => {
     const kw = filterText.trim().toLowerCase()
     if (!kw) return groups
@@ -96,58 +89,13 @@ export default function RoleEditPage() {
     return out
   }, [groups, filterText])
 
-  const toggle = (pid: number, checked: boolean | string) => {
-    setGranted((prev) => {
-      const n = new Set(prev)
-      if (checked) n.add(pid)
-      else n.delete(pid)
-      return n
-    })
-  }
-
-  const selectAllResource = (resource: string) => {
-    const ids = (groups[resource] || []).map((p) => p.id)
-    setGranted((prev) => new Set([...prev, ...ids]))
-  }
-  const unselectAllResource = (resource: string) => {
-    const ids = new Set((groups[resource] || []).map((p) => p.id))
-    setGranted((prev) => new Set([...prev].filter((id) => !ids.has(id))))
-  }
-
-  const onSaveMeta = useCallback(async () => {
-    if (!data) return
-    setSavingMeta(true)
-    try {
-      await updateRoleMeta(data.id, {
-        name: name.trim(),
-        description: description.trim() || null
-      })
-    } finally {
-      setSavingMeta(false)
-    }
-  }, [data, name, description])
-
-  const onSavePerms = useCallback(async () => {
-    if (!data) return
-    setSavingPerms(true)
-    try {
-      await replaceRolePermissions(data.id, Array.from(granted))
-      // refresh (optional)
-      const res = await fetchRoleDetail(data.id)
-      setData(res)
-      setGranted(new Set(res.permissions.map((p) => p.id)))
-    } finally {
-      setSavingPerms(false)
-    }
-  }, [data, granted])
-
   return (
     <div className="p-4 space-y-6">
       <Card>
         <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
             <CardTitle className="text-xl">{data?.name ?? "Role"}</CardTitle>
-            <CardDescription>Edit role & permissions</CardDescription>
+            <CardDescription>View role & permissions</CardDescription>
             {!!data && (
               <div className="mt-2 text-sm space-y-1">
                 <div>
@@ -160,9 +108,15 @@ export default function RoleEditPage() {
                     {data.isSystem ? "Yes" : "No"}
                   </Badge>
                 </div>
+                {data.description && (
+                  <div>
+                    <span className="text-muted-foreground">Description: </span>
+                    <span>{data.description}</span>
+                  </div>
+                )}
                 <div>
                   <span className="text-muted-foreground">Updated:</span>{" "}
-                  {new Date(data.updatedAt).toLocaleString()}
+                  {data ? new Date(data.updatedAt).toLocaleString() : "-"}
                 </div>
               </div>
             )}
@@ -176,6 +130,7 @@ export default function RoleEditPage() {
             </Button>
           </div>
         </CardHeader>
+
         <CardContent>
           {loading && (
             <div className="text-sm text-muted-foreground">Loading...</div>
@@ -186,37 +141,9 @@ export default function RoleEditPage() {
 
           {!!data && (
             <>
-              {/* Meta */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm mb-1">Name</label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={data.isSystem}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">Description</label>
-                  <Input
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    disabled={data.isSystem}
-                  />
-                </div>
-              </div>
-              <div className="mt-3">
-                <Button
-                  onClick={onSaveMeta}
-                  disabled={data.isSystem || savingMeta}
-                >
-                  Save meta
-                </Button>
-              </div>
+              <Separator className="my-4" />
 
-              <Separator className="my-6" />
-
-              {/* Permissions */}
+              {/* Filter (ดูอย่างเดียว) */}
               <div className="flex items-end justify-between gap-3">
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">
@@ -229,10 +156,12 @@ export default function RoleEditPage() {
                   />
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Granted: <span className="font-medium">{granted.size}</span>
+                  Granted:{" "}
+                  <span className="font-medium">{grantedSet.size}</span>
                 </div>
               </div>
 
+              {/* Permissions (read-only) */}
               <div className="mt-4 space-y-6">
                 {Object.keys(filteredGroups).length === 0 && (
                   <div className="text-sm text-muted-foreground">
@@ -244,54 +173,38 @@ export default function RoleEditPage() {
                   <div key={resource} className="rounded-lg border p-3">
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{resource}</div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => selectAllResource(resource)}
-                        >
-                          Select all
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => unselectAllResource(resource)}
-                        >
-                          Unselect all
-                        </Button>
-                      </div>
                     </div>
+
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {items.map((p) => (
-                        <label
-                          key={p.id}
-                          className="flex items-center gap-2 rounded border p-2"
-                        >
-                          <Checkbox
-                            checked={granted.has(p.id)}
-                            onCheckedChange={(ck: boolean) => toggle(p.id, ck)}
-                            disabled={data.isSystem}
-                          />
-                          <div className="flex-1">
-                            <div className="font-mono text-xs">{p.slug}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {p.action} · effect: {p.effect}
+                      {items.map((p) => {
+                        const granted = grantedSet.has(p.id)
+                        return (
+                          <div
+                            key={p.id}
+                            className={`flex items-center justify-between rounded border p-2 ${
+                              granted ? "bg-green-50 dark:bg-green-950/20" : ""
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="font-mono text-xs truncate">
+                                {p.slug}
+                              </div>
+                              {/* <div className="text-xs text-muted-foreground">
+                                {p.action} · effect: {p.effect}
+                              </div> */}
                             </div>
+                            <Badge
+                              variant={granted ? "default" : "outline"}
+                              className="ml-2 shrink-0"
+                            >
+                              {granted ? "GRANTED" : "NOT GRANTED"}
+                            </Badge>
                           </div>
-                        </label>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-4">
-                <Button
-                  onClick={onSavePerms}
-                  disabled={data.isSystem || savingPerms}
-                >
-                  Save permissions
-                </Button>
               </div>
             </>
           )}

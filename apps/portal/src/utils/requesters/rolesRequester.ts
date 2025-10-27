@@ -87,6 +87,7 @@ export async function replaceRolePermissions(
   id: number,
   permissionIds: number[]
 ) {
+  console.log("replaceRolePermissions", id, permissionIds)
   const r = await axios.put(
     `/api/admin/roles/${id}/permissions`,
     { permissionIds },

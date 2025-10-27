@@ -20,14 +20,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem
-} from "@/components/ui/select"
-import { Eye, Search } from "lucide-react"
+import { Eye, Search as SearchIcon } from "lucide-react"
 
 import type { AdminUserLite } from "@/types/admin/users"
 import {
@@ -150,43 +143,45 @@ function AdminCustomersPage() {
     setOpenSuggest(false)
   }
 
+  // กด Enter ใน filter ใดๆ = ค้นหา
+  const onKeyDownEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      onSearch()
+    }
+  }
+
   return (
     <div className="p-4 space-y-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle>Users</CardTitle>
           <CardDescription>
             Browse users (filters by date & spent)
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-3">
-          {/* ── Filters */}
+        <CardContent className="space-y-4">
+          {/* ── Filters: จัด Search / Clear ไว้ท้ายสุด (ขวาสุด) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-            {/* Search */}
-            <div className="lg:col-span-5">
+            {/* Search (with suggestion) */}
+            <div className="lg:col-span-4">
               <label className="block text-sm mb-1">Search</label>
               <Popover open={openSuggest} onOpenChange={setOpenSuggest}>
                 <PopoverAnchor asChild>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Name / email"
-                      value={qInput}
-                      onChange={(e) => setQInput(e.target.value)}
-                      onFocus={() => {
-                        if (qInput.trim()) setOpenSuggest(true)
-                      }}
-                      onBlur={() =>
-                        setTimeout(() => setOpenSuggest(false), 120)
-                      }
-                    />
-                    <Button onClick={onSearch}>
-                      <Search className="h-4 w-4 mr-2" /> Search
-                    </Button>
-                  </div>
+                  <Input
+                    placeholder="Name / email"
+                    value={qInput}
+                    onChange={(e) => setQInput(e.target.value)}
+                    onFocus={() => {
+                      if (qInput.trim()) setOpenSuggest(true)
+                    }}
+                    onBlur={() => setTimeout(() => setOpenSuggest(false), 120)}
+                    onKeyDown={onKeyDownEnter}
+                  />
                 </PopoverAnchor>
                 <PopoverContent
-                  className="w-[520px] p-0"
+                  className="w-[min(520px,90vw)] p-0"
                   align="start"
                   onOpenAutoFocus={(e) => e.preventDefault()}
                 >
@@ -218,50 +213,56 @@ function AdminCustomersPage() {
             </div>
 
             {/* Date range */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <label className="block text-sm mb-1">Created from</label>
               <Input
                 type="date"
                 value={dateFromInput}
                 onChange={(e) => setDateFromInput(e.target.value)}
+                onKeyDown={onKeyDownEnter}
               />
             </div>
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <label className="block text-sm mb-1">Created to</label>
               <Input
                 type="date"
                 value={dateToInput}
                 onChange={(e) => setDateToInput(e.target.value)}
+                onKeyDown={onKeyDownEnter}
               />
             </div>
 
-            {/* Clear */}
-            <div className="lg:col-span-1 flex items-end justify-end">
-              <Button variant="outline" onClick={onClear}>
-                Clear
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
             {/* Spent range (THB) */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <label className="block text-sm mb-1">Spent min (THB)</label>
               <Input
                 inputMode="decimal"
-                placeholder="e.g. 1000"
+                placeholder="e.g. 1,000"
                 value={spentMinInput}
                 onChange={(e) => setSpentMinInput(e.target.value)}
+                onKeyDown={onKeyDownEnter}
               />
             </div>
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <label className="block text-sm mb-1">Spent max (THB)</label>
               <Input
                 inputMode="decimal"
-                placeholder="e.g. 50000"
+                placeholder="e.g. 50,000"
                 value={spentMaxInput}
                 onChange={(e) => setSpentMaxInput(e.target.value)}
+                onKeyDown={onKeyDownEnter}
               />
+            </div>
+
+            {/* Actions (ท้ายสุด) */}
+            <div className="lg:col-span-12 flex flex-col sm:flex-row sm:justify-end gap-2 pt-1">
+              <Button variant="outline" onClick={onClear}>
+                Clear
+              </Button>
+              <Button onClick={onSearch}>
+                <SearchIcon className="h-4 w-4 mr-2" />
+                Search
+              </Button>
             </div>
           </div>
 
@@ -270,12 +271,12 @@ function AdminCustomersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Store</TableHead>
-                  <TableHead className="text-right">Spent</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="w-[200px]">Name</TableHead>
+                  <TableHead className="w-[280px]">Email</TableHead>
+                  <TableHead className="w-[160px]">Created</TableHead>
+                  <TableHead className="w-[220px]">Store</TableHead>
+                  <TableHead className="w-[160px] text-right">Spent</TableHead>
+                  <TableHead className="w-[140px] text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -289,56 +290,70 @@ function AdminCustomersPage() {
                     </TableCell>
                   </TableRow>
                 )}
+
                 {!loading &&
                   pageRows.map((r) => (
                     <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.name}</TableCell>
-                      <TableCell>{r.email}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="truncate">{r.name || "—"}</div>
+                      </TableCell>
+
                       <TableCell>
+                        <div className="truncate max-w-[260px]">{r.email}</div>
+                      </TableCell>
+
+                      <TableCell className="whitespace-nowrap">
                         {new Date(r.createdAt).toLocaleString()}
                       </TableCell>
+
                       <TableCell>
                         {!r.store ? (
                           "—"
                         ) : (
                           <button
-                            className="text-primary hover:underline"
+                            className="text-primary hover:underline truncate max-w-[210px]"
                             onClick={() =>
                               router.push(`/admin/merchants/${r.store!.id}`)
                             }
+                            title={r.store.storeName}
                           >
                             {r.store.storeName}
                           </button>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+
+                      <TableCell className="text-right whitespace-nowrap">
                         {formatTHBMinor(r.orderTotalMinor)}{" "}
                         <span className="text-xs text-muted-foreground">
                           ({r.orderCount})
                         </span>
                       </TableCell>
+
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mr-2"
-                          onClick={() =>
-                            router.push(`/admin/customers/${r.id}`)
-                          }
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            router.push(`/admin/customers/${r.id}`)
-                          }
-                        >
-                          Detail
-                        </Button>
+                        <div className="inline-flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              router.push(`/admin/customers/${r.id}`)
+                            }
+                            aria-label="View"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              router.push(`/admin/customers/${r.id}`)
+                            }
+                          >
+                            Detail
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
+
                 {!loading && pageRows.length === 0 && (
                   <TableRow>
                     <TableCell

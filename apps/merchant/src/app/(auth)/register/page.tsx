@@ -20,19 +20,32 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { ModeToggle } from "@/components/mode-toggle"
-import Link from "next/link"
-import {
-  createMerchant,
-  fetchUser
-} from "@/utils/requestUtils/requestAuthUtils"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { createMerchant } from "@/utils/requestUtils/requestAuthUtils"
+
+type FormData = {
+  storeName: string
+  ownerName: string
+  email: string
+  phone: string
+  businessType: string
+  description: string
+  addressNumber: string
+  addressBuilding: string
+  addressSubStreet: string
+  addressStreet: string
+  addressSubdistrict: string
+  addressDistrict: string
+  addressProvince: string
+  addressZip: string
+}
 
 export default function RegisterPage() {
   const DIGISHOP_URL =
     process.env.NEXT_PUBLIC_DIGISHOP_URL ?? "http://localhost:3000"
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     storeName: "",
     ownerName: "",
     email: "",
@@ -53,7 +66,6 @@ export default function RegisterPage() {
   const router = useRouter()
 
   useEffect(() => {
-    console.log("User in Register Page:", user)
     if (!isLoading) {
       if (!user) {
         router.push("/login")
@@ -63,40 +75,114 @@ export default function RegisterPage() {
     }
   }, [user, isLoading, router])
 
-  // if (isLoading) return <p>Loading...</p>
-
   const [step, setStep] = useState(1)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const handleChange = (field: string, value: string) => {
-    console.log("data set: ", field)
-    console.log("data set: ", value)
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  // ช่องที่ต้องกรอกเฉพาะที่มี *
+  const REQUIRED_BY_STEP: Record<number, (keyof FormData)[]> = {
+    1: ["storeName", "ownerName", "email", "phone", "businessType"],
+    2: [
+      "addressNumber",
+      "addressSubdistrict",
+      "addressDistrict",
+      "addressProvince",
+      "addressZip"
+    ]
   }
 
-  const handleNext = () => setStep((s) => s + 1)
+  const isEmpty = (v?: string) => !v || v.trim() === ""
+  const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+
+  const handleChange = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    // เคลียร์ error ของช่องนั้นๆ เมื่อผู้ใช้เริ่มพิมพ์
+    setErrors((prev) => {
+      if (!prev[field]) return prev
+      const clone = { ...prev }
+      delete clone[field]
+      return clone
+    })
+  }
+
+  function collectErrorsForStep(stepNum: number) {
+    const nextErrors: Record<string, string> = {}
+
+    for (const key of REQUIRED_BY_STEP[stepNum] ?? []) {
+      const val = formData[key]
+      if (isEmpty(val)) nextErrors[key] = "This field is required"
+    }
+
+    if (
+      stepNum === 1 &&
+      !nextErrors.email &&
+      !isEmpty(formData.email) &&
+      !isEmail(formData.email)
+    ) {
+      nextErrors.email = "Invalid email format"
+    }
+
+    return nextErrors
+  }
+
+  function collectAllErrors() {
+    return {
+      ...collectErrorsForStep(1),
+      ...collectErrorsForStep(2)
+    }
+  }
+
+  function focusFirstErrorFromMap(errMap: Record<string, string>) {
+    const firstKey = Object.keys(errMap)[0]
+    if (firstKey) {
+      const el = document.getElementById(firstKey)
+      if (el) el.focus()
+    }
+  }
+
+  const handleNext = () => {
+    const stepErrors = collectErrorsForStep(step)
+    if (Object.keys(stepErrors).length === 0) {
+      setStep((s) => s + 1)
+    } else {
+      setErrors((prev) => ({ ...prev, ...stepErrors }))
+      focusFirstErrorFromMap(stepErrors)
+    }
+  }
+
   const handleBack = () => setStep((s) => s - 1)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // formData + user.id
-    const customAxiosData = {
-      ...formData,
-      userId: user?.id
+
+    // เช็คทุกสเต็ปก่อนยิง API
+    const allErrors = collectAllErrors()
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors)
+      // ถ้ามี error ใน step1 ให้เด้งกลับไป step1 ไม่งั้นไป step2
+      const fieldsStep1 = new Set(REQUIRED_BY_STEP[1])
+      const firstErrorKey = Object.keys(allErrors)[0]
+      if (firstErrorKey && fieldsStep1.has(firstErrorKey as keyof FormData)) {
+        setStep(1)
+      } else {
+        setStep(2)
+      }
+      focusFirstErrorFromMap(allErrors)
+      return
     }
+
+    const payload = { ...formData, userId: user?.id }
     try {
-      const res = await createMerchant(customAxiosData)
-      console.log("Response from createMerchant:", res)
-      console.log("Response:", res)
-      // const user = await fetchUser()
-      // console.log("Fetched user after registration:", user)
-      // router.refresh()
+      await createMerchant(payload)
       router.push("/")
     } catch (error) {
       console.error("Error creating merchant:", error)
-      // Handle error (e.g., show notification)
       alert("Failed to create merchant account. Please try again later.")
     }
   }
+
+  // helper สำหรับคลาส error
+  const errorClass = (key: keyof FormData) =>
+    errors[key] ? "border-red-500 focus-visible:ring-red-500" : ""
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
@@ -142,16 +228,22 @@ export default function RegisterPage() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="storeName">Business Name *</Label>
+                      <Label htmlFor="storeName">Merchant Name *</Label>
                       <Input
                         id="storeName"
                         value={formData.storeName}
                         onChange={(e) =>
                           handleChange("storeName", e.target.value)
                         }
-                        placeholder="Your Business Name"
-                        required
+                        placeholder="Your Merchant Name"
+                        aria-invalid={!!errors.storeName}
+                        className={errorClass("storeName")}
                       />
+                      {errors.storeName && (
+                        <p className="text-sm text-red-600">
+                          {errors.storeName}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="ownerName">Owner Name *</Label>
@@ -162,8 +254,14 @@ export default function RegisterPage() {
                           handleChange("ownerName", e.target.value)
                         }
                         placeholder="Full Name"
-                        required
+                        aria-invalid={!!errors.ownerName}
+                        className={errorClass("ownerName")}
                       />
+                      {errors.ownerName && (
+                        <p className="text-sm text-red-600">
+                          {errors.ownerName}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -174,9 +272,13 @@ export default function RegisterPage() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleChange("email", e.target.value)}
-                        placeholder="business@example.com"
-                        required
+                        placeholder="digio@thailand.com"
+                        aria-invalid={!!errors.email}
+                        className={errorClass("email")}
                       />
+                      {errors.email && (
+                        <p className="text-sm text-red-600">{errors.email}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number *</Label>
@@ -185,38 +287,55 @@ export default function RegisterPage() {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => handleChange("phone", e.target.value)}
-                        placeholder="+1 (555) 000-0000"
-                        required
+                        placeholder="+66 8X-XXX-XXXX"
+                        aria-invalid={!!errors.phone}
+                        className={errorClass("phone")}
                       />
+                      {errors.phone && (
+                        <p className="text-sm text-red-600">{errors.phone}</p>
+                      )}
                     </div>
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="businessType">Business Type *</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleChange("businessType", value)
+                    <Label htmlFor="businessType">Merchant Type *</Label>
+                    <div
+                      className={
+                        errors.businessType
+                          ? "rounded-md border border-red-500 p-0.5"
+                          : ""
                       }
-                      value={formData.businessType}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select business type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="retail">Retail</SelectItem>
-                        <SelectItem value="wholesale">Wholesale</SelectItem>
-                        <SelectItem value="services">Services</SelectItem>
-                        <SelectItem value="manufacturing">
-                          Manufacturing
-                        </SelectItem>
-                        <SelectItem value="food">Food & Beverage</SelectItem>
-                        <SelectItem value="fashion">
-                          Fashion & Apparel
-                        </SelectItem>
-                        <SelectItem value="electronics">Electronics</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <Select
+                        onValueChange={(value) =>
+                          handleChange("businessType", value)
+                        }
+                        value={formData.businessType}
+                      >
+                        <SelectTrigger
+                          id="businessType"
+                          aria-invalid={!!errors.businessType}
+                        >
+                          <SelectValue placeholder="Select merchant type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="food">Food & Beverage</SelectItem>
+                          <SelectItem value="fashion">
+                            Fashion & Apparel
+                          </SelectItem>
+                          <SelectItem value="electronics">
+                            Electronics
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {errors.businessType && (
+                      <p className="text-sm text-red-600">
+                        {errors.businessType}
+                      </p>
+                    )}
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="description">Business Description</Label>
                     <Textarea
@@ -229,6 +348,7 @@ export default function RegisterPage() {
                       rows={3}
                     />
                   </div>
+
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       variant="destructive"
@@ -246,12 +366,7 @@ export default function RegisterPage() {
                       type="button"
                       variant="outline"
                       className="flex-1"
-                      // disabled={isLoading}
                       asChild
-                      // onClick={async () => {
-                      //   await logout()
-                      //   router.push("/login")
-                      // }}
                     >
                       <a href={DIGISHOP_URL}>Back to Digishop</a>
                     </Button>
@@ -265,6 +380,7 @@ export default function RegisterPage() {
                   </div>
                 </>
               )}
+
               {step === 2 && (
                 <>
                   <div className="space-y-2">
@@ -276,9 +392,16 @@ export default function RegisterPage() {
                         handleChange("addressNumber", e.target.value)
                       }
                       placeholder="Address Number"
-                      required
+                      aria-invalid={!!errors.addressNumber}
+                      className={errorClass("addressNumber")}
                     />
+                    {errors.addressNumber && (
+                      <p className="text-sm text-red-600">
+                        {errors.addressNumber}
+                      </p>
+                    )}
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="addressBuilding">Address Building</Label>
                     <Input
@@ -288,9 +411,9 @@ export default function RegisterPage() {
                         handleChange("addressBuilding", e.target.value)
                       }
                       placeholder="Address Building"
-                      required
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="addressSubStreet">Address SubStreet</Label>
                     <Input
@@ -300,9 +423,9 @@ export default function RegisterPage() {
                         handleChange("addressSubStreet", e.target.value)
                       }
                       placeholder="Address SubStreet"
-                      required
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="addressStreet">Street</Label>
                     <Input
@@ -312,9 +435,9 @@ export default function RegisterPage() {
                         handleChange("addressStreet", e.target.value)
                       }
                       placeholder="Street"
-                      required
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="addressSubdistrict">Subdistrict *</Label>
                     <Input
@@ -324,9 +447,16 @@ export default function RegisterPage() {
                         handleChange("addressSubdistrict", e.target.value)
                       }
                       placeholder="Subdistrict"
-                      required
+                      aria-invalid={!!errors.addressSubdistrict}
+                      className={errorClass("addressSubdistrict")}
                     />
+                    {errors.addressSubdistrict && (
+                      <p className="text-sm text-red-600">
+                        {errors.addressSubdistrict}
+                      </p>
+                    )}
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="addressDistrict">District *</Label>
                     <Input
@@ -336,9 +466,16 @@ export default function RegisterPage() {
                         handleChange("addressDistrict", e.target.value)
                       }
                       placeholder="District"
-                      required
+                      aria-invalid={!!errors.addressDistrict}
+                      className={errorClass("addressDistrict")}
                     />
+                    {errors.addressDistrict && (
+                      <p className="text-sm text-red-600">
+                        {errors.addressDistrict}
+                      </p>
+                    )}
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="addressProvince">Province *</Label>
                     <Input
@@ -348,9 +485,16 @@ export default function RegisterPage() {
                         handleChange("addressProvince", e.target.value)
                       }
                       placeholder="Province"
-                      required
+                      aria-invalid={!!errors.addressProvince}
+                      className={errorClass("addressProvince")}
                     />
+                    {errors.addressProvince && (
+                      <p className="text-sm text-red-600">
+                        {errors.addressProvince}
+                      </p>
+                    )}
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="addressZip">Zip Code *</Label>
                     <Input
@@ -360,9 +504,18 @@ export default function RegisterPage() {
                         handleChange("addressZip", e.target.value)
                       }
                       placeholder="Zip Code"
-                      required
+                      inputMode="numeric"
+                      pattern="\d*"
+                      aria-invalid={!!errors.addressZip}
+                      className={errorClass("addressZip")}
                     />
+                    {errors.addressZip && (
+                      <p className="text-sm text-red-600">
+                        {errors.addressZip}
+                      </p>
+                    )}
                   </div>
+
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       type="button"
@@ -383,6 +536,7 @@ export default function RegisterPage() {
                   </div>
                 </>
               )}
+
               {step === 3 && (
                 <>
                   <div className="space-y-4 text-center">

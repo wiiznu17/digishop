@@ -27,6 +27,16 @@ import {
   type AdminRoleListItem
 } from "@/utils/requesters/rolesRequester"
 import { Pager } from "@/components/common/Pager"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 
 export default function AdminRolesPage() {
   // filters (draft)
@@ -77,16 +87,57 @@ export default function AdminRolesPage() {
     setTimeout(() => void load(), 0)
   }, [load])
 
-  // create role quick
+  // ─────────────────────────
+  // Create role (Dialog)
+  // ─────────────────────────
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
-  const handleQuickCreate = async () => {
-    const slug = window.prompt("Slug (unique):")
-    if (!slug) return
-    const name = window.prompt("Name:") || slug
+  const [slugDraft, setSlugDraft] = useState("")
+  const [nameDraft, setNameDraft] = useState("")
+  const [formErr, setFormErr] = useState<string | null>(null)
+
+  function resetDialog() {
+    setSlugDraft("")
+    setNameDraft("")
+    setFormErr(null)
+  }
+
+  function normalizeSlug(s: string) {
+    // ช่วยผู้ใช้เล็กน้อย: trim + แปลงช่องว่าง/ตัวพิเศษเป็น "-"
+    return s
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^A-Z0-9_]/g, "")
+  }
+
+  async function handleCreateRole(e?: React.FormEvent) {
+    e?.preventDefault()
+    const slug = normalizeSlug(slugDraft)
+    const name = nameDraft.trim() || slug
+
+    if (!slug) {
+      setFormErr("Slug is required")
+      return
+    }
+    if (slug === "SUPER_ADMIN") {
+      setFormErr("SUPER_ADMIN is reserved and cannot be created here.")
+      return
+    }
+
     setCreating(true)
+    setFormErr(null)
     try {
       await createRole({ slug, name })
+      resetDialog()
+      setDialogOpen(false)
       await load()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      // แสดง error จาก backend ถ้ามี
+      const message =
+        err?.response?.data?.error || err?.message || "Failed to create role"
+      setFormErr(message)
     } finally {
       setCreating(false)
     }
@@ -100,13 +151,76 @@ export default function AdminRolesPage() {
             <CardTitle>Roles</CardTitle>
             <CardDescription>Assign roles & Permission</CardDescription>
           </div>
-          <Button
-            className="gap-2"
-            onClick={handleQuickCreate}
-            disabled={creating}
+
+          {/* New role dialog trigger */}
+          {/* <Dialog
+            open={dialogOpen}
+            onOpenChange={(o) => {
+              setDialogOpen(o)
+              if (!o) resetDialog()
+            }}
           >
-            <Plus className="h-4 w-4" /> New role
-          </Button>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" /> New role
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>New role</DialogTitle>
+                <DialogDescription>
+                  Create a new role to group permissions and assign to admins.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form className="space-y-4" onSubmit={handleCreateRole}>
+                <div className="space-y-2">
+                  <Label htmlFor="role-slug">Slug (unique) *</Label>
+                  <Input
+                    id="role-slug"
+                    value={slugDraft}
+                    onChange={(e) => setSlugDraft(e.target.value)}
+                    placeholder="e.g. RBAC_ADMIN"
+                    autoFocus
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use uppercase letters, digits and underscores only. (e.g.,{" "}
+                    <span className="font-mono">RBAC_ADMIN</span>)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="role-name">Name</Label>
+                  <Input
+                    id="role-name"
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    placeholder="e.g. RBAC Admin"
+                  />
+                </div>
+
+                {formErr && (
+                  <div className="text-sm text-destructive">{formErr}</div>
+                )}
+
+                <DialogFooter className="gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      resetDialog()
+                      setDialogOpen(false)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={creating}>
+                    {creating ? "Saving..." : "Create role"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog> */}
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -143,7 +257,7 @@ export default function AdminRolesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Role</TableHead>
-                  <TableHead>Slug</TableHead>
+                  {/* <TableHead>Slug</TableHead> */}
                   <TableHead>Permissions</TableHead>
                   <TableHead>System</TableHead>
                   <TableHead>Created</TableHead>
@@ -165,9 +279,9 @@ export default function AdminRolesPage() {
                   rows.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>{r.name}</TableCell>
-                      <TableCell className="font-mono text-xs">
+                      {/* <TableCell className="font-mono text-xs">
                         {r.slug}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>{r.permissionCount}</TableCell>
                       <TableCell>{r.isSystem ? "Yes" : "No"}</TableCell>
                       <TableCell>

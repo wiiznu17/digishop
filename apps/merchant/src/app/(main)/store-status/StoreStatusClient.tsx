@@ -30,7 +30,10 @@ export default function StoreStatusPage() {
 
   const queryStatus = (sp.get("status") || "").toUpperCase()
 
-  // If the store becomes approved, redirect to merchant home
+  // ดึง URL หลักจาก env เช่น https://digishop.example.com
+  const DIGISHOP_URL =
+    process.env.NEXT_PUBLIC_DIGISHOP_URL ?? "https://digishop.localhost"
+
   useEffect(() => {
     if (!isLoading && storeStatus === "APPROVED") {
       router.replace("/")
@@ -42,31 +45,37 @@ export default function StoreStatusPage() {
     statusTextMap[storeStatus ?? "PENDING"] ??
     statusTextMap["PENDING"]
 
+  const btnBase =
+    "px-4 py-2 rounded-lg border transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+
   return (
-    <div className="min-h-[60vh] flex items-center justify-center p-6">
-      <div className="max-w-xl w-full border rounded-2xl p-8 shadow-sm">
+    <div className="min-h-screen w-full grid place-items-center p-6">
+      <div className="max-w-xl w-full border rounded-2xl p-8 shadow-sm bg-white">
         <h1 className="text-2xl font-bold mb-2">{info.title}</h1>
         <p className="text-muted-foreground mb-6">{info.desc}</p>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => router.refresh()}
-            className="px-4 py-2 rounded-lg border"
+            className={`${btnBase} hover:bg-gray-50 hover:border-gray-300 focus-visible:ring-gray-300`}
           >
             Check Again
           </button>
+
           <a
             href="mailto:support@example.com"
-            className="px-4 py-2 rounded-lg border"
+            className={`${btnBase} hover:bg-gray-50 hover:border-gray-300 focus-visible:ring-gray-300`}
           >
             Contact Support
           </a>
-          <button
-            onClick={() => router.replace("/")}
-            className="px-4 py-2 rounded-lg border"
+
+          {/* ใช้ href จาก ENV แทน router.replace */}
+          <a
+            href={DIGISHOP_URL}
+            className={`${btnBase} bg-gray-900 text-white border-gray-900 hover:bg-black hover:border-black focus-visible:ring-gray-400`}
           >
             Back to Home
-          </button>
+          </a>
         </div>
       </div>
     </div>
