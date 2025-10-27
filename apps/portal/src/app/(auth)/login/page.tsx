@@ -30,7 +30,7 @@ function LoginInner() {
   const nextPath = useMemo(() => {
     const next = search.get("next")
     // กัน open redirect: ต้องขึ้นต้นด้วย "/"
-    if (!next || !next.startsWith("/")) return "/admin/orders"
+    if (!next || !next.startsWith("/")) return "/"
     return next
   }, [search])
 

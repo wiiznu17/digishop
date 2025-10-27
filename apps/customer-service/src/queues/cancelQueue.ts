@@ -15,7 +15,7 @@ export async function removeCancelJobById(q: Queue, jobId: string) {
 }
 
 const REDIS_URL = process.env.REDIS_URL||"" ;
-const CANCEL_QUEUE_NAME = process.env.CANCEL_QUEUE_NAME || "";
+const CANCEL_QUEUE_NAME = process.env.CANCEL_QUEUE_NAME || "1";
 
 const connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
 

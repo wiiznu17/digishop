@@ -34,6 +34,11 @@ import {
 } from "@/utils/requesters/refundRequester"
 import { Pager } from "@/components/common/Pager"
 import AuthGuard from "@/components/AuthGuard"
+import {
+  RefundStatus,
+  RefundStatusBadge
+} from "@/components/commerce/orders/RefundStatusBadge"
+import { DashboardHeader } from "@/components/dashboard-header"
 
 const formatTHB = (m: number) =>
   (m / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
@@ -119,210 +124,217 @@ function AdminRefundsPage() {
   )
 
   return (
-    <div className="p-4 space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Refunds</CardTitle>
-          <CardDescription>Refund requests & results</CardDescription>
-        </CardHeader>
+    <div>
+      {" "}
+      <DashboardHeader
+        title="Refund Orders"
+        description="View all order that requested refunds"
+      />
+      <div className="p-4 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Refunds</CardTitle>
+            <CardDescription>Refund requests & results</CardDescription>
+          </CardHeader>
 
-        <CardContent className="space-y-3">
-          {/* Filters */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
-            {/* Suggest: order_code */}
-            <div className="lg:col-span-2">
-              <label className="block text-sm mb-1">Order Code</label>
-              <div className="relative">
+          <CardContent className="space-y-3">
+            {/* Filters */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+              {/* Suggest: order_code */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm mb-1">Order Code</label>
+                <div className="relative">
+                  <Input
+                    list="orderCodeList"
+                    placeholder="e.g. DS12345678"
+                    value={orderCode}
+                    onChange={(e) => setOrderCode(e.target.value)}
+                  />
+                  <datalist id="orderCodeList">
+                    {suggests.map((s) => (
+                      <option key={s.orderCode} value={s.orderCode} />
+                    ))}
+                  </datalist>
+                  {!!orderCode && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute right-1 top-1 h-7 px-2"
+                      onClick={() => setOrderCode("")}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Search: order id / customer name */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm mb-1">Customer name</label>
                 <Input
-                  list="orderCodeList"
-                  placeholder="e.g. DS12345678"
-                  value={orderCode}
-                  onChange={(e) => setOrderCode(e.target.value)}
+                  placeholder="e.g. Alice"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
                 />
-                <datalist id="orderCodeList">
-                  {suggests.map((s) => (
-                    <option key={s.orderCode} value={s.orderCode} />
-                  ))}
-                </datalist>
-                {!!orderCode && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="absolute right-1 top-1 h-7 px-2"
-                    onClick={() => setOrderCode("")}
-                  >
-                    Clear
-                  </Button>
-                )}
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm mb-1">Status</label>
+                <Select value={status} onValueChange={(v) => setStatus(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      "ALL",
+                      "REQUESTED",
+                      "APPROVED",
+                      "SUCCESS",
+                      "FAIL",
+                      "CANCELED"
+                    ].map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date range */}
+              <div className="lg:col-span-1.5">
+                <label className="block text-sm mb-1">From</label>
+                <Input
+                  type="datetime-local"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+              </div>
+              <div className="lg:col-span-1.5">
+                <label className="block text-sm mb-1">To</label>
+                <Input
+                  type="datetime-local"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+              </div>
+
+              {/* Search btn */}
+              <div className="flex items-end">
+                <Button className="w-full" onClick={doSearch}>
+                  Search
+                </Button>
               </div>
             </div>
 
-            {/* Search: order id / customer name */}
-            <div className="lg:col-span-2">
-              <label className="block text-sm mb-1">Customer name</label>
-              <Input
-                placeholder="e.g. Alice"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-            </div>
-
-            {/* Status */}
-            <div>
-              <label className="block text-sm mb-1">Status</label>
-              <Select value={status} onValueChange={(v) => setStatus(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[
-                    "ALL",
-                    "REQUESTED",
-                    "APPROVED",
-                    "SUCCESS",
-                    "FAIL",
-                    "CANCELED"
-                  ].map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
+            {/* Table */}
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Requested / Created</TableHead>
+                    <TableHead className="text-right">Detail</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex flex-col">
+                          <span>{r.orderCode}</span>
+                          <span className="text-xs text-muted-foreground">
+                            Order ID: {r.orderId}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span>{r.customerName ?? "—"}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {r.customerEmail ?? ""}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <RefundStatusBadge status={r.status as RefundStatus} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatTHB(r.amountMinor)} {r.currencyCode}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-xs">
+                            Req:{" "}
+                            {r.requestedAt
+                              ? new Date(r.requestedAt).toLocaleString()
+                              : "—"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Created: {new Date(r.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/admin/orders/${r.orderId}`)
+                          }
+                        >
+                          Detail
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Date range */}
-            <div className="lg:col-span-1.5">
-              <label className="block text-sm mb-1">From</label>
-              <Input
-                type="datetime-local"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-              />
-            </div>
-            <div className="lg:col-span-1.5">
-              <label className="block text-sm mb-1">To</label>
-              <Input
-                type="datetime-local"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-              />
-            </div>
-
-            {/* Search btn */}
-            <div className="flex items-end">
-              <Button className="w-full" onClick={doSearch}>
-                Search
-              </Button>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Requested / Created</TableHead>
-                  <TableHead className="text-right">Detail</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span>{r.orderCode}</span>
-                        <span className="text-xs text-muted-foreground">
-                          Order ID: {r.orderId}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span>{r.customerName ?? "—"}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {r.customerEmail ?? ""}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{r.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatTHB(r.amountMinor)} {r.currencyCode}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-xs">
-                          Req:{" "}
-                          {r.requestedAt
-                            ? new Date(r.requestedAt).toLocaleString()
-                            : "—"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Created: {new Date(r.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          router.push(`/admin/orders/${r.orderId}`)
-                        }
+                  {rows.length === 0 && !loading && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="py-10 text-center text-sm text-muted-foreground"
                       >
-                        Detail
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {rows.length === 0 && !loading && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="py-10 text-center text-sm text-muted-foreground"
-                    >
-                      No data
-                    </TableCell>
-                  </TableRow>
-                )}
-                {loading && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="py-10 text-center text-sm text-muted-foreground"
-                    >
-                      Loading…
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                        No data
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {loading && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="py-10 text-center text-sm text-muted-foreground"
+                      >
+                        Loading…
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-          <Pager
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            onPage={(p: number) => {
-              setPage(p)
-            }}
-            onPageSize={(s: number) => {
-              setPageSize(s)
-              setPage(1)
-            }}
-          />
+            <Pager
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPage={(p: number) => {
+                setPage(p)
+              }}
+              onPageSize={(s: number) => {
+                setPageSize(s)
+                setPage(1)
+              }}
+            />
 
-          {/* Quick info */}
-          <div className="text-xs text-muted-foreground">
-            Page {page} / {totalPages}. Filters apply to Refund created_at.
-          </div>
-        </CardContent>
-      </Card>
+            {/* Quick info */}
+            <div className="text-xs text-muted-foreground">
+              Page {page} / {totalPages}. Filters apply to Refund created_at.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

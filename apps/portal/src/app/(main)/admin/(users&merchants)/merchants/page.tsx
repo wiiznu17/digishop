@@ -37,6 +37,7 @@ import {
 } from "@/utils/requesters/merchantRequester"
 import { Pager } from "@/components/common/Pager"
 import AuthGuard from "@/components/AuthGuard"
+import { StatusBadge } from "@/components/admin/merchants/merchantColorBadge"
 
 function formatMoneyMinor(minor?: number) {
   const n = Number(minor ?? 0)
@@ -181,8 +182,8 @@ function AdminMerchantsPage() {
 
         <CardContent className="space-y-4">
           {/* Filters */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-            {/* Search */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 items-end">
+            {/* Search (กว้าง 2 คอลัมน์บนจอใหญ่) */}
             <div className="lg:col-span-2">
               <label className="block text-sm mb-1">Search</label>
               <Popover open={openSuggest} onOpenChange={setOpenSuggest}>
@@ -199,13 +200,11 @@ function AdminMerchantsPage() {
                         setTimeout(() => setOpenSuggest(false), 120)
                       }
                     />
-                    {/* <Button onClick={onSearch}>
-                      <Search className="h-4 w-4 mr-2" /> Search
-                    </Button> */}
                   </div>
                 </PopoverAnchor>
+                {/* ทำให้กว้างเท่าช่อง input โดยใช้ตัวแปรของ radix */}
                 <PopoverContent
-                  className="w-[520px] p-0"
+                  className="w-[--radix-popover-trigger-width] p-0"
                   align="start"
                   onOpenAutoFocus={(e) => e.preventDefault()}
                 >
@@ -240,16 +239,15 @@ function AdminMerchantsPage() {
               <label className="block text-sm mb-1">Status</label>
               <Select
                 value={statusInput}
-                onValueChange={(v) => setStatusInput(v as string)}
+                onValueChange={(v) => setStatusInput(v)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Choose status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                  <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
                   <SelectItem value="PENDING">PENDING</SelectItem>
+                  <SelectItem value="APPROVED">APPROVED</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -321,16 +319,19 @@ function AdminMerchantsPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-sm mb-1">search</label>
-                <Button onClick={onSearch}>
+
+            {/* Actions: จัดให้ปุ่มชิดล่างของแถว */}
+            <div className="grid grid-cols-2 gap-2 self-end">
+              {/* Search button (no label) */}
+              <div className="flex items-end">
+                <Button className="w-full" onClick={onSearch}>
                   <Search className="h-4 w-4 mr-2" /> Search
                 </Button>
               </div>
-              <div className="grid grid-rows-2">
-                <label className="block text-sm mb-1">clear</label>
-                <Button variant="outline" onClick={onClear}>
+
+              {/* Clear button (no label) */}
+              <div className="flex items-end">
+                <Button variant="outline" className="w-full" onClick={onClear}>
                   Clear filters
                 </Button>
               </div>
@@ -380,7 +381,7 @@ function AdminMerchantsPage() {
                       </TableCell>
                       <TableCell>{r.orderCount}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{r.status}</Badge>
+                        <StatusBadge status={r.status} />
                       </TableCell>
                       <TableCell>
                         {new Date(r.createdAt).toLocaleString()}

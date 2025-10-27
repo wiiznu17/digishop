@@ -19,7 +19,7 @@ export type AdminOrderStatus =
   | "RETURN_VERIFIED"
   | "RETURN_FAIL"
   | "REFUND_APPROVED"
-  | "REFUND_RERY"
+  | "REFUND_RETRY"
   | "TRANSIT_LACK"
   | "RE_TRANSIT"
 

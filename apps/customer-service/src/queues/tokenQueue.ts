@@ -2,7 +2,7 @@ import { delay, Queue } from "bullmq";
 import IORedis from "ioredis";
 
 const REDIS_URL = process.env.REDIS_URL || "";
-const REFRESH_TOKEN = process.env.REFRESH_TOKEN || "";
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN || "sd";
 
 export type RefreshTokenJob = {
  userId: number

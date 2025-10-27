@@ -207,15 +207,12 @@ function AdminOrdersPage() {
 
   return (
     <div>
-      <DashboardHeader
-        title="Orders"
-        description="View all orders (per store)"
-      />
+      <DashboardHeader title="Orders" description="View all orders" />
 
       <div className="p-4 space-y-4">
         <Card>
           <CardHeader className="space-y-2">
-            <CardTitle>Orders (Admin)</CardTitle>
+            <CardTitle>Orders</CardTitle>
             <CardDescription>Search &amp; filter orders</CardDescription>
           </CardHeader>
 
