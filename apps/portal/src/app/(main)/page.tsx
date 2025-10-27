@@ -21,12 +21,12 @@ function WelcomeHero() {
         <div className="mx-auto max-w-5xl px-6 md:px-10">
           <div className="min-h-[70vh] flex items-center justify-center">
             <div className="relative z-10 flex flex-col items-center text-center gap-6">
-              <Badge
+              {/* <Badge
                 variant="outline"
                 className="border-indigo-500/40 text-indigo-600 text-sm md:text-base px-3 py-1.5"
               >
                 Portal Admin
-              </Badge>
+              </Badge> */}
 
               <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight">
                 Welcome to <span className="text-indigo-600">DigiShop</span>{" "}

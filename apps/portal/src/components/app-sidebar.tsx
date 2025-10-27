@@ -36,13 +36,13 @@ import { Button } from "./ui/button"
 import { logout } from "@/utils/requesters/authRequester"
 import { useAuth } from "@/components/AuthGuard"
 import { useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation" // ⬅️ เพิ่ม usePathname
 
 type NavItem = {
   title: string
   url: string
   icon: React.ComponentType<{ className?: string }>
-  perms?: string[] // สิทธิ์ที่ต้องมีทั้งหมด (AND)
+  perms?: string[]
 }
 
 type NavGroup = { label: string; items: NavItem[] }
@@ -121,8 +121,8 @@ const groups: NavGroup[] = [
 export function AdminSidebar() {
   const { me, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname() // ⬅️ ใช้ path ปัจจุบัน
 
-  // มีครบทุก perm ถึงจะเห็นเมนู
   const hasPerms = (need?: string[]) => {
     if (!need || need.length === 0) return true
     if (!me) return false
@@ -130,15 +130,20 @@ export function AdminSidebar() {
     return need.every((p) => set.has(p))
   }
 
-  // กรองเมนูตามสิทธิ์
-  const visibleGroups = useMemo(() => {
-    return groups
-      .map((g) => ({
-        ...g,
-        items: g.items.filter((it) => hasPerms(it.perms))
-      }))
-      .filter((g) => g.items.length > 0)
-  }, [me])
+  const visibleGroups = useMemo(
+    () =>
+      groups
+        .map((g) => ({
+          ...g,
+          items: g.items.filter((it) => hasPerms(it.perms))
+        }))
+        .filter((g) => g.items.length > 0),
+    [me]
+  )
+
+  // กำหนด active เมื่อ path ตรงหรือเป็น path ย่อย
+  const isActive = (url: string) =>
+    pathname === url || pathname.startsWith(url + "/")
 
   return (
     <Sidebar>
@@ -163,7 +168,7 @@ export function AdminSidebar() {
           </Link>
         </div>
 
-        {/* Loading state (กัน layout shift) */}
+        {/* Loading state */}
         {loading ? (
           <div className="p-3 text-xs text-muted-foreground">Loading menu…</div>
         ) : (
@@ -172,16 +177,31 @@ export function AdminSidebar() {
               <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {group.items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <Link href={item.url}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {group.items.map((item) => {
+                    const active = isActive(item.url)
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        {/* ถ้า lib รองรับ prop isActive จะช่วยใส่ data-state ให้ด้วย */}
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active} // เผื่อคอมโพเนนต์รองรับ
+                          className={
+                            active
+                              ? "bg-gray-100 text-gray-900 hover:bg-gray-300" // พื้นหลังเทาเมื่อ active
+                              : ""
+                          }
+                        >
+                          <Link
+                            href={item.url}
+                            className="flex items-center gap-2"
+                          >
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -206,9 +226,6 @@ export function AdminSidebar() {
                 <DropdownMenuItem asChild>
                   <Link href="/admin/admins">Team & Roles</Link>
                 </DropdownMenuItem>
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/admin/audit-logs">View Audit Logs</Link>
-                </DropdownMenuItem> */}
                 <DropdownMenuItem asChild>
                   <Button
                     variant="destructive"
@@ -218,9 +235,7 @@ export function AdminSidebar() {
                     onClick={async () => {
                       try {
                         await logout()
-                        // พาไปหน้า login ทันที
                         router.replace("/login")
-                        // กัน state/cache ค้าง (ถ้าเพจไหนเก็บ me ไว้)
                         window.setTimeout(() => window.location.reload(), 50)
                       } catch {
                         router.replace("/login")

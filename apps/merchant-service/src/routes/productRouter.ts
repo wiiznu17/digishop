@@ -24,7 +24,7 @@ const router: express.Router = express.Router();
 router.get("/suggest", authenticate, requireApprovedStore(), suggestProducts);
 router.get("/list", authenticate, requireApprovedStore(), getProductList);
 router.get("/:productUuid", authenticate, requireApprovedStore(), getProductDetail);
-router.get("/categories/list", authenticate, requireApprovedStore(), listCategories);
+router.get("/categories/list", authenticate, listCategories);
 
 // Create / Update / Delete / Duplicate
 router.delete("/:productUuid", authenticate, deleteProduct);

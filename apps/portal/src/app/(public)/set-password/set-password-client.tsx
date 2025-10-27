@@ -47,10 +47,21 @@ export default function SetPasswordClient({
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Set your password</CardTitle>
+    <main className="min-h-screen w-full relative flex items-center justify-center p-6 bg-gradient-to-br from-violet-100 via-sky-100 to-fuchsia-100">
+      {/* soft pastel rings */}
+      <div className="pointer-events-none absolute left-[-7rem] top-[-7rem] h-72 w-72 rounded-full border-2 border-violet-300/30" />
+      <div className="pointer-events-none absolute right-[-6rem] bottom-[-6rem] h-72 w-72 rounded-full border-2 border-sky-300/40" />
+      <div className="pointer-events-none absolute right-[-10rem] top-[-10rem] h-96 w-96 rounded-full border-2 border-fuchsia-300/30" />
+
+      <Card className="w-full max-w-md border border-sky-200/60 bg-white/80 backdrop-blur-md shadow-xl">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-2xl font-semibold text-violet-700">
+            Set your password
+          </CardTitle>
+          {/* subtitle เล็ก ๆ */}
+          <p className="mt-1 text-sm text-sky-700/70">
+            Complete your invite to access DigiShop Merchant Portal
+          </p>
         </CardHeader>
         <CardContent>
           <PasswordRulesForm
@@ -64,6 +75,6 @@ export default function SetPasswordClient({
           />
         </CardContent>
       </Card>
-    </div>
+    </main>
   )
 }

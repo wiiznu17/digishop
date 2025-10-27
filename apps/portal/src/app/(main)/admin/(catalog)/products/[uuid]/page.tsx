@@ -179,9 +179,9 @@ function AdminProductDetailPage() {
 
                   <div>
                     <CardTitle className="text-xl">{data.name}</CardTitle>
-                    <CardDescription className="mt-1">
+                    {/* <CardDescription className="mt-1">
                       UUID: {data.uuid}
-                    </CardDescription>
+                    </CardDescription> */}
                     <p className="text-sm text-muted-foreground mt-2">
                       {data.description || "—"}
                     </p>
