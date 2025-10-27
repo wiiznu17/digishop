@@ -123,29 +123,6 @@ export default function Home() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="col-span-4">
             <CardHeader>
-              <CardTitle>Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="pl-2">
-              {/* ถ้ามี data.revenueSeries แสดงกราฟจริง; ถ้ายังไม่มีใช้ placeholder */}
-              {!loading && data?.revenueSeries?.length ? (
-                <div className="text-sm text-muted-foreground">
-                  {/* ใส่กราฟจริงของคุณที่นี่ (Recharts/ฯลฯ)  */}
-                  Coming soon: revenue chart ({data.revenueSeries.length}{" "}
-                  points)
-                </div>
-              ) : (
-                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                  <BarChart3 className="h-12 w-12" />
-                  <span className="ml-2">
-                    {loading ? "Loading chart…" : "Revenue Chart"}
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="col-span-3">
-            <CardHeader>
               <CardTitle>Recent Sales</CardTitle>
               <CardDescription>
                 {loading
@@ -178,55 +155,26 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
+          <Card className="col-span-3">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>Manage your business operations</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-2">
+            <CardContent className="grid grid-cols-1 gap-2 mt-4">
               <Link
                 href="/products"
                 className="p-4 border rounded-lg hover:bg-muted transition-colors"
               >
-                <Package className="h-5 w-5 mb-2" />
+                <Package className="h-7 w-7 mb-4" />
                 <div className="text-sm font-medium">Add Product</div>
               </Link>
               <Link
                 href="/orders"
                 className="p-4 border rounded-lg hover:bg-muted transition-colors"
               >
-                <ShoppingCart className="h-5 w-5 mb-2" />
+                <ShoppingCart className="h-7 w-7 mb-4" />
                 <div className="text-sm font-medium">View Orders</div>
               </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Business Performance</CardTitle>
-              <CardDescription>Your store metrics this month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Row
-                  label="Conversion Rate"
-                  value={`${data?.conversionRatePct ?? 0}%`}
-                  loading={loading}
-                />
-                <Row
-                  label="Average Order Value"
-                  value={formatCurrencyTHB(data?.aovMinor ?? 0)}
-                  loading={loading}
-                />
-                <Row
-                  label="Customer Satisfaction"
-                  value={`${data?.customerSatisfaction ?? "—"}`}
-                  loading={loading}
-                />
-              </div>
             </CardContent>
           </Card>
         </div>
