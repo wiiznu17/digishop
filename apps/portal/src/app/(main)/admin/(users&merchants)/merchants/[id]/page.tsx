@@ -16,6 +16,7 @@ import {
   fetchAdminStoreDetail,
   approveAdminStore
 } from "@/utils/requesters/merchantRequester"
+import Swal from "sweetalert2"
 
 // recharts
 import {
@@ -69,19 +70,60 @@ function AdminStoreDetailPage() {
 
   async function handleApprove() {
     if (!data) return
-    const okConfirm = window.confirm(`Approve store "${data.storeName}" ?`)
-    if (!okConfirm) return
+    const { isConfirmed } = await Swal.fire({
+      title: "Approve this store?",
+      text: `Merchant: ${data.storeName}`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Approve",
+      cancelButtonText: "Cancel",
+      reverseButtons: true
+    })
+    if (!isConfirmed) return
+
     setApproving(true)
+
+    Swal.fire({
+      title: "Approving...",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading()
+      }
+    })
+
     try {
       const res = await approveAdminStore(Number(id))
+
+      // ปิด loading ก่อนแจ้งผล
+      Swal.close()
+
       if (res.ok) {
         setData((prev) =>
           prev ? ({ ...prev, status: "APPROVED" } as AdminStoreDetail) : prev
         )
-        alert(res.message || "Store approved")
+        await Swal.fire({
+          icon: "success",
+          title: "Approved",
+          text: res.message || "Store approved successfully",
+          showConfirmButton: false,
+          timer: 1400
+        })
       } else {
-        alert(res.message || "Approve failed")
+        await Swal.fire({
+          icon: "error",
+          title: "Approve failed",
+          text: res.message || "Something went wrong"
+        })
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      Swal.close()
+      await Swal.fire({
+        icon: "error",
+        title: "Approve failed",
+        text: err?.message || "Network or server error"
+      })
     } finally {
       setApproving(false)
     }
@@ -340,7 +382,6 @@ function AdminStoreDetailPage() {
 
 function Guard({ children }: { children: React.ReactNode }) {
   "use client"
-  // ถ้าต้องปิดปุ่ม Approve เมื่อไม่มีสิทธิ์ ให้เพิ่ม MERCHANTS_APPROVE ใน requiredPerms ด้วย
   return <AuthGuard requiredPerms={["MERCHANTS_READ"]}>{children}</AuthGuard>
 }
 
