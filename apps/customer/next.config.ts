@@ -8,7 +8,7 @@ module.exports = {
   images: {
     remotePatterns: [
       {
-        protocal: "https",
+        protocol: "https",
         hostname: "digishop.blob.core.windows.net",
         pathname: "/digishop/**"
       }
