@@ -732,10 +732,10 @@ export default function OrderPage() {
               </div>
 
               <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                Order Error
+                Order Failed
               </h1>
 
-              <p className="text-gray-600 mb-2 text-base">Please order again</p>
+              <p className="text-gray-600 mb-2 text-base">Bank authorized failed</p>
 
               <p className="text-lg text-gray-500 mb-8">
                 We encountered an issue processing your order. Don&apos;t worry,
