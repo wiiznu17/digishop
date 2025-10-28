@@ -11,10 +11,12 @@ import {
     User,
     OrderStatus
 } from "@digishop/db"
+import { AuthenticatedRequest } from "../middlewares/middleware"
 
-export async function getDashboardSummary(req: Request, res: Response) {
+export async function getDashboardSummary(req: AuthenticatedRequest, res: Response) {
   try {
     const store = await Store.findOne({ where: { userId: (req as any).user?.sub } })
+    console.log("[dashboard] getDashboardSummary for store:", store?.id)
     if (!store) return res.status(404).json({ error: "No store found" })
 
     const now = new Date()
