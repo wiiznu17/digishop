@@ -47,7 +47,6 @@ const AuthPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateForm()) return;
     const success = await login(formData.email, formData.password);
-    console.log('success',success)
     if (success) {
       router.push("/");
     } else {

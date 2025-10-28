@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
     setIsLoading(true)
-    console.log()
     try {
       // if (isLoginPath(currentPath)) {
       //   const u = await loadUserIfNeeded()

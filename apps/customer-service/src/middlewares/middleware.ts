@@ -51,13 +51,13 @@ export const authenticate = async (
   next: NextFunction
 ) => {
   // ถ้า serviceAuth ผ่านมาแล้ว ก็ไม่ต้องเช็ค cookie
+  console.log('token',req.cookies )
   const token = (req as any).cookies?.[ATK_NAME];
-  console.log('token',req.cookies , )
-  if (!token) return res.status(401).json({ error: "Unauthorized no token" });
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const payload = verifyAccess<JWTPayload>(token);
-    if (!payload?.jti) return res.status(401).json({ error: "Unauthorized no payload" });
+    if (!payload?.jti) return res.status(401).json({ error: "Unauthorized" });
 
     const raw = await redis.get(sessKey(payload.jti));
     if (!raw) return res.status(401).json({ error: "SESSION_REVOKED" });
@@ -79,8 +79,8 @@ export const authenticate = async (
     };
     req.authMode = "user";
     return next();
-  } catch (err){
-    return res.status(401).json({ error: err });
+  } catch {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 };
 
