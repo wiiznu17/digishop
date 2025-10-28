@@ -299,7 +299,7 @@ export default function OrderCard({
                     )}
                     <div className="flex">
                       {item.refundOrders[refundId].status ==
-                        RefundStatus.REQUESTED &&
+                        RefundStatus.REQUESTED && item.refundOrders.length < 3 &&
                         typeof item.refundOrders[item.refundOrders.length - 1]
                           .id == "number" && (
                           <Button

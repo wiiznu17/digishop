@@ -20,6 +20,7 @@ export interface OrderDetail {
   currency_code: string
   checkout: CheckOut
   createdAt?: Date;
+  updated_at:string
   shippingInfo: {
     id: number;
     address: Address;
