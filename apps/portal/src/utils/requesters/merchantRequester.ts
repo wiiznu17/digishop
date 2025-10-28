@@ -38,11 +38,6 @@ export async function fetchAdminStoreListRequester(params: {
       meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 }
     }
   }
-  // const r = await axios.get<{ data: AdminStoreLite[]; meta: ListMeta }>(
-  //   "/api/admin/stores/list",
-  //   { params }
-  // )
-  // return r.data
 }
 
 export async function fetchAdminStoreSuggest(q: string) {
@@ -68,5 +63,37 @@ export async function fetchAdminStoreDetail(id: number) {
   } catch (error) {
     console.log("fetchAdminStoreDetail error", error)
     return null
+  }
+}
+
+type ApproveStoreAPIResponse = {
+  message: string
+  store?: AdminStoreLite // ฝั่ง controller ส่งฟิลด์แบบ lite กลับมา
+}
+
+export async function approveAdminStore(id: number): Promise<{
+  ok: boolean
+  message: string
+  store?: AdminStoreLite
+}> {
+  try {
+    const r = await axios.post<ApproveStoreAPIResponse>(
+      `/api/admin/stores/${id}/approve`
+    )
+    return {
+      ok: true,
+      message: r.data?.message ?? "Store approved",
+      store: r.data?.store
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    // ดึงข้อความจาก server ถ้ามี
+    const msg =
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Approve store failed"
+    console.log("approveAdminStore error", error)
+    return { ok: false, message: msg }
   }
 }
