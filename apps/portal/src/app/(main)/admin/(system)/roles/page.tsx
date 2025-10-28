@@ -289,7 +289,7 @@ export default function AdminRolesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button size="sm" asChild>
-                          <Link href={`/admin/roles/${r.id}`}>Edit</Link>
+                          <Link href={`/admin/roles/${r.id}`}>Detail</Link>
                         </Button>
                       </TableCell>
                     </TableRow>

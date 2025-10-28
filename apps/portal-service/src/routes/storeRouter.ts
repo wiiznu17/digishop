@@ -1,6 +1,7 @@
 import express from "express"
 import {
-  adminListStores, adminSuggestStores, adminGetStoreDetail
+  adminListStores, adminSuggestStores, adminGetStoreDetail,
+  adminApproveStore
 } from "../controllers/storeController"
 import { requirePerms } from "../middlewares/auth"
 
@@ -22,4 +23,9 @@ router.get("/:id/detail",
   adminGetStoreDetail
 )
 
+router.post(
+  "/:id/approve",
+  requirePerms("MERCHANTS_APPROVE"),
+  adminApproveStore
+)
 export default router

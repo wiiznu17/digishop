@@ -4,6 +4,7 @@ import { redis } from "../lib/redis/client";
 import { verifyAccess, type JWTPayload } from "../lib/jwtVerfify";
 
 export interface AuthenticatedRequest extends Request {
+  store?: any;
   user?: any;
   authMode?: "service" | "user";
 }
@@ -72,6 +73,7 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
         (req.query as any)?.storeId;
 
       if (!storeId) {
+        console.log("requireApprovedStore: no storeId in request, trying to find by userId");
         const ownerUserId = Number(req.user.sub);
         if (!Number.isFinite(ownerUserId)) return res.status(400).json({ error: "Missing storeId" });
         const owned = await Store.findOne({
@@ -81,6 +83,7 @@ export function requireApprovedStore(opts?: { allowAdminBypass?: boolean; allowS
         if (!owned) return res.status(404).json({ error: "Store not found" });
         if (owned.status !== StoreStatus.APPROVED) return res.status(403).json({ error: "Store status is not APPROVED" });
         (req as any).store = owned;
+        console.log("requireApprovedStore: found store by userId", req.store);
         return next();
       }
 

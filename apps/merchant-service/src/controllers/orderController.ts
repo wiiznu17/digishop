@@ -1,4 +1,4 @@
-import { Request, Response } from "express"
+import e, { Request, Response } from "express"
 import axios from "axios"
 import crypto from "crypto"
 import { IncludeOptions, Op, WhereOptions, literal, Transaction, Sequelize } from "sequelize"
@@ -11,6 +11,7 @@ import {
   ActorType,
 } from "@digishop/db"
 import { CheckOut, Order, OrderItem, OrderStatusHistory, Payment, PaymentGatewayEvent, Product, RefundOrder, RefundStatusHistory, ReturnShipment, ReturnShipmentEvent, sequelize, ShipmentEvent, ShippingInfo, User } from "@digishop/db"
+import { AuthenticatedRequest } from "../middlewares/middleware"
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -421,9 +422,10 @@ function serializeOrder(order: any) {
 }
 
 // GET /orders/summary
-export async function getOrdersSummary(req: Request, res: Response) {
+export async function getOrdersSummary(req: AuthenticatedRequest, res: Response) {
   try {
-    const { storeId, startDate, endDate } = req.query as Record<string, string>
+    const { startDate, endDate } = req.query as Record<string, string>
+    const storeId = req.store?.id as number | undefined
 
     const orderWhere: any = {}
     if (storeId) orderWhere.storeId = storeId
@@ -518,11 +520,19 @@ export async function getOrdersSummary(req: Request, res: Response) {
 }
 
 // GET /orders/:orderId
-export async function getOrderById(req: Request, res: Response) {
+export async function getOrderById(req: AuthenticatedRequest, res: Response) {
   try {
+    const storeId = req.store?.id as number | undefined
     const { orderId } = req.params;
+    console.log("getOrderById storeId:", storeId, " orderId:", orderId);
     if (!orderId) return res.status(400).json({ error: "Missing order id" });
-
+    // check store is owner order?
+    if (storeId) {
+      const count = await Order.count({ where: { id: orderId, storeId } });
+      if (count === 0) {
+        return res.status(403).json({ error: "Forbidden: You don't have access to this order" });
+      }
+    }
     const order = await Order.findByPk(orderId, { include: ORDER_BASE_INCLUDES });
     if (!order) return res.status(404).json({ error: "Order not found" });
     console.log("order from get by id: ", order)
@@ -534,13 +544,13 @@ export async function getOrderById(req: Request, res: Response) {
 }
 
 // GET /orders (list)
-export async function listOrders(req: Request, res: Response) {
+export async function listOrders(req: AuthenticatedRequest, res: Response) {
   try {
     const {
       page = "1",
       pageSize = "20",
       status,                        // "ALL" | "PAID" | "PAID,PROCESSING"
-      storeId,
+      // storeId,
       q,
       startDate,
       endDate,
@@ -553,13 +563,14 @@ export async function listOrders(req: Request, res: Response) {
 
     const limit = toInt(page, 1) > 0 ? toInt(pageSize, 20) : 20;
     const offset = (toInt(page, 1) - 1) * limit;
-
+    // console.log("listOrders storeId:", storeId);
     const orderField = SORT_WHITELIST.has(sortBy as any)
       ? (sortBy as any)
       : "createdAt";
     const orderDir = String(sortDir).toUpperCase() === "ASC" ? "ASC" : "DESC";
 
     // where: ORDER
+    const storeId = req.store?.id as number | undefined
     const whereOrder: WhereOptions = {};
     if (storeId) Object.assign(whereOrder, { storeId });
 
@@ -675,7 +686,7 @@ export async function listOrders(req: Request, res: Response) {
 // Side-effects: เขียน OrderStatusHistory / sync ShippingInfo(+ShipmentEvent) / RefundOrder
 // และถ้ามีการยิง PGW จะบันทึก PaymentGatewayEvent + RefundStatusHistory ให้ด้วย
 // 
-export async function updateOrder(req: Request, res: Response) {
+export async function updateOrder(req: AuthenticatedRequest, res: Response) {
   const { orderId } = req.params;
 
   const {
@@ -691,7 +702,8 @@ export async function updateOrder(req: Request, res: Response) {
     reason?: string;
     needToReturn: boolean // บอกว่าต้องคืนของไหม
   } = req.body || {};
-
+  console.log("updateOrder orderId:", orderId, " nextStatus:", nextStatusRaw, " needToReturn:", needToReturn);
+  const storeId = req.store?.id as number | undefined;
   if (!orderId) return res.status(400).json({ error: "Missing order id" });
 
   // actor
@@ -702,6 +714,17 @@ export async function updateOrder(req: Request, res: Response) {
     (req.headers["x-request-id"] as string | undefined) ??
     (req.headers["x-correlation-id"] as string | undefined) ??
     null;
+  
+  // if not service check product owner
+  if (!isService && !storeId) {
+    return res.status(403).json({ error: "Forbidden: Store context required" });
+  } else if (!isService) {
+    // check store is owner order?
+    const count = await Order.count({ where: { id: orderId, storeId } });
+    if (count === 0) {
+      return res.status(403).json({ error: "Forbidden: You don't have access to this order" });
+    }
+  }
 
   // map ShippingStatus ที่สัมพันธ์กับ OrderStatus ที่ร้านแตะได้
   const mapShipping: Record<string, ShippingStatus | undefined> = {
@@ -1263,8 +1286,6 @@ export async function updateOrder(req: Request, res: Response) {
     return res.status(500).json({ error: "Failed to update order" });
   }
 }
-
-
 
 // ───────────────────────────────────────────────────────────────────────────────
 

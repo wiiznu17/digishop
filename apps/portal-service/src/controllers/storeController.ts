@@ -1,4 +1,4 @@
-import { CheckOut, Order, OrderItem, Product, Store, User } from "@digishop/db";
+import { CheckOut, Order, OrderItem, Product, Store, StoreStatus, User } from "@digishop/db";
 import { Request, Response } from "express"
 import { Op, col, fn, where as sqlWhere, WhereOptions } from "sequelize"
 
@@ -386,5 +386,94 @@ export async function adminGetStoreDetail(req: Request, res: Response) {
   } catch (e) {
     console.error("adminGetStoreDetail error:", e)
     res.status(500).json({ error: "Internal server error" })
+  }
+}
+
+export async function adminApproveStore(req: Request, res: Response) {
+  try {
+    const id = Number((req.params as { id: string }).id)
+    if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" })
+
+    // เช็คสถานะปัจจุบันก่อน (เพื่อง่ายต่อการแจ้งข้อความที่ถูกต้อง)
+    const existing: any = await Store.findOne({
+      where: { id },
+      attributes: ["id", "uuid", ["store_name", "storeName"], "email", "status", ["created_at", "createdAt"]],
+    })
+    if (!existing) return res.status(404).json({ error: "Not found" })
+
+    const currentStatus = String(existing.get("status")) as StoreStatus
+    if (currentStatus === StoreStatus.BANNED) {
+      return res.status(409).json({ error: "Store is BANNED and cannot be approved" })
+    }
+    if (currentStatus === StoreStatus.APPROVED) {
+      // idempotent: อนุมัติแล้ว ไม่ต้องทำซ้ำ
+      return res.status(200).json({
+        message: "Store already approved",
+        store: {
+          id: existing.get("id"),
+          uuid: existing.get("uuid"),
+          storeName: existing.get("storeName"),
+          email: existing.get("email"),
+          status: existing.get("status"),
+          createdAt: existing.get("createdAt"),
+        },
+      })
+    }
+
+    // อัปเดตแบบมีเงื่อนไขเพื่อกัน race (จะอัปเดตได้เฉพาะเมื่อยังเป็น PENDING)
+    const [affected] = await Store.update(
+      { status: StoreStatus.APPROVED },
+      { where: { id, status: StoreStatus.PENDING } }
+    )
+
+    if (affected === 0) {
+      // เกิด race หรือสถานะถูกเปลี่ยนก่อนหน้า ลองอ่านใหม่เพื่อรายงานที่ถูกต้อง
+      const after: any = await Store.findOne({
+        where: { id },
+        attributes: ["id", "uuid", ["store_name", "storeName"], "email", "status", ["created_at", "createdAt"]],
+      })
+      if (!after) return res.status(404).json({ error: "Not found" })
+
+      const st = String(after.get("status")) as StoreStatus
+      if (st === StoreStatus.APPROVED) {
+        return res.status(200).json({
+          message: "Store already approved",
+          store: {
+            id: after.get("id"),
+            uuid: after.get("uuid"),
+            storeName: after.get("storeName"),
+            email: after.get("email"),
+            status: after.get("status"),
+            createdAt: after.get("createdAt"),
+          },
+        })
+      }
+      if (st === StoreStatus.BANNED) {
+        return res.status(409).json({ error: "Store is BANNED and cannot be approved" })
+      }
+      // ยังเป็น PENDING แต่ update ไม่ผ่าน (ไม่น่าเกิด แต่กันเผื่อ)
+      return res.status(409).json({ error: "Store status is not eligible for approval" })
+    }
+
+    // อัปเดตสำเร็จ: อ่านค่าหลังอัปเดตเพื่อตอบกลับ
+    const updated: any = await Store.findOne({
+      where: { id },
+      attributes: ["id", "uuid", ["store_name", "storeName"], "email", "status", ["created_at", "createdAt"]],
+    })
+
+    return res.status(200).json({
+      message: "Store approved",
+      store: {
+        id: updated?.get("id"),
+        uuid: updated?.get("uuid"),
+        storeName: updated?.get("storeName"),
+        email: updated?.get("email"),
+        status: updated?.get("status"),
+        createdAt: updated?.get("createdAt"),
+      },
+    })
+  } catch (e) {
+    console.error("adminApproveStore error:", e)
+    return res.status(500).json({ error: "Internal server error" })
   }
 }

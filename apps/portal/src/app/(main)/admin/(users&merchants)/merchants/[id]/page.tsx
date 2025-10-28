@@ -12,7 +12,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { AdminStoreDetail } from "@/types/admin/stores"
-import { fetchAdminStoreDetail } from "@/utils/requesters/merchantRequester"
+import {
+  fetchAdminStoreDetail,
+  approveAdminStore
+} from "@/utils/requesters/merchantRequester"
 
 // recharts
 import {
@@ -36,6 +39,7 @@ function AdminStoreDetailPage() {
   const router = useRouter()
   const [data, setData] = useState<AdminStoreDetail | null>(null)
   const [loading, setLoading] = useState(false)
+  const [approving, setApproving] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -62,6 +66,26 @@ function AdminStoreDetailPage() {
       })) ?? [],
     [data]
   )
+
+  async function handleApprove() {
+    if (!data) return
+    const okConfirm = window.confirm(`Approve store "${data.storeName}" ?`)
+    if (!okConfirm) return
+    setApproving(true)
+    try {
+      const res = await approveAdminStore(Number(id))
+      if (res.ok) {
+        setData((prev) =>
+          prev ? ({ ...prev, status: "APPROVED" } as AdminStoreDetail) : prev
+        )
+        alert(res.message || "Store approved")
+      } else {
+        alert(res.message || "Approve failed")
+      }
+    } finally {
+      setApproving(false)
+    }
+  }
 
   return (
     <div className="p-4 space-y-6">
@@ -97,6 +121,7 @@ function AdminStoreDetailPage() {
               </div>
             )}
           </div>
+
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -104,6 +129,17 @@ function AdminStoreDetailPage() {
             >
               Back
             </Button>
+
+            {!!data && data.status === "PENDING" && (
+              <Button
+                variant="default"
+                onClick={handleApprove}
+                disabled={approving}
+              >
+                {approving ? "Approving..." : "Approve"}
+              </Button>
+            )}
+
             {!!data && (
               <Button
                 variant="default"
@@ -304,6 +340,7 @@ function AdminStoreDetailPage() {
 
 function Guard({ children }: { children: React.ReactNode }) {
   "use client"
+  // ถ้าต้องปิดปุ่ม Approve เมื่อไม่มีสิทธิ์ ให้เพิ่ม MERCHANTS_APPROVE ใน requiredPerms ด้วย
   return <AuthGuard requiredPerms={["MERCHANTS_READ"]}>{children}</AuthGuard>
 }
 
