@@ -250,7 +250,7 @@ export default function OrderCard({
             <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">Payment</div>
             <div className="text-xl pl-2">
               <div >
-              {typeof item.checkout.payment?.payment_method === "number" && (
+              {typeof item.checkout.payment?.payment_method === "string" && (
                 <div>
                   paid by{" "}
                   {

@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
     setIsLoading(true)
-    console.log()
     try {
       // if (isLoginPath(currentPath)) {
       //   const u = await loadUserIfNeeded()
@@ -71,10 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       //ดูอีกที
       if (!isPublicPath(currentPath)) {
         const u = await loadUserIfNeeded()
-        console.log('have u', u)
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (!u) {
-          console.log('redirect')
           router.replace("/")
           return
         }
@@ -82,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         //   router.replace("/register")
         //   return
         // }
-        console.log('hiiii')
         return
       }
       return
