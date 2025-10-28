@@ -6,7 +6,13 @@ const nextConfig: NextConfig = {
 
 module.exports = {
   images: {
-    remotePatterns: [new URL('https://digishop.blob.core.windows.net/product/products/**')],
+    remotePatterns: [
+      {
+        protocal: "https",
+        hostname: "digishop.blob.core.windows.net",
+        pathname: "/digishop/**"
+      }
+    ],
   },
 }
 export default nextConfig;
