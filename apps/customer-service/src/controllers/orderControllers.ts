@@ -144,6 +144,7 @@ export const findUserOrder = async (
         "shipping_fee_minor",
         "discount_total_minor",
         "created_at",
+        "updated_at"
       ],
       include: [
         {
