@@ -52,6 +52,7 @@ export const authenticate = async (
 ) => {
   // ถ้า serviceAuth ผ่านมาแล้ว ก็ไม่ต้องเช็ค cookie
   const token = (req as any).cookies?.[ATK_NAME];
+  console.log('token',req.cookies , )
   if (!token) return res.status(401).json({ error: "Unauthorized no token" });
 
   try {
