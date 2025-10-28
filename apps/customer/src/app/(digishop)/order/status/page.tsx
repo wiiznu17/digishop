@@ -21,7 +21,6 @@ export default function OrderStatus() {
   const [selectShowCancel, setSelectShowCancel] = useState<
     CancelProp | undefined
   >();
-
   const [selectStatus, setSelectStatus] = useState<keyof typeof StateConfig>("PENDING");
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +52,10 @@ export default function OrderStatus() {
     setSelectShowDetail(undefined);
     setSelectShowCancel(undefined);
   };
-   const filterOrder = getFilterOrder() ? getFilterOrder() : null;
+   const filterOrder = getFilterOrder()
+  ? getFilterOrder()?.sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    ): [];
    const handleShowDetail = (order: OrderDetail) => {
     setSelectShowDetail(order);
   };
