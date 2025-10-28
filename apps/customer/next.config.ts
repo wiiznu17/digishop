@@ -1,18 +1,15 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-module.exports = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "digishop.blob.core.windows.net",
-        pathname: "/digishop/**"
-      }
+        pathname: "/digishop-production/**",
+      },
     ],
   },
 }
-export default nextConfig;
+
+export default nextConfig
