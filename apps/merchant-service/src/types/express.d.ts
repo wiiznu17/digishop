@@ -2,11 +2,12 @@ import { ShippingStatus, OrderStatus, ReturnShipmentStatus } from "@digishop/db/
 
 export interface CarrierContext {
   carrierCode: string;
+  orderId: number;
   payload: any;
   payloadRaw: string;
   signatureHeader?: string;
 
-  trackingNumber: string;
+  trackingNumber?: string;
   eventTime: Date;
   nextShippingStatus: ShippingStatus;
 

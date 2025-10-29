@@ -121,6 +121,7 @@ export function cmwParseBase(req: Request, _res: Response, next: NextFunction) {
   const signatureHeader = (req.headers["x-signature"] as string);
   req.carrierCtx = {
     carrierCode,
+    orderId: 0,
     payload,
     payloadRaw,
     signatureHeader,
@@ -128,7 +129,7 @@ export function cmwParseBase(req: Request, _res: Response, next: NextFunction) {
     eventTime: new Date(),
     nextShippingStatus: ShippingStatus.PENDING,
   };
-  // console.log("cmwParseBase: ", req.carrierCtx)
+  console.log("cmwParseBase: ", req.carrierCtx)
   next();
 }
 
@@ -149,6 +150,7 @@ export function cmwVerifySignature(
   const sigHex = (req.carrierCtx!.signatureHeader || "").trim();
   const provided = Buffer.from(sigHex.replace(/^sha256=/i, ""), "hex");
   const ok = provided.length === mac.length && crypto.timingSafeEqual(mac, provided);
+  console.log("cmwVerifySignature: ", { ok })
   if (!ok) return res.status(401).json({ error: "Bad signature" });
 
   next();
@@ -161,20 +163,25 @@ export function cmwExtractCoreFields(
   next: NextFunction
 ) {
   const p = req.carrierCtx!.payload;
-  // console.log("cmwExtractCoreFields: ", p)
-  const trackingNumber = p.trackingNumber;
-  if (!trackingNumber)
-    return res.status(400).json({ error: "Missing tracking number" });
 
-  const eventTime = new Date(p.occurredAt);
+  const orderId = Number(p.orderId);
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return res.status(400).json({ error: "Missing or invalid orderId" });
+  }
+
+  const trackingNumber = p.trackingNumber ? String(p.trackingNumber) : undefined;
+
+  const eventTime = p.occurredAt ? new Date(p.occurredAt) : new Date();
   const nextShippingStatus = normalizeCarrierStatus(p);
 
-  req.carrierCtx!.trackingNumber = String(trackingNumber);
+  req.carrierCtx!.orderId = orderId;
+  req.carrierCtx!.trackingNumber = trackingNumber;
   req.carrierCtx!.eventTime = eventTime;
   req.carrierCtx!.nextShippingStatus = nextShippingStatus;
-  // console.log("Final cmwExtractCoreFields: ", req.carrierCtx)
+
   next();
 }
+
 
 // 4) โหลด ShippingInfo (ถ้าไม่พบให้ตอบ 202)
 export async function cmwLoadShippingInfo(
@@ -182,14 +189,23 @@ export async function cmwLoadShippingInfo(
   res: Response,
   next: NextFunction
 ) {
-  const shippingInfo = await ShippingInfo.findOne({
-    where: { trackingNumber: req.carrierCtx!.trackingNumber },
-  });
-  if (!shippingInfo) return res.status(202).json({ ok: true }); // รับไว้แต่ไม่ทำอะไร
+  const orderId = req.carrierCtx!.orderId!;
+  // ✅ เปลี่ยนมา query ด้วย orderId
+  const shippingInfo = await ShippingInfo.findOne({ where: { orderId } });
+
+  // (option) ถ้าอยาก fallback เมื่อหาไม่เจอแต่มี trackingNumber:
+  // let shippingInfo = await ShippingInfo.findOne({ where: { orderId } });
+  // if (!shippingInfo && req.carrierCtx!.trackingNumber) {
+  //   shippingInfo = await ShippingInfo.findOne({
+  //     where: { trackingNumber: req.carrierCtx!.trackingNumber }
+  //   });
+  // }
+
+  if (!shippingInfo) return res.status(202).json({ ok: true }); // รับไว้แต่ยังไม่ทำอะไร
   req.carrierCtx!.shippingInfo = shippingInfo;
-  console.log("cmwLoadShippingInfo: ", shippingInfo)
   next();
 }
+
 
 // กันเหตุการณ์ซ้ำ (สถานะเดียวกันภายใน 60 วินาที)
 export async function cmwDeduplicateEvent(
@@ -210,7 +226,7 @@ export async function cmwDeduplicateEvent(
     (lastEvent?.get("toStatus") as ShippingStatus) ??
     shippingInfo.shippingStatus ??
     null;
-
+  console.log("Last event status: ", req.carrierCtx!.lastEventStatus)
   if (
     lastEvent &&
     lastEvent.get("toStatus") === req.carrierCtx!.nextShippingStatus

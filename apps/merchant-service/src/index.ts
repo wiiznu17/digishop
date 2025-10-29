@@ -20,11 +20,11 @@ async function main() {
       credentials: true
     }))
     initModels(sequelize);
-    app.use('/api', router);
     app.use((req, res, next) => {
       console.log('[MERCHANT] Incoming', req.method, req.url)
       next()
     })
+    app.use('/api', router);
 
     const server = app.listen(PORT, () => {
       console.log(`Merchant Service listening at: http://localhost:${PORT}`);
