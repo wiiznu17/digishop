@@ -11,16 +11,17 @@ import {
   listOrdersRequester,
   updateOrderRequester,
   handOverOrderRequester,
+  type ListOrdersParams as _ListOrdersParams,
   type ListOrdersResponse as _ListOrdersResponse,
   OrderSummary,
   fetchOrderSummary
 } from "@/utils/requestUtils/requestOrderUtils"
+import { useToast } from "@/hooks/use-toast"
 import {
   OrdersFilters,
   OrdersFiltersValue
 } from "@/components/order/orders-filters"
 import { extractErrorMessage } from "@/utils/errorToToast"
-import Swal from "sweetalert2" // ⬅️ NEW: SweetAlert2
 
 type ListOrdersResponse = _ListOrdersResponse
 
@@ -30,14 +31,16 @@ export default function OrdersPage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
 
+  // filters (ยืนยันจริงเมื่อ apply)
   const [filters, setFilters] = useState<OrdersFiltersValue>({
     q: "",
-    statuses: [],
+    statuses: [], // [] = ALL
     sortBy: "createdAt",
     sortDir: "DESC",
     hasTracking: ""
   })
 
+  // trigger search
   const [tick, setTick] = useState(0)
   const applyFilters = (v: OrdersFiltersValue) => {
     setPage(1)
@@ -61,7 +64,8 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false)
 
-  const { getStatusText } = useOrderStatus()
+  const { getStatusIcon, getStatusBadgeColor, getStatusText } = useOrderStatus()
+  const { toast } = useToast()
 
   // initial load
   const didInit = useRef(false)
@@ -93,17 +97,17 @@ export default function OrdersPage() {
           setOrders([])
           setTotal(0)
           const { title, description } = extractErrorMessage(e)
-          Swal.fire({
-            icon: "error",
-            title: `Failed to load orders · ${title}`,
-            text: description || "Please try again"
+          toast({
+            title: "Failed to load orders",
+            description,
+            variant: "destructive"
           })
           console.error("listOrders error:", e)
         }
       }
     })()
     return () => ac.abort()
-  }, [tick, page, pageSize, filters])
+  }, [tick, page, pageSize, filters, toast])
 
   // summary
   useEffect(() => {
@@ -116,10 +120,10 @@ export default function OrdersPage() {
       } catch (e) {
         if (!isAbortError(e)) {
           const { title, description } = extractErrorMessage(e)
-          Swal.fire({
-            icon: "error",
+          toast({
             title: `Failed to load summary · ${title}`,
-            text: description || "Please try again"
+            description,
+            variant: "destructive"
           })
           console.error("orderSummary error:", e)
         }
@@ -137,26 +141,12 @@ export default function OrdersPage() {
     })
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // SweetAlert-around handlers
-  // ─────────────────────────────────────────────────────────────
-  const showLoading = (title = "Updating...") => {
-    // อย่า await
-    Swal.fire({
-      title,
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => Swal.showLoading()
-    })
-  }
-
   const handleStatusChange = async (
     orderId: string,
     newStatus: OrderStatus
   ) => {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
-
     const willTouchPGW = [
       "MERCHANT_CANCELED",
       "REFUND_APPROVED",
@@ -176,30 +166,17 @@ export default function OrdersPage() {
       )
     )
 
-    // loading
-    showLoading("Updating status...")
-
     try {
       const res = await updateOrderRequester(orderId, { status: newStatus })
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-
-      Swal.close()
-      await Swal.fire({
-        icon: "success",
+      toast({
         title: "Status updated",
-        text: `New status: ${getStatusText(updated.status)}`,
-        timer: 1400,
-        showConfirmButton: false
+        description: `New status: ${getStatusText(updated.status)}`
       })
-
       if (willTouchPGW && updated.status === "REFUND_FAIL") {
-        Swal.fire({
-          icon: "error",
-          title: "Refund failed",
-          text: "Please check PGW logs or try again."
-        })
+        toast({ title: "Refund failed", variant: "destructive" })
       }
     } catch (e) {
       // rollback
@@ -210,15 +187,12 @@ export default function OrdersPage() {
 
       if (!isAbortError(e)) {
         const { title, description } = extractErrorMessage(e)
-        Swal.close()
-        Swal.fire({
-          icon: "error",
+        toast({
           title: `Failed to update · ${title}`,
-          text: description || "Please try again"
+          description,
+          variant: "destructive"
         })
         console.error("updateOrder error:", e)
-      } else {
-        Swal.close()
       }
     }
   }
@@ -236,8 +210,6 @@ export default function OrdersPage() {
       list.map((o) => (o.id === orderId ? { ...o, trackingNumber } : o))
     )
 
-    showLoading("Updating tracking...")
-
     try {
       const res = await updateOrderRequester(orderId, {
         trackingNumber,
@@ -246,14 +218,7 @@ export default function OrdersPage() {
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-
-      Swal.close()
-      Swal.fire({
-        icon: "success",
-        title: "Tracking updated",
-        timer: 1200,
-        showConfirmButton: false
-      })
+      toast({ title: "Tracking updated" })
     } catch (e) {
       // rollback
       setOrders((list) =>
@@ -263,15 +228,12 @@ export default function OrdersPage() {
 
       if (!isAbortError(e)) {
         const { title, description } = extractErrorMessage(e)
-        Swal.close()
-        Swal.fire({
-          icon: "error",
+        toast({
           title: `Failed to update tracking · ${title}`,
-          text: description || "Please try again"
+          description,
+          variant: "destructive"
         })
         console.error("updateTracking error:", e)
-      } else {
-        Swal.close()
       }
     }
   }
@@ -301,21 +263,12 @@ export default function OrdersPage() {
       )
     )
 
-    showLoading("Handing over parcel...")
-
     try {
       const res = await handOverOrderRequester(orderId, trackingNumber, carrier)
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-
-      Swal.close()
-      Swal.fire({
-        icon: "success",
-        title: "Parcel handed over",
-        timer: 1200,
-        showConfirmButton: false
-      })
+      toast({ title: "Parcel handed over" })
     } catch (e) {
       // rollback
       setOrders((list) =>
@@ -325,15 +278,12 @@ export default function OrdersPage() {
 
       if (!isAbortError(e)) {
         const { title, description } = extractErrorMessage(e)
-        Swal.close()
-        Swal.fire({
-          icon: "error",
+        toast({
           title: `Failed to hand over · ${title}`,
-          text: description || "Please try again"
+          description,
+          variant: "destructive"
         })
         console.error("handOver error:", e)
-      } else {
-        Swal.close()
       }
     }
   }
@@ -383,9 +333,9 @@ export default function OrdersPage() {
           }}
           loading={false}
           onViewDetails={viewOrderDetails}
-          getStatusIcon={useOrderStatus().getStatusIcon}
-          getStatusBadgeColor={useOrderStatus().getStatusBadgeColor}
-          getStatusText={useOrderStatus().getStatusText}
+          getStatusIcon={getStatusIcon}
+          getStatusBadgeColor={getStatusBadgeColor}
+          getStatusText={getStatusText}
         />
       </div>
 

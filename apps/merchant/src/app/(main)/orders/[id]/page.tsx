@@ -295,7 +295,7 @@ export default function OrderDetailPage() {
             </Card>
 
             {/* Shipping timeline */}
-            {/* <Card>
+            <Card>
               <CardHeader className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Truck className="h-4 w-4 text-muted-foreground" />
@@ -333,10 +333,10 @@ export default function OrderDetailPage() {
                   </p>
                 )}
               </CardContent>
-            </Card> */}
+            </Card>
 
             {/* Return shipments (ถ้ามี) */}
-            {/* <Card>
+            <Card>
               <CardHeader className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Undo2 className="h-4 w-4 text-muted-foreground" />
@@ -388,10 +388,10 @@ export default function OrderDetailPage() {
                   </p>
                 )}
               </CardContent>
-            </Card> */}
+            </Card>
 
             {/* Status history (raw) */}
-            {/* <Card>
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Order Status History</CardTitle>
               </CardHeader>
@@ -421,7 +421,7 @@ export default function OrderDetailPage() {
                   <p className="text-sm text-muted-foreground">No history.</p>
                 )}
               </CardContent>
-            </Card> */}
+            </Card>
           </div>
 
           {/* RIGHT column (1/3) */}

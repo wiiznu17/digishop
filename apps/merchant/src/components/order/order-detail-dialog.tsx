@@ -114,15 +114,16 @@ export function OrderDetailDialog({
           </div>
 
           {/* Status Management */}
-          {/* <OrderStatusManager
+          <OrderStatusManager
             currentStatus={order.status}
             statusHistory={order.statusHistory ?? []}
             orderId={order.id}
             trackingNumber={order.trackingNumber ?? undefined}
             onStatusChange={onStatusChange}
             onTrackingNumberUpdate={onTrackingNumberUpdate}
+            /** ส่ง handler hand over ลงไป */
             onHandedOver={onHandedOver}
-          /> */}
+          />
 
           {/* Notes */}
           {order.notes && (
