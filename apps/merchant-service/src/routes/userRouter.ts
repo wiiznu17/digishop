@@ -8,7 +8,6 @@ import {
 } from '../controllers/userController'
 import { authenticate } from '../middlewares/middleware'
 import { upload } from '../middlewares/upload'
-import { getStoreStatus } from '../controllers/storeController'
 
 const router: express.Router = express.Router();
 
