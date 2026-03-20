@@ -13,14 +13,18 @@ import {
   ReturnCarrierWebhookInput,
   ReturnCarrierWebhookSuccessResponse,
 } from "../types/returnCarrier.types";
+import { AppError } from "../errors/AppError";
 
-export class ReturnCarrierServiceError extends Error {
+export class ReturnCarrierServiceError extends AppError {
+  public readonly body: Record<string, unknown>;
+
   constructor(
-    public readonly statusCode: number,
-    public readonly body: Record<string, unknown>,
+    statusCode: number,
+    body: Record<string, unknown>,
   ) {
-    super(String(body.error ?? "Return carrier service error"));
+    super(String(body.error ?? body.message ?? "Return carrier service error"), statusCode, true, body);
     this.name = "ReturnCarrierServiceError";
+    this.body = body;
   }
 }
 

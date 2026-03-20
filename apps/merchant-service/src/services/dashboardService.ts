@@ -1,13 +1,17 @@
+import { AppError } from "../errors/AppError";
 import { dashboardRepository } from "../repositories/dashboardRepository";
 import { DashboardSummaryResponse } from "../types/dashboard.types";
 
-export class DashboardServiceError extends Error {
+export class DashboardServiceError extends AppError {
+  public readonly body: Record<string, unknown>;
+
   constructor(
-    public readonly statusCode: number,
-    public readonly body: Record<string, unknown>,
+    statusCode: number,
+    body: Record<string, unknown>,
   ) {
-    super(String(body.error ?? "Dashboard service error"));
+    super(String(body.error ?? body.message ?? "Dashboard service error"), statusCode, true, body);
     this.name = "DashboardServiceError";
+    this.body = body;
   }
 }
 

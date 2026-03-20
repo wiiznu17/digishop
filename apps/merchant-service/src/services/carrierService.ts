@@ -1,15 +1,19 @@
 import { ActorType, Order, OrderStatus, ShippingInfo, ShippingStatus } from "@digishop/db";
 import { CreationAttributes, Transaction } from "sequelize";
+import { AppError } from "../errors/AppError";
 import { carrierRepository } from "../repositories/carrierRepository";
 import { CarrierWebhookInput, CarrierWebhookSuccessResponse } from "../types/carrier.types";
 
-export class CarrierServiceError extends Error {
+export class CarrierServiceError extends AppError {
+  public readonly body: Record<string, unknown>;
+
   constructor(
-    public readonly statusCode: number,
-    public readonly body: Record<string, unknown>,
+    statusCode: number,
+    body: Record<string, unknown>,
   ) {
-    super(String(body.error ?? "Carrier service error"));
+    super(String(body.error ?? body.message ?? "Carrier service error"), statusCode, true, body);
     this.name = "CarrierServiceError";
+    this.body = body;
   }
 }
 

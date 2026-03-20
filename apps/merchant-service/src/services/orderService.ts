@@ -23,14 +23,18 @@ import {
   SerializedOrder,
   UpdateOrderInput,
 } from "../types/order.types";
+import { AppError } from "../errors/AppError";
 
-class OrderServiceError extends Error {
+class OrderServiceError extends AppError {
+  public readonly body: Record<string, unknown>;
+
   constructor(
-    public readonly statusCode: number,
-    public readonly body: Record<string, unknown>,
+    statusCode: number,
+    body: Record<string, unknown>,
   ) {
-    super(String(body.error ?? "Order service error"));
+    super(String(body.error ?? body.message ?? "Order service error"), statusCode, true, body);
     this.name = "OrderServiceError";
+    this.body = body;
   }
 }
 

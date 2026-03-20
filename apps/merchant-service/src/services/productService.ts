@@ -9,6 +9,7 @@ import {
 } from "@digishop/db";
 import { ProductAttributes, ProductCreationAttributes } from "@digishop/db/src/models/Product";
 import { type Transaction } from "sequelize";
+import { AppError } from "../errors/AppError";
 import { azureBlobService } from "../helpers/azureBlobService";
 import { productRepository } from "../repositories/productRepository";
 import {
@@ -18,9 +19,9 @@ import {
   ReviewFootprint,
 } from "../types/product.types";
 
-class ProductServiceError extends Error {
+class ProductServiceError extends AppError {
   constructor(public readonly statusCode: number, message: string) {
-    super(message);
+    super(message, statusCode);
     this.name = "ProductServiceError";
   }
 }

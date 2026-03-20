@@ -1,4 +1,5 @@
 import { BankAccount, sequelize } from "@digishop/db";
+import { AppError } from "../errors/AppError";
 import { setDefaultAccountForStore } from "../helpers/bankAccountService";
 import { scheduleBankAccountApproval } from "../helpers/mocks api/bankAccountVerify";
 import { bankRepository } from "../repositories/bankRepository";
@@ -10,13 +11,16 @@ import {
 } from "../types/bank.types";
 import { Transaction } from "sequelize";
 
-export class BankServiceError extends Error {
+export class BankServiceError extends AppError {
+  public readonly body: Record<string, unknown>;
+
   constructor(
-    public readonly statusCode: number,
-    public readonly body: Record<string, unknown>,
+    statusCode: number,
+    body: Record<string, unknown>,
   ) {
-    super(String(body.error ?? "Bank service error"));
+    super(String(body.error ?? body.message ?? "Bank service error"), statusCode, true, body);
     this.name = "BankServiceError";
+    this.body = body;
   }
 }
 

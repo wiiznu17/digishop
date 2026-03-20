@@ -1,77 +1,47 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/middleware";
-import { BankServiceError, bankService } from "../services/bankService";
+import { bankService } from "../services/bankService";
 import { AddBankAccountPayload } from "../types/bank.types";
+import { asyncHandler } from "../utils/asyncHandler";
 
-const errorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : String(error ?? "Unknown error");
-
-const handleBankControllerError = (res: Response, label: string, error: unknown) => {
-  if (error instanceof BankServiceError) {
-    return res.status(error.statusCode).json(error.body);
-  }
-
-  console.error(label, error);
-  return res.status(500).json({
-    error: "An internal server error occurred",
-    details: errorMessage(error),
+export const getBankAccountList = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const result = await bankService.getBankAccountList({
+    userSub: req.user?.sub,
+    storeId: req.store?.id,
   });
-};
 
-export const getBankAccountList = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const result = await bankService.getBankAccountList({
-      userSub: req.user?.sub,
-      storeId: req.store?.id,
-    });
+  return res.status(200).json(result);
+});
 
-    return res.status(200).json(result);
-  } catch (error) {
-    return handleBankControllerError(res, "Error fetching bank account list:", error);
-  }
-};
+export const addBankAccountToStore = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const payload = req.body as AddBankAccountPayload;
+  const result = await bankService.addBankAccountToStore({
+    userSub: req.user?.sub,
+    storeId: req.store?.id,
+    payload,
+  });
 
-export const addBankAccountToStore = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const payload = req.body as AddBankAccountPayload;
-    const result = await bankService.addBankAccountToStore({
-      userSub: req.user?.sub,
-      storeId: req.store?.id,
-      payload,
-    });
+  return res.status(201).json(result);
+});
 
-    return res.status(201).json(result);
-  } catch (error) {
-    return handleBankControllerError(res, "Error adding bank account:", error);
-  }
-};
+export const setDefaultBankAccount = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { accountId } = req.params as { accountId: string };
+  const result = await bankService.setDefaultBankAccount({
+    accountId,
+    userSub: req.user?.sub,
+    storeId: req.store?.id,
+  });
 
-export const setDefaultBankAccount = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { accountId } = req.params as { accountId: string };
-    const result = await bankService.setDefaultBankAccount({
-      accountId,
-      userSub: req.user?.sub,
-      storeId: req.store?.id,
-    });
+  return res.status(200).json(result);
+});
 
-    return res.status(200).json(result);
-  } catch (error) {
-    return handleBankControllerError(res, "Error setting default bank account:", error);
-  }
-};
+export const deleteBankAccount = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { bankAccountId } = req.params as { bankAccountId: string };
+  await bankService.deleteBankAccount({
+    bankAccountId,
+    userSub: req.user?.sub,
+    storeId: req.store?.id,
+  });
 
-export const deleteBankAccount = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { bankAccountId } = req.params as { bankAccountId: string };
-    await bankService.deleteBankAccount({
-      bankAccountId,
-      userSub: req.user?.sub,
-      storeId: req.store?.id,
-    });
-
-    return res.status(204).send();
-  } catch (error) {
-    return handleBankControllerError(res, "Error deleting bank account:", error);
-  }
-};
+  return res.status(204).send();
+});

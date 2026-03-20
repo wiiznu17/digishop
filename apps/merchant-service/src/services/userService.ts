@@ -7,6 +7,7 @@ import {
 } from "@digishop/db";
 import { Transaction } from "sequelize";
 import { azureBlobService } from "../helpers/azureBlobService";
+import { AppError } from "../errors/AppError";
 import { userRepository } from "../repositories/userRepository";
 import {
   CreateStoreForUserPayload,
@@ -30,13 +31,16 @@ type ProfileJson = Record<string, unknown> & {
   };
 };
 
-export class UserServiceError extends Error {
+export class UserServiceError extends AppError {
+  public readonly body: Record<string, unknown>;
+
   constructor(
-    public readonly statusCode: number,
-    public readonly body: Record<string, unknown>,
+    statusCode: number,
+    body: Record<string, unknown>,
   ) {
-    super(String(body.error ?? body.message ?? "User service error"));
+    super(String(body.error ?? body.message ?? "User service error"), statusCode, true, body);
     this.name = "UserServiceError";
+    this.body = body;
   }
 }
 

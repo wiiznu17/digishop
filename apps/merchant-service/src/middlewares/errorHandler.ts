@@ -26,10 +26,16 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   }
 
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
+    const payload: Record<string, unknown> = {
       status: "error",
       message: err.message,
-    });
+    };
+
+    if (typeof err.details !== "undefined") {
+      payload.details = err.details;
+    }
+
+    return res.status(err.statusCode).json(payload);
   }
 
   if (process.env.NODE_ENV !== "production") {
