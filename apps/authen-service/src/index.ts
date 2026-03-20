@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import "./helpers/dotenv.helper";
 import authRoutes from "./routes/authRouter";
 import { checkDatabaseConnection, initModels, sequelize } from "@digishop/db";
@@ -11,33 +10,11 @@ async function main() {
     const app = express();
     app.set("trust proxy", 1);
 
-    // const allowlist = (process.env.ALLOW_CORS ?? "")
-    //   .split(",")
-    //   .map(s => s.trim())
-    //   .filter(Boolean);
-    // console.log("CORS allowlist:", allowlist);
-    // app.use(
-    //   cors({
-    //     origin(origin, callback) {
-    //       // กรณีไม่มี Origin (เช่น curl/same-origin) ให้ผ่าน
-    //       if (!origin) return callback(null, true);
-    //       if (allowlist.includes(origin)) return callback(null, true);
-    //       return callback(new Error("Not allowed by CORS"));
-    //     },
-    //     credentials: true,
-    //     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    //     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    //     optionsSuccessStatus: 204
-    //   })
-    // );
-
-    // app.options("*", cors())
-
     app.use(cookieParser())
     app.use(express.json())
 
     app.use((req, _res, next) => {
-      console.log("[AUTH] Incoming", req.method, req.url, "Origin:", req.headers.origin);
+      console.log("[AUTH] Incoming", req.method, "payload: ", req.body, "URL:", req.url, "Origin:", req.headers.origin);
       next();
     });
 
