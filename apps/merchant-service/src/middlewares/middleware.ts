@@ -3,9 +3,16 @@ import { Request, Response, NextFunction } from "express";
 import { redis } from "../lib/redis/client";
 import { verifyAccess, type JWTPayload } from "../lib/jwtVerfify";
 
+export interface AuthenticatedUser {
+  id?: number | string;
+  sub?: number | string;
+  role?: string;
+  storeId?: number;
+  [key: string]: unknown;
+}
+
 export interface AuthenticatedRequest extends Request {
-  store?: any;
-  user?: any;
+  user?: AuthenticatedUser;
   authMode?: "service" | "user";
 }
 

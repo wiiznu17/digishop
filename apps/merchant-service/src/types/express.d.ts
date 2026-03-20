@@ -1,3 +1,4 @@
+import type { Store } from "@digishop/db";
 import { ShippingStatus, OrderStatus, ReturnShipmentStatus } from "@digishop/db/src/types/enum";
 
 export interface CarrierContext {
@@ -35,12 +36,12 @@ export interface ReturnCarrierContext {
   nextOrderStatus?: OrderStatus | null;
 }
 
-// ⬇️ ใช้ global augmentation เพื่อให้ไม่ผูกกับสำเนา module ใด ๆ
 declare global {
   namespace Express {
     interface Request {
       carrierCtx?: CarrierContext;
       returnCarrierCtx?: ReturnCarrierContext;
+      store?: Store;
     }
   }
 }

@@ -9,7 +9,6 @@
     "dev:portal": "turbo run dev --parallel --filter=portal... --filter=portal-service...",
     "dev:customer": "turbo run dev --parallel --filter=customer-service... --filter=customer...",
     "dev:authen": "turbo run dev --parallel --filter=authen-service...",
-    "dev:gateway": "turbo run dev --parallel --filter=gateway-service...",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"

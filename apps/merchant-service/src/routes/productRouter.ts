@@ -1,5 +1,6 @@
 import express from "express";
 import { authenticate, requireApprovedStore } from "../middlewares/middleware";
+import { ensureStore } from "../middlewares/storeMiddleware";
 import { upload } from "../middlewares/upload";
 
 import {
@@ -21,18 +22,19 @@ import {
 const router: express.Router = express.Router();
 
 // List & Detail
-router.get("/suggest", authenticate, requireApprovedStore(), suggestProducts);
-router.get("/list", authenticate, requireApprovedStore(), getProductList);
-router.get("/:productUuid", authenticate, requireApprovedStore(), getProductDetail);
+router.get("/suggest", authenticate, requireApprovedStore(), ensureStore, suggestProducts);
+router.get("/list", authenticate, requireApprovedStore(), ensureStore, getProductList);
+router.get("/:productUuid", authenticate, requireApprovedStore(), ensureStore, getProductDetail);
 router.get("/categories/list", authenticate, listCategories);
 
 // Create / Update / Delete / Duplicate
-router.delete("/:productUuid", authenticate, deleteProduct);
-router.post("/:productUuid/duplicate", authenticate, requireApprovedStore(), duplicateProduct);
+router.delete("/:productUuid", authenticate, ensureStore, deleteProduct);
+router.post("/:productUuid/duplicate", authenticate, requireApprovedStore(), ensureStore, duplicateProduct);
 router.post(
   "/desired",
   authenticate,
   requireApprovedStore(),
+  ensureStore,
   upload.fields([
     { name: "productImages", maxCount: 20 },
     { name: "itemImages", maxCount: 50 }
@@ -44,6 +46,7 @@ router.put(
   "/:productUuid/desired",
   authenticate,
   requireApprovedStore(),
+  ensureStore,
   upload.fields([
     { name: "productImages", maxCount: 20 },
     { name: "itemImages", maxCount: 50 }
@@ -52,10 +55,10 @@ router.put(
 );
 
 // Bulk
-router.patch("/bulk/status", authenticate, requireApprovedStore(), bulkUpdateProductStatus);
-router.delete("/bulk/delete", authenticate, requireApprovedStore(), bulkDeleteProducts);
+router.patch("/bulk/status", authenticate, requireApprovedStore(), ensureStore, bulkUpdateProductStatus);
+router.delete("/bulk/delete", authenticate, requireApprovedStore(), ensureStore, bulkDeleteProducts);
 
 // items
-router.put("/:productUuid/items/:itemUuid", authenticate, requireApprovedStore(), updateProductItem);
+router.put("/:productUuid/items/:itemUuid", authenticate, requireApprovedStore(), ensureStore, updateProductItem);
 
 export default router;
