@@ -1,29 +1,19 @@
-import { Response } from "express"
-import { AuthenticatedRequest } from "../middlewares/middleware"
-import { Store } from "@digishop/db";
+import { Response } from "express";
+import { AuthenticatedRequest } from "../middlewares/middleware";
+import { StoreServiceError, storeService } from "../services/storeService";
 
 export async function getStoreStatus(req: AuthenticatedRequest, res: Response) {
   try {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" })
-    const ownerUserId = Number(req.user.sub);
-    if (!ownerUserId) return res.status(400).json({ error: "Missing user Id in cookie" });
-    const owned = await Store.findOne({
-      where: { userId: ownerUserId },
-      attributes: ["id", "status"]
-    });
-    if (!owned) return res.status(404).json({ error: "Store not found" });
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-    const storeId = owned.id;
-    let store = null
-
-    store = await Store.findByPk(storeId, { attributes: ["id", "status"] })
-    if (!store) {
-      return res.status(404).json({ status: null })
+    const result = await storeService.getStoreStatus({ userSub: req.user.sub });
+    return res.json(result);
+  } catch (error) {
+    if (error instanceof StoreServiceError) {
+      return res.status(error.statusCode).json(error.body);
     }
 
-    return res.json({ status: store.status })
-  } catch (err) {
-    console.error("[getMyStoreStatus] error:", err)
-    return res.status(500).json({ message: "Internal server error" })
+    console.error("[getMyStoreStatus] error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
