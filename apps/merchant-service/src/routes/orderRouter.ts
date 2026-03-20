@@ -11,17 +11,19 @@ import {
   requireApprovedStore,
   serviceAuth
 } from "../middlewares/middleware";
+import { attachStore } from "../middlewares/storeMiddleware";
 
 const router: express.Router = express.Router();
 
 // เฉพาะหน้าเว็บ: cookie-JWT เท่านั้น
-router.get("/", authenticate, requireApprovedStore(), listOrders);
-router.get("/summary", authenticate, requireApprovedStore(), getOrdersSummary);
+router.get("/", authenticate, requireApprovedStore(), attachStore(), listOrders);
+router.get("/summary", authenticate, requireApprovedStore(), attachStore(), getOrdersSummary);
 
 router.get(
   "/:orderId",
   authenticate,
   requireApprovedStore(),
+  attachStore(),
   getOrderById
 );
 
@@ -30,6 +32,7 @@ router.patch(
   "/:orderId",
   eitherAuth([serviceAuth, authenticate]),
   requireApprovedStore({ allowAdminBypass: true, allowServiceBypass: true }),
+  attachStore({ allowServiceBypass: true }),
   updateOrder
 );
 
