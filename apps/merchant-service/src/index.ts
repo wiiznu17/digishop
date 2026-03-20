@@ -3,6 +3,7 @@ import cors from "cors"
 import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels, sequelize } from '@digishop/db';
+import { errorHandler } from "./middlewares/errorHandler";
 const cookieParser = require("cookie-parser")
 
 const PORT = Number(process.env.PORT);
@@ -25,6 +26,7 @@ async function main() {
       next()
     })
     app.use('/api', router);
+    app.use(errorHandler);
 
     const server = app.listen(PORT, () => {
       console.log(`Merchant Service listening at: http://localhost:${PORT}`);
