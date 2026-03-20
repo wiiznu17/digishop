@@ -1,35 +1,20 @@
-import { BlobServiceClient, ContainerClient } from '@azure/storage-blob'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
-import { generateBlobSASQueryParameters, BlobSASPermissions, SASProtocol, StorageSharedKeyCredential } from '@azure/storage-blob'
 
-
-class AzureBlobService {
-  private blobServiceClient: BlobServiceClient
-  private containerClient: ContainerClient
+class StorageService {
+  private supabase: SupabaseClient
+  private bucketName: string
   
   constructor() {
-    const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
-    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || ""
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY // แนะนำให้ใช้ Service Role Key สำหรับ Backend
+    this.bucketName = process.env.SUPABASE_BUCKET_NAME || 'digishop-images'
     
-    if (!connectionString) {
-      throw new Error('Azure Storage connection string is not configured')
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase URL or Key is not configured')
     }
     
-    this.blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
-    this.containerClient = this.blobServiceClient.getContainerClient(containerName)
-    
-    this.initializeContainer()
-  }
-  
-  private async initializeContainer() {
-    try {
-      // Create container if it doesn't exist
-      await this.containerClient.createIfNotExists({
-        access: 'blob' // Allow public read access to blobs
-      })
-    } catch (error) {
-      console.error('Error initializing Azure Blob container:', error)
-    }
+    this.supabase = createClient(supabaseUrl, supabaseKey)
   }
   
   async uploadImage(
@@ -40,64 +25,69 @@ class AzureBlobService {
       const fileExtension = file.originalname.split('.').pop()
       const blobName = `${folder}/${uuidv4()}.${fileExtension}`
       
-      const blockBlobClient = this.containerClient.getBlockBlobClient(blobName)
+      const { data, error } = await this.supabase.storage
+        .from(this.bucketName)
+        .upload(blobName, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false
+        })
+        
+      if (error) throw error
       
-      // Upload file buffer to blob
-      await blockBlobClient.uploadData(file.buffer, {
-        blobHTTPHeaders: {
-          blobContentType: file.mimetype
-        }
-      })
+      // ดึง Public URL กลับไป
+      const { data: publicUrlData } = this.supabase.storage
+        .from(this.bucketName)
+        .getPublicUrl(blobName)
       
-      const url = blockBlobClient.url
-      
-      return { url, blobName }
+      return { url: publicUrlData.publicUrl, blobName }
     } catch (error) {
-      console.error('Error uploading image to Azure Blob:', error)
+      console.error('Error uploading image to Supabase:', error)
       throw new Error('Failed to upload image')
     }
   }
   
   async deleteImage(blobName: string): Promise<void> {
     try {
-      const blockBlobClient = this.containerClient.getBlockBlobClient(blobName)
-      await blockBlobClient.deleteIfExists()
+      const { error } = await this.supabase.storage
+        .from(this.bucketName)
+        .remove([blobName])
+        
+      if (error) throw error
     } catch (error) {
-      console.error('Error deleting image from Azure Blob:', error)
+      console.error('Error deleting image from Supabase:', error)
       throw new Error('Failed to delete image')
     }
   }
   
   async deleteMultipleImages(blobNames: string[]): Promise<void> {
+    if (!blobNames || blobNames.length === 0) return;
     try {
-      await Promise.all(
-        blobNames.map(blobName => this.deleteImage(blobName))
-      )
+      const { error } = await this.supabase.storage
+        .from(this.bucketName)
+        .remove(blobNames)
+        
+      if (error) throw error
     } catch (error) {
-      console.error('Error deleting multiple images:', error)
+      console.error('Error deleting multiple images from Supabase:', error)
       throw new Error('Failed to delete images')
     }
   }
 
   async generateSignedUrl(blobName: string, expiresInMinutes = 15): Promise<string> {
-    const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME!
-    const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY!
-
-    const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
-
-    const sasToken = generateBlobSASQueryParameters({
-      containerName: this.containerClient.containerName,
-      blobName,
-      permissions: BlobSASPermissions.parse('r'), // read only
-      startsOn: new Date(),
-      expiresOn: new Date(Date.now() + expiresInMinutes * 60 * 1000),
-      protocol: SASProtocol.Https
-    }, sharedKeyCredential).toString()
-
-    const blobClient = this.containerClient.getBlobClient(blobName)
-    return `${blobClient.url}?${sasToken}`
+    try {
+      const { data, error } = await this.supabase.storage
+        .from(this.bucketName)
+        .createSignedUrl(blobName, expiresInMinutes * 60)
+        
+      if (error) throw error
+      
+      return data.signedUrl
+    } catch (error) {
+      console.error('Error generating signed URL from Supabase:', error)
+      throw new Error('Failed to generate signed url')
+    }
   }
-
 }
 
-export const azureBlobService = new AzureBlobService()
+// ยังคงใช้ชื่อเดิมเพื่อไม่ให้กระทบกับการ import ในไฟล์อื่น
+export const azureBlobService = new StorageService()
