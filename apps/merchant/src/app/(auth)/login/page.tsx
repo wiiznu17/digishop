@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" })
@@ -24,7 +25,6 @@ export default function LoginPage() {
   const { login, isLoading } = useAuth()
   const router = useRouter()
 
-  // ⬇️ ใช้ URL หลักจาก ENV
   const DIGISHOP_URL =
     process.env.NEXT_PUBLIC_DIGISHOP_URL ?? "https://digishop.localhost"
 
@@ -43,9 +43,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      {/* LEFT: Illustration / Logo */}
-      <div className="relative flex items-center justify-center p-8 bg-white">
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-background">
+      <div className="relative flex items-center justify-center p-8 bg-background">
         <Image
           src="/Login-amico.svg"
           alt="DigiShop"
@@ -56,54 +55,50 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* RIGHT: Pastel purple-pink gradient area */}
-      <div className="relative flex items-center justify-center bg-gradient-to-br from-fuchsia-100 via-rose-100 to-violet-100">
-        {/* soft rings */}
-        {/* <div className="pointer-events-none absolute right-[-6rem] bottom-[-6rem] h-72 w-72 rounded-full border-2 border-fuchsia-300/40" />
-        <div className="pointer-events-none absolute right-[-10rem] bottom-[-10rem] h-96 w-96 rounded-full border-2 border-violet-300/30" /> */}
-
+      <div className="relative flex items-center justify-center bg-gradient-to-br from-fuchsia-100 via-rose-100 to-violet-100 dark:from-zinc-950 dark:via-violet-950/40 dark:to-fuchsia-950/40">
+        <div className="absolute top-4 right-4">
+          <ModeToggle />
+        </div>
         <div className="w-full max-w-md px-6 py-10">
-          <Card className="border border-fuchsia-200/50 bg-white/80 backdrop-blur-md shadow-xl">
+          <Card className="border-border bg-card/90 backdrop-blur-md shadow-xl">
             <CardHeader className="pt-6">
-              <CardTitle className="text-2xl font-semibold text-violet-700">
+              <CardTitle className="text-2xl font-semibold text-card-foreground">
                 Login
               </CardTitle>
-              <CardDescription className="text-violet-600/80">
+              <CardDescription className="text-muted-foreground">
                 Sign in to DigiShop Merchant Portal
               </CardDescription>
             </CardHeader>
 
             <CardContent className="pb-6">
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-violet-800">
+                  <Label htmlFor="email" className="text-foreground">
                     Email Address
                   </Label>
                   <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-violet-400">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       <Mail className="h-4 w-4" />
                     </span>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="digo@thailand.com"
+                      placeholder="digio@thailand.com"
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
                       required
-                      className="pl-9 focus-visible:ring-fuchsia-400"
+                      className="pl-9 focus-visible:ring-fuchsia-500"
                       autoComplete="username"
                     />
                   </div>
                 </div>
 
-                {/* Password + show/hide */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-violet-800">
+                  <Label htmlFor="password" className="text-foreground">
                     Password
                   </Label>
                   <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-violet-400">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       <Lock className="h-4 w-4" />
                     </span>
                     <Input
@@ -113,7 +108,7 @@ export default function LoginPage() {
                       value={formData.password}
                       onChange={(e) => handleChange("password", e.target.value)}
                       required
-                      className="pl-9 pr-10 focus-visible:ring-fuchsia-400"
+                      className="pl-9 pr-10 focus-visible:ring-fuchsia-500"
                       autoComplete="current-password"
                     />
                     <button
@@ -122,7 +117,7 @@ export default function LoginPage() {
                         showPassword ? "Hide password" : "Show password"
                       }
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-violet-500 hover:text-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-300/70"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -133,7 +128,6 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Gradient primary button */}
                 <Button
                   type="submit"
                   disabled={isLoading || isLoadingLocal}
@@ -145,14 +139,13 @@ export default function LoginPage() {
                 <div className="flex items-center justify-between text-sm">
                   <Link
                     href={`${DIGISHOP_URL}`}
-                    className="text-violet-700/80 hover:underline"
+                    className="text-muted-foreground hover:text-foreground hover:underline"
                   >
                     ← Back to DigiShop
                   </Link>
-                  {/* ⬇️ เปลี่ยนปลายทางเป็น DIGISHOP_URL + /auth/forgot-password */}
                   <Link
                     href={`${DIGISHOP_URL}/auth/forgot-password`}
-                    className="text-fuchsia-600 hover:underline"
+                    className="text-primary hover:underline"
                   >
                     Forgot Password
                   </Link>
@@ -161,12 +154,11 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
-          <p className="mt-6 text-center text-sm text-violet-700/80">
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             Don’t have an account?{" "}
-            {/* ⬇️ เปลี่ยนปลายทางเป็น DIGISHOP_URL + /auth/register */}
             <Link
               href={`${DIGISHOP_URL}/auth/register`}
-              className="font-medium text-fuchsia-700 hover:underline underline-offset-4"
+              className="font-medium text-primary hover:underline underline-offset-4"
             >
               Sign up
             </Link>
