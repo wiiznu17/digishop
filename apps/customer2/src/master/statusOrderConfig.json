@@ -1,0 +1,59 @@
+{
+  "PENDING": {
+    "id": "pending", 
+    "icon": "Clock",
+    "color": "bg-amber-100 text-amber-700 border-amber-300",
+    "activeColor": "bg-amber-500 text-white border-amber-600",
+    "label": "pending",
+    "value": "PENDING",
+    "status": "PENDING"
+  },
+  "PAID": {
+    "label": "paid",
+    "value": "PAID",
+    "status": "PAID"
+  },
+  "PREPARE": {
+    "label": "prepare",
+    "value": "PREPARE",
+    "status": ["PROCESSING", "READY_TO_SHIP", "HANDED_OVER"]
+  },
+  "TRANSIT": {
+    "label": "transit",
+    "value": "TRANSIT",
+    "status": ["SHIPPED", "TRANSIT_LACK", "RE_TRANSIT"]
+  },
+  "DELIVERED": {
+    "label": "delivered",
+    "value": "DELIVERED",
+    "status": ["DELIVERED","CANCELED_REFUND"]
+  }
+  ,
+  "COMPLETE": {
+    "label": "complete",
+    "value": "COMPLETE",
+    "status": "COMPLETE"
+  },
+  "CANCEL": {
+    "label": "cancel",
+    "value": "CANCEL",
+    "status": ["CUSTOMER_CANCELED", "MERCHANT_CANCELED"]
+  },
+  "CALM": {
+    "label": "calm",
+    "value": "CALM",
+    "status": [
+      "REFUND_REQUEST",
+      "REFUND_REJECTED",
+      "AWAITING_RETURN",
+      "RECEIVE_RETURN",
+      "RETURN_VERIFIED",
+      "RETURN_FAIL", 
+      "REFUND_APPROVED", 
+      "REFUND_PROCESSING",
+      "REFUND_SUCCESS",
+      "REFUND_FAIL",
+      "REFUND_RETRY"
+    ]
+  }
+}

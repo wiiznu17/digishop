@@ -1,0 +1,122 @@
+{
+  "PENDING": {
+    "label": "Waiting to paid",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "CUSTOMER_CANCELED": {
+    "label": "You are cancel this order",
+    "color": "bg-red-200",
+    "cancel": "none"
+  },
+  "PAID": {
+    "label": "Waiting merchant confirm",
+    "color": "bg-amber-200",
+    "cancel": "cancel"
+  },
+  "MERCHANT_CANCELED": {
+    "label": "Merchant cancel this order",
+    "color": "bg-red-200",
+    "cancel": "none"
+  },
+  "PROCESSING": {
+    "label": "Order is preparing",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "READY_TO_SHIP": {
+    "label": "Order is ready to ship",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "HANDED_OVER": {
+    "label": "Shipping company pickup",
+    "color": "bg-green-200",
+    "cancel": "none"
+  },
+  "SHIPPED": {
+    "label": "Order is in transit",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "DELIVERED": {
+    "label": "Order is delivered",
+    "color": "bg-green-200",
+    "cancel": "refund"
+  },
+  "COMPLETE": {
+    "label": "Order is completed",
+    "color": "bg-green-200",
+    "cancel": "none"
+  },
+  "TRANSIT_LACK": {
+    "label": "Transit lack",
+    "color": "bg-amber-400",
+    "cancel": "none"
+  },
+  "RE_TRANSIT": {
+    "label": "Shipping company is re-transport",
+    "color": "bg-amber-400",
+    "cancel": "none"
+  },
+  "AWAITING_RETURN": {
+    "label": "Waiting to return product",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "RECEIVE_RETURN": {
+    "label": "The shipping company received the returned products.",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "RETURN_VERIFIED": {
+    "label": "The shipping company confirmed receipt of the returned products",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "RETURN_FAIL": {
+    "label": "The shipping company failed receipt of the returned products",
+    "color": "bg-red-200",
+    "cancel": "none"
+  },
+  "REFUND_REQUEST": {
+    "label": "Waiting merchant to approve this refund request ",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "REFUND_APPROVED": {
+    "label": "Merchant approve this refund request",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "REFUND_SUCCESS": {
+    "label": "Refund is successfully",
+    "color": "bg-green-200",
+    "cancel": "none"
+  },
+  "REFUND_FAIL": {
+    "label": "Refund is failed",
+    "color": "bg-red-200",
+    "cancel": "none"
+  },
+  "REFUND_REJECTED": {
+    "label": "This refund is rejected",
+    "color": "bg-red-200",
+    "cancel": "none"
+  },
+  "REFUND_RETRY": {
+    "label": "You are trying again to process the refund",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "REFUND_PROCESSING": {
+    "label": "Refund in processing",
+    "color": "bg-amber-200",
+    "cancel": "none"
+  },
+  "CANCELED_REFUND": {
+    "label": "Order is delivered ",
+    "color": "bg-green-200",
+    "cancel": "refund"
+  }
+}
