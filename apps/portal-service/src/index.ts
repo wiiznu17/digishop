@@ -6,6 +6,7 @@ import router from './iamRouter';
 import './helpers/dotenv.helper';
 import { checkDatabaseConnection, initModels, sequelize } from '@digishop/db';
 import { ensureRedis } from './lib/redis';
+import { errorHandler } from './middlewares/errorHandler';
 const cookieParser = require('cookie-parser');
 
 const PORT = Number(process.env.PORT) || 4001;
@@ -71,6 +72,7 @@ async function main() {
 
     initModels(sequelize);
     app.use('/api', router);
+    app.use(errorHandler);
 
     const server = app.listen(PORT, () => {
       console.log(`Portal Service listening at: http://localhost:${PORT}`);
