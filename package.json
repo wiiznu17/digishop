@@ -8,6 +8,7 @@
     "dev:merchant": "turbo run dev --parallel --filter=merchant... --filter=merchant-service...",
     "dev:portal": "turbo run dev --parallel --filter=portal... --filter=portal-service...",
     "dev:customer": "turbo run dev --parallel --filter=customer-service... --filter=customer...",
+    "dev:customer2": "turbo run dev --parallel --filter=customer-service2... --filter=customer2...",
     "dev:authen": "turbo run dev --parallel --filter=authen-service...",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
