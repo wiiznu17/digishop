@@ -3,6 +3,7 @@ import "./helpers/dotenv.helper";
 import authRoutes from "./routes/authRouter";
 import { checkDatabaseConnection, initModels, sequelize } from "@digishop/db";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./middlewares/errorHandler";
 
 async function main() {
   try {
@@ -22,10 +23,12 @@ async function main() {
 
     app.use("/api/auth", authRoutes);
 
+    // Centralized error handler — must be last
+    app.use(errorHandler);
+
     const PORT = Number(process.env.PORT)
     app.listen(PORT, () => {
-      console.log(`Auth Service running on port ${PORT}`);
-      // console.log("CORS allowlist:", allowlist);
+      console.log(`[AuthService] Running on port ${PORT}`);
     });
   } catch (err) {
     console.error("❌ Server failed to start:", err);
