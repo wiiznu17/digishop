@@ -1,0 +1,185 @@
+name: digishop
+
+services:
+  # ── Infrastructure ───────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.4
+    container_name: digishop-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-digishop}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: digishop-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend Services ─────────────────────────────────────────────────────────
+  authen-service:
+    build:
+      context: .
+      dockerfile: apps/authen-service/Dockerfile
+    image: digishop/authen-service:latest
+    container_name: digishop-authen-service
+    restart: unless-stopped
+    env_file: apps/authen-service/.env
+    environment:
+      NODE_ENV: production
+    ports:
+      - "4001:4001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  customer-service2:
+    build:
+      context: .
+      dockerfile: apps/customer-service2/Dockerfile
+    image: digishop/customer-service2:latest
+    container_name: digishop-customer-service2
+    restart: unless-stopped
+    env_file: apps/customer-service2/.env
+    environment:
+      NODE_ENV: production
+    ports:
+      - "4002:4002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  merchant-service:
+    build:
+      context: .
+      dockerfile: apps/merchant-service/Dockerfile
+    image: digishop/merchant-service:latest
+    container_name: digishop-merchant-service
+    restart: unless-stopped
+    env_file: apps/merchant-service/.env
+    environment:
+      NODE_ENV: production
+    ports:
+      - "4003:4003"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  portal-service:
+    build:
+      context: .
+      dockerfile: apps/portal-service/Dockerfile
+    image: digishop/portal-service:latest
+    container_name: digishop-portal-service
+    restart: unless-stopped
+    env_file: apps/portal-service/.env
+    environment:
+      NODE_ENV: production
+    ports:
+      - "4004:4004"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  merchant-worker:
+    build:
+      context: .
+      dockerfile: apps/merchant-worker/Dockerfile
+    image: digishop/merchant-worker:latest
+    container_name: digishop-merchant-worker
+    restart: unless-stopped
+    env_file: apps/merchant-worker/.env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Next.js Frontends ────────────────────────────────────────────────────────
+  customer:
+    build:
+      context: apps/customer
+      dockerfile: Dockerfile
+    image: digishop/customer:latest
+    container_name: digishop-customer
+    restart: unless-stopped
+    env_file: apps/customer/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+
+  customer2:
+    build:
+      context: apps/customer2
+      dockerfile: Dockerfile
+    image: digishop/customer2:latest
+    container_name: digishop-customer2
+    restart: unless-stopped
+    env_file: apps/customer2/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+
+  merchant:
+    build:
+      context: apps/merchant
+      dockerfile: Dockerfile
+    image: digishop/merchant:latest
+    container_name: digishop-merchant
+    restart: unless-stopped
+    env_file: apps/merchant/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3002"
+    ports:
+      - "3002:3002"
+
+  portal:
+    build:
+      context: apps/portal
+      dockerfile: Dockerfile
+    image: digishop/portal:latest
+    container_name: digishop-portal
+    restart: unless-stopped
+    env_file: apps/portal/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3003"
+    ports:
+      - "3003:3003"
+
+volumes:
+  mysql_data:
+  redis_data:
