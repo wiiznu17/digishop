@@ -1,4 +1,4 @@
-import Axios, { AxiosError, AxiosRequestConfig } from "axios"
+import Axios, { AxiosError, AxiosRequestConfig } from 'axios'
 
 type RetriableAxiosRequestConfig = AxiosRequestConfig & { _retry?: boolean }
 
@@ -30,7 +30,7 @@ if (!interceptorsAttached) {
       const status = error.response?.status
       const original = (error.config ?? {}) as RetriableAxiosRequestConfig
 
-      const path = original?.url || ""
+      const path = original?.url || ''
       if (REFRESH_SKIP.some((re) => re.test(path))) {
         return Promise.reject(error)
       }
@@ -38,7 +38,7 @@ if (!interceptorsAttached) {
       if (status === 401 && !original._retry) {
         original._retry = true
         try {
-          await refreshClient.post("/api/auth/refresh")
+          await refreshClient.post('/api/auth/refresh')
           return axios(original)
         } catch (e) {
           return Promise.reject(e)

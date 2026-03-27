@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Dialog,
@@ -6,8 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription
-} from "@/components/ui/dialog"
-import type { AdminCategoryItem } from "@/utils/requesters/categoryRequester"
+} from '@/components/ui/dialog'
+import type { AdminCategoryItem } from '@/utils/requesters/categoryRequester'
 
 export function CategoryQuickViewDialog({
   item,
@@ -36,11 +36,11 @@ export function CategoryQuickViewDialog({
               {item.status}
             </div> */}
             <div>
-              <span className="text-muted-foreground">Products (direct):</span>{" "}
+              <span className="text-muted-foreground">Products (direct):</span>{' '}
               {item.productCountDirect}
             </div>
             <div>
-              <span className="text-muted-foreground">Products (total):</span>{" "}
+              <span className="text-muted-foreground">Products (total):</span>{' '}
               {item.productCountTotal}
             </div>
           </div>

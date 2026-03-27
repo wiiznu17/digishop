@@ -1,27 +1,27 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { MerchantHeader } from "@/components/dashboard-header"
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { MerchantHeader } from '@/components/dashboard-header'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from '@/components/ui/card'
 import {
   BarChart3,
   ShoppingCart,
   Package,
   Users,
   DollarSign
-} from "lucide-react"
+} from 'lucide-react'
 import {
   fetchMerchantDashboard,
   type MerchantDashboard
-} from "@/utils/requestUtils/requestDashboardUtils"
-import { formatCurrencyTHB } from "@/utils/formatters/currency"
+} from '@/utils/requestUtils/requestDashboardUtils'
+import { formatCurrencyTHB } from '@/utils/formatters/currency'
 
 export default function Home() {
   const [data, setData] = useState<MerchantDashboard | null>(null)
@@ -38,7 +38,7 @@ export default function Home() {
         if (e instanceof Error) {
           setError(e.message)
         } else {
-          setError("An unknown error occurred")
+          setError('An unknown error occurred')
         }
       } finally {
         if (mounted) setLoading(false)
@@ -51,26 +51,26 @@ export default function Home() {
 
   const statCards = [
     {
-      title: "Total Revenue",
-      value: data ? formatCurrencyTHB(data.totalRevenueMinor) : "—",
-      change: data ? data.revenueChangeText : "",
+      title: 'Total Revenue',
+      value: data ? formatCurrencyTHB(data.totalRevenueMinor) : '—',
+      change: data ? data.revenueChangeText : '',
       icon: DollarSign
     },
     {
-      title: "Orders",
-      value: data ? String(data.ordersCount) : "—",
-      change: data ? data.ordersChangeText : "",
+      title: 'Orders',
+      value: data ? String(data.ordersCount) : '—',
+      change: data ? data.ordersChangeText : '',
       icon: ShoppingCart
     },
     {
-      title: "Products",
-      value: data ? String(data.productsCount) : "—",
+      title: 'Products',
+      value: data ? String(data.productsCount) : '—',
       // change: data ? data.productsChangeText : "",
       icon: Package
     },
     {
-      title: "Active Customers",
-      value: data ? String(data.activeCustomers) : "—",
+      title: 'Active Customers',
+      value: data ? String(data.activeCustomers) : '—',
       // change: data ? data.customersChangeText : "",
       icon: Users
     }
@@ -126,7 +126,7 @@ export default function Home() {
               <CardTitle>Recent Sales</CardTitle>
               <CardDescription>
                 {loading
-                  ? "Loading…"
+                  ? 'Loading…'
                   : `You made ${data?.thisMonthSalesCount ?? 0} sales this month.`}
               </CardDescription>
             </CardHeader>

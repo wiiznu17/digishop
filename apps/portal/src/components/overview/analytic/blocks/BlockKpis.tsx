@@ -1,19 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+'use client'
 
-import { useEffect, useMemo, useRef, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, ShoppingCart, Store, Users } from "lucide-react"
-import { ResponsiveContainer, AreaChart, Area } from "recharts"
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TrendingUp, ShoppingCart, Store, Users } from 'lucide-react'
+import { ResponsiveContainer, AreaChart, Area } from 'recharts'
 import {
   fetchAnaKpis,
   fetchAnaTrends
-} from "@/utils/requesters/analyticsRequester"
-import type { AnalyticsKpis, TrendsPoint } from "@/types/admin/analytics"
+} from '@/utils/requesters/analyticsRequester'
+import type { AnalyticsKpis, TrendsPoint } from '@/types/admin/analytics'
 
 const toNum = (x: unknown) => (Number.isFinite(Number(x ?? 0)) ? Number(x) : 0)
 const fmtTHB = (minor: number) =>
-  (minor / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+  (minor / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 function useAnimatedNumber(value: number, duration = 400) {
   const [display, setDisplay] = useState(value)
@@ -153,7 +153,7 @@ export default function BlockKpis({
     }
   }, [from, to, refreshKey])
 
-  const toSpark = (key: "gmvMinor" | "orders" | "aovMinor") =>
+  const toSpark = (key: 'gmvMinor' | 'orders' | 'aovMinor') =>
     (trends ?? []).map((d) => ({ x: d.date, y: toNum(d[key]) }))
 
   return (
@@ -162,25 +162,25 @@ export default function BlockKpis({
         title="GMV"
         icon={TrendingUp}
         valueMinor={kpis?.gmvMinor ?? 0}
-        series={toSpark("gmvMinor")}
+        series={toSpark('gmvMinor')}
       />
       <MetricCount
         title="Orders"
         icon={ShoppingCart}
         value={kpis?.orders ?? 0}
-        series={toSpark("orders")}
+        series={toSpark('orders')}
       />
       <MetricMoney
         title="AOV"
         icon={Store}
         valueMinor={kpis?.aovMinor ?? 0}
-        series={toSpark("aovMinor")}
+        series={toSpark('aovMinor')}
       />
       <MetricCount
         title="Paid %"
         icon={Users}
         value={Math.round((kpis?.paidRate ?? 0) * 100)}
-        series={toSpark("orders")}
+        series={toSpark('orders')}
       />
       {/* แสดงอัตราอื่นๆแบบย่อใต้การ์ดสุดท้าย */}
       <div className="md:col-span-4 grid grid-cols-3 gap-3">

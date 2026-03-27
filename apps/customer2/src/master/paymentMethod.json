@@ -1,18 +1,17 @@
-
 {
-    "CREDIT_CARD": {
-      "label": "CREDIT CARD",
-      "value": "CREDIT_CARD",
-      "valid": true
-    },
-    "PROMPTPAY": {
-      "label": "PROMPT PAY",
-      "value": "PROMPTPAY",
-      "valid": true
-    },
-    "CASH_ON_DELIVERY": {
-      "label": "CASH ON DELIVERY",
-      "value": "CASH_ON_DELIVERY",
-      "valid": false
-    }
+  "CREDIT_CARD": {
+    "label": "CREDIT CARD",
+    "value": "CREDIT_CARD",
+    "valid": true
+  },
+  "PROMPTPAY": {
+    "label": "PROMPT PAY",
+    "value": "PROMPTPAY",
+    "valid": true
+  },
+  "CASH_ON_DELIVERY": {
+    "label": "CASH ON DELIVERY",
+    "value": "CASH_ON_DELIVERY",
+    "valid": false
+  }
 }

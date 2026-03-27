@@ -1,4 +1,4 @@
-import { QueryInterface } from 'sequelize';
+import { QueryInterface } from 'sequelize'
 
 export default {
   up: async (queryInterface: QueryInterface) => {
@@ -11,11 +11,11 @@ export default {
         comment: 'Great product!',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
-      },
-    ]);
+        deleted_at: null
+      }
+    ])
   },
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete('Reviews', {}, {});
-  },
-};
+    await queryInterface.bulkDelete('Reviews', {}, {})
+  }
+}

@@ -13,10 +13,16 @@ export interface ProfileMerchantImageAttributes {
 }
 
 export interface ProfileMerchantImageCreationAttributes
-  extends Optional<ProfileMerchantImageAttributes, 'id' | "uuid" | 'createdAt' | 'updatedAt'> {}
+  extends Optional<
+    ProfileMerchantImageAttributes,
+    'id' | 'uuid' | 'createdAt' | 'updatedAt'
+  > {}
 
 export class ProfileMerchantImage
-  extends Model<ProfileMerchantImageAttributes, ProfileMerchantImageCreationAttributes>
+  extends Model<
+    ProfileMerchantImageAttributes,
+    ProfileMerchantImageCreationAttributes
+  >
   implements ProfileMerchantImageAttributes
 {
   public id!: string
@@ -34,13 +40,14 @@ ProfileMerchantImage.init(
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
-      primaryKey: true,
+      primaryKey: true
     },
-    uuid: {        // CHAR(36) for UUID v4
+    uuid: {
+      // CHAR(36) for UUID v4
       type: DataTypes.UUID,
       allowNull: false,
       unique: true,
-      defaultValue: DataTypes.UUIDV4,
+      defaultValue: DataTypes.UUIDV4
     },
     storeId: {
       type: DataTypes.INTEGER.UNSIGNED,

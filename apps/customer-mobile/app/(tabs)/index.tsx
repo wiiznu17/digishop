@@ -1,33 +1,55 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
-import { searchProduct } from "../../src/utils/requestProductUtils";
-import { Product, Store } from "../../src/types";
+import React, { useState, useCallback } from 'react'
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator
+} from 'react-native'
+import { useRouter } from 'expo-router'
+import { searchProduct } from '../../src/utils/requestProductUtils'
+import { Product, Store } from '../../src/types'
 
-type SearchResult = { type: "product" | "store"; id: string; name: string };
+type SearchResult = { type: 'product' | 'store'; id: string; name: string }
 
 export default function HomeScreen() {
-  const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [query, setQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<SearchResult[]>([])
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-  const handleSearch = useCallback(async (q = query) => {
-    if (!q.trim()) return;
-    router.push({ pathname: "/search-results", params: { query: q } } as any);
-  }, [query]);
+  const handleSearch = useCallback(
+    async (q = query) => {
+      if (!q.trim()) return
+      router.push({ pathname: '/search-results', params: { query: q } } as any)
+    },
+    [query]
+  )
 
   const fetchSuggestions = useCallback(async (q: string) => {
-    if (!q.trim()) { setSuggestions([]); return; }
-    setLoading(true);
+    if (!q.trim()) {
+      setSuggestions([])
+      return
+    }
+    setLoading(true)
     try {
-      const res = await searchProduct(q) as any;
-      const products: SearchResult[] = (res?.product || []).map((p: Product) => ({ type: "product" as const, id: p.uuid, name: p.name }));
-      const stores: SearchResult[] = (res?.store || []).map((s: Store) => ({ type: "store" as const, id: s.uuid, name: s.storeName }));
-      setSuggestions([...products, ...stores].slice(0, 10));
-    } catch { setSuggestions([]); } 
-    finally { setLoading(false); }
-  }, []);
+      const res = (await searchProduct(q)) as any
+      const products: SearchResult[] = (res?.product || []).map(
+        (p: Product) => ({ type: 'product' as const, id: p.uuid, name: p.name })
+      )
+      const stores: SearchResult[] = (res?.store || []).map((s: Store) => ({
+        type: 'store' as const,
+        id: s.uuid,
+        name: s.storeName
+      }))
+      setSuggestions([...products, ...stores].slice(0, 10))
+    } catch {
+      setSuggestions([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   return (
     <View className="flex-1 bg-gradient-to-b from-blue-50 to-white">
@@ -44,13 +66,21 @@ export default function HomeScreen() {
               className="flex-1 text-gray-900 text-base"
               placeholder="Search products and stores..."
               value={query}
-              onChangeText={(t) => { setQuery(t); fetchSuggestions(t); }}
+              onChangeText={(t) => {
+                setQuery(t)
+                fetchSuggestions(t)
+              }}
               onSubmitEditing={() => handleSearch()}
               returnKeyType="search"
             />
             {loading && <ActivityIndicator size="small" color="#1D4ED8" />}
             {query.length > 0 && (
-              <TouchableOpacity onPress={() => { setQuery(""); setSuggestions([]); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setQuery('')
+                  setSuggestions([])
+                }}
+              >
                 <Text className="text-gray-400 text-xl ml-2">✕</Text>
               </TouchableOpacity>
             )}
@@ -63,11 +93,21 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   className="px-4 py-3 border-t border-gray-100 flex-row items-center"
                   onPress={() => {
-                    if (item.type === "product") router.push({ pathname: "/product/[id]", params: { id: item.id } });
-                    else router.push({ pathname: "/store/[id]", params: { id: item.id } });
+                    if (item.type === 'product')
+                      router.push({
+                        pathname: '/product/[id]',
+                        params: { id: item.id }
+                      })
+                    else
+                      router.push({
+                        pathname: '/store/[id]',
+                        params: { id: item.id }
+                      })
                   }}
                 >
-                  <Text className="mr-2">{item.type === "product" ? "📦" : "🏪"}</Text>
+                  <Text className="mr-2">
+                    {item.type === 'product' ? '📦' : '🏪'}
+                  </Text>
                   <Text className="text-gray-800">{item.name}</Text>
                 </TouchableOpacity>
               )}
@@ -84,5 +124,5 @@ export default function HomeScreen() {
         </Text>
       </View>
     </View>
-  );
+  )
 }

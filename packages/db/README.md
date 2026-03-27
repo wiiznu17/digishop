@@ -9,11 +9,13 @@ npm install --save-dev sequelize-cli typescript ts-node @types/node
 ```
 
 # create folder
+
 ```sh
 npx sequelize-cli init --migrations-path src/migrations --seeders-path src/seeders --models-path src/models
 ```
 
 # about this flow
+
 ```sh
 1.  ถ้าแก้ config ให้ npm run build ก่อน เพราะ .sequelizerc ชี้ไปที่ dist
 
@@ -22,6 +24,7 @@ npx sequelize-cli init --migrations-path src/migrations --seeders-path src/seede
 ```
 
 ## env
+
 ```sh
 NODE_ENV=development
 DB_USERNAME=root

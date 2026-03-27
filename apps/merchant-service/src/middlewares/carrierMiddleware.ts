@@ -1,8 +1,8 @@
-import { NextFunction, Request, Response } from "express";
-import crypto from "crypto";
+import { NextFunction, Request, Response } from 'express'
+import crypto from 'crypto'
 
-import { ShippingStatus, OrderStatus } from "@digishop/db";
-import { Order, ShipmentEvent, ShippingInfo } from "@digishop/db";
+import { ShippingStatus, OrderStatus } from '@digishop/db'
+import { Order, ShipmentEvent, ShippingInfo } from '@digishop/db'
 // import "../types/express";
 // import type { CarrierContext } from "../types/express";
 // ───────────────────────────────────────────────────────────────────────────────
@@ -36,35 +36,33 @@ import { Order, ShipmentEvent, ShippingInfo } from "@digishop/db";
 // Helpers
 // แมะสถานะการขนส่งกับระบบเรา ตอนนี้ให้มีค่าเหมือนกัน
 function normalizeCarrierStatus(payload: any): ShippingStatus {
-  const status = (payload.status)
-    .toUpperCase()
-    .trim();
+  const status = payload.status.toUpperCase().trim()
 
   switch (status) {
-    case "RECEIVE_PARCEL":
-      return ShippingStatus.RECEIVE_PARCEL;
-    case "ARRIVED_SORTING_CENTER":
-      return ShippingStatus.ARRIVED_SORTING_CENTER;
-    case "OUT_SORTING_CENTER":
-      return ShippingStatus.OUT_SORTING_CENTER;
-    case "ARRIVED_DESTINATION_STATION":
-      return ShippingStatus.ARRIVED_DESTINATION_STATION;
-    case "OUT_FOR_DELIVERY":
-      return ShippingStatus.OUT_FOR_DELIVERY;
-    case "DELIVERED":
-      return ShippingStatus.DELIVERED;
-    case "DELIVERY_FAILED":
-      return ShippingStatus.DELIVERY_FAILED;
-    case "RETURN_TO_SENDER_IN_TRANSIT":
-      return ShippingStatus.RETURN_TO_SENDER_IN_TRANSIT;
-    case "RETURNED_TO_SENDER":
-      return ShippingStatus.RETURNED_TO_SENDER;
-    case "TRANSIT_ISSUE":
-      return ShippingStatus.TRANSIT_ISSUE;
-    case "RE_TRANSIT":
-      return ShippingStatus.RE_TRANSIT;
+    case 'RECEIVE_PARCEL':
+      return ShippingStatus.RECEIVE_PARCEL
+    case 'ARRIVED_SORTING_CENTER':
+      return ShippingStatus.ARRIVED_SORTING_CENTER
+    case 'OUT_SORTING_CENTER':
+      return ShippingStatus.OUT_SORTING_CENTER
+    case 'ARRIVED_DESTINATION_STATION':
+      return ShippingStatus.ARRIVED_DESTINATION_STATION
+    case 'OUT_FOR_DELIVERY':
+      return ShippingStatus.OUT_FOR_DELIVERY
+    case 'DELIVERED':
+      return ShippingStatus.DELIVERED
+    case 'DELIVERY_FAILED':
+      return ShippingStatus.DELIVERY_FAILED
+    case 'RETURN_TO_SENDER_IN_TRANSIT':
+      return ShippingStatus.RETURN_TO_SENDER_IN_TRANSIT
+    case 'RETURNED_TO_SENDER':
+      return ShippingStatus.RETURNED_TO_SENDER
+    case 'TRANSIT_ISSUE':
+      return ShippingStatus.TRANSIT_ISSUE
+    case 'RE_TRANSIT':
+      return ShippingStatus.RE_TRANSIT
     default:
-      return ShippingStatus.PENDING;
+      return ShippingStatus.PENDING
   }
 }
 
@@ -77,37 +75,37 @@ function computeNextOrderStatus(
     case ShippingStatus.RECEIVE_PARCEL:
       return currentOrderStatus === OrderStatus.READY_TO_SHIP
         ? OrderStatus.HANDED_OVER
-        : null;
+        : null
     case ShippingStatus.OUT_FOR_DELIVERY:
       return currentOrderStatus === OrderStatus.HANDED_OVER
         ? OrderStatus.SHIPPED
-        : null;
+        : null
     case ShippingStatus.DELIVERED:
       return [OrderStatus.SHIPPED, OrderStatus.RE_TRANSIT].includes(
         currentOrderStatus
       )
         ? OrderStatus.DELIVERED
-        : null;
+        : null
     case ShippingStatus.DELIVERY_FAILED:
       return currentOrderStatus === OrderStatus.SHIPPED
         ? OrderStatus.AWAITING_RETURN
-        : null;
+        : null
     case ShippingStatus.RETURNED_TO_SENDER:
       return currentOrderStatus === OrderStatus.AWAITING_RETURN
         ? OrderStatus.RECEIVE_RETURN
-        : null;
+        : null
     case ShippingStatus.TRANSIT_ISSUE:
       return [OrderStatus.SHIPPED, OrderStatus.RE_TRANSIT].includes(
         currentOrderStatus
       )
         ? OrderStatus.TRANSIT_LACK
-        : null;
+        : null
     case ShippingStatus.RE_TRANSIT:
       return currentOrderStatus === OrderStatus.TRANSIT_LACK
         ? OrderStatus.RE_TRANSIT
-        : null;
+        : null
     default:
-      return null;
+      return null
   }
 }
 
@@ -115,22 +113,22 @@ function computeNextOrderStatus(
 
 // 1) อ่านพารามิเตอร์พื้นฐาน + เก็บ payload raw
 export function cmwParseBase(req: Request, _res: Response, next: NextFunction) {
-  const carrierCode = String(req.params.carrier || "").toUpperCase();
-  const payload = req.body ?? {};
-  const payloadRaw = JSON.stringify(payload); // postman เซ็นจาก format นี้
-  const signatureHeader = (req.headers["x-signature"] as string);
+  const carrierCode = String(req.params.carrier || '').toUpperCase()
+  const payload = req.body ?? {}
+  const payloadRaw = JSON.stringify(payload) // postman เซ็นจาก format นี้
+  const signatureHeader = req.headers['x-signature'] as string
   req.carrierCtx = {
     carrierCode,
     orderId: 0,
     payload,
     payloadRaw,
     signatureHeader,
-    trackingNumber: "",
+    trackingNumber: '',
     eventTime: new Date(),
-    nextShippingStatus: ShippingStatus.PENDING,
-  };
-  console.log("cmwParseBase: ", req.carrierCtx)
-  next();
+    nextShippingStatus: ShippingStatus.PENDING
+  }
+  console.log('cmwParseBase: ', req.carrierCtx)
+  next()
 }
 
 // 2) ตรวจลายเซ็น (ถ้ามีการตั้งค่า secret) ยังไม่ใช้
@@ -139,21 +137,22 @@ export function cmwVerifySignature(
   res: Response,
   next: NextFunction
 ) {
-  const secret = process.env.CARRIER_WEBHOOK_SECRET;
-  if (!secret) return next();
-  const canonical = req.carrierCtx?.payloadRaw || JSON.stringify(req.body ?? {});
+  const secret = process.env.CARRIER_WEBHOOK_SECRET
+  if (!secret) return next()
+  const canonical = req.carrierCtx?.payloadRaw || JSON.stringify(req.body ?? {})
   const mac = crypto
-    .createHmac("sha256", secret)
-    .update(canonical, "utf8")
-    .digest(); // ได้ Buffer
+    .createHmac('sha256', secret)
+    .update(canonical, 'utf8')
+    .digest() // ได้ Buffer
 
-  const sigHex = (req.carrierCtx!.signatureHeader || "").trim();
-  const provided = Buffer.from(sigHex.replace(/^sha256=/i, ""), "hex");
-  const ok = provided.length === mac.length && crypto.timingSafeEqual(mac, provided);
-  console.log("cmwVerifySignature: ", { ok })
-  if (!ok) return res.status(401).json({ error: "Bad signature" });
+  const sigHex = (req.carrierCtx!.signatureHeader || '').trim()
+  const provided = Buffer.from(sigHex.replace(/^sha256=/i, ''), 'hex')
+  const ok =
+    provided.length === mac.length && crypto.timingSafeEqual(mac, provided)
+  console.log('cmwVerifySignature: ', { ok })
+  if (!ok) return res.status(401).json({ error: 'Bad signature' })
 
-  next();
+  next()
 }
 
 // 3) ดึงฟิลด์หลัก: trackingNumber / eventTime / nextShippingStatus
@@ -162,26 +161,25 @@ export function cmwExtractCoreFields(
   res: Response,
   next: NextFunction
 ) {
-  const p = req.carrierCtx!.payload;
+  const p = req.carrierCtx!.payload
 
-  const orderId = Number(p.orderId);
+  const orderId = Number(p.orderId)
   if (!Number.isInteger(orderId) || orderId <= 0) {
-    return res.status(400).json({ error: "Missing or invalid orderId" });
+    return res.status(400).json({ error: 'Missing or invalid orderId' })
   }
 
-  const trackingNumber = p.trackingNumber ? String(p.trackingNumber) : undefined;
+  const trackingNumber = p.trackingNumber ? String(p.trackingNumber) : undefined
 
-  const eventTime = p.occurredAt ? new Date(p.occurredAt) : new Date();
-  const nextShippingStatus = normalizeCarrierStatus(p);
+  const eventTime = p.occurredAt ? new Date(p.occurredAt) : new Date()
+  const nextShippingStatus = normalizeCarrierStatus(p)
 
-  req.carrierCtx!.orderId = orderId;
-  req.carrierCtx!.trackingNumber = trackingNumber;
-  req.carrierCtx!.eventTime = eventTime;
-  req.carrierCtx!.nextShippingStatus = nextShippingStatus;
+  req.carrierCtx!.orderId = orderId
+  req.carrierCtx!.trackingNumber = trackingNumber
+  req.carrierCtx!.eventTime = eventTime
+  req.carrierCtx!.nextShippingStatus = nextShippingStatus
 
-  next();
+  next()
 }
-
 
 // 4) โหลด ShippingInfo (ถ้าไม่พบให้ตอบ 202)
 export async function cmwLoadShippingInfo(
@@ -189,9 +187,9 @@ export async function cmwLoadShippingInfo(
   res: Response,
   next: NextFunction
 ) {
-  const orderId = req.carrierCtx!.orderId!;
+  const orderId = req.carrierCtx!.orderId!
   // ✅ เปลี่ยนมา query ด้วย orderId
-  const shippingInfo = await ShippingInfo.findOne({ where: { orderId } });
+  const shippingInfo = await ShippingInfo.findOne({ where: { orderId } })
 
   // (option) ถ้าอยาก fallback เมื่อหาไม่เจอแต่มี trackingNumber:
   // let shippingInfo = await ShippingInfo.findOne({ where: { orderId } });
@@ -201,11 +199,10 @@ export async function cmwLoadShippingInfo(
   //   });
   // }
 
-  if (!shippingInfo) return res.status(202).json({ ok: true }); // รับไว้แต่ยังไม่ทำอะไร
-  req.carrierCtx!.shippingInfo = shippingInfo;
-  next();
+  if (!shippingInfo) return res.status(202).json({ ok: true }) // รับไว้แต่ยังไม่ทำอะไร
+  req.carrierCtx!.shippingInfo = shippingInfo
+  next()
 }
-
 
 // กันเหตุการณ์ซ้ำ (สถานะเดียวกันภายใน 60 วินาที)
 export async function cmwDeduplicateEvent(
@@ -213,32 +210,32 @@ export async function cmwDeduplicateEvent(
   _res: Response,
   next: NextFunction
 ) {
-  const shippingInfo = req.carrierCtx!.shippingInfo!;
+  const shippingInfo = req.carrierCtx!.shippingInfo!
   const lastEvent = await ShipmentEvent.findOne({
     where: { shippingInfoId: shippingInfo.id },
     order: [
-      ["occurredAt", "DESC"],
-      ["id", "DESC"],
-    ],
-  });
+      ['occurredAt', 'DESC'],
+      ['id', 'DESC']
+    ]
+  })
 
   req.carrierCtx!.lastEventStatus =
-    (lastEvent?.get("toStatus") as ShippingStatus) ??
+    (lastEvent?.get('toStatus') as ShippingStatus) ??
     shippingInfo.shippingStatus ??
-    null;
-  console.log("Last event status: ", req.carrierCtx!.lastEventStatus)
+    null
+  console.log('Last event status: ', req.carrierCtx!.lastEventStatus)
   if (
     lastEvent &&
-    lastEvent.get("toStatus") === req.carrierCtx!.nextShippingStatus
+    lastEvent.get('toStatus') === req.carrierCtx!.nextShippingStatus
   ) {
     const diffMs = Math.abs(
-      new Date(lastEvent.get("occurredAt") as any).getTime() -
+      new Date(lastEvent.get('occurredAt') as any).getTime() -
         req.carrierCtx!.eventTime.getTime()
-    );
-    if (diffMs < 60_000) req.carrierCtx!.isDuplicateEvent = true;
+    )
+    if (diffMs < 60_000) req.carrierCtx!.isDuplicateEvent = true
   }
-  console.log("is duplicat event : ", req.carrierCtx!.isDuplicateEvent)
-  next();
+  console.log('is duplicat event : ', req.carrierCtx!.isDuplicateEvent)
+  next()
 }
 
 // 6) โหลด Order + คำนวณ nextOrderStatus ตามกติกา
@@ -247,18 +244,21 @@ export async function cmwComputeOrderTransition(
   _res: Response,
   next: NextFunction
 ) {
-  const shippingInfo = req.carrierCtx!.shippingInfo!;
-  const orderRecord = await Order.findByPk(shippingInfo.orderId);
-  req.carrierCtx!.orderRecord = orderRecord ?? undefined;
+  const shippingInfo = req.carrierCtx!.shippingInfo!
+  const orderRecord = await Order.findByPk(shippingInfo.orderId)
+  req.carrierCtx!.orderRecord = orderRecord ?? undefined
 
   if (orderRecord) {
-    const currentOrderStatus = orderRecord.status as OrderStatus;
-    console.log("Current order status: ", currentOrderStatus)
+    const currentOrderStatus = orderRecord.status as OrderStatus
+    console.log('Current order status: ', currentOrderStatus)
     req.carrierCtx!.nextOrderStatus = computeNextOrderStatus(
       currentOrderStatus,
       req.carrierCtx!.nextShippingStatus
-    );
+    )
   }
-  console.log("req.carrierCtx!.nextOrderStatus = ", req.carrierCtx!.nextOrderStatus)
-  next();
+  console.log(
+    'req.carrierCtx!.nextOrderStatus = ',
+    req.carrierCtx!.nextOrderStatus
+  )
+  next()
 }

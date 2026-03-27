@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Dialog,
@@ -6,8 +6,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+} from '@/components/ui/dialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -15,8 +15,8 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import {
   Package,
   User,
@@ -25,10 +25,10 @@ import {
   Mail,
   Calendar,
   Truck
-} from "lucide-react"
-import { Order, OrderStatus } from "@/types/props/orderProp"
-import { OrderStatusManager } from "@/components/order/orderManager"
-import { useOrderStatus } from "@/hooks/useOrderStatus"
+} from 'lucide-react'
+import { Order, OrderStatus } from '@/types/props/orderProp'
+import { OrderStatusManager } from '@/components/order/orderManager'
+import { useOrderStatus } from '@/hooks/useOrderStatus'
 
 interface OrderDetailDialogProps {
   order: Order | null
@@ -97,13 +97,13 @@ export function OrderDetailDialog({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">
-                ฿{order.grandTotal?.toLocaleString() ?? "0"}
+                ฿{order.grandTotal?.toLocaleString() ?? '0'}
               </div>
               <div className="text-xl font-bold text-muted-foreground">
-                ฿{order.payment.captured?.toLocaleString() ?? "0"}
+                ฿{order.payment.captured?.toLocaleString() ?? '0'}
               </div>
               <div className="text-sm text-muted-foreground">
-                {order.paymentMethod ?? "-"}
+                {order.paymentMethod ?? '-'}
               </div>
               {order.refundAmount && (
                 <div className="text-sm text-red-600">
@@ -149,29 +149,29 @@ export function OrderDetailDialog({
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">
-                    {order.customerName || "N/A"}
+                    {order.customerName || 'N/A'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{order.customerEmail || "N/A"}</span>
+                  <span>{order.customerEmail || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{order.customerPhone || "-"}</span>
+                  <span>{order.customerPhone || '-'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>
                     {order.createdAt
-                      ? new Date(order.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit"
+                      ? new Date(order.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
                         })
-                      : "N/A"}
+                      : 'N/A'}
                   </span>
                 </div>
               </CardContent>
@@ -187,13 +187,13 @@ export function OrderDetailDialog({
               <CardContent>
                 {order.shippingAddress ? (
                   <div className="space-y-1 text-sm">
-                    <p>{order.shippingAddress?.street ?? "-"}</p>
-                    <p>{order.shippingAddress?.district ?? "-"}</p>
+                    <p>{order.shippingAddress?.street ?? '-'}</p>
+                    <p>{order.shippingAddress?.district ?? '-'}</p>
                     <p>
-                      {order.shippingAddress?.province ?? "-"}{" "}
-                      {order.shippingAddress?.postalCode ?? ""}
+                      {order.shippingAddress?.province ?? '-'}{' '}
+                      {order.shippingAddress?.postalCode ?? ''}
                     </p>
-                    <p>{order.shippingAddress?.country ?? "-"}</p>
+                    <p>{order.shippingAddress?.country ?? '-'}</p>
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground">
@@ -250,7 +250,7 @@ export function OrderDetailDialog({
                           {item.quantity}
                         </TableCell>
                         <TableCell className="text-right">
-                          ฿{item.price?.toLocaleString() ?? "0"}
+                          ฿{item.price?.toLocaleString() ?? '0'}
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           ฿{(item.quantity * item.price).toLocaleString()}
@@ -280,15 +280,15 @@ export function OrderDetailDialog({
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Shipping:</span>
-                  <span>฿{order.shippingCost?.toLocaleString() ?? "0"}</span>
+                  <span>฿{order.shippingCost?.toLocaleString() ?? '0'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Tax:</span>
-                  <span>฿{order.tax?.toLocaleString() ?? "0"}</span>
+                  <span>฿{order.tax?.toLocaleString() ?? '0'}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Total:</span>
-                  <span>฿{order.grandTotal?.toLocaleString() ?? "0"}</span>
+                  <span>฿{order.grandTotal?.toLocaleString() ?? '0'}</span>
                 </div>
               </div>
             </CardContent>

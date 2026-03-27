@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import { useEffect, useRef, useState } from "react"
-import { MerchantHeader } from "@/components/dashboard-header"
-import { Order, OrderStatus } from "@/types/props/orderProp"
-import { OrderDetailDialog } from "@/components/order/order-detail-dialog"
-import { OrdersTable } from "@/components/order/orders-table"
-import { OrderStats } from "@/components/order/order-stats"
-import { useOrderStatus } from "@/hooks/useOrderStatus"
+import { useEffect, useRef, useState } from 'react'
+import { MerchantHeader } from '@/components/dashboard-header'
+import { Order, OrderStatus } from '@/types/props/orderProp'
+import { OrderDetailDialog } from '@/components/order/order-detail-dialog'
+import { OrdersTable } from '@/components/order/orders-table'
+import { OrderStats } from '@/components/order/order-stats'
+import { useOrderStatus } from '@/hooks/useOrderStatus'
 import {
   listOrdersRequester,
   updateOrderRequester,
@@ -15,13 +15,13 @@ import {
   type ListOrdersResponse as _ListOrdersResponse,
   OrderSummary,
   fetchOrderSummary
-} from "@/utils/requestUtils/requestOrderUtils"
-import { useToast } from "@/hooks/use-toast"
+} from '@/utils/requestUtils/requestOrderUtils'
+import { useToast } from '@/hooks/use-toast'
 import {
   OrdersFilters,
   OrdersFiltersValue
-} from "@/components/order/orders-filters"
-import { extractErrorMessage } from "@/utils/errorToToast"
+} from '@/components/order/orders-filters'
+import { extractErrorMessage } from '@/utils/errorToToast'
 
 type ListOrdersResponse = _ListOrdersResponse
 
@@ -33,11 +33,11 @@ export default function OrdersPage() {
 
   // filters (ยืนยันจริงเมื่อ apply)
   const [filters, setFilters] = useState<OrdersFiltersValue>({
-    q: "",
+    q: '',
     statuses: [], // [] = ALL
-    sortBy: "createdAt",
-    sortDir: "DESC",
-    hasTracking: ""
+    sortBy: 'createdAt',
+    sortDir: 'DESC',
+    hasTracking: ''
   })
 
   // trigger search
@@ -49,11 +49,11 @@ export default function OrdersPage() {
   }
   const resetFilters = () =>
     applyFilters({
-      q: "",
+      q: '',
       statuses: [],
-      sortBy: "createdAt",
-      sortDir: "DESC",
-      hasTracking: ""
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+      hasTracking: ''
     })
 
   // summary
@@ -84,7 +84,7 @@ export default function OrdersPage() {
           page,
           pageSize,
           q: filters.q,
-          status: filters.statuses.length ? filters.statuses.join(",") : "ALL",
+          status: filters.statuses.length ? filters.statuses.join(',') : 'ALL',
           sortBy: filters.sortBy,
           sortDir: filters.sortDir,
           hasTracking: filters.hasTracking || undefined,
@@ -98,11 +98,11 @@ export default function OrdersPage() {
           setTotal(0)
           const { title, description } = extractErrorMessage(e)
           toast({
-            title: "Failed to load orders",
+            title: 'Failed to load orders',
             description,
-            variant: "destructive"
+            variant: 'destructive'
           })
-          console.error("listOrders error:", e)
+          console.error('listOrders error:', e)
         }
       }
     })()
@@ -123,9 +123,9 @@ export default function OrdersPage() {
           toast({
             title: `Failed to load summary · ${title}`,
             description,
-            variant: "destructive"
+            variant: 'destructive'
           })
-          console.error("orderSummary error:", e)
+          console.error('orderSummary error:', e)
         }
       }
       setSummaryLoading(false)
@@ -148,9 +148,9 @@ export default function OrdersPage() {
     const prev = orders.find((o) => o.id === orderId)
     if (!prev) return
     const willTouchPGW = [
-      "MERCHANT_CANCELED",
-      "REFUND_APPROVED",
-      "REFUND_RETRY"
+      'MERCHANT_CANCELED',
+      'REFUND_APPROVED',
+      'REFUND_RETRY'
     ].includes(newStatus)
 
     // optimistic update
@@ -172,11 +172,11 @@ export default function OrdersPage() {
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
       toast({
-        title: "Status updated",
+        title: 'Status updated',
         description: `New status: ${getStatusText(updated.status)}`
       })
-      if (willTouchPGW && updated.status === "REFUND_FAIL") {
-        toast({ title: "Refund failed", variant: "destructive" })
+      if (willTouchPGW && updated.status === 'REFUND_FAIL') {
+        toast({ title: 'Refund failed', variant: 'destructive' })
       }
     } catch (e) {
       // rollback
@@ -190,9 +190,9 @@ export default function OrdersPage() {
         toast({
           title: `Failed to update · ${title}`,
           description,
-          variant: "destructive"
+          variant: 'destructive'
         })
-        console.error("updateOrder error:", e)
+        console.error('updateOrder error:', e)
       }
     }
   }
@@ -218,7 +218,7 @@ export default function OrdersPage() {
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-      toast({ title: "Tracking updated" })
+      toast({ title: 'Tracking updated' })
     } catch (e) {
       // rollback
       setOrders((list) =>
@@ -231,9 +231,9 @@ export default function OrdersPage() {
         toast({
           title: `Failed to update tracking · ${title}`,
           description,
-          variant: "destructive"
+          variant: 'destructive'
         })
-        console.error("updateTracking error:", e)
+        console.error('updateTracking error:', e)
       }
     }
   }
@@ -253,10 +253,10 @@ export default function OrdersPage() {
           ? o
           : {
               ...o,
-              status: "HANDED_OVER",
+              status: 'HANDED_OVER',
               statusHistory: [
                 ...(o.statusHistory || [o.status]),
-                "HANDED_OVER"
+                'HANDED_OVER'
               ],
               trackingNumber
             }
@@ -268,7 +268,7 @@ export default function OrdersPage() {
       const updated = res.data
       setOrders((list) => list.map((o) => (o.id === orderId ? updated : o)))
       setSelectedOrder((o) => (o && o.id === orderId ? updated : o))
-      toast({ title: "Parcel handed over" })
+      toast({ title: 'Parcel handed over' })
     } catch (e) {
       // rollback
       setOrders((list) =>
@@ -281,9 +281,9 @@ export default function OrdersPage() {
         toast({
           title: `Failed to hand over · ${title}`,
           description,
-          variant: "destructive"
+          variant: 'destructive'
         })
-        console.error("handOver error:", e)
+        console.error('handOver error:', e)
       }
     }
   }
@@ -352,11 +352,11 @@ export default function OrdersPage() {
 }
 
 function isAbortError(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false
+  if (!err || typeof err !== 'object') return false
   const e = err as { code?: string; name?: string; message?: string }
   return (
-    e?.code === "ERR_CANCELED" ||
-    e?.name === "CanceledError" ||
-    e?.name === "AbortError"
+    e?.code === 'ERR_CANCELED' ||
+    e?.name === 'CanceledError' ||
+    e?.name === 'AbortError'
   )
 }

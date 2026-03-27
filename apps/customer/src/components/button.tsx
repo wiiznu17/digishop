@@ -1,20 +1,20 @@
 // components/Button.tsx
-import React, { FormEvent } from 'react';
+import React, { FormEvent } from 'react'
 
-type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonSize = 'sm' | 'md' | 'lg'
 
 interface ButtonProps {
-  children: React.ReactNode;
-  size?: ButtonSize;
-  onClick?:  (e?: React.FormEvent<Element>) => void | Promise<void>;
-  disabled?: boolean;
-  className?: string;
-  color?: string;
-  colorHover?: string;
-  colorHoverBorder?: string;
-  textColor?: string;
+  children: React.ReactNode
+  size?: ButtonSize
+  onClick?: (e?: React.FormEvent<Element>) => void | Promise<void>
+  disabled?: boolean
+  className?: string
+  color?: string
+  colorHover?: string
+  colorHoverBorder?: string
+  textColor?: string
   border?: string
-  hidden?:boolean
+  hidden?: boolean
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -30,13 +30,12 @@ const Button: React.FC<ButtonProps> = ({
   textColor = 'black',
   border = 'border-gray-300'
 }) => {
-  
   const sizeClasses = {
     sm: 'px-4 py-2 text-sm',
     md: 'px-6 py-3 text-base',
     lg: 'px-8 py-4 text-lg'
-  };
-  
+  }
+
   return (
     <button
       onClick={onClick}
@@ -47,7 +46,7 @@ const Button: React.FC<ButtonProps> = ({
     >
       {children}
     </button>
-  );
-};
+  )
+}
 
-export default Button;
+export default Button

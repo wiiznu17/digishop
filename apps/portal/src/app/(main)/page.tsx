@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight } from "lucide-react"
-import AuthGuard from "@/components/AuthGuard"
-import Link from "next/link"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ArrowRight } from 'lucide-react'
+import AuthGuard from '@/components/AuthGuard'
+import Link from 'next/link'
+import { DashboardHeader } from '@/components/dashboard-header'
 
 function WelcomeHero() {
   return (
@@ -29,7 +29,7 @@ function WelcomeHero() {
               </Badge> */}
 
               <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight">
-                Welcome to <span className="text-indigo-600">DigiShop</span>{" "}
+                Welcome to <span className="text-indigo-600">DigiShop</span>{' '}
                 Portal Admin
               </h1>
 
@@ -69,13 +69,13 @@ function WelcomeHero() {
           aria-hidden
           className="pointer-events-none absolute -top-10 -left-10 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl"
           animate={{ x: [0, 12, -12, 0], y: [0, -8, 8, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
           aria-hidden
           className="pointer-events-none absolute -bottom-12 -right-12 h-64 w-64 rounded-full bg-fuchsia-500/20 blur-3xl"
           animate={{ x: [0, -14, 14, 0], y: [0, 10, -10, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
     </div>
@@ -83,8 +83,8 @@ function WelcomeHero() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["DASHBOARD_VIEW"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['DASHBOARD_VIEW']}>{children}</AuthGuard>
 }
 
 export default function Page() {

@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useCallback, useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { MerchantHeader } from "@/components/dashboard-header"
-import { ProductList } from "@/components/product/productList"
-import { Pagination } from "@/components/order/pagination"
+import { useCallback, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { MerchantHeader } from '@/components/dashboard-header'
+import { ProductList } from '@/components/product/productList'
+import { Pagination } from '@/components/order/pagination'
 import {
   fetchProductsRequester,
   deleteProductRequester,
@@ -12,41 +12,41 @@ import {
   type ProductListResponse,
   fetchCategoriesRequester,
   type CategoryDto
-} from "@/utils/requestUtils/requestProductUtils"
-import ProductDialog from "@/components/product/productDialog"
-import type { ProductFilterState } from "@/components/product/productFilters"
+} from '@/utils/requestUtils/requestProductUtils'
+import ProductDialog from '@/components/product/productDialog'
+import type { ProductFilterState } from '@/components/product/productFilters'
 
-type ProductRow = ProductListResponse["data"][number]
+type ProductRow = ProductListResponse['data'][number]
 
 export default function ProductsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const page = Number(searchParams.get("page") ?? 1)
-  const pageSize = Number(searchParams.get("pageSize") ?? 20)
-  const q = searchParams.get("q") ?? ""
-  const categoryUuid = searchParams.get("categoryUuid") ?? undefined
+  const page = Number(searchParams.get('page') ?? 1)
+  const pageSize = Number(searchParams.get('pageSize') ?? 20)
+  const q = searchParams.get('q') ?? ''
+  const categoryUuid = searchParams.get('categoryUuid') ?? undefined
   const status =
-    (searchParams.get("status") as "ACTIVE" | "INACTIVE" | null) ?? undefined
+    (searchParams.get('status') as 'ACTIVE' | 'INACTIVE' | null) ?? undefined
   const reqStatus =
-    (searchParams.get("reqStatus") as
-      | "PENDING"
-      | "APPROVED"
-      | "REJECT"
+    (searchParams.get('reqStatus') as
+      | 'PENDING'
+      | 'APPROVED'
+      | 'REJECT'
       | null) ?? undefined
-  const inStockParam = searchParams.get("inStock")
-  const inStock = inStockParam == null ? undefined : inStockParam === "true"
+  const inStockParam = searchParams.get('inStock')
+  const inStock = inStockParam == null ? undefined : inStockParam === 'true'
   const sortBy =
-    (searchParams.get("sortBy") as FetchProductsParams["sortBy"]) ?? "createdAt"
+    (searchParams.get('sortBy') as FetchProductsParams['sortBy']) ?? 'createdAt'
   const sortDir =
-    (searchParams.get("sortDir") as FetchProductsParams["sortDir"]) ?? "desc"
+    (searchParams.get('sortDir') as FetchProductsParams['sortDir']) ?? 'desc'
 
   const [filters, setFilters] = useState<ProductFilterState>({
     q,
     categoryUuid,
     status,
     reqStatus,
-    stock: inStock === undefined ? "all" : inStock ? "in" : "out",
+    stock: inStock === undefined ? 'all' : inStock ? 'in' : 'out',
     sortBy,
     sortDir
   })
@@ -57,7 +57,7 @@ export default function ProductsPage() {
       categoryUuid,
       status,
       reqStatus,
-      stock: inStock === undefined ? "all" : inStock ? "in" : "out",
+      stock: inStock === undefined ? 'all' : inStock ? 'in' : 'out',
       sortBy,
       sortDir
     })
@@ -118,7 +118,7 @@ export default function ProductsPage() {
   const pushQuery = (kv: Record<string, string | number | undefined>) => {
     const sp = new URLSearchParams(searchParams.toString())
     Object.entries(kv).forEach(([k, v]) => {
-      if (v === undefined || v === "") sp.delete(k)
+      if (v === undefined || v === '') sp.delete(k)
       else sp.set(k, String(v))
     })
     router.push(`/products?${sp.toString()}`)
@@ -131,7 +131,7 @@ export default function ProductsPage() {
       status: filters.status,
       reqStatus: filters.reqStatus,
       inStock:
-        filters.stock === "all" ? undefined : String(filters.stock === "in"),
+        filters.stock === 'all' ? undefined : String(filters.stock === 'in'),
       sortBy: filters.sortBy,
       sortDir: filters.sortDir,
       page: 1
@@ -140,13 +140,13 @@ export default function ProductsPage() {
 
   const handleResetFilters = () => {
     setFilters({
-      q: "",
+      q: '',
       categoryUuid: undefined,
       status: undefined,
       reqStatus: undefined,
-      stock: "all",
-      sortBy: "createdAt",
-      sortDir: "desc"
+      stock: 'all',
+      sortBy: 'createdAt',
+      sortDir: 'desc'
     })
     pushQuery({
       q: undefined,
@@ -154,8 +154,8 @@ export default function ProductsPage() {
       status: undefined,
       reqStatus: undefined,
       inStock: undefined,
-      sortBy: "createdAt",
-      sortDir: "desc",
+      sortBy: 'createdAt',
+      sortDir: 'desc',
       page: 1,
       pageSize
     })
@@ -172,7 +172,7 @@ export default function ProductsPage() {
   const onEdit = (p: ProductRow) => router.push(`/products/${p.uuid}/edit`)
 
   const onDelete = async (uuid: string) => {
-    if (!confirm("Delete this product?")) return
+    if (!confirm('Delete this product?')) return
     const ok = await deleteProductRequester(uuid)
     if (ok) await fetchList()
   }

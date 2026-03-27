@@ -1,31 +1,31 @@
 // apps/portal/src/app/(main)/admin/(system)/admins/new/page.tsx
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useRouter } from "next/navigation"
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useRouter } from 'next/navigation'
 import {
   createAdminUser,
   sendAdminInviteById,
   fetchRoleOptions
-} from "@/utils/requesters/adminRequester"
-import type { RolesDetail } from "@/types/system/admin"
-import { DashboardHeader } from "@/components/dashboard-header"
+} from '@/utils/requesters/adminRequester'
+import type { RolesDetail } from '@/types/system/admin'
+import { DashboardHeader } from '@/components/dashboard-header'
 
 export default function NewAdminPage() {
-  const [email, setEmail] = useState("")
-  const [name, setName] = useState("")
-  const [roleSlug, setRoleSlug] = useState<string>("")
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [roleSlug, setRoleSlug] = useState<string>('')
   const [sendInvite, setSendInvite] = useState(true)
 
   const [loading, setLoading] = useState(false)
@@ -42,13 +42,13 @@ export default function NewAdminPage() {
         if (!alive) return
 
         // ตัด SUPER_ADMIN ออก
-        const filtered = (opts ?? []).filter((o) => o.slug !== "SUPER_ADMIN")
+        const filtered = (opts ?? []).filter((o) => o.slug !== 'SUPER_ADMIN')
         const sorted = filtered.sort((a, b) =>
           (a.name ?? a.slug).localeCompare(b.name ?? b.slug)
         )
         setRoleOptions(sorted)
 
-        if ((!roleSlug || roleSlug === "SUPER_ADMIN") && sorted.length > 0) {
+        if ((!roleSlug || roleSlug === 'SUPER_ADMIN') && sorted.length > 0) {
           setRoleSlug(sorted[0].slug)
         }
       } finally {
@@ -63,11 +63,11 @@ export default function NewAdminPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!roleSlug) {
-      alert("Please select a role.")
+      alert('Please select a role.')
       return
     }
-    if (roleSlug === "SUPER_ADMIN") {
-      alert("SUPER_ADMIN can only be assigned to a single user.")
+    if (roleSlug === 'SUPER_ADMIN') {
+      alert('SUPER_ADMIN can only be assigned to a single user.')
       return
     }
     setLoading(true)
@@ -78,10 +78,10 @@ export default function NewAdminPage() {
         roleSlug
       })
       if (sendInvite) await sendAdminInviteById(id)
-      router.push("/admin/admins")
+      router.push('/admin/admins')
     } catch (err) {
       console.error(err)
-      alert("Failed to create admin")
+      alert('Failed to create admin')
     } finally {
       setLoading(false)
     }
@@ -134,7 +134,7 @@ export default function NewAdminPage() {
                   <SelectTrigger>
                     <SelectValue
                       placeholder={
-                        roleLoading ? "Loading roles..." : "Select a role"
+                        roleLoading ? 'Loading roles...' : 'Select a role'
                       }
                     />
                   </SelectTrigger>
@@ -171,7 +171,7 @@ export default function NewAdminPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push("/admin/admins")}
+                  onClick={() => router.push('/admin/admins')}
                 >
                   Cancel
                 </Button>
@@ -179,7 +179,7 @@ export default function NewAdminPage() {
                   type="submit"
                   disabled={loading || roleLoading || !roleSlug}
                 >
-                  {loading ? "Saving..." : "Create admin"}
+                  {loading ? 'Saving...' : 'Create admin'}
                 </Button>
               </div>
             </form>

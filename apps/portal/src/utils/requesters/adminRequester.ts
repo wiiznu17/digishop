@@ -1,23 +1,23 @@
-import axios from "@/lib/axios"
+import axios from '@/lib/axios'
 import type {
   AdminDetail,
   AdminListResponse,
   AdminRoleSlug,
   AdminSuggestItem,
   RolesDetail
-} from "@/types/system/admin"
-import { AdminRoleDetail } from "./rolesRequester"
+} from '@/types/system/admin'
+import { AdminRoleDetail } from './rolesRequester'
 
 export async function fetchAdminList(params: {
   q?: string
   role?: string
   status?: string
-  sortBy?: "createdAt" | "name" | "email" | "lastLoginAt"
-  sortDir?: "asc" | "desc"
+  sortBy?: 'createdAt' | 'name' | 'email' | 'lastLoginAt'
+  sortDir?: 'asc' | 'desc'
   page?: number
   pageSize?: number
 }) {
-  const r = await axios.get<AdminListResponse>("/api/admin/admins/list", {
+  const r = await axios.get<AdminListResponse>('/api/admin/admins/list', {
     params,
     withCredentials: true
   })
@@ -26,7 +26,7 @@ export async function fetchAdminList(params: {
 
 export async function fetchAdminSuggest(q: string) {
   if (!q.trim()) return [] as AdminSuggestItem[]
-  const r = await axios.get<AdminSuggestItem[]>("/api/admin/admins/suggest", {
+  const r = await axios.get<AdminSuggestItem[]>('/api/admin/admins/suggest', {
     params: { q },
     withCredentials: true
   })
@@ -46,7 +46,7 @@ export async function createAdminUser(payload: {
   roleSlug: string
 }) {
   const r = await axios.post<{ id: number }>(
-    "/api/admin/admins/create",
+    '/api/admin/admins/create',
     payload,
     { withCredentials: true }
   )
@@ -70,7 +70,7 @@ export async function resetAdminPasswordById(adminId: number) {
 }
 
 export async function fetchRoleOptions() {
-  const r = await axios.get<RolesDetail[]>("/api/admin/admins/roles/list", {
+  const r = await axios.get<RolesDetail[]>('/api/admin/admins/roles/list', {
     withCredentials: true
   })
   return r.data

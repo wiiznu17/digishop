@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import type { AdminUserDetail, MonthlySpend } from "@/types/admin/users"
-import { fetchAdminUserDetail } from "@/utils/requesters/userRequester"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import type { AdminUserDetail, MonthlySpend } from '@/types/admin/users'
+import { fetchAdminUserDetail } from '@/utils/requesters/userRequester'
 
 // กราฟ (recharts)
 import {
@@ -22,12 +22,12 @@ import {
   XAxis,
   YAxis,
   Tooltip
-} from "recharts"
-import AuthGuard from "@/components/AuthGuard"
+} from 'recharts'
+import AuthGuard from '@/components/AuthGuard'
 
 function formatTHBMinor(minor: number) {
   const v = (minor ?? 0) / 100
-  return v.toLocaleString("th-TH", { style: "currency", currency: "THB" })
+  return v.toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 }
 
 function AdminUserDetailPage() {
@@ -73,7 +73,7 @@ function AdminUserDetailPage() {
       <Card>
         <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
-            <CardTitle className="text-xl">{data?.name ?? "User"}</CardTitle>
+            <CardTitle className="text-xl">{data?.name ?? 'User'}</CardTitle>
             <CardDescription>User detail</CardDescription>
             {!!data && (
               <div className="mt-2 text-sm space-y-1">
@@ -91,7 +91,7 @@ function AdminUserDetailPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => router.push("/admin/customers")}
+              onClick={() => router.push('/admin/customers')}
             >
               Back
             </Button>
@@ -154,7 +154,7 @@ function AdminUserDetailPage() {
               <CardContent className="text-2xl font-semibold text-balance">
                 {summary?.lastOrderAt
                   ? new Date(summary.lastOrderAt).toLocaleString()
-                  : "—"}
+                  : '—'}
               </CardContent>
             </Card>
           </div>
@@ -179,7 +179,7 @@ function AdminUserDetailPage() {
                       // state?.activeLabel คือค่า X (เช่น "2025-03")
                       const m = state?.activeLabel as string
                       const lastDayofmonth = (m: string) => {
-                        const [y, mm] = m.split("-").map((x) => Number(x))
+                        const [y, mm] = m.split('-').map((x) => Number(x))
                         return new Date(y, mm, 0).getDate()
                       }
                       const mToParam = `dateFrom=${m}-01&dateTo=${m}-${lastDayofmonth(m)}`
@@ -192,20 +192,20 @@ function AdminUserDetailPage() {
                     <XAxis dataKey="month" tickFormatter={(m) => m.slice(2)} />
                     <YAxis
                       tickFormatter={(v) =>
-                        Number(v).toLocaleString("th-TH", {
+                        Number(v).toLocaleString('th-TH', {
                           maximumFractionDigits: 0
                         })
                       }
                     />
                     <Tooltip
                       formatter={(v: number, key: string) => {
-                        if (key === "spent")
+                        if (key === 'spent')
                           return [
-                            v.toLocaleString("th-TH", {
-                              style: "currency",
-                              currency: "THB"
+                            v.toLocaleString('th-TH', {
+                              style: 'currency',
+                              currency: 'THB'
                             }),
-                            "Spent"
+                            'Spent'
                           ]
                         return [v, key]
                       }}
@@ -251,13 +251,13 @@ function AdminUserDetailPage() {
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
                     {a.addressNumber}
-                    {a.building ? `, ${a.building}` : ""}
-                    {a.subStreet ? `, ${a.subStreet}` : ""}, {a.street},{" "}
-                    {a.subdistrict}, {a.district}, {a.province} {a.postalCode},{" "}
+                    {a.building ? `, ${a.building}` : ''}
+                    {a.subStreet ? `, ${a.subStreet}` : ''}, {a.street},{' '}
+                    {a.subdistrict}, {a.district}, {a.province} {a.postalCode},{' '}
                     {a.country}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    Type: {a.addressType ?? "—"} • Created:{" "}
+                    Type: {a.addressType ?? '—'} • Created:{' '}
                     {new Date(a.createdAt).toLocaleString()}
                   </div>
                 </div>
@@ -364,8 +364,8 @@ function AdminUserDetailPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["CUSTOMERS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['CUSTOMERS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

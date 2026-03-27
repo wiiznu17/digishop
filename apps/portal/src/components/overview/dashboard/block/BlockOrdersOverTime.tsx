@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from '@/components/ui/card'
 import {
   ResponsiveContainer,
   BarChart,
@@ -16,10 +16,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip
-} from "recharts"
-import type { DashboardSeriesPoint } from "@/types/admin/dashboard"
-import { fetchDashboardSeries } from "@/utils/requesters/dashboardRequester"
-import { fmtDateShort } from "../format"
+} from 'recharts'
+import type { DashboardSeriesPoint } from '@/types/admin/dashboard'
+import { fetchDashboardSeries } from '@/utils/requesters/dashboardRequester'
+import { fmtDateShort } from '../format'
 
 export default function BlockOrdersOverTime({
   from,
@@ -55,7 +55,7 @@ export default function BlockOrdersOverTime({
       <CardHeader>
         <CardTitle>Orders over time</CardTitle>
         <CardDescription>
-          {loading ? "Loading…" : "จำนวนคำสั่งซื้อรายวัน"}
+          {loading ? 'Loading…' : 'จำนวนคำสั่งซื้อรายวัน'}
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[360px]">

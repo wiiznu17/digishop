@@ -1,22 +1,22 @@
-import axios from "@/lib/axios"
+import axios from '@/lib/axios'
 import type {
   DashboardKpis,
   DashboardSeriesPoint,
   DashboardStatusDist,
   DashboardTopStore
-} from "@/types/admin/dashboard"
+} from '@/types/admin/dashboard'
 
 export type DateRange = { from: string; to: string }
 
 export async function fetchDashboardKpis(params: DateRange) {
   try {
-    const r = await axios.get<DashboardKpis>("/api/admin/dashboards/kpis", {
+    const r = await axios.get<DashboardKpis>('/api/admin/dashboards/kpis', {
       params,
       withCredentials: true
     })
     return r.data
   } catch (error) {
-    console.error("fetchDashboardKpis error:", error)
+    console.error('fetchDashboardKpis error:', error)
     throw error // Rethrow the error after logging it
   }
 }
@@ -24,7 +24,7 @@ export async function fetchDashboardKpis(params: DateRange) {
 export async function fetchDashboardSeries(params: DateRange) {
   try {
     const r = await axios.get<DashboardSeriesPoint[]>(
-      "/api/admin/dashboards/series",
+      '/api/admin/dashboards/series',
       {
         params,
         withCredentials: true
@@ -32,7 +32,7 @@ export async function fetchDashboardSeries(params: DateRange) {
     )
     return r.data
   } catch (error) {
-    console.error("fetchDashboardSeries error:", error)
+    console.error('fetchDashboardSeries error:', error)
     throw error // Rethrow the error after logging it
   }
 }
@@ -40,7 +40,7 @@ export async function fetchDashboardSeries(params: DateRange) {
 export async function fetchDashboardStatusDist(params: DateRange) {
   try {
     const r = await axios.get<DashboardStatusDist[]>(
-      "/api/admin/dashboards/status-dist",
+      '/api/admin/dashboards/status-dist',
       {
         params,
         withCredentials: true
@@ -48,7 +48,7 @@ export async function fetchDashboardStatusDist(params: DateRange) {
     )
     return r.data
   } catch (error) {
-    console.error("fetchDashboardStatusDist error:", error)
+    console.error('fetchDashboardStatusDist error:', error)
     throw error // Rethrow the error after logging it
   }
 }
@@ -56,7 +56,7 @@ export async function fetchDashboardStatusDist(params: DateRange) {
 export async function fetchDashboardTopStores(params: DateRange) {
   try {
     const r = await axios.get<DashboardTopStore[]>(
-      "/api/admin/dashboards/top-stores",
+      '/api/admin/dashboards/top-stores',
       {
         params,
         withCredentials: true
@@ -64,7 +64,7 @@ export async function fetchDashboardTopStores(params: DateRange) {
     )
     return r.data
   } catch (error) {
-    console.error("fetchDashboardTopStores error:", error)
+    console.error('fetchDashboardTopStores error:', error)
     throw error // Rethrow the error after logging it
   }
 }

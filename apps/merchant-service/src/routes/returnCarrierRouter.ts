@@ -1,23 +1,23 @@
-import express from "express";
+import express from 'express'
 import {
   rcmwParseBase,
   rcmwVerifySignature,
   rcmwExtractCoreFields,
   rcmwLoadReturnShipment,
   rcmwDeduplicateEvent,
-  rcmwComputeOrderTransition,
-} from "../middlewares/returnCarrierMiddleware";
+  rcmwComputeOrderTransition
+} from '../middlewares/returnCarrierMiddleware'
 
 import {
   returnCarrierWebhook,
-  markReturnFailed,
-} from "../controllers/returnCarrierController";
+  markReturnFailed
+} from '../controllers/returnCarrierController'
 
-const router: express.Router = express.Router();
+const router: express.Router = express.Router()
 
 // webhook ขนส่ง “ขากลับ”
 router.post(
-  "/webhooks/returns/:carrier",
+  '/webhooks/returns/:carrier',
   rcmwParseBase,
   rcmwVerifySignature,
   rcmwExtractCoreFields,
@@ -25,9 +25,9 @@ router.post(
   rcmwDeduplicateEvent,
   rcmwComputeOrderTransition,
   returnCarrierWebhook
-);
+)
 
 // worker/cron: auto-timeout
-router.post("/returns/:id/fail", markReturnFailed);
+router.post('/returns/:id/fail', markReturnFailed)
 
-export default router;
+export default router

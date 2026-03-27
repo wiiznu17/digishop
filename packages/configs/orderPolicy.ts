@@ -10,5 +10,5 @@ export const OrderPolicy = {
 
   // Retry เฉพาะหลัง delivered
   refundMaxRetries: 3,
-  refundRetryWindowDays: 7,
-} as const;
+  refundRetryWindowDays: 7
+} as const

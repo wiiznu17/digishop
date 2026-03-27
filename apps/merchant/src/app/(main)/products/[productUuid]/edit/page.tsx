@@ -1,36 +1,36 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { MerchantHeader } from "@/components/dashboard-header"
-import { ImageUpload, type ImageLike } from "@/components/product/imageUpload"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { MerchantHeader } from '@/components/dashboard-header'
+import { ImageUpload, type ImageLike } from '@/components/product/imageUpload'
 import {
   fetchProductDetailRequester,
   fetchCategoriesRequester,
   type CategoryDto,
   updateProductDesiredRequester,
   type DesiredPayload
-} from "@/utils/requestUtils/requestProductUtils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from '@/utils/requestUtils/requestProductUtils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import PRODUCT_STATUS_MASTER from "@/constants/master/productStatusMaster.json"
-import { ProductItemLite } from "@/types/props/productProp"
+} from '@/components/ui/select'
+import PRODUCT_STATUS_MASTER from '@/constants/master/productStatusMaster.json'
+import { ProductItemLite } from '@/types/props/productProp'
 import {
   VariationEditor,
   type VariationDraft
-} from "@/components/product/variationEditor"
-import { Switch } from "@/components/ui/switch"
+} from '@/components/product/variationEditor'
+import { Switch } from '@/components/ui/switch'
 
 // ใช้ค่านี้เป็นตัวแทน "ไม่เลือกหมวด"
-const NONE_VALUE = "none"
+const NONE_VALUE = 'none'
 
 type ServerImageLite = {
   uuid: string
@@ -69,10 +69,10 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const [name, setName] = useState("")
+  const [name, setName] = useState('')
   const [categoryUuid, setCategoryUuid] = useState<string>(NONE_VALUE)
-  const [status, setStatus] = useState<string>("DRAFT")
-  const [description, setDescription] = useState<string>("")
+  const [status, setStatus] = useState<string>('DRAFT')
+  const [description, setDescription] = useState<string>('')
   const [updatedAt, setUpdatedAt] = useState<string | undefined>(undefined)
 
   // images
@@ -101,7 +101,7 @@ export default function EditProductPage() {
     return Number.isNaN(n) || n < 0 ? 0 : Math.round(n * 100)
   }
   const toInt = (val: string): number => {
-    const n = parseInt(val || "0", 10)
+    const n = parseInt(val || '0', 10)
     return Number.isNaN(n) || n < 0 ? 0 : n
   }
 
@@ -110,7 +110,7 @@ export default function EditProductPage() {
   const toFileFromBlobUrl = async (img: ImageLike, uploadKey: string) => {
     const resp = await fetch(img.url)
     const blob = await resp.blob()
-    const ext = img.fileName?.split(".").pop() ?? "jpg"
+    const ext = img.fileName?.split('.').pop() ?? 'jpg'
     const fileName = `${uploadKey}__${img.fileName || `image.${ext}`}`
     return new File([blob], fileName, { type: blob.type || undefined })
   }
@@ -123,8 +123,8 @@ export default function EditProductPage() {
           (acc, cur) => acc.flatMap((a) => cur.map((c) => [...a, c])),
           [[]]
         )
-  const comboLabel = (vals: string[]) => vals.join(" / ")
-  const comboKey = (keys: string[]) => keys.join("|")
+  const comboLabel = (vals: string[]) => vals.join(' / ')
+  const comboKey = (keys: string[]) => keys.join('|')
 
   // ===== Load detail =====
   useEffect(() => {
@@ -134,10 +134,10 @@ export default function EditProductPage() {
       setLoading(false)
       if (!res) return
 
-      setName(res.name || "")
+      setName(res.name || '')
       setCategoryUuid(res.category?.uuid || NONE_VALUE)
-      setStatus(res.status || "DRAFT")
-      setDescription(res.description || "")
+      setStatus(res.status || 'DRAFT')
+      setDescription(res.description || '')
       setUpdatedAt(res.updatedAt)
 
       const toClientId = (id?: string) =>
@@ -152,8 +152,8 @@ export default function EditProductPage() {
           .sort((a, b) => {
             const so = (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
             if (so !== 0) return so
-            const ta = new Date(a.createdAt ?? "").getTime() || 0
-            const tb = new Date(b.createdAt ?? "").getTime() || 0
+            const ta = new Date(a.createdAt ?? '').getTime() || 0
+            const tb = new Date(b.createdAt ?? '').getTime() || 0
             return ta - tb
           })
           .map((o, idx) => ({
@@ -210,7 +210,7 @@ export default function EditProductPage() {
             uuid: it.uuid,
             optionKeys: keysInOrder,
             label: comboLabel(labelsInOrder),
-            sku: it.sku ?? "",
+            sku: it.sku ?? '',
             price: fromMinor(it.priceMinor ?? 0),
             stock: String(it.stockQuantity ?? 0),
             isEnable: Boolean((it as ProductItemLite).isEnable ?? true),
@@ -229,7 +229,7 @@ export default function EditProductPage() {
       setItemBaselines(
         (res.items ?? []).map((it) => ({
           uuid: it.uuid,
-          sku: it.sku ?? "",
+          sku: it.sku ?? '',
           priceMinor: it.priceMinor ?? 0,
           stockQuantity: it.stockQuantity ?? 0,
           isEnable: Boolean((it as ProductItemLite).isEnable ?? true),
@@ -287,9 +287,9 @@ export default function EditProductPage() {
             uuid: undefined,
             optionKeys: keys,
             label,
-            sku: "",
-            price: "",
-            stock: "",
+            sku: '',
+            price: '',
+            stock: '',
             isEnable: true,
             image: null,
             imageBaselineUuid: null,
@@ -342,7 +342,7 @@ export default function EditProductPage() {
 
     // ถ้าจับคู่ไม่ได้ครบ (เช่น แถวจะถูกลบเพราะโครงสร้างเปลี่ยน) → fallback ใช้ label เดิม
     if (pairs.length === 0 || pairs.length !== r.optionKeys.length) {
-      const parts = (r.label || "").split(" / ").filter(Boolean)
+      const parts = (r.label || '').split(' / ').filter(Boolean)
       if (parts.length) return parts.map((val) => ({ value: val }))
     }
     return pairs
@@ -350,14 +350,14 @@ export default function EditProductPage() {
   // ===== Save (Desired) =====
   const handleSave = async () => {
     if (!name.trim()) {
-      alert("Please fill product name")
+      alert('Please fill product name')
       return
     }
 
     // SKU duplicate เฉพาะแถวที่ไม่ถูกลบ
     const seen = new Set<string>()
     for (const r of itemEdits.filter((x) => !x.toBeDeleted)) {
-      const k = (r.sku || "").trim().toUpperCase()
+      const k = (r.sku || '').trim().toUpperCase()
       if (!k) continue
       if (seen.has(k)) {
         alert(`Duplicate SKU: ${r.sku}`)
@@ -368,13 +368,13 @@ export default function EditProductPage() {
     // SKU ต้องมี (เฉพาะแถว active ที่จะถูกบันทึก)
     const missing = itemEdits
       .filter((x) => !x.toBeDeleted)
-      .filter((x) => !(x.sku || "").trim())
+      .filter((x) => !(x.sku || '').trim())
       .map((x) => x.label)
 
     if (missing.length) {
       alert(
-        "SKU is required for:\n" +
-          missing.map((s, i) => `${i + 1}. ${s}`).join("\n")
+        'SKU is required for:\n' +
+          missing.map((s, i) => `${i + 1}. ${s}`).join('\n')
       )
       return
     }
@@ -384,7 +384,7 @@ export default function EditProductPage() {
       const productImageFiles: File[] = []
       const desiredImages = await Promise.all(
         uiImages.map(async (img, idx) => {
-          if (!img.uuid && img.url.startsWith("blob:")) {
+          if (!img.uuid && img.url.startsWith('blob:')) {
             const uploadKey = `p-${randomKey()}`
             const f = await toFileFromBlobUrl(img, uploadKey)
             productImageFiles.push(f)
@@ -428,13 +428,13 @@ export default function EditProductPage() {
             // ข้าม — BE จะลบจาก diff เพราะไม่มี uuid แสดงใน payload
             return null
           }
-          let image: DesiredPayload["items"][number]["image"] = null
+          let image: DesiredPayload['items'][number]['image'] = null
           const had = r.imageBaselineUuid ?? null
           const cur = r.image ?? null
 
           if (!cur && had) {
             image = { remove: true }
-          } else if (cur && cur.url.startsWith("blob:")) {
+          } else if (cur && cur.url.startsWith('blob:')) {
             const uploadKey = `it-${randomKey()}`
             const f = await toFileFromBlobUrl(cur, uploadKey)
             itemImageFiles.push(f)
@@ -448,7 +448,7 @@ export default function EditProductPage() {
           return {
             uuid: r.uuid,
             clientKey: r.key,
-            sku: (r.sku || "").trim() || undefined,
+            sku: (r.sku || '').trim() || undefined,
             priceMinor: toMinor(r.price),
             stockQuantity: toInt(r.stock),
             isEnable: r.isEnable,
@@ -478,16 +478,16 @@ export default function EditProductPage() {
         itemImageFiles
       )
       if (!updated?.uuid) {
-        alert("Save failed")
+        alert('Save failed')
         setSaving(false)
         return
       }
 
-      alert("Saved")
+      alert('Saved')
       router.push(`/products/${productUuid}`)
     } catch (e) {
       console.error(e)
-      alert("Error while saving")
+      alert('Error while saving')
     } finally {
       setSaving(false)
     }
@@ -533,7 +533,7 @@ export default function EditProductPage() {
                   <SelectTrigger>
                     <SelectValue
                       placeholder={
-                        catLoading ? "Loading..." : "Select category"
+                        catLoading ? 'Loading...' : 'Select category'
                       }
                     />
                   </SelectTrigger>
@@ -641,15 +641,15 @@ export default function EditProductPage() {
                           <tr
                             key={r.key}
                             className={[
-                              "border-t align-top",
-                              isNew ? "bg-emerald-50/40" : "",
-                              willDelete ? "bg-rose-50/60 opacity-90" : ""
-                            ].join(" ")}
+                              'border-t align-top',
+                              isNew ? 'bg-emerald-50/40' : '',
+                              willDelete ? 'bg-rose-50/60 opacity-90' : ''
+                            ].join(' ')}
                             title={
                               isNew
-                                ? "ยังไม่มี UUID — จะถูกสร้างเมื่อกด Save"
+                                ? 'ยังไม่มี UUID — จะถูกสร้างเมื่อกด Save'
                                 : willDelete
-                                  ? "คอมบิเนชันนี้ไม่อยู่ใน Variations ปัจจุบัน — จะถูกลบเมื่อกด Save"
+                                  ? 'คอมบิเนชันนี้ไม่อยู่ใน Variations ปัจจุบัน — จะถูกลบเมื่อกด Save'
                                   : undefined
                             }
                           >
@@ -676,7 +676,7 @@ export default function EditProductPage() {
                                   aria-label={`Toggle enable for ${r.sku || r.label}`}
                                 />
                                 <span className="text-xs text-muted-foreground">
-                                  {r.isEnable ? "Enabled" : "Disabled"}
+                                  {r.isEnable ? 'Enabled' : 'Disabled'}
                                 </span>
                               </div>
                             </td>
@@ -719,9 +719,9 @@ export default function EditProductPage() {
                                       key={idx}
                                       title={p.name}
                                       className={[
-                                        "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] bg-muted/40",
-                                        willDelete ? "opacity-60" : ""
-                                      ].join(" ")}
+                                        'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] bg-muted/40',
+                                        willDelete ? 'opacity-60' : ''
+                                      ].join(' ')}
                                     >
                                       {p.name && (
                                         <span className="text-muted-foreground mr-1">
@@ -838,7 +838,7 @@ export default function EditProductPage() {
             {/* Actions */}
             <div className="flex gap-3">
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? "Saving..." : "Save"}
+                {saving ? 'Saving...' : 'Save'}
               </Button>
               <Button
                 variant="outline"

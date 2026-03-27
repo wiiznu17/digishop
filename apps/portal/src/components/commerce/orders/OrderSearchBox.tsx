@@ -1,18 +1,18 @@
 // apps/portal/src/components/commerce/orders/OrdersSearchBox.tsx
-"use client"
+'use client'
 
-import React, { useEffect, useState, useTransition } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import { Search } from "lucide-react"
-import { AdminOrderListItem } from "@/types/commerce/orders"
-import { fetchAdminOrderSuggestRequester } from "@/utils/requesters/orderRequester"
+import React, { useEffect, useState, useTransition } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+import { Search } from 'lucide-react'
+import { AdminOrderListItem } from '@/types/commerce/orders'
+import { fetchAdminOrderSuggestRequester } from '@/utils/requesters/orderRequester'
 
 const THB = (n?: number | null) =>
   n == null
-    ? "-"
-    : (n / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+    ? '-'
+    : (n / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 function useDebounce<T>(val: T, ms = 400) {
   const [v, setV] = useState(val)
@@ -59,9 +59,9 @@ export function OrdersSearchBox({
           orderCode: s.orderCode,
           customerName: s.customerName,
           customerEmail: s.customerEmail,
-          storeName: "",
+          storeName: '',
           status: s.status,
-          currencyCode: "THB",
+          currencyCode: 'THB',
           grandTotalMinor: s.grandTotalMinor,
           createdAt: s.createdAt
         }))
@@ -89,7 +89,7 @@ export function OrdersSearchBox({
             }}
             onBlur={() => setTimeout(() => setOpenSuggest(false), 120)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === 'Enter') {
                 e.preventDefault()
                 // onSubmit()
               }
@@ -130,7 +130,7 @@ export function OrdersSearchBox({
                   {s.orderCode} — {s.customerName}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {s.customerEmail} · {s.status} · {THB(s.grandTotalMinor)} ·{" "}
+                  {s.customerEmail} · {s.status} · {THB(s.grandTotalMinor)} ·{' '}
                   {new Date(s.createdAt).toLocaleString()}
                 </div>
               </button>

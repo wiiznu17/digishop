@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { fetchAuditLogDetail } from "@/utils/requesters/auditLogRequester"
-import type { AdminAuditLogItem } from "@/types/admin/audit"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { fetchAuditLogDetail } from '@/utils/requesters/auditLogRequester'
+import type { AdminAuditLogItem } from '@/types/admin/audit'
 
 export default function AuditLogDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -45,7 +45,7 @@ export default function AuditLogDetailPage() {
           </div>
           <Button
             variant="outline"
-            onClick={() => router.push("/admin/system/audit-logs")}
+            onClick={() => router.push('/admin/system/audit-logs')}
           >
             Back
           </Button>
@@ -61,7 +61,7 @@ export default function AuditLogDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Actor: </span>
-                {data.actorName || "-"} &lt;{data.actorEmail || "-"}&gt;
+                {data.actorName || '-'} &lt;{data.actorEmail || '-'}&gt;
               </div>
               <div>
                 <span className="text-muted-foreground">Date: </span>
@@ -74,19 +74,19 @@ export default function AuditLogDetailPage() {
               <div>
                 <span className="text-muted-foreground">Resource: </span>
                 {data.resource}
-                {data.targetId ? `#${data.targetId}` : ""}
+                {data.targetId ? `#${data.targetId}` : ''}
               </div>
               <div>
                 <span className="text-muted-foreground">IP: </span>
-                {data.ip || "-"}
+                {data.ip || '-'}
               </div>
               <div>
                 <span className="text-muted-foreground">Correlation: </span>
-                {data.correlationId || "-"}
+                {data.correlationId || '-'}
               </div>
               <div className="md:col-span-2">
                 <span className="text-muted-foreground">User agent: </span>
-                {data.userAgent || "-"}
+                {data.userAgent || '-'}
               </div>
               <div className="md:col-span-2">
                 <span className="text-muted-foreground block">Meta JSON:</span>

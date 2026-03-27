@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Plus, Trash2 } from "lucide-react"
-import { ImageLike, ImageUpload } from "./imageUpload"
-import { Switch } from "../ui/switch"
+import { useEffect, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { Plus, Trash2 } from 'lucide-react'
+import { ImageLike, ImageUpload } from './imageUpload'
+import { Switch } from '../ui/switch'
 
 // ===== Types for Draft on client =====
 export type OptionDraft = {
@@ -88,16 +88,16 @@ function buildRows(variations: VariationDraft[]): ItemDraft[] {
   const combos = cartesian(optionMatrix)
   return combos.map((opts) => {
     const optionCids = opts.map((o) => o.cid)
-    const label = opts.map((o) => o.value).join(" / ")
-    const key = optionCids.join("|")
+    const label = opts.map((o) => o.value).join(' / ')
+    const key = optionCids.join('|')
     return {
       key,
       optionCids,
       label,
       enabled: true,
-      sku: "",
-      price: "",
-      stock: ""
+      sku: '',
+      price: '',
+      stock: ''
     }
   })
 }
@@ -113,13 +113,13 @@ const hashString = (s: string) => {
 
 const toCode = (s: string, max = 4) => {
   const t = s
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "")
+    .replace(/[^A-Z0-9]+/g, '')
     .slice(0, max)
   if (t) return t
-  return Math.abs(hashString(s)).toString(36).toUpperCase().slice(0, max) || "X"
+  return Math.abs(hashString(s)).toString(36).toUpperCase().slice(0, max) || 'X'
 }
 
 // ===== UI =====
@@ -166,18 +166,18 @@ export default function VariationBuilder({
   const autoGenerateSkus = (overwriteExisting = false) => {
     const seen = new Set(
       items
-        .map((r) => (r.sku || "").trim())
+        .map((r) => (r.sku || '').trim())
         .filter(Boolean)
         .map((s) => s.toUpperCase())
     )
-    const prefix = toCode((skuPrefix ?? "").trim(), 6) || "PRD"
+    const prefix = toCode((skuPrefix ?? '').trim(), 6) || 'PRD'
 
     const next = items.map((r) => {
-      if (!overwriteExisting && (r.sku || "").trim()) return r
+      if (!overwriteExisting && (r.sku || '').trim()) return r
       const optCodes = r.optionCids.map((cid) =>
-        toCode(optionLabelByCid.get(cid) ?? "OPT", 3)
+        toCode(optionLabelByCid.get(cid) ?? 'OPT', 3)
       )
-      let base = [prefix, ...optCodes].join("-").replace(/-+/g, "-")
+      let base = [prefix, ...optCodes].join('-').replace(/-+/g, '-')
       base = base.slice(0, 28)
       let candidate = base
       let i = 1
@@ -196,8 +196,8 @@ export default function VariationBuilder({
       cid: cuid(),
       name: `Variation ${variations.length + 1}`,
       options: [
-        { cid: cuid(), value: "Option A", sortOrder: 0 },
-        { cid: cuid(), value: "Option B", sortOrder: 1 }
+        { cid: cuid(), value: 'Option A', sortOrder: 0 },
+        { cid: cuid(), value: 'Option B', sortOrder: 1 }
       ]
     }
     onVariationsChange([...variations, nv])
@@ -390,7 +390,7 @@ export default function VariationBuilder({
                         aria-label={`Toggle enable for ${r.sku || r.label}`}
                       />
                       <span className="text-xs text-muted-foreground">
-                        {r.enabled ? "Enabled" : "Disabled"}
+                        {r.enabled ? 'Enabled' : 'Disabled'}
                       </span>
                     </td>
                     <td className="p-2 align-top">

@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useMemo, useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useMemo, useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -18,33 +18,33 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import { Eye, Search as SearchIcon } from "lucide-react"
+} from '@/components/ui/table'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+import { Eye, Search as SearchIcon } from 'lucide-react'
 
-import type { AdminUserLite } from "@/types/admin/users"
+import type { AdminUserLite } from '@/types/admin/users'
 import {
   fetchAdminUserListRequester,
   fetchAdminUserSuggest
-} from "@/utils/requesters/userRequester"
-import { Pager } from "@/components/common/Pager"
-import AuthGuard from "@/components/AuthGuard"
-import { DashboardHeader } from "@/components/dashboard-header"
+} from '@/utils/requesters/userRequester'
+import { Pager } from '@/components/common/Pager'
+import AuthGuard from '@/components/AuthGuard'
+import { DashboardHeader } from '@/components/dashboard-header'
 
 function formatTHBMinor(minor: number) {
   const v = (minor ?? 0) / 100
-  return v.toLocaleString("th-TH", { style: "currency", currency: "THB" })
+  return v.toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 }
 
 function AdminCustomersPage() {
   const router = useRouter()
 
   // input states (ยังไม่ยิงค้นหา)
-  const [qInput, setQInput] = useState("")
-  const [dateFromInput, setDateFromInput] = useState<string>("")
-  const [dateToInput, setDateToInput] = useState<string>("")
-  const [spentMinInput, setSpentMinInput] = useState<string>("")
-  const [spentMaxInput, setSpentMaxInput] = useState<string>("")
+  const [qInput, setQInput] = useState('')
+  const [dateFromInput, setDateFromInput] = useState<string>('')
+  const [dateToInput, setDateToInput] = useState<string>('')
+  const [spentMinInput, setSpentMinInput] = useState<string>('')
+  const [spentMaxInput, setSpentMaxInput] = useState<string>('')
 
   const [openSuggest, setOpenSuggest] = useState(false)
   const [suggest, setSuggest] = useState<
@@ -81,8 +81,8 @@ function AdminCustomersPage() {
         spentMax: applied.spentMax,
         page,
         pageSize,
-        sortBy: "createdAt",
-        sortDir: "desc"
+        sortBy: 'createdAt',
+        sortDir: 'desc'
       })
       setRows(data)
       setTotal(meta.total)
@@ -134,11 +134,11 @@ function AdminCustomersPage() {
   }
 
   const onClear = () => {
-    setQInput("")
-    setDateFromInput("")
-    setDateToInput("")
-    setSpentMinInput("")
-    setSpentMaxInput("")
+    setQInput('')
+    setDateFromInput('')
+    setDateToInput('')
+    setSpentMinInput('')
+    setSpentMaxInput('')
     setApplied({})
     setPage(1)
     setOpenSuggest(false)
@@ -146,7 +146,7 @@ function AdminCustomersPage() {
 
   // กด Enter ใน filter ใดๆ = ค้นหา
   const onKeyDownEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault()
       onSearch()
     }
@@ -307,7 +307,7 @@ function AdminCustomersPage() {
                     pageRows.map((r) => (
                       <TableRow key={r.id}>
                         <TableCell className="font-medium">
-                          <div className="truncate">{r.name || "—"}</div>
+                          <div className="truncate">{r.name || '—'}</div>
                         </TableCell>
 
                         <TableCell>
@@ -322,7 +322,7 @@ function AdminCustomersPage() {
 
                         <TableCell>
                           {!r.store ? (
-                            "—"
+                            '—'
                           ) : (
                             <button
                               className="text-primary hover:underline truncate max-w-[210px]"
@@ -337,7 +337,7 @@ function AdminCustomersPage() {
                         </TableCell>
 
                         <TableCell className="text-right whitespace-nowrap">
-                          {formatTHBMinor(r.orderTotalMinor)}{" "}
+                          {formatTHBMinor(r.orderTotalMinor)}{' '}
                           <span className="text-xs text-muted-foreground">
                             ({r.orderCount})
                           </span>
@@ -400,8 +400,8 @@ function AdminCustomersPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["CUSTOMERS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['CUSTOMERS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

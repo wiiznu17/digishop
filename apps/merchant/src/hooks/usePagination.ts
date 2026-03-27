@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback } from 'react'
 
 interface UsePaginationProps<T> {
   data: T[]
@@ -22,7 +22,7 @@ export function usePagination<T>({
 
   const totalPages = Math.max(1, Math.ceil(data.length / itemsPerPage))
 
-  console.log("usePagination Debug:", {
+  console.log('usePagination Debug:', {
     dataLength: data.length,
     itemsPerPage,
     currentPage,
@@ -33,7 +33,7 @@ export function usePagination<T>({
   const goToPage = useCallback(
     (page: number) => {
       const clampedPage = Math.max(1, Math.min(page, totalPages))
-      console.log("goToPage:", { page, clampedPage, totalPages })
+      console.log('goToPage:', { page, clampedPage, totalPages })
       setCurrentPage(clampedPage)
     },
     [totalPages]
@@ -41,7 +41,7 @@ export function usePagination<T>({
 
   const changeItemsPerPage = useCallback(
     (newItemsPerPage: number) => {
-      console.log("changeItemsPerPage:", {
+      console.log('changeItemsPerPage:', {
         old: itemsPerPage,
         new: newItemsPerPage,
         currentPage,

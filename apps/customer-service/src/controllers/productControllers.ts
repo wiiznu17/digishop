@@ -1,39 +1,50 @@
-import { Op } from "sequelize";
-import { NextFunction, Request, Response } from "express";
-import { Category, Product, ProductConfiguration, ProductImage, ProductItem, ProductItemImage, ProductStatus, Store, StoreStatus, Variation, VariationOption } from "@digishop/db";
-
+import { Op } from 'sequelize'
+import { NextFunction, Request, Response } from 'express'
+import {
+  Category,
+  Product,
+  ProductConfiguration,
+  ProductImage,
+  ProductItem,
+  ProductItemImage,
+  ProductStatus,
+  Store,
+  StoreStatus,
+  Variation,
+  VariationOption
+} from '@digishop/db'
 
 export const searchProduct = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { query , page } = req.query;
+  const { query, page } = req.query
   try {
     const productCount = await Product.count({
       where: {
         [Op.and]: [
-          { name: {[Op.like]: `%${query}%`}},
-          { status: ProductStatus.ACTIVE}
+          { name: { [Op.like]: `%${query}%` } },
+          { status: ProductStatus.ACTIVE }
         ]
       }
     })
     let searchProduct
-    if(page){
+    if (page) {
       searchProduct = await Product.findAll({
         where: {
           [Op.and]: [
-          { name: {[Op.like]: `%${query}%`}},
-          { status: ProductStatus.ACTIVE}
+            { name: { [Op.like]: `%${query}%` } },
+            { status: ProductStatus.ACTIVE }
           ]
         },
         limit: 10,
         offset: 10 * (Number(page) - 1),
-        attributes: ['id','uuid','name'],
+        attributes: ['id', 'uuid', 'name'],
         include: [
           {
             model: Category,
-            as: 'category',
+            as: 'category'
           },
           {
             model: ProductImage,
@@ -41,64 +52,68 @@ export const searchProduct = async (
           },
           {
             model: ProductItem,
-            as: 'items',
+            as: 'items'
           },
           {
             model: Store,
-            as: 'store',
+            as: 'store'
           }
         ]
-      });
+      })
     }
     // engine search
-    if(!page){
+    if (!page) {
       searchProduct = await Product.findAll({
         where: {
           [Op.and]: [
-          { name: {[Op.like]: `%${query}%`}},
-          { status: ProductStatus.ACTIVE}
+            { name: { [Op.like]: `%${query}%` } },
+            { status: ProductStatus.ACTIVE }
           ]
         },
         limit: 10,
-        attributes: ['name'],
-      });
+        attributes: ['name']
+      })
     }
     const searchStore = await Store.findAll({
       where: {
         storeName: {
-          [Op.like]: `%${query}%`, 
-        },
+          [Op.like]: `%${query}%`
+        }
       },
       limit: 5
-    });
+    })
     if (!searchProduct) {
-      return res.status(404).json({ error: `${query} not found` });
+      return res.status(404).json({ error: `${query} not found` })
     }
-    return res.json({ product: searchProduct , productCount: productCount , store: searchStore });
+    return res.json({
+      product: searchProduct,
+      productCount: productCount,
+      store: searchStore
+    })
   } catch (error) {
-    return res.status(500).json({ error: error });
+    return res.status(500).json({ error: error })
   }
-};
+}
 
 export const getProduct = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const id = req.params.id;
+  const id = req.params.id
   try {
     const productDetail = await Product.findOne({
       where: {
-        [Op.and]: [{ uuid: id }, { status: ProductStatus.ACTIVE }],
+        [Op.and]: [{ uuid: id }, { status: ProductStatus.ACTIVE }]
       },
       include: [
         {
           model: ProductItem,
-          as: "items",
+          as: 'items',
           include: [
             {
               model: ProductConfiguration,
-              as:'configurations',
+              as: 'configurations',
               include: [
                 {
                   model: VariationOption,
@@ -106,7 +121,7 @@ export const getProduct = async (
                   include: [
                     {
                       model: Variation,
-                      as: 'variation',
+                      as: 'variation'
                     }
                   ]
                 }
@@ -114,76 +129,76 @@ export const getProduct = async (
             },
             {
               model: ProductItemImage,
-              as: "productItemImage",
-            },
-          ],
+              as: 'productItemImage'
+            }
+          ]
         },
         {
           model: Store,
-          as: "store",
-          where: { status: StoreStatus.APPROVED },
+          as: 'store',
+          where: { status: StoreStatus.APPROVED }
         },
         {
           model: Category,
-          as: "category",
-        },
+          as: 'category'
+        }
       ],
-      attributes: ["id", "name", "description"],
-    });
+      attributes: ['id', 'name', 'description']
+    })
     const optionProduct = await Product.findOne({
       where: {
-        [Op.and]: [{ uuid: id }, { status: ProductStatus.ACTIVE }],
+        [Op.and]: [{ uuid: id }, { status: ProductStatus.ACTIVE }]
       },
-      attributes: ["id"],
+      attributes: ['id'],
       include: [
         {
           model: Variation,
           as: 'variations',
-          attributes: ["id","uuid","productId","name"],
+          attributes: ['id', 'uuid', 'productId', 'name'],
           include: [
             {
               model: VariationOption,
               as: 'options',
-              attributes: ["id","variationId","value","sortOrder"]
+              attributes: ['id', 'variationId', 'value', 'sortOrder']
             }
           ]
         }
       ]
     })
     if (!productDetail) {
-      return res.status(404).json({ error: `${id} not found` });
+      return res.status(404).json({ error: `${id} not found` })
     }
-    return res.json({ data: productDetail , choices: optionProduct });
+    return res.json({ data: productDetail, choices: optionProduct })
   } catch (error) {
-    return res.status(500).json({ error: error });
+    return res.status(500).json({ error: error })
   }
-};
+}
 export const getAllProduct = async (req: Request, res: Response) => {
   try {
     const product = await Product.findAll({
       include: [
         {
           model: ProductItem,
-          as: "items",
-        },
-      ],
-    });
+          as: 'items'
+        }
+      ]
+    })
     if (!product) {
-      return res.status(404).json({ error: `not found` });
+      return res.status(404).json({ error: `not found` })
     }
-    return res.json({ data: product });
+    return res.json({ data: product })
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: 'Internal server error' })
   }
-};
+}
 
 export const getProductDetail = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const productData = await Product.findAll();
-};
+  const productData = await Product.findAll()
+}
 
 export const getStoreProduct = async (
   req: Request,
@@ -192,37 +207,37 @@ export const getStoreProduct = async (
 ) => {
   const id = req.params.id
   try {
-    const productData = await Store.findOne(
-      { where : { uuid: id},
-       include: [
+    const productData = await Store.findOne({
+      where: { uuid: id },
+      include: [
         {
           model: Product,
-          as: "products",
+          as: 'products',
           include: [
             {
-            model: ProductItem,
-            as: "items",
-            include: [
-              {
-                model: ProductItemImage,
-                as: "productItemImage",
-              }
-              ,]
+              model: ProductItem,
+              as: 'items',
+              include: [
+                {
+                  model: ProductItemImage,
+                  as: 'productItemImage'
+                }
+              ]
             },
             {
-            model: Category,
-            as: 'category',
-          },
-          {
-            model: ProductImage,
-            as: 'images'
-          },
-          ],
-        },
-      ]}
-    )
-    res.json({data: productData })
+              model: Category,
+              as: 'category'
+            },
+            {
+              model: ProductImage,
+              as: 'images'
+            }
+          ]
+        }
+      ]
+    })
+    res.json({ data: productData })
   } catch (error) {
-    res.json({ error: error})
+    res.json({ error: error })
   }
 }

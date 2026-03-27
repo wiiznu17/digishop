@@ -17,12 +17,12 @@ export type TrendsPoint = {
 
 export type StatusDistItem = {
   name:
-    | "PENDING"
-    | "PAID"
-    | "PROCESSING"
-    | "SHIPPED"
-    | "DELIVERED"
-    | "CANCELLED"
+    | 'PENDING'
+    | 'PAID'
+    | 'PROCESSING'
+    | 'SHIPPED'
+    | 'DELIVERED'
+    | 'CANCELLED'
   value: number
 }
 

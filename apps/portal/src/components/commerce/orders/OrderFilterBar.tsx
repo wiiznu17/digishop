@@ -1,35 +1,35 @@
 // apps/portal/src/components/commerce/orders/OrdersFilterBar.tsx
-"use client"
+'use client'
 
-import { Calendar, CalendarDays } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Calendar, CalendarDays } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { AdminOrderStatus } from "@/types/commerce/orders"
+} from '@/components/ui/select'
+import { AdminOrderStatus } from '@/types/commerce/orders'
 
-const STATUS_OPTIONS: { value: AdminOrderStatus | "ALL"; label: string }[] = (
+const STATUS_OPTIONS: { value: AdminOrderStatus | 'ALL'; label: string }[] = (
   [
-    "PENDING",
-    "PAID",
-    "PROCESSING",
-    "READY_TO_SHIP",
-    "HANDED_OVER",
-    "SHIPPED",
-    "DELIVERED",
-    "COMPLETE",
-    "MERCHANT_CANCELED",
-    "REFUND_REQUEST",
-    "REFUND_PROCESSING",
-    "REFUND_SUCCESS",
-    "REFUND_FAIL"
+    'PENDING',
+    'PAID',
+    'PROCESSING',
+    'READY_TO_SHIP',
+    'HANDED_OVER',
+    'SHIPPED',
+    'DELIVERED',
+    'COMPLETE',
+    'MERCHANT_CANCELED',
+    'REFUND_REQUEST',
+    'REFUND_PROCESSING',
+    'REFUND_SUCCESS',
+    'REFUND_FAIL'
   ] as AdminOrderStatus[]
 ).map((s) => ({ value: s, label: s }))
-STATUS_OPTIONS.unshift({ value: "ALL", label: "All status" })
+STATUS_OPTIONS.unshift({ value: 'ALL', label: 'All status' })
 
 export function OrdersFilterBar({
   status,
@@ -39,8 +39,8 @@ export function OrdersFilterBar({
   dateTo,
   onDateToChange
 }: {
-  status: AdminOrderStatus | "ALL"
-  onStatusChange: (s: AdminOrderStatus | "ALL") => void
+  status: AdminOrderStatus | 'ALL'
+  onStatusChange: (s: AdminOrderStatus | 'ALL') => void
   dateFrom: string
   onDateFromChange: (v: string) => void
   dateTo: string

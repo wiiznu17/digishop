@@ -5,18 +5,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   CreditCard,
   Lock,
@@ -25,9 +25,9 @@ import {
   AlertCircle,
   Eye,
   EyeOff
-} from "lucide-react"
-import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
+} from 'lucide-react'
+import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 
 interface CardLinkingDialogProps {
   open?: boolean
@@ -41,15 +41,15 @@ export function CardLinkingDialog({
   trigger
 }: CardLinkingDialogProps) {
   const [formData, setFormData] = useState({
-    cardNumber: "",
-    cardholderName: "",
-    expiryMonth: "",
-    expiryYear: "",
-    cvv: "",
-    billingAddress: "",
-    city: "",
-    postalCode: "",
-    country: "TH",
+    cardNumber: '',
+    cardholderName: '',
+    expiryMonth: '',
+    expiryYear: '',
+    cvv: '',
+    billingAddress: '',
+    city: '',
+    postalCode: '',
+    country: 'TH',
     saveCard: false,
     setAsDefault: false
   })
@@ -59,19 +59,19 @@ export function CardLinkingDialog({
 
   // ตรวจสอบประเภทของบัตร
   const getCardType = (number: string) => {
-    const cleaned = number.replace(/\s+/g, "")
-    if (cleaned.match(/^4/)) return "visa"
-    if (cleaned.match(/^5[1-5]/)) return "mastercard"
-    if (cleaned.match(/^3[47]/)) return "amex"
-    if (cleaned.match(/^35(2[89]|[3-8][0-9])/)) return "jcb"
+    const cleaned = number.replace(/\s+/g, '')
+    if (cleaned.match(/^4/)) return 'visa'
+    if (cleaned.match(/^5[1-5]/)) return 'mastercard'
+    if (cleaned.match(/^3[47]/)) return 'amex'
+    if (cleaned.match(/^35(2[89]|[3-8][0-9])/)) return 'jcb'
     return null
   }
 
   // Format เลขบัตร
   const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
+    const cleaned = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
     const matches = cleaned.match(/\d{4,16}/g)
-    const match = (matches && matches[0]) || ""
+    const match = (matches && matches[0]) || ''
     const parts = []
 
     for (let i = 0, len = match.length; i < len; i += 4) {
@@ -79,7 +79,7 @@ export function CardLinkingDialog({
     }
 
     if (parts.length) {
-      return parts.join(" ")
+      return parts.join(' ')
     } else {
       return cleaned
     }
@@ -90,42 +90,42 @@ export function CardLinkingDialog({
     const newErrors: Record<string, string> = {}
 
     // ตรวจสอบเลขบัตร
-    const cleanCardNumber = formData.cardNumber.replace(/\s+/g, "")
+    const cleanCardNumber = formData.cardNumber.replace(/\s+/g, '')
     if (!cleanCardNumber) {
-      newErrors.cardNumber = "Please enter card number"
+      newErrors.cardNumber = 'Please enter card number'
     } else if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
-      newErrors.cardNumber = "Invalid card number length"
+      newErrors.cardNumber = 'Invalid card number length'
     }
 
     // ตรวจสอบชื่อผู้ถือบัตร
     if (!formData.cardholderName.trim()) {
-      newErrors.cardholderName = "Please enter cardholder name"
+      newErrors.cardholderName = 'Please enter cardholder name'
     }
 
     // ตรวจสอบวันหมดอายุ
     if (!formData.expiryMonth) {
-      newErrors.expiryMonth = "Please select expiry month"
+      newErrors.expiryMonth = 'Please select expiry month'
     }
     if (!formData.expiryYear) {
-      newErrors.expiryYear = "Please select expiry year"
+      newErrors.expiryYear = 'Please select expiry year'
     }
 
     // ตรวจสอบ CVV
     if (!formData.cvv) {
-      newErrors.cvv = "Please enter CVV"
+      newErrors.cvv = 'Please enter CVV'
     } else if (formData.cvv.length < 3 || formData.cvv.length > 4) {
-      newErrors.cvv = "Invalid CVV"
+      newErrors.cvv = 'Invalid CVV'
     }
 
     // ตรวจสอบที่อยู่
     if (!formData.billingAddress.trim()) {
-      newErrors.billingAddress = "Please enter billing address"
+      newErrors.billingAddress = 'Please enter billing address'
     }
     if (!formData.city.trim()) {
-      newErrors.city = "Please enter city"
+      newErrors.city = 'Please enter city'
     }
     if (!formData.postalCode.trim()) {
-      newErrors.postalCode = "Please enter postal code"
+      newErrors.postalCode = 'Please enter postal code'
     }
 
     setErrors(newErrors)
@@ -137,19 +137,19 @@ export function CardLinkingDialog({
 
     if (validateForm()) {
       // ส่งข้อมูลไปยัง API
-      console.log("Linking card:", formData)
+      console.log('Linking card:', formData)
 
       // รีเซ็ตฟอร์มและปิด Dialog
       setFormData({
-        cardNumber: "",
-        cardholderName: "",
-        expiryMonth: "",
-        expiryYear: "",
-        cvv: "",
-        billingAddress: "",
-        city: "",
-        postalCode: "",
-        country: "TH",
+        cardNumber: '',
+        cardholderName: '',
+        expiryMonth: '',
+        expiryYear: '',
+        cvv: '',
+        billingAddress: '',
+        city: '',
+        postalCode: '',
+        country: 'TH',
         saveCard: false,
         setAsDefault: false
       })
@@ -163,18 +163,18 @@ export function CardLinkingDialog({
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 20 }, (_, i) => currentYear + i)
   const months = [
-    { value: "01", label: "01 - January" },
-    { value: "02", label: "02 - February" },
-    { value: "03", label: "03 - March" },
-    { value: "04", label: "04 - April" },
-    { value: "05", label: "05 - May" },
-    { value: "06", label: "06 - June" },
-    { value: "07", label: "07 - July" },
-    { value: "08", label: "08 - August" },
-    { value: "09", label: "09 - September" },
-    { value: "10", label: "10 - October" },
-    { value: "11", label: "11 - November" },
-    { value: "12", label: "12 - December" }
+    { value: '01', label: '01 - January' },
+    { value: '02', label: '02 - February' },
+    { value: '03', label: '03 - March' },
+    { value: '04', label: '04 - April' },
+    { value: '05', label: '05 - May' },
+    { value: '06', label: '06 - June' },
+    { value: '07', label: '07 - July' },
+    { value: '08', label: '08 - August' },
+    { value: '09', label: '09 - September' },
+    { value: '10', label: '10 - October' },
+    { value: '11', label: '11 - November' },
+    { value: '12', label: '12 - December' }
   ]
 
   return (
@@ -214,11 +214,11 @@ export function CardLinkingDialog({
                     setFormData({ ...formData, cardNumber: formatted })
                     // Clear error when user starts typing
                     if (errors.cardNumber) {
-                      setErrors({ ...errors, cardNumber: "" })
+                      setErrors({ ...errors, cardNumber: '' })
                     }
                   }}
                   maxLength={19}
-                  className={errors.cardNumber ? "border-red-500" : ""}
+                  className={errors.cardNumber ? 'border-red-500' : ''}
                 />
                 {cardType && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -249,10 +249,10 @@ export function CardLinkingDialog({
                     cardholderName: e.target.value.toUpperCase()
                   })
                   if (errors.cardholderName) {
-                    setErrors({ ...errors, cardholderName: "" })
+                    setErrors({ ...errors, cardholderName: '' })
                   }
                 }}
-                className={errors.cardholderName ? "border-red-500" : ""}
+                className={errors.cardholderName ? 'border-red-500' : ''}
               />
               {errors.cardholderName && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -271,12 +271,12 @@ export function CardLinkingDialog({
                   onValueChange={(value) => {
                     setFormData({ ...formData, expiryMonth: value })
                     if (errors.expiryMonth) {
-                      setErrors({ ...errors, expiryMonth: "" })
+                      setErrors({ ...errors, expiryMonth: '' })
                     }
                   }}
                 >
                   <SelectTrigger
-                    className={errors.expiryMonth ? "border-red-500" : ""}
+                    className={errors.expiryMonth ? 'border-red-500' : ''}
                   >
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
@@ -303,12 +303,12 @@ export function CardLinkingDialog({
                   onValueChange={(value) => {
                     setFormData({ ...formData, expiryYear: value })
                     if (errors.expiryYear) {
-                      setErrors({ ...errors, expiryYear: "" })
+                      setErrors({ ...errors, expiryYear: '' })
                     }
                   }}
                 >
                   <SelectTrigger
-                    className={errors.expiryYear ? "border-red-500" : ""}
+                    className={errors.expiryYear ? 'border-red-500' : ''}
                   >
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
@@ -333,18 +333,18 @@ export function CardLinkingDialog({
                 <div className="relative">
                   <Input
                     id="cvv"
-                    type={showCVV ? "text" : "password"}
+                    type={showCVV ? 'text' : 'password'}
                     placeholder="123"
                     value={formData.cvv}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, "")
+                      const value = e.target.value.replace(/[^0-9]/g, '')
                       setFormData({ ...formData, cvv: value })
                       if (errors.cvv) {
-                        setErrors({ ...errors, cvv: "" })
+                        setErrors({ ...errors, cvv: '' })
                       }
                     }}
                     maxLength={4}
-                    className={errors.cvv ? "border-red-500" : ""}
+                    className={errors.cvv ? 'border-red-500' : ''}
                   />
                   <Button
                     type="button"
@@ -386,10 +386,10 @@ export function CardLinkingDialog({
                 onChange={(e) => {
                   setFormData({ ...formData, billingAddress: e.target.value })
                   if (errors.billingAddress) {
-                    setErrors({ ...errors, billingAddress: "" })
+                    setErrors({ ...errors, billingAddress: '' })
                   }
                 }}
-                className={errors.billingAddress ? "border-red-500" : ""}
+                className={errors.billingAddress ? 'border-red-500' : ''}
               />
               {errors.billingAddress && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -409,10 +409,10 @@ export function CardLinkingDialog({
                   onChange={(e) => {
                     setFormData({ ...formData, city: e.target.value })
                     if (errors.city) {
-                      setErrors({ ...errors, city: "" })
+                      setErrors({ ...errors, city: '' })
                     }
                   }}
-                  className={errors.city ? "border-red-500" : ""}
+                  className={errors.city ? 'border-red-500' : ''}
                 />
                 {errors.city && (
                   <p className="text-sm text-red-500 flex items-center gap-1">
@@ -431,10 +431,10 @@ export function CardLinkingDialog({
                   onChange={(e) => {
                     setFormData({ ...formData, postalCode: e.target.value })
                     if (errors.postalCode) {
-                      setErrors({ ...errors, postalCode: "" })
+                      setErrors({ ...errors, postalCode: '' })
                     }
                   }}
-                  className={errors.postalCode ? "border-red-500" : ""}
+                  className={errors.postalCode ? 'border-red-500' : ''}
                 />
                 {errors.postalCode && (
                   <p className="text-sm text-red-500 flex items-center gap-1">

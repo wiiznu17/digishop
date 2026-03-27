@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import PasswordRulesForm from "@/components/auth/PasswordRulesForm"
-import { acceptInvite } from "@/utils/requesters/credentialRequester"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import PasswordRulesForm from '@/components/auth/PasswordRulesForm'
+import { acceptInvite } from '@/utils/requesters/credentialRequester'
 
 export default function SetPasswordClient({
   token,
@@ -18,7 +18,7 @@ export default function SetPasswordClient({
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!token) setErr("Missing token. Please use the link from your email.")
+    if (!token) setErr('Missing token. Please use the link from your email.')
   }, [token])
 
   async function handleSubmit({
@@ -30,17 +30,17 @@ export default function SetPasswordClient({
   }) {
     setErr(null)
     if (!token) {
-      setErr("Missing token.")
+      setErr('Missing token.')
       return
     }
     setSubmitting(true)
     try {
       await acceptInvite({ token, name, password })
-      router.push("/login?msg=account_ready")
+      router.push('/login?msg=account_ready')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error(e)
-      setErr(e?.response?.data?.error ?? "Failed to set password.")
+      setErr(e?.response?.data?.error ?? 'Failed to set password.')
     } finally {
       setSubmitting(false)
     }

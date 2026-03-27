@@ -1,25 +1,24 @@
 'use client'
-import { useEffect, useState } from "react";
-import { Mail, Lock, ArrowLeft, CheckCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { sendResetPassword } from "@/utils/requestUtils/requestAuthUtils";
+import { useEffect, useState } from 'react'
+import { Mail, Lock, ArrowLeft, CheckCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { sendResetPassword } from '@/utils/requestUtils/requestAuthUtils'
 export default function ForgotPasswordPage() {
-  const [page, setPage] = useState("email"); // 'email', 'success', 'reset'
-  const [email, setEmail] = useState("");
+  const [page, setPage] = useState('email') // 'email', 'success', 'reset'
+  const [email, setEmail] = useState('')
   const router = useRouter()
-  useEffect(() => {
-  },[page])
-  const handleEmailSubmit = async(e:React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if(email !== ''){
-      const res = (await sendResetPassword(email)) as {data: string}
-      if(res.data){
-        setPage("success");
+  useEffect(() => {}, [page])
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (email !== '') {
+      const res = (await sendResetPassword(email)) as { data: string }
+      if (res.data) {
+        setPage('success')
       }
     }
-  };
+  }
 
-  if (page === "email") {
+  if (page === 'email') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -36,8 +35,8 @@ export default function ForgotPasswordPage() {
               Forgot Password?
             </h1>
             <p className="text-center text-gray-600 mb-8">
-              No worries! Enter your email address and we&apos;ll send you a link to
-              reset your password.
+              No worries! Enter your email address and we&apos;ll send you a
+              link to reset your password.
             </p>
 
             {/* Form */}
@@ -80,13 +79,12 @@ export default function ForgotPasswordPage() {
               Back to Login
             </button>
           </div>
-
         </div>
       </div>
-    );
+    )
   }
 
-  if (page === "success") {
+  if (page === 'success') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -111,8 +109,6 @@ export default function ForgotPasswordPage() {
               expire in 15 minutes.
             </p>
 
-            
-
             <button
               onClick={() => router.replace('/auth')}
               className="w-full flex items-center justify-center text-gray-600 hover:text-gray-900 transition"
@@ -123,6 +119,6 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 }

@@ -1,6 +1,6 @@
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ItemsPerPageSelector } from "@/components/order/items-per-page-selector"
+import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ItemsPerPageSelector } from '@/components/order/items-per-page-selector'
 
 interface PaginationProps {
   currentPage: number
@@ -52,7 +52,7 @@ export function Pagination({
     if (currentPage > delta + 1) {
       pages.push(1)
       if (currentPage > delta + 2) {
-        pages.push("...")
+        pages.push('...')
       }
     }
 
@@ -68,7 +68,7 @@ export function Pagination({
     // If current page is far from the last page
     if (currentPage < totalPages - delta) {
       if (currentPage < totalPages - delta - 1) {
-        pages.push("...")
+        pages.push('...')
       }
       pages.push(totalPages)
     }
@@ -90,7 +90,7 @@ export function Pagination({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {showInfo && totalItems > 0 && (
           <div className="text-sm text-muted-foreground">
-            Showing {startItem.toLocaleString()}-{endItem.toLocaleString()} of{" "}
+            Showing {startItem.toLocaleString()}-{endItem.toLocaleString()} of{' '}
             {totalItems.toLocaleString()} items
           </div>
         )}
@@ -128,13 +128,13 @@ export function Pagination({
             <div className="flex items-center space-x-1">
               {pageNumbers.map((page, index) => (
                 <div key={`page-${index}`}>
-                  {page === "..." ? (
+                  {page === '...' ? (
                     <div className="flex items-center justify-center w-9 h-9">
                       <MoreHorizontal className="h-4 w-4" />
                     </div>
                   ) : (
                     <Button
-                      variant={currentPage === page ? "default" : "outline"}
+                      variant={currentPage === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => onPageChange(page as number)}
                       className="w-9 h-9 p-0"

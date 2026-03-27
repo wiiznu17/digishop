@@ -6,214 +6,258 @@ import {
   ProfileMerchantImage,
   Review,
   Store,
-  User,
-} from "@digishop/db";
-import { col, CreationAttributes, fn, Op, Transaction } from "sequelize";
+  User
+} from '@digishop/db'
+import { col, CreationAttributes, fn, Op, Transaction } from 'sequelize'
 import {
   CreateMerchantAddressPatch,
   CreateStorePatch,
   MerchantAddressPatch,
   UpdateStorePatch,
-  UpdateUserRoleInput,
-} from "../types/user.types";
+  UpdateUserRoleInput
+} from '../types/user.types'
 
-type AvgRatingRow = { avgRating: number | string | null } | null;
+type AvgRatingRow = { avgRating: number | string | null } | null
 
 export class UserRepository {
   async findMerchantProfileByUserId(userId: number) {
     return User.findOne({
       where: { id: userId },
-      attributes: ["id", "role"],
+      attributes: ['id', 'role'],
       include: [
         {
           model: Store,
-          as: "store",
+          as: 'store',
           attributes: [
-            "id",
-            "userId",
-            "storeName",
-            "email",
-            "phone",
-            "businessType",
-            "website",
-            "logoUrl",
-            "description",
-            "status",
-            "createdAt",
+            'id',
+            'userId',
+            'storeName',
+            'email',
+            'phone',
+            'businessType',
+            'website',
+            'logoUrl',
+            'description',
+            'status',
+            'createdAt'
           ],
           include: [
             {
               model: MerchantAddress,
-              as: "addresses",
+              as: 'addresses',
               attributes: [
-                "id",
-                "ownerName",
-                "phone",
-                "address_number",
-                "subStreet",
-                "street",
-                "building",
-                "subdistrict",
-                "district",
-                "province",
-                "postalCode",
-                "isDefault",
-                "addressType",
-              ],
+                'id',
+                'ownerName',
+                'phone',
+                'address_number',
+                'subStreet',
+                'street',
+                'building',
+                'subdistrict',
+                'district',
+                'province',
+                'postalCode',
+                'isDefault',
+                'addressType'
+              ]
             },
             {
               model: BankAccount,
-              as: "bankAccounts",
-              attributes: ["id", "bankName", "accountNumber", "accountHolderName"],
+              as: 'bankAccounts',
+              attributes: [
+                'id',
+                'bankName',
+                'accountNumber',
+                'accountHolderName'
+              ]
             },
             {
               model: ProfileMerchantImage,
-              as: "profileImages",
-              attributes: ["id", "url", "fileName", "createdAt"],
-            },
-          ],
-        },
-      ],
-    });
+              as: 'profileImages',
+              attributes: ['id', 'url', 'fileName', 'createdAt']
+            }
+          ]
+        }
+      ]
+    })
   }
 
   async countProductsByStoreId(storeId: number) {
-    return Product.count({ where: { storeId } });
+    return Product.count({ where: { storeId } })
   }
 
   async countOrdersByStoreId(storeId: number) {
-    return Order.count({ where: { storeId } });
+    return Order.count({ where: { storeId } })
   }
 
   async findAvgRatingByStoreId(storeId: number) {
     return Review.findOne({
-      attributes: [[fn("AVG", col("rating")), "avgRating"]],
-      include: [{ model: Order, as: "order", attributes: [], where: { storeId } }],
-      raw: true,
-    }) as Promise<AvgRatingRow>;
+      attributes: [[fn('AVG', col('rating')), 'avgRating']],
+      include: [
+        { model: Order, as: 'order', attributes: [], where: { storeId } }
+      ],
+      raw: true
+    }) as Promise<AvgRatingRow>
   }
 
   async findUserByPk(userId: number, transaction?: Transaction) {
-    return User.findByPk(userId, { transaction });
+    return User.findByPk(userId, { transaction })
   }
 
-  async saveUser(user: User, payload: UpdateUserRoleInput, transaction?: Transaction) {
-    user.role = payload.role;
-    return user.save({ transaction });
+  async saveUser(
+    user: User,
+    payload: UpdateUserRoleInput,
+    transaction?: Transaction
+  ) {
+    user.role = payload.role
+    return user.save({ transaction })
   }
 
   async findStoreByPk(storeId: number, transaction?: Transaction) {
-    return Store.findByPk(storeId, { transaction });
+    return Store.findByPk(storeId, { transaction })
   }
 
   async findStoreByUserId(userId: number, transaction?: Transaction) {
-    return Store.findOne({ where: { userId }, transaction });
+    return Store.findOne({ where: { userId }, transaction })
   }
 
   async createStore(payload: CreateStorePatch, transaction?: Transaction) {
-    return Store.create(payload, { transaction });
+    return Store.create(payload, { transaction })
   }
 
-  async updateStore(store: Store, payload: UpdateStorePatch, transaction: Transaction) {
-    return store.update(payload as Partial<CreationAttributes<Store>>, { transaction });
+  async updateStore(
+    store: Store,
+    payload: UpdateStorePatch,
+    transaction: Transaction
+  ) {
+    return store.update(payload as Partial<CreationAttributes<Store>>, {
+      transaction
+    })
   }
 
   async findProfileImagesByStoreId(storeId: number, transaction?: Transaction) {
-    return ProfileMerchantImage.findAll({ where: { storeId }, transaction });
+    return ProfileMerchantImage.findAll({ where: { storeId }, transaction })
   }
 
-  async destroyProfileImagesByStoreId(storeId: number, transaction: Transaction) {
-    return ProfileMerchantImage.destroy({ where: { storeId }, transaction });
+  async destroyProfileImagesByStoreId(
+    storeId: number,
+    transaction: Transaction
+  ) {
+    return ProfileMerchantImage.destroy({ where: { storeId }, transaction })
   }
 
   async createProfileMerchantImage(
     payload: {
-      storeId: number;
-      url: string;
-      blobName: string;
-      fileName: string;
+      storeId: number
+      url: string
+      blobName: string
+      fileName: string
     },
-    transaction: Transaction,
+    transaction: Transaction
   ) {
-    return ProfileMerchantImage.create(payload, { transaction });
+    return ProfileMerchantImage.create(payload, { transaction })
   }
 
-  async findMerchantAddressesByStoreId(storeId: number, transaction?: Transaction) {
+  async findMerchantAddressesByStoreId(
+    storeId: number,
+    transaction?: Transaction
+  ) {
     return MerchantAddress.findAll({
       where: { storeId },
-      attributes: ["id"],
-      transaction,
-    });
+      attributes: ['id'],
+      transaction
+    })
   }
 
-  async destroyMerchantAddressesByIds(storeId: number, ids: number[], transaction: Transaction) {
+  async destroyMerchantAddressesByIds(
+    storeId: number,
+    ids: number[],
+    transaction: Transaction
+  ) {
     return MerchantAddress.destroy({
       where: { storeId, id: ids },
-      transaction,
-    });
+      transaction
+    })
   }
 
   async updateMerchantAddressById(
     storeId: number,
     addressId: number,
     payload: MerchantAddressPatch,
-    transaction: Transaction,
+    transaction: Transaction
   ) {
-    return MerchantAddress.update(payload as Partial<CreationAttributes<MerchantAddress>>, {
-      where: { id: addressId, storeId },
-      transaction,
-    }) as unknown as Promise<[number]>;
+    return MerchantAddress.update(
+      payload as Partial<CreationAttributes<MerchantAddress>>,
+      {
+        where: { id: addressId, storeId },
+        transaction
+      }
+    ) as unknown as Promise<[number]>
   }
 
-  async createMerchantAddress(payload: CreateMerchantAddressPatch, transaction?: Transaction) {
+  async createMerchantAddress(
+    payload: CreateMerchantAddressPatch,
+    transaction?: Transaction
+  ) {
     return MerchantAddress.create(
       payload as unknown as CreationAttributes<MerchantAddress>,
-      { transaction },
-    );
+      { transaction }
+    )
   }
 
-  async findFirstMerchantAddressByStoreId(storeId: number, transaction: Transaction) {
+  async findFirstMerchantAddressByStoreId(
+    storeId: number,
+    transaction: Transaction
+  ) {
     return MerchantAddress.findOne({
       where: { storeId },
-      order: [["id", "ASC"]],
-      transaction,
-    });
+      order: [['id', 'ASC']],
+      transaction
+    })
   }
 
-  async setMerchantAddressDefaultById(storeId: number, addressId: number, transaction: Transaction) {
+  async setMerchantAddressDefaultById(
+    storeId: number,
+    addressId: number,
+    transaction: Transaction
+  ) {
     return MerchantAddress.update(
       { isDefault: true },
-      { where: { id: addressId, storeId }, transaction },
-    );
+      { where: { id: addressId, storeId }, transaction }
+    )
   }
 
-  async findMerchantAddressByIdAndStore(addressId: number, storeId: number, transaction?: Transaction) {
+  async findMerchantAddressByIdAndStore(
+    addressId: number,
+    storeId: number,
+    transaction?: Transaction
+  ) {
     return MerchantAddress.findOne({
       where: { id: addressId, storeId },
-      transaction,
-    });
+      transaction
+    })
   }
 
   async clearDefaultMerchantAddressesExcept(
     storeId: number,
     addressId: number,
-    transaction: Transaction,
+    transaction: Transaction
   ) {
     return MerchantAddress.update(
       { isDefault: false },
       {
         where: {
           storeId,
-          id: { [Op.ne]: addressId },
+          id: { [Op.ne]: addressId }
         },
-        transaction,
-      },
-    );
+        transaction
+      }
+    )
   }
 
   async deleteUserById(id: string) {
-    return User.destroy({ where: { id } });
+    return User.destroy({ where: { id } })
   }
 }
 
-export const userRepository = new UserRepository();
+export const userRepository = new UserRepository()

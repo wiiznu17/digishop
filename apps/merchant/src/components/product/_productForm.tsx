@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from 'react'
 
 export type ProductFormValues = {
   name: string
@@ -37,13 +37,13 @@ export default function ProductForm({
   initialImages,
   categories = [],
   submitting = false,
-  submitLabel = "Save",
+  submitLabel = 'Save',
   onSubmit
 }: Props) {
   const [values, setValues] = useState<ProductFormValues>({
-    name: initial?.name || "",
-    categoryUuid: initial?.categoryUuid || "",
-    description: initial?.description || ""
+    name: initial?.name || '',
+    categoryUuid: initial?.categoryUuid || '',
+    description: initial?.description || ''
   })
 
   const [images, setImages] = useState<ImagePreview[]>(
@@ -133,7 +133,7 @@ export default function ProductForm({
           <label className="block text-sm font-medium mb-1">Category</label>
           <select
             name="categoryUuid"
-            value={values.categoryUuid || ""}
+            value={values.categoryUuid || ''}
             onChange={handleChange}
             className="w-full rounded border px-3 py-2"
           >
@@ -150,7 +150,7 @@ export default function ProductForm({
           <label className="block text-sm font-medium mb-1">Description</label>
           <textarea
             name="description"
-            value={values.description || ""}
+            value={values.description || ''}
             onChange={handleChange}
             rows={4}
             className="w-full rounded border px-3 py-2"
@@ -188,10 +188,10 @@ export default function ProductForm({
               <img src={img.url} className="w-full h-32 object-cover rounded" />
               <div className="mt-2 flex items-center justify-between text-xs">
                 <button
-                  className={`px-2 py-1 rounded border ${img.isMain ? "bg-black text-white" : ""}`}
+                  className={`px-2 py-1 rounded border ${img.isMain ? 'bg-black text-white' : ''}`}
                   onClick={() => setMain(idx)}
                 >
-                  {img.isMain ? "Main" : "Set main"}
+                  {img.isMain ? 'Main' : 'Set main'}
                 </button>
                 <div className="space-x-1">
                   <button
@@ -227,7 +227,7 @@ export default function ProductForm({
           onClick={submit}
           className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
         >
-          {submitting ? "Saving..." : submitLabel}
+          {submitting ? 'Saving...' : submitLabel}
         </button>
       </div>
     </div>

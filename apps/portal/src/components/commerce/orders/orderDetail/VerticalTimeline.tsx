@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import React from "react"
+import React from 'react'
 
 export type TimelineItem = {
   id: string | number
@@ -13,8 +13,8 @@ export type TimelineItem = {
 
 export function VerticalTimeline({
   items,
-  emptyText = "No events",
-  className = ""
+  emptyText = 'No events',
+  className = ''
 }: {
   items: TimelineItem[]
   emptyText?: string

@@ -1,4 +1,4 @@
-import { QueryInterface } from 'sequelize';
+import { QueryInterface } from 'sequelize'
 
 export default {
   async up(queryInterface: QueryInterface) {
@@ -10,7 +10,7 @@ export default {
         price: 5000,
         isActive: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       },
       {
         name: 'Express Shipping',
@@ -19,12 +19,12 @@ export default {
         price: 15000,
         isActive: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       }
-    ]);
+    ])
   },
 
   async down(queryInterface: QueryInterface) {
-    await queryInterface.bulkDelete('ShippingTypes', {}, {});
-  },
-};
+    await queryInterface.bulkDelete('ShippingTypes', {}, {})
+  }
+}

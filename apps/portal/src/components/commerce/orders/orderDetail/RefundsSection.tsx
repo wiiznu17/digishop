@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Card,
@@ -6,10 +6,10 @@ import {
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { StatusBadge, REFUND_STATUS_CLASS } from "./StatusBadge"
-import { VerticalTimeline, TimelineItem } from "./VerticalTimeline"
-import type { AdminRefundOrderLite } from "@/types/commerce/orders"
+} from '@/components/ui/card'
+import { StatusBadge, REFUND_STATUS_CLASS } from './StatusBadge'
+import { VerticalTimeline, TimelineItem } from './VerticalTimeline'
+import type { AdminRefundOrderLite } from '@/types/commerce/orders'
 
 export function RefundsSection({
   refunds,
@@ -45,7 +45,7 @@ export function RefundsSection({
                     text={r.status}
                     className={
                       REFUND_STATUS_CLASS[r.status] ??
-                      "bg-muted text-foreground"
+                      'bg-muted text-foreground'
                     }
                   />
                   <span className="text-sm">
@@ -55,15 +55,15 @@ export function RefundsSection({
               </div>
 
               <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
-                <div>Requested by: {r.requestedBy ?? "—"}</div>
-                <div>Reason: {r.reason ?? "—"}</div>
+                <div>Requested by: {r.requestedBy ?? '—'}</div>
+                <div>Reason: {r.reason ?? '—'}</div>
                 <div>
-                  Approved:{" "}
-                  {r.approvedAt ? new Date(r.approvedAt).toLocaleString() : "—"}
+                  Approved:{' '}
+                  {r.approvedAt ? new Date(r.approvedAt).toLocaleString() : '—'}
                 </div>
                 <div>
-                  Refunded:{" "}
-                  {r.refundedAt ? new Date(r.refundedAt).toLocaleString() : "—"}
+                  Refunded:{' '}
+                  {r.refundedAt ? new Date(r.refundedAt).toLocaleString() : '—'}
                 </div>
               </div>
 

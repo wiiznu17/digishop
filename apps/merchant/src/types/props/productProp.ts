@@ -21,15 +21,15 @@ export interface ProductListItem {
 
 /** ================= Enums ================= */
 export enum ProductStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE"
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
   // OUT_OF_STOCK = "OUT_OF_STOCK"
 }
 
 export enum reqStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
-  REJECT = "REJECT"
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECT = 'REJECT'
 }
 
 /** =============== Lite Models (relations) =============== */
@@ -128,9 +128,9 @@ export interface Product {
 
 /** ค่าเริ่มต้นเวลา init form (หน้า Add/Edit) */
 export const defaultProduct: Product = {
-  uuid: "",
-  name: "",
-  description: "",
+  uuid: '',
+  name: '',
+  description: '',
   category: null,
   categoryId: undefined,
   totalStock: null,

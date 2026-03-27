@@ -1,22 +1,22 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import type { AdminStoreDetail } from "@/types/admin/stores"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import type { AdminStoreDetail } from '@/types/admin/stores'
 import {
   fetchAdminStoreDetail,
   approveAdminStore
-} from "@/utils/requesters/merchantRequester"
-import Swal from "sweetalert2"
+} from '@/utils/requesters/merchantRequester'
+import Swal from 'sweetalert2'
 
 // recharts
 import {
@@ -27,8 +27,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip
-} from "recharts"
-import AuthGuard from "@/components/AuthGuard"
+} from 'recharts'
+import AuthGuard from '@/components/AuthGuard'
 
 function formatMoneyMinor(minor?: number) {
   const n = Number(minor ?? 0)
@@ -71,12 +71,12 @@ function AdminStoreDetailPage() {
   async function handleApprove() {
     if (!data) return
     const { isConfirmed } = await Swal.fire({
-      title: "Approve this store?",
+      title: 'Approve this store?',
       text: `Merchant: ${data.storeName}`,
-      icon: "question",
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonText: "Approve",
-      cancelButtonText: "Cancel",
+      confirmButtonText: 'Approve',
+      cancelButtonText: 'Cancel',
       reverseButtons: true
     })
     if (!isConfirmed) return
@@ -84,7 +84,7 @@ function AdminStoreDetailPage() {
     setApproving(true)
 
     Swal.fire({
-      title: "Approving...",
+      title: 'Approving...',
       allowOutsideClick: false,
       allowEscapeKey: false,
       didOpen: () => {
@@ -100,29 +100,29 @@ function AdminStoreDetailPage() {
 
       if (res.ok) {
         setData((prev) =>
-          prev ? ({ ...prev, status: "APPROVED" } as AdminStoreDetail) : prev
+          prev ? ({ ...prev, status: 'APPROVED' } as AdminStoreDetail) : prev
         )
         await Swal.fire({
-          icon: "success",
-          title: "Approved",
-          text: res.message || "Store approved successfully",
+          icon: 'success',
+          title: 'Approved',
+          text: res.message || 'Store approved successfully',
           showConfirmButton: false,
           timer: 1400
         })
       } else {
         await Swal.fire({
-          icon: "error",
-          title: "Approve failed",
-          text: res.message || "Something went wrong"
+          icon: 'error',
+          title: 'Approve failed',
+          text: res.message || 'Something went wrong'
         })
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       Swal.close()
       await Swal.fire({
-        icon: "error",
-        title: "Approve failed",
-        text: err?.message || "Network or server error"
+        icon: 'error',
+        title: 'Approve failed',
+        text: err?.message || 'Network or server error'
       })
     } finally {
       setApproving(false)
@@ -135,7 +135,7 @@ function AdminStoreDetailPage() {
         <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
             <CardTitle className="text-xl">
-              {data?.storeName ?? "Store"}
+              {data?.storeName ?? 'Store'}
             </CardTitle>
             <CardDescription>Store detail</CardDescription>
             {!!data && (
@@ -153,11 +153,11 @@ function AdminStoreDetailPage() {
                   <Badge variant="outline">{data.status}</Badge>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Products:</span>{" "}
+                  <span className="text-muted-foreground">Products:</span>{' '}
                   {data.productCount}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Created:</span>{" "}
+                  <span className="text-muted-foreground">Created:</span>{' '}
                   {new Date(data.createdAt).toLocaleString()}
                 </div>
               </div>
@@ -167,18 +167,18 @@ function AdminStoreDetailPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => router.push("/admin/merchants")}
+              onClick={() => router.push('/admin/merchants')}
             >
               Back
             </Button>
 
-            {!!data && data.status === "PENDING" && (
+            {!!data && data.status === 'PENDING' && (
               <Button
                 variant="default"
                 onClick={handleApprove}
                 disabled={approving}
               >
-                {approving ? "Approving..." : "Approve"}
+                {approving ? 'Approving...' : 'Approve'}
               </Button>
             )}
 
@@ -249,7 +249,7 @@ function AdminStoreDetailPage() {
                 <CardContent className="text-lg">
                   {data.orders.summary.lastOrderAt
                     ? new Date(data.orders.summary.lastOrderAt).toLocaleString()
-                    : "—"}
+                    : '—'}
                 </CardContent>
               </Card>
             </div>
@@ -381,8 +381,8 @@ function AdminStoreDetailPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["MERCHANTS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['MERCHANTS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

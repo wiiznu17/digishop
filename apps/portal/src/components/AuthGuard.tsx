@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
-import { fetchAuth } from "@/utils/requesters/authRequester"
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { fetchAuth } from '@/utils/requesters/authRequester'
 
 export type Me = {
   id: number
@@ -37,7 +37,7 @@ export function useAuth() {
     } catch (e: unknown) {
       if (activeRef.current !== mySeq || !mountedRef.current) return
       setMe(null)
-      setErr(e instanceof Error ? e : new Error("fetchAuth failed"))
+      setErr(e instanceof Error ? e : new Error('fetchAuth failed'))
     } finally {
       if (mountedRef.current) setLoading(false)
     }
@@ -45,7 +45,7 @@ export function useAuth() {
 
   useEffect(() => {
     mountedRef.current = true
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
       if (!didRunRef.current) {
         didRunRef.current = true
         void loadMe()
@@ -57,15 +57,15 @@ export function useAuth() {
     // รีเช็ค session เมื่อกลับมาโฟกัส/แท็บกลับมา visible
     const onFocus = () => void loadMe()
     const onVisible = () => {
-      if (document.visibilityState === "visible") void loadMe()
+      if (document.visibilityState === 'visible') void loadMe()
     }
-    window.addEventListener("focus", onFocus)
-    document.addEventListener("visibilitychange", onVisible)
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
 
     return () => {
       mountedRef.current = false
-      window.removeEventListener("focus", onFocus)
-      document.removeEventListener("visibilitychange", onVisible)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisible)
     }
   }, [])
 
@@ -79,13 +79,13 @@ export function useCan(perms: string[], me: Me | null) {
     if (need.length === 0) return true
     const set = new Set(me.permissions || [])
     return need.every((p) => set.has(p))
-  }, [me, need.join("|")])
+  }, [me, need.join('|')])
 }
 
 export default function AuthGuard({
   children,
   requiredPerms,
-  redirectTo = "/login"
+  redirectTo = '/login'
 }: {
   children: ReactNode
   requiredPerms?: string[]
@@ -111,7 +111,7 @@ export default function AuthGuard({
     // มี session แต่สิทธิ์ไม่พอ
     if (me && !allowed) {
       redirectedRef.current = true
-      router.replace("/403")
+      router.replace('/403')
       return
     }
   }, [loading, me, allowed, router, redirectTo])

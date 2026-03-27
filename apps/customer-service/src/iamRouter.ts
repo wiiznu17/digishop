@@ -22,4 +22,3 @@ router.use('/customer/order', orderRouter)
 router.use('/customer/payment', paymentRouter)
 
 export default router
-

@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Edit,
   Trash2,
@@ -16,20 +16,20 @@ import {
   Image as ImageIcon,
   Eye,
   Info
-} from "lucide-react"
-import type { ProductListItem } from "../../types/props/productProp"
+} from 'lucide-react'
+import type { ProductListItem } from '../../types/props/productProp'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger
-} from "../ui/tooltip"
+} from '../ui/tooltip'
 
 function formatTHBFromMinor(minor?: number | null) {
-  const m = typeof minor === "number" ? minor : 0
-  return new Intl.NumberFormat("th-TH", {
-    style: "currency",
-    currency: "THB"
+  const m = typeof minor === 'number' ? minor : 0
+  return new Intl.NumberFormat('th-TH', {
+    style: 'currency',
+    currency: 'THB'
   }).format(m / 100)
 }
 
@@ -71,16 +71,16 @@ export function ProductTable({
     products.every((p) => selectedUuids.has(p.uuid))
 
   const statusBadgeClass = (s: string) =>
-    s === "ACTIVE"
-      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+    s === 'ACTIVE'
+      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+      : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
 
   const approvalBadgeClass = (a: string) =>
-    a === "APPROVED"
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300"
-      : a === "PENDING"
-        ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
-        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" // REJECT
+    a === 'APPROVED'
+      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300'
+      : a === 'PENDING'
+        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300'
+        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' // REJECT
   return (
     <Table>
       <TableHeader>
@@ -162,7 +162,7 @@ export function ProductTable({
                       {product.name}
                     </div>
                     <div className="text-xs text-muted-foreground truncate max-w-xs">
-                      {product.description || "-"}
+                      {product.description || '-'}
                     </div>
                     {/* <div className="text-[10px] text-neutral-500">
                       UUID: {product.uuid}
@@ -171,12 +171,12 @@ export function ProductTable({
                 </div>
               </TableCell>
 
-              <TableCell>{product.category?.name || "-"}</TableCell>
+              <TableCell>{product.category?.name || '-'}</TableCell>
 
               <TableCell>{formatTHBFromMinor(product.minPriceMinor)}</TableCell>
 
               <TableCell>
-                <span className={!product.totalStock ? "text-destructive" : ""}>
+                <span className={!product.totalStock ? 'text-destructive' : ''}>
                   {product.totalStock ?? 0}
                 </span>
               </TableCell>
@@ -198,7 +198,7 @@ export function ProductTable({
                   >
                     {product.reqStatus}
                   </span>
-                  {product.reqStatus === "REJECT" && product.rejectReason && (
+                  {product.reqStatus === 'REJECT' && product.rejectReason && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>

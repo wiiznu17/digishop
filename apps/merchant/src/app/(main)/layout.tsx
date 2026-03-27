@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
 // import type { Metadata } from "next"
-import MerchantLayout from "./MerchantLayout"
+import MerchantLayout from './MerchantLayout'
 
 // export const metadata: Metadata = {
 //   title: "Merchant Dashboard",

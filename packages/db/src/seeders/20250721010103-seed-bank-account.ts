@@ -1,8 +1,7 @@
-import { QueryInterface } from 'sequelize';
+import { QueryInterface } from 'sequelize'
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
-    
     await queryInterface.bulkInsert('BANK_ACCOUNTS', [
       // --- บัญชีสำหรับร้านค้า ID 1 ---
       {
@@ -13,7 +12,7 @@ export default {
         account_holder_name: 'Test Merchant Store 1',
         status: 'VERIFIED',
         created_at: new Date(),
-        updated_at: new Date(),
+        updated_at: new Date()
       },
       {
         store_id: 1,
@@ -23,7 +22,7 @@ export default {
         account_holder_name: 'Test Merchant Store 1',
         status: 'VERIFIED',
         created_at: new Date(),
-        updated_at: new Date(),
+        updated_at: new Date()
       },
       {
         store_id: 1,
@@ -33,7 +32,7 @@ export default {
         account_holder_name: 'Test Merchant Store 1',
         status: 'VERIFIED',
         created_at: new Date(),
-        updated_at: new Date(),
+        updated_at: new Date()
       },
 
       // --- บัญชีสำหรับร้านค้า ID 2 ---
@@ -45,7 +44,7 @@ export default {
         account_holder_name: 'Another Merchant Store 2',
         status: 'VERIFIED',
         created_at: new Date(),
-        updated_at: new Date(),
+        updated_at: new Date()
       },
       {
         store_id: 2,
@@ -55,7 +54,7 @@ export default {
         account_holder_name: 'Another Merchant Store 2',
         status: 'VERIFIED',
         created_at: new Date(),
-        updated_at: new Date(),
+        updated_at: new Date()
       },
       {
         store_id: 2,
@@ -65,12 +64,12 @@ export default {
         account_holder_name: 'Third Store Owner',
         status: 'VERIFIED',
         created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ]);
+        updated_at: new Date()
+      }
+    ])
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
-    await queryInterface.bulkDelete('BANK_ACCOUNTS', {}, {});
-  },
-};
+    await queryInterface.bulkDelete('BANK_ACCOUNTS', {}, {})
+  }
+}

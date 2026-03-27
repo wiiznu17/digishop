@@ -1,27 +1,27 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams } from "next/navigation"
-import { DashboardHeader } from "@/components/dashboard-header"
-import { fetchAdminOrderDetailRequester } from "@/utils/requesters/orderRequester"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { DashboardHeader } from '@/components/dashboard-header'
+import { fetchAdminOrderDetailRequester } from '@/utils/requesters/orderRequester'
 import type {
   AdminOrderDetail,
   AdminOrderStatus
-} from "@/types/commerce/orders"
-import { OrderHeaderCard } from "@/components/commerce/orders/orderDetail/OrderHeaderCard"
-import { ItemsTable } from "@/components/commerce/orders/orderDetail/ItemsTable"
-import { ShippingSection } from "@/components/commerce/orders/orderDetail/ShippingSection"
-import { RefundsSection } from "@/components/commerce/orders/orderDetail/RefundsSection"
+} from '@/types/commerce/orders'
+import { OrderHeaderCard } from '@/components/commerce/orders/orderDetail/OrderHeaderCard'
+import { ItemsTable } from '@/components/commerce/orders/orderDetail/ItemsTable'
+import { ShippingSection } from '@/components/commerce/orders/orderDetail/ShippingSection'
+import { RefundsSection } from '@/components/commerce/orders/orderDetail/RefundsSection'
 import {
   VerticalTimeline,
   TimelineItem
-} from "@/components/commerce/orders/orderDetail/VerticalTimeline"
-import AuthGuard from "@/components/AuthGuard"
+} from '@/components/commerce/orders/orderDetail/VerticalTimeline'
+import AuthGuard from '@/components/AuthGuard'
 
 const THB = (n?: number | null) =>
   n == null
-    ? "-"
-    : (n / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+    ? '-'
+    : (n / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -53,14 +53,14 @@ function AdminOrderDetailPage() {
   const shippingTimeline = useMemo(() => {
     if (!data) return []
     const shipStates: AdminOrderStatus[] = [
-      "HANDED_OVER",
-      "SHIPPED",
-      "DELIVERED",
-      "REFUND_REQUEST",
-      "REFUND_PROCESSING",
-      "REFUND_SUCCESS",
-      "REFUND_FAIL",
-      "MERCHANT_CANCELED"
+      'HANDED_OVER',
+      'SHIPPED',
+      'DELIVERED',
+      'REFUND_REQUEST',
+      'REFUND_PROCESSING',
+      'REFUND_SUCCESS',
+      'REFUND_FAIL',
+      'MERCHANT_CANCELED'
     ]
     return data.timeline.filter((t) => shipStates.includes(t.toStatus))
   }, [data])
@@ -124,8 +124,8 @@ function AdminOrderDetailPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["ORDERS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['ORDERS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

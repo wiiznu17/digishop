@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Card,
@@ -6,10 +6,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { MerchantHeader } from "@/components/dashboard-header"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+} from '@/components/ui/card'
+import { MerchantHeader } from '@/components/dashboard-header'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/app-sidebar'
 import {
   BarChart3,
   TrendingUp,
@@ -21,31 +21,31 @@ import {
   Eye,
   Calendar,
   MapPin
-} from "lucide-react"
+} from 'lucide-react'
 
 const revenueData = [
-  { month: "Jan", revenue: 12400, orders: 89 },
-  { month: "Feb", revenue: 15600, orders: 112 },
-  { month: "Mar", revenue: 18200, orders: 134 },
-  { month: "Apr", revenue: 16800, orders: 121 },
-  { month: "May", revenue: 21300, orders: 156 },
-  { month: "Jun", revenue: 25100, orders: 187 }
+  { month: 'Jan', revenue: 12400, orders: 89 },
+  { month: 'Feb', revenue: 15600, orders: 112 },
+  { month: 'Mar', revenue: 18200, orders: 134 },
+  { month: 'Apr', revenue: 16800, orders: 121 },
+  { month: 'May', revenue: 21300, orders: 156 },
+  { month: 'Jun', revenue: 25100, orders: 187 }
 ]
 
 const topProducts = [
-  { name: "Wireless Bluetooth Headphones", sales: 124, revenue: 9916 },
-  { name: "Cotton T-Shirt", sales: 98, revenue: 2449 },
-  { name: "Coffee Beans - Premium Blend", sales: 76, revenue: 1406 },
-  { name: "Smartphone Case", sales: 64, revenue: 1920 },
-  { name: "Yoga Mat", sales: 52, revenue: 1560 }
+  { name: 'Wireless Bluetooth Headphones', sales: 124, revenue: 9916 },
+  { name: 'Cotton T-Shirt', sales: 98, revenue: 2449 },
+  { name: 'Coffee Beans - Premium Blend', sales: 76, revenue: 1406 },
+  { name: 'Smartphone Case', sales: 64, revenue: 1920 },
+  { name: 'Yoga Mat', sales: 52, revenue: 1560 }
 ]
 
 const customerInsights = [
-  { location: "New York", customers: 342, revenue: 18230 },
-  { location: "California", customers: 298, revenue: 15670 },
-  { location: "Texas", customers: 234, revenue: 12340 },
-  { location: "Florida", customers: 189, revenue: 9870 },
-  { location: "Illinois", customers: 156, revenue: 8230 }
+  { location: 'New York', customers: 342, revenue: 18230 },
+  { location: 'California', customers: 298, revenue: 15670 },
+  { location: 'Texas', customers: 234, revenue: 12340 },
+  { location: 'Florida', customers: 189, revenue: 9870 },
+  { location: 'Illinois', customers: 156, revenue: 8230 }
 ]
 
 export default function AnalyticsPage() {
@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
                         className="w-full bg-primary rounded-t-sm mb-2 flex items-end justify-center text-xs text-primary-foreground"
                         style={{
                           height: `${(data.revenue / 25100) * 200}px`,
-                          minHeight: "20px"
+                          minHeight: '20px'
                         }}
                       >
                         ${(data.revenue / 1000).toFixed(0)}k
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
                         ${location.revenue.toLocaleString()}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        ${(location.revenue / location.customers).toFixed(0)}{" "}
+                        ${(location.revenue / location.customers).toFixed(0)}{' '}
                         avg
                       </p>
                     </div>
@@ -309,7 +309,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-4">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(
                 (day, index) => (
                   <div key={day} className="text-center">
                     <div className="text-sm font-medium mb-2">{day}</div>
@@ -321,9 +321,9 @@ export default function AnalyticsPage() {
                         {Math.floor(Math.random() * 50 + 20)} orders
                       </div>
                       <div
-                        className={`text-xs ${index % 2 === 0 ? "text-green-600" : "text-red-600"}`}
+                        className={`text-xs ${index % 2 === 0 ? 'text-green-600' : 'text-red-600'}`}
                       >
-                        {index % 2 === 0 ? "+" : "-"}
+                        {index % 2 === 0 ? '+' : '-'}
                         {(Math.random() * 10 + 1).toFixed(1)}%
                       </div>
                     </div>

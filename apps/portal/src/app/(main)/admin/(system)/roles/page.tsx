@@ -1,15 +1,15 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState, useCallback } from "react"
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -17,16 +17,16 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Popover, PopoverAnchor } from "@/components/ui/popover"
-import Link from "next/link"
-import { Search, Plus } from "lucide-react"
+} from '@/components/ui/table'
+import { Popover, PopoverAnchor } from '@/components/ui/popover'
+import Link from 'next/link'
+import { Search, Plus } from 'lucide-react'
 import {
   fetchRoleList,
   createRole,
   type AdminRoleListItem
-} from "@/utils/requesters/rolesRequester"
-import { Pager } from "@/components/common/Pager"
+} from '@/utils/requesters/rolesRequester'
+import { Pager } from '@/components/common/Pager'
 import {
   Dialog,
   DialogTrigger,
@@ -35,13 +35,13 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 
 export default function AdminRolesPage() {
   // filters (draft)
-  const [qDraft, setQDraft] = useState("")
-  const [q, setQ] = useState("")
+  const [qDraft, setQDraft] = useState('')
+  const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [rows, setRows] = useState<AdminRoleListItem[]>([])
@@ -51,8 +51,8 @@ export default function AdminRolesPage() {
   const params = useMemo(
     () => ({
       q: q || undefined,
-      sortBy: "createdAt" as const,
-      sortDir: "desc" as const,
+      sortBy: 'createdAt' as const,
+      sortDir: 'desc' as const,
       page,
       pageSize
     }),
@@ -81,8 +81,8 @@ export default function AdminRolesPage() {
   }, [qDraft, load])
 
   const onClear = useCallback(() => {
-    setQDraft("")
-    setQ("")
+    setQDraft('')
+    setQ('')
     setPage(1)
     setTimeout(() => void load(), 0)
   }, [load])
@@ -92,13 +92,13 @@ export default function AdminRolesPage() {
   // ─────────────────────────
   const [dialogOpen, setDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
-  const [slugDraft, setSlugDraft] = useState("")
-  const [nameDraft, setNameDraft] = useState("")
+  const [slugDraft, setSlugDraft] = useState('')
+  const [nameDraft, setNameDraft] = useState('')
   const [formErr, setFormErr] = useState<string | null>(null)
 
   function resetDialog() {
-    setSlugDraft("")
-    setNameDraft("")
+    setSlugDraft('')
+    setNameDraft('')
     setFormErr(null)
   }
 
@@ -107,8 +107,8 @@ export default function AdminRolesPage() {
     return s
       .trim()
       .toUpperCase()
-      .replace(/\s+/g, "_")
-      .replace(/[^A-Z0-9_]/g, "")
+      .replace(/\s+/g, '_')
+      .replace(/[^A-Z0-9_]/g, '')
   }
 
   async function handleCreateRole(e?: React.FormEvent) {
@@ -117,11 +117,11 @@ export default function AdminRolesPage() {
     const name = nameDraft.trim() || slug
 
     if (!slug) {
-      setFormErr("Slug is required")
+      setFormErr('Slug is required')
       return
     }
-    if (slug === "SUPER_ADMIN") {
-      setFormErr("SUPER_ADMIN is reserved and cannot be created here.")
+    if (slug === 'SUPER_ADMIN') {
+      setFormErr('SUPER_ADMIN is reserved and cannot be created here.')
       return
     }
 
@@ -136,7 +136,7 @@ export default function AdminRolesPage() {
     } catch (err: any) {
       // แสดง error จาก backend ถ้ามี
       const message =
-        err?.response?.data?.error || err?.message || "Failed to create role"
+        err?.response?.data?.error || err?.message || 'Failed to create role'
       setFormErr(message)
     } finally {
       setCreating(false)
@@ -235,7 +235,7 @@ export default function AdminRolesPage() {
                       value={qDraft}
                       onChange={(e) => setQDraft(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") onSearch()
+                        if (e.key === 'Enter') onSearch()
                       }}
                     />
                   </div>
@@ -283,7 +283,7 @@ export default function AdminRolesPage() {
                         {r.slug}
                       </TableCell> */}
                       <TableCell>{r.permissionCount}</TableCell>
-                      <TableCell>{r.isSystem ? "Yes" : "No"}</TableCell>
+                      <TableCell>{r.isSystem ? 'Yes' : 'No'}</TableCell>
                       <TableCell>
                         {new Date(r.createdAt).toLocaleString()}
                       </TableCell>

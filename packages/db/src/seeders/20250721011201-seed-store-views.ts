@@ -1,4 +1,4 @@
-import { QueryInterface } from 'sequelize';
+import { QueryInterface } from 'sequelize'
 
 export default {
   up: async (queryInterface: QueryInterface) => {
@@ -12,11 +12,11 @@ export default {
         user_agent: 'Mozilla/5.0',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
-      },
-    ]);
+        deleted_at: null
+      }
+    ])
   },
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete('Store_Views', {}, {});
-  },
-};
+    await queryInterface.bulkDelete('Store_Views', {}, {})
+  }
+}

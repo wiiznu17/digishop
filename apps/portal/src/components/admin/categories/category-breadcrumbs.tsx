@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { ChevronRight } from "lucide-react"
+import { ChevronRight } from 'lucide-react'
 
 type Props = {
   items: { uuid: string | null; name: string }[]
@@ -11,7 +11,7 @@ export function CategoryBreadcrumbs({ items, onNavigate }: Props) {
   return (
     <div className="flex items-center gap-1 text-sm">
       {items.map((c, idx) => (
-        <div key={c.uuid ?? "root"} className="flex items-center">
+        <div key={c.uuid ?? 'root'} className="flex items-center">
           <button
             className="text-blue-600 hover:underline disabled:text-foreground/70"
             onClick={() => onNavigate(c.uuid)}

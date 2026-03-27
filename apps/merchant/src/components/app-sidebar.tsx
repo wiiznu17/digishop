@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   ChevronUp,
   Home,
@@ -12,7 +12,7 @@ import {
   BarChart3,
   Users,
   WalletMinimal
-} from "lucide-react"
+} from 'lucide-react'
 
 import {
   Sidebar,
@@ -24,15 +24,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/contexts/auth-context"
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/contexts/auth-context'
 
 type NavItem = {
   title: string
@@ -41,13 +41,13 @@ type NavItem = {
 }
 
 const items: NavItem[] = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Orders", url: "/orders", icon: ShoppingCart },
-  { title: "Products", url: "/products", icon: Package },
+  { title: 'Dashboard', url: '/', icon: Home },
+  { title: 'Orders', url: '/orders', icon: ShoppingCart },
+  { title: 'Products', url: '/products', icon: Package },
   // { title: "Customers", url: "/customers", icon: Users },
   // { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Bank Account", url: "/balance", icon: WalletMinimal },
-  { title: "Profile", url: "/profile", icon: User }
+  { title: 'Bank Account', url: '/balance', icon: WalletMinimal },
+  { title: 'Profile', url: '/profile', icon: User }
   // { title: "Settings", url: "/settings", icon: Settings }
 ]
 
@@ -76,7 +76,7 @@ export function AppSidebar() {
   const { logout, isLoading } = useAuth()
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/"
+    if (href === '/') return pathname === '/'
     return pathname.startsWith(href)
   }
 
@@ -98,7 +98,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <Link
                       href={item.url}
-                      aria-current={isActive(item.url) ? "page" : undefined}
+                      aria-current={isActive(item.url) ? 'page' : undefined}
                     >
                       <item.icon />
                       <span>{item.title}</span>
@@ -141,7 +141,7 @@ export function AppSidebar() {
                     disabled={isLoading}
                     onClick={async () => {
                       await logout()
-                      router.push("/login")
+                      router.push('/login')
                     }}
                   >
                     Logout

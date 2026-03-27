@@ -1,4 +1,4 @@
-import axios from "@/lib/axios"
+import axios from '@/lib/axios'
 
 export type RecentSale = {
   orderId: string
@@ -27,13 +27,13 @@ export type MerchantDashboard = {
 
 export async function fetchMerchantDashboard(): Promise<MerchantDashboard> {
   try {
-    const r = await axios.get<MerchantDashboard>("/api/merchant/dashboard", {
+    const r = await axios.get<MerchantDashboard>('/api/merchant/dashboard', {
       withCredentials: true
     })
-    console.log("Merchant dashboard data:", r.data)
+    console.log('Merchant dashboard data:', r.data)
     return r.data
   } catch (error) {
-    console.error("Error fetching merchant dashboard:", error)
+    console.error('Error fetching merchant dashboard:', error)
     throw error
   }
 }

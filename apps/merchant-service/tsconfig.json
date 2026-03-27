@@ -4,7 +4,11 @@
   "compilerOptions": {
     "outDir": "./dist",
     "noImplicitReturns": false,
-    "typeRoots": ["./src/types", "../../node_modules/@types", "./node_modules/@types"]
+    "typeRoots": [
+      "./src/types",
+      "../../node_modules/@types",
+      "./node_modules/@types"
+    ]
   },
   "exclude": ["node_modules"]
 }

@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Card,
@@ -6,15 +6,15 @@ import {
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import type { AdminOrderDetail } from "@/types/commerce/orders"
+} from '@/components/ui/card'
+import type { AdminOrderDetail } from '@/types/commerce/orders'
 
 export function ItemsTable({
   items,
   totals,
   THB
 }: {
-  items: AdminOrderDetail["items"]
+  items: AdminOrderDetail['items']
   totals: {
     subtotal: string
     shipping: string
@@ -75,7 +75,7 @@ export function ItemsTable({
                             onClick={() =>
                               window.open(
                                 `/admin/products/${it.productUuid}`,
-                                "_blank"
+                                '_blank'
                               )
                             }
                           >
@@ -84,9 +84,9 @@ export function ItemsTable({
                         )}
                       </div>
                     </td>
-                    <td className="p-2">{it.productSku ?? "—"}</td>
+                    <td className="p-2">{it.productSku ?? '—'}</td>
                     <td className="p-2 text-xs text-muted-foreground">
-                      {it.optionsText ?? "—"}
+                      {it.optionsText ?? '—'}
                     </td>
                     <td className="p-2 text-right">{THB(it.unitPriceMinor)}</td>
                     <td className="p-2 text-right">{it.quantity}</td>

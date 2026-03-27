@@ -1,58 +1,58 @@
-"use client";
+'use client'
 // pages/auth.tsx or app/auth/page.tsx
-import React, { useState } from "react";
-import Button from "../../components/button";
-import { LogIn } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import InputField from "@/components/inputField";
-import { useAuth } from "@/contexts/auth-context";
-import { Rubik } from "next/font/google";
-import icon from "../shopping.png";
-import Image from "next/image";
+import React, { useState } from 'react'
+import Button from '../../components/button'
+import { LogIn } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import InputField from '@/components/inputField'
+import { useAuth } from '@/contexts/auth-context'
+import { Rubik } from 'next/font/google'
+import icon from '../shopping.png'
+import Image from 'next/image'
 const rubik = Rubik({
-  subsets: ["latin"],
-  weight: "300",
-});
+  subsets: ['latin'],
+  weight: '300'
+})
 
 const AuthPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const { login, isLoading } = useAuth();
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [loginFail, setLoginFail] = useState<boolean>(false);
+    email: '',
+    password: ''
+  })
+  const { login, isLoading } = useAuth()
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [loginFail, setLoginFail] = useState<boolean>(false)
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
-    }));
-  };
+      [name]: value
+    }))
+  }
 
   const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
+    const newErrors: { [key: string]: string } = {}
 
     if (!formData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required'
     }
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required'
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  const router = useRouter();
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+  const router = useRouter()
   const handleSubmit = async () => {
-    if (!validateForm()) return;
-    const success = await login(formData.email, formData.password);
+    if (!validateForm()) return
+    const success = await login(formData.email, formData.password)
     if (success) {
-      router.push("/");
+      router.push('/')
     } else {
       setLoginFail(true)
     }
-  };
+  }
   return (
     <div
       className={`grid grid-cols-2 min-h-screen bg-white ${rubik.className}`}
@@ -60,51 +60,51 @@ const AuthPage: React.FC = () => {
       <div className="flex justify-center items-center">
         <Link href={'/'}>
           <Image src={icon} width={600} height={600} alt="Shpping" />
-
         </Link>
       </div>
       <div className="flex justify-center items-center">
         <div className="w-lg">
-          <div
-           
-            className=" bg-white px-4 relative"
-          >
-            {
-              loginFail && (
-                <p className="absolute top-[-40] text-red-500 bg-red-500/10 px-4 text-lg font-bold">Incorrect email or password</p>
-              )
-            }
+          <div className=" bg-white px-4 relative">
+            {loginFail && (
+              <p className="absolute top-[-40] text-red-500 bg-red-500/10 px-4 text-lg font-bold">
+                Incorrect email or password
+              </p>
+            )}
             <div className="relative space-y-6">
-            {/* Email Field */}
-            <InputField
-              label="Email Address"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="Enter your email address"
-              required
-              error={errors.email}
-            />
+              {/* Email Field */}
+              <InputField
+                label="Email Address"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Enter your email address"
+                required
+                error={errors.email}
+              />
 
-            {/* Password Field */}
-            <InputField
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder="Enter your password"
-              required
-              error={errors.password}
-              className="relative"
-            />
-
+              {/* Password Field */}
+              <InputField
+                label="Password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Enter your password"
+                required
+                error={errors.password}
+                className="relative"
+              />
             </div>
-            <button className="flex justify-end items-end mb-6 mt-2  cursor-pointer " onClick={() => router.push('/auth/forgot-password')}>
-              <div className=" text-base text-black font-normal">forgot password ?</div>
+            <button
+              className="flex justify-end items-end mb-6 mt-2  cursor-pointer "
+              onClick={() => router.push('/auth/forgot-password')}
+            >
+              <div className=" text-base text-black font-normal">
+                forgot password ?
+              </div>
             </button>
-            
+
             {/* Submit Button */}
             <Button
               size="lg"
@@ -138,7 +138,7 @@ const AuthPage: React.FC = () => {
           </div>
           <Link href="/auth/register">
             <div className="px-4">
-              <Button size="lg" className="w-full" border="border-blue-600/80" >
+              <Button size="lg" className="w-full" border="border-blue-600/80">
                 Create Account
               </Button>
             </div>
@@ -146,7 +146,7 @@ const AuthPage: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AuthPage;
+export default AuthPage

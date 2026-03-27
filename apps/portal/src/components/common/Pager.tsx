@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Select,
@@ -6,8 +6,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 
 export function Pager({
   page,
@@ -26,10 +26,10 @@ export function Pager({
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="text-sm text-muted-foreground">
-        Showing{" "}
+        Showing{' '}
         <span className="font-medium">
           {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)}
-        </span>{" "}
+        </span>{' '}
         of <span className="font-medium">{total}</span>
       </div>
       <div className="flex items-center gap-2">

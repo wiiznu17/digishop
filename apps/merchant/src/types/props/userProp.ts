@@ -4,11 +4,11 @@ export interface UserAuth {
   role: string
 }
 
-export type StoreStatus = "PENDING" | "BANNED" | "APPROVED"
+export type StoreStatus = 'PENDING' | 'BANNED' | 'APPROVED'
 
 export enum AddressType {
-  HOME = "HOME",
-  OFFICE = "OFFICE"
+  HOME = 'HOME',
+  OFFICE = 'OFFICE'
 }
 export interface ProfileMerchantImage {
   id?: string
@@ -93,42 +93,42 @@ export interface MerchantProfileProps {
 
 export const defaultMerchant: MerchantProfileFormValues = {
   id: 0,
-  role: "",
+  role: '',
   store: {
     id: 0,
-    storeName: "",
-    email: "",
-    phone: "",
-    businessType: "",
-    website: "",
-    description: "",
+    storeName: '',
+    email: '',
+    phone: '',
+    businessType: '',
+    website: '',
+    description: '',
     profileImages: [],
-    status: "",
+    status: '',
     addresses: [
       {
         id: 0,
-        ownerName: "",
-        address_number: "",
-        street: "",
-        building: "",
-        subStreet: "",
-        subdistrict: "",
-        district: "",
-        province: "",
-        postalCode: "",
+        ownerName: '',
+        address_number: '',
+        street: '',
+        building: '',
+        subStreet: '',
+        subdistrict: '',
+        district: '',
+        province: '',
+        postalCode: '',
         addressType: AddressType.HOME,
         isDefault: true,
-        phone: ""
+        phone: ''
       }
     ],
     bankAccount: {
-      id: "",
-      bankName: "",
-      accountNumber: "",
-      accountName: ""
+      id: '',
+      bankName: '',
+      accountNumber: '',
+      accountName: ''
     },
     metrics: {
-      memberSince: "",
+      memberSince: '',
       totalProducts: 0,
       totalOrders: 0,
       rating: null

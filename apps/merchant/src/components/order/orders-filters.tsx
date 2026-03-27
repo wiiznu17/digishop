@@ -1,33 +1,33 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { RotateCcw, SlidersHorizontal } from "lucide-react"
+import { useEffect, useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { RotateCcw, SlidersHorizontal } from 'lucide-react'
 import {
   MultiSelect,
   MultiSelectContent,
   MultiSelectItem,
   MultiSelectTrigger,
   MultiSelectValue
-} from "@/components/ui/multi-select" // <- ใช้ lib multi-select ของคุณ หรือเปลี่ยนเป็น combobox custom ก็ได้
+} from '@/components/ui/multi-select' // <- ใช้ lib multi-select ของคุณ หรือเปลี่ยนเป็น combobox custom ก็ได้
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 
-export type SortField = "id" | "createdAt" | "updatedAt" | "grandTotalMinor"
-export type SortDir = "ASC" | "DESC"
+export type SortField = 'id' | 'createdAt' | 'updatedAt' | 'grandTotalMinor'
+export type SortDir = 'ASC' | 'DESC'
 
 export interface OrdersFiltersValue {
   q: string
   statuses: string[] // multi
   sortBy: SortField
   sortDir: SortDir
-  hasTracking?: "true" | "false" | "" // optional
+  hasTracking?: 'true' | 'false' | '' // optional
 }
 
 export function OrdersFilters({
@@ -43,43 +43,43 @@ export function OrdersFilters({
   const [statuses, setStatuses] = useState<string[]>(initial.statuses)
   const [sortBy, setSortBy] = useState<SortField>(initial.sortBy)
   const [sortDir, setSortDir] = useState<SortDir>(initial.sortDir)
-  const [hasTracking, setHasTracking] = useState<"" | "true" | "false">(
-    initial.hasTracking ?? ""
+  const [hasTracking, setHasTracking] = useState<'' | 'true' | 'false'>(
+    initial.hasTracking ?? ''
   )
-  const ALL = "__ALL__" // sentinel แทน "All"
+  const ALL = '__ALL__' // sentinel แทน "All"
 
   useEffect(() => {
     setQ(initial.q)
     setStatuses(initial.statuses)
     setSortBy(initial.sortBy)
     setSortDir(initial.sortDir)
-    setHasTracking(initial.hasTracking ?? "")
+    setHasTracking(initial.hasTracking ?? '')
   }, [initial])
 
   const statusOptions = useMemo(
     () => [
-      "PENDING",
-      "PAID",
-      "PROCESSING",
-      "READY_TO_SHIP",
-      "HANDED_OVER",
-      "SHIPPED",
-      "DELIVERED",
-      "COMPLETE",
-      "CUSTOMER_CANCELED",
-      "MERCHANT_CANCELED",
-      "TRANSIT_LACK",
-      "RE_TRANSIT",
-      "REFUND_REQUEST",
-      "AWAITING_RETURN",
-      "RECEIVE_RETURN",
-      "RETURN_VERIFIED",
-      "RETURN_FAIL",
-      "REFUND_APPROVED",
-      "REFUND_PROCESSING",
-      "REFUND_SUCCESS",
-      "REFUND_FAIL",
-      "REFUND_RETRY"
+      'PENDING',
+      'PAID',
+      'PROCESSING',
+      'READY_TO_SHIP',
+      'HANDED_OVER',
+      'SHIPPED',
+      'DELIVERED',
+      'COMPLETE',
+      'CUSTOMER_CANCELED',
+      'MERCHANT_CANCELED',
+      'TRANSIT_LACK',
+      'RE_TRANSIT',
+      'REFUND_REQUEST',
+      'AWAITING_RETURN',
+      'RECEIVE_RETURN',
+      'RETURN_VERIFIED',
+      'RETURN_FAIL',
+      'REFUND_APPROVED',
+      'REFUND_PROCESSING',
+      'REFUND_SUCCESS',
+      'REFUND_FAIL',
+      'REFUND_RETRY'
     ],
     []
   )
@@ -120,9 +120,9 @@ export function OrdersFilters({
 
         {/* tracking */}
         <Select
-          value={hasTracking === "" ? ALL : hasTracking}
+          value={hasTracking === '' ? ALL : hasTracking}
           onValueChange={(v) =>
-            setHasTracking(v === ALL ? "" : (v as "true" | "false"))
+            setHasTracking(v === ALL ? '' : (v as 'true' | 'false'))
           }
         >
           <SelectTrigger>

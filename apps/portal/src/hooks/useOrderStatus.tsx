@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { AdminOrderStatus } from "@/types/commerce/orders"
+import { AdminOrderStatus } from '@/types/commerce/orders'
 import {
   Clock,
   CheckCircle,
@@ -16,113 +16,113 @@ import {
   Package,
   Undo2,
   Repeat2
-} from "lucide-react"
+} from 'lucide-react'
 
 export const useOrderStatus = () => {
   const getStatusIcon = (status: AdminOrderStatus) => {
     switch (status) {
-      case "PENDING":
+      case 'PENDING':
         return <Clock className="h-4 w-4" />
-      case "PAID":
+      case 'PAID':
         return <CreditCard className="h-4 w-4" />
-      case "PROCESSING":
+      case 'PROCESSING':
         return <Package className="h-4 w-4" />
-      case "READY_TO_SHIP":
+      case 'READY_TO_SHIP':
         return <PackageCheck className="h-4 w-4" />
-      case "HANDED_OVER":
-      case "SHIPPED":
+      case 'HANDED_OVER':
+      case 'SHIPPED':
         return <Truck className="h-4 w-4" />
-      case "DELIVERED":
+      case 'DELIVERED':
         return <Home className="h-4 w-4" />
-      case "COMPLETE":
+      case 'COMPLETE':
         return <ThumbsUp className="h-4 w-4" />
-      case "CUSTOMER_CANCELED":
+      case 'CUSTOMER_CANCELED':
         return <Ban className="h-4 w-4" />
-      case "MERCHANT_CANCELED":
+      case 'MERCHANT_CANCELED':
         return <Ban className="h-4 w-4" />
-      case "REFUND_REQUEST":
+      case 'REFUND_REQUEST':
         return <RotateCcw className="h-4 w-4" />
-      case "REFUND_REJECTED":
+      case 'REFUND_REJECTED':
         return <XCircle className="h-4 w-4" />
-      case "AWAITING_RETURN":
+      case 'AWAITING_RETURN':
         return <Undo2 className="h-4 w-4" />
-      case "RECEIVE_RETURN":
+      case 'RECEIVE_RETURN':
         return <Package className="h-4 w-4" />
-      case "RETURN_VERIFIED":
+      case 'RETURN_VERIFIED':
         return <CheckCircle className="h-4 w-4" />
-      case "RETURN_FAIL":
+      case 'RETURN_FAIL':
         return <XCircle className="h-4 w-4" />
-      case "REFUND_APPROVED":
+      case 'REFUND_APPROVED':
         return <CheckCircle className="h-4 w-4" />
-      case "REFUND_PROCESSING":
+      case 'REFUND_PROCESSING':
         return <Repeat2 className="h-4 w-4" />
-      case "REFUND_SUCCESS":
+      case 'REFUND_SUCCESS':
         return <CheckCircle className="h-4 w-4" />
-      case "REFUND_FAIL":
+      case 'REFUND_FAIL':
         return <XCircle className="h-4 w-4" />
-      case "REFUND_RETRY":
+      case 'REFUND_RETRY':
         return <Repeat2 className="h-4 w-4" />
-      case "TRANSIT_LACK":
+      case 'TRANSIT_LACK':
         return <AlertTriangle className="h-4 w-4" />
-      case "RE_TRANSIT":
+      case 'RE_TRANSIT':
         return <Repeat2 className="h-4 w-4" />
     }
   }
 
   const getStatusText = (status: AdminOrderStatus) => {
     const statusMap: Record<AdminOrderStatus, string> = {
-      PENDING: "Awaiting payment",
-      PAID: "Payment completed",
-      PROCESSING: "Processing order",
-      READY_TO_SHIP: "Ready to ship",
-      HANDED_OVER: "Handed over to courier",
-      SHIPPED: "Shipped",
-      DELIVERED: "Delivered",
-      COMPLETE: "Completed",
-      CUSTOMER_CANCELED: "Customer canceled",
-      MERCHANT_CANCELED: "Order canceled by merchant",
-      REFUND_REQUEST: "Refund requested",
-      REFUND_REJECTED: "Refund rejected",
-      AWAITING_RETURN: "Awaiting return",
-      RECEIVE_RETURN: "Return received",
-      RETURN_VERIFIED: "Return verified",
-      RETURN_FAIL: "Return failed",
-      REFUND_APPROVED: "Refund approved",
-      REFUND_PROCESSING: "Refund processing",
-      REFUND_SUCCESS: "Refund successful",
-      REFUND_FAIL: "Refund failed",
-      REFUND_RETRY: "Retrying refund",
-      TRANSIT_LACK: "Shipping issue",
-      RE_TRANSIT: "Reshipping"
+      PENDING: 'Awaiting payment',
+      PAID: 'Payment completed',
+      PROCESSING: 'Processing order',
+      READY_TO_SHIP: 'Ready to ship',
+      HANDED_OVER: 'Handed over to courier',
+      SHIPPED: 'Shipped',
+      DELIVERED: 'Delivered',
+      COMPLETE: 'Completed',
+      CUSTOMER_CANCELED: 'Customer canceled',
+      MERCHANT_CANCELED: 'Order canceled by merchant',
+      REFUND_REQUEST: 'Refund requested',
+      REFUND_REJECTED: 'Refund rejected',
+      AWAITING_RETURN: 'Awaiting return',
+      RECEIVE_RETURN: 'Return received',
+      RETURN_VERIFIED: 'Return verified',
+      RETURN_FAIL: 'Return failed',
+      REFUND_APPROVED: 'Refund approved',
+      REFUND_PROCESSING: 'Refund processing',
+      REFUND_SUCCESS: 'Refund successful',
+      REFUND_FAIL: 'Refund failed',
+      REFUND_RETRY: 'Retrying refund',
+      TRANSIT_LACK: 'Shipping issue',
+      RE_TRANSIT: 'Reshipping'
     }
     return statusMap[status]
   }
 
   const getStatusTextForReal = (status: AdminOrderStatus) => {
     const statusMap: Record<AdminOrderStatus, string> = {
-      PENDING: "Awaiting payment",
-      PAID: "Payment completed",
-      PROCESSING: "Confirm order", // use
-      READY_TO_SHIP: "Ready to ship", // use
-      HANDED_OVER: "Handed over to courier",
-      SHIPPED: "Shipped",
-      DELIVERED: "Delivered",
-      COMPLETE: "Completed",
-      CUSTOMER_CANCELED: "Canceled by customer",
-      MERCHANT_CANCELED: "Canceled order", // use
-      REFUND_REQUEST: "Refund requested",
-      REFUND_REJECTED: "Rejected refund request", // use
-      AWAITING_RETURN: "Approved refund and want product return", //use
-      RECEIVE_RETURN: "Return received",
-      RETURN_VERIFIED: "Verify product returned", // use
-      RETURN_FAIL: "Return failed",
+      PENDING: 'Awaiting payment',
+      PAID: 'Payment completed',
+      PROCESSING: 'Confirm order', // use
+      READY_TO_SHIP: 'Ready to ship', // use
+      HANDED_OVER: 'Handed over to courier',
+      SHIPPED: 'Shipped',
+      DELIVERED: 'Delivered',
+      COMPLETE: 'Completed',
+      CUSTOMER_CANCELED: 'Canceled by customer',
+      MERCHANT_CANCELED: 'Canceled order', // use
+      REFUND_REQUEST: 'Refund requested',
+      REFUND_REJECTED: 'Rejected refund request', // use
+      AWAITING_RETURN: 'Approved refund and want product return', //use
+      RECEIVE_RETURN: 'Return received',
+      RETURN_VERIFIED: 'Verify product returned', // use
+      RETURN_FAIL: 'Return failed',
       REFUND_APPROVED: "Approve refund (Don't return product)", // use
-      REFUND_PROCESSING: "Refund processing",
-      REFUND_SUCCESS: "Refund successful",
-      REFUND_FAIL: "Refund failed",
-      REFUND_RETRY: "Retry refund",
-      TRANSIT_LACK: "Shipping issue",
-      RE_TRANSIT: "Reshipping"
+      REFUND_PROCESSING: 'Refund processing',
+      REFUND_SUCCESS: 'Refund successful',
+      REFUND_FAIL: 'Refund failed',
+      REFUND_RETRY: 'Retry refund',
+      TRANSIT_LACK: 'Shipping issue',
+      RE_TRANSIT: 'Reshipping'
     }
     return statusMap[status]
   }
@@ -134,90 +134,90 @@ export const useOrderStatus = () => {
   ) => {
     if (isActive) {
       switch (status) {
-        case "PENDING":
-          return "bg-yellow-500 border-yellow-500 text-white"
-        case "PAID":
-          return "bg-green-500 border-green-500 text-white"
-        case "PROCESSING":
-          return "bg-blue-500 border-blue-500 text-white"
-        case "READY_TO_SHIP":
-          return "bg-indigo-500 border-indigo-500 text-white"
-        case "HANDED_OVER":
-          return "bg-sky-500 border-sky-500 text-white"
-        case "SHIPPED":
-          return "bg-purple-500 border-purple-500 text-white"
-        case "DELIVERED":
-          return "bg-emerald-500 border-emerald-500 text-white"
-        case "CUSTOMER_CANCELED":
-          return "bg-gray-500 border-gray-500 text-white"
-        case "MERCHANT_CANCELED":
-          return "bg-red-500 border-red-700 text-white"
-        case "REFUND_REQUEST":
-        case "AWAITING_RETURN":
-        case "RECEIVE_RETURN":
-        case "REFUND_PROCESSING":
-        case "REFUND_FAIL":
-          return "bg-red-500 border-red-700 text-white"
-        case "REFUND_RETRY":
-          return "bg-orange-500 border-orange-500 text-white"
-        case "REFUND_REJECTED":
-        case "TRANSIT_LACK":
-          return "bg-red-500 border-red-500 text-white"
+        case 'PENDING':
+          return 'bg-yellow-500 border-yellow-500 text-white'
+        case 'PAID':
+          return 'bg-green-500 border-green-500 text-white'
+        case 'PROCESSING':
+          return 'bg-blue-500 border-blue-500 text-white'
+        case 'READY_TO_SHIP':
+          return 'bg-indigo-500 border-indigo-500 text-white'
+        case 'HANDED_OVER':
+          return 'bg-sky-500 border-sky-500 text-white'
+        case 'SHIPPED':
+          return 'bg-purple-500 border-purple-500 text-white'
+        case 'DELIVERED':
+          return 'bg-emerald-500 border-emerald-500 text-white'
+        case 'CUSTOMER_CANCELED':
+          return 'bg-gray-500 border-gray-500 text-white'
+        case 'MERCHANT_CANCELED':
+          return 'bg-red-500 border-red-700 text-white'
+        case 'REFUND_REQUEST':
+        case 'AWAITING_RETURN':
+        case 'RECEIVE_RETURN':
+        case 'REFUND_PROCESSING':
+        case 'REFUND_FAIL':
+          return 'bg-red-500 border-red-700 text-white'
+        case 'REFUND_RETRY':
+          return 'bg-orange-500 border-orange-500 text-white'
+        case 'REFUND_REJECTED':
+        case 'TRANSIT_LACK':
+          return 'bg-red-500 border-red-500 text-white'
         default:
-          return "bg-blue-500 border-blue-500 text-white"
+          return 'bg-blue-500 border-blue-500 text-white'
       }
     } else if (isPassed) {
-      return "bg-green-100 border-green-300 text-green-800"
+      return 'bg-green-100 border-green-300 text-green-800'
     } else {
-      return "bg-gray-100 border-gray-300 text-gray-500"
+      return 'bg-gray-100 border-gray-300 text-gray-500'
     }
   }
 
   const getStatusBadgeColor = (status: AdminOrderStatus) => {
     switch (status) {
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300"
-      case "PAID":
-        return "bg-green-100 text-green-800 border-green-300"
-      case "PROCESSING":
-        return "bg-blue-100 text-blue-800 border-blue-300"
-      case "READY_TO_SHIP":
-        return "bg-indigo-100 text-indigo-800 border-indigo-300"
-      case "HANDED_OVER":
-        return "bg-sky-100 text-sky-800 border-sky-300"
-      case "SHIPPED":
-        return "bg-purple-100 text-purple-800 border-purple-300"
-      case "DELIVERED":
-      case "COMPLETE":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300"
-      case "CUSTOMER_CANCELED":
-        return "bg-gray-100 text-gray-800 border-gray-300"
-      case "MERCHANT_CANCELED":
-        return "bg-red-100 text-red-800 border-red-300"
-      case "REFUND_REQUEST":
-        return "bg-orange-100 text-orange-800 border-orange-300"
-      case "AWAITING_RETURN":
-      case "RECEIVE_RETURN":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300"
-      case "RETURN_VERIFIED":
-        return "bg-green-100 text-green-800 border-green-300"
-      case "RETURN_FAIL":
-        return "bg-red-100 text-red-800 border-red-300"
-      case "REFUND_APPROVED":
-      case "REFUND_SUCCESS":
-        return "bg-green-100 text-green-800 border-green-300"
-      case "REFUND_PROCESSING":
-        return "bg-blue-100 text-blue-800 border-blue-300"
-      case "REFUND_FAIL":
-      case "REFUND_REJECTED":
-      case "TRANSIT_LACK":
-        return "bg-red-100 text-red-800 border-red-300"
-      case "REFUND_RETRY":
-        return "bg-orange-100 text-orange-800 border-orange-300"
-      case "RE_TRANSIT":
-        return "bg-orange-100 text-orange-800 border-orange-300"
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+      case 'PAID':
+        return 'bg-green-100 text-green-800 border-green-300'
+      case 'PROCESSING':
+        return 'bg-blue-100 text-blue-800 border-blue-300'
+      case 'READY_TO_SHIP':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-300'
+      case 'HANDED_OVER':
+        return 'bg-sky-100 text-sky-800 border-sky-300'
+      case 'SHIPPED':
+        return 'bg-purple-100 text-purple-800 border-purple-300'
+      case 'DELIVERED':
+      case 'COMPLETE':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300'
+      case 'CUSTOMER_CANCELED':
+        return 'bg-gray-100 text-gray-800 border-gray-300'
+      case 'MERCHANT_CANCELED':
+        return 'bg-red-100 text-red-800 border-red-300'
+      case 'REFUND_REQUEST':
+        return 'bg-orange-100 text-orange-800 border-orange-300'
+      case 'AWAITING_RETURN':
+      case 'RECEIVE_RETURN':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+      case 'RETURN_VERIFIED':
+        return 'bg-green-100 text-green-800 border-green-300'
+      case 'RETURN_FAIL':
+        return 'bg-red-100 text-red-800 border-red-300'
+      case 'REFUND_APPROVED':
+      case 'REFUND_SUCCESS':
+        return 'bg-green-100 text-green-800 border-green-300'
+      case 'REFUND_PROCESSING':
+        return 'bg-blue-100 text-blue-800 border-blue-300'
+      case 'REFUND_FAIL':
+      case 'REFUND_REJECTED':
+      case 'TRANSIT_LACK':
+        return 'bg-red-100 text-red-800 border-red-300'
+      case 'REFUND_RETRY':
+        return 'bg-orange-100 text-orange-800 border-orange-300'
+      case 'RE_TRANSIT':
+        return 'bg-orange-100 text-orange-800 border-orange-300'
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300"
+        return 'bg-gray-100 text-gray-800 border-gray-300'
     }
   }
 

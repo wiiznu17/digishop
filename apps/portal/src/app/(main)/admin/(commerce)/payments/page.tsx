@@ -1,17 +1,17 @@
 // apps/portal/src/app/(main)/admin/payments/page.tsx
-"use client"
+'use client'
 
-import { useMemo, useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useMemo, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -19,24 +19,24 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
+} from '@/components/ui/table'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Search } from "lucide-react"
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Search } from 'lucide-react'
 
 type Payment = {
   id: number
   orderCode: string
-  provider: "stripe" | "omise" | "paypal" | "mock"
-  method: "card" | "qr" | "promptpay" | "account"
-  status: "AUTHORIZED" | "CAPTURED" | "REFUNDED" | "FAILED"
+  provider: 'stripe' | 'omise' | 'paypal' | 'mock'
+  method: 'card' | 'qr' | 'promptpay' | 'account'
+  status: 'AUTHORIZED' | 'CAPTURED' | 'REFUNDED' | 'FAILED'
   amountMinor: number
   createdAt: string
 }
@@ -44,20 +44,20 @@ type Payment = {
 const MOCK: Payment[] = Array.from({ length: 90 }).map((_, i) => ({
   id: 8000 + i,
   orderCode: `ORD-${(6000 + i).toString(36).toUpperCase()}`,
-  provider: (["stripe", "omise", "paypal", "mock"] as Payment["provider"][])[
+  provider: (['stripe', 'omise', 'paypal', 'mock'] as Payment['provider'][])[
     i % 4
   ],
-  method: (["card", "qr", "promptpay", "account"] as Payment["method"][])[
+  method: (['card', 'qr', 'promptpay', 'account'] as Payment['method'][])[
     i % 4
   ],
   status: (
-    ["AUTHORIZED", "CAPTURED", "REFUNDED", "FAILED"] as Payment["status"][]
+    ['AUTHORIZED', 'CAPTURED', 'REFUNDED', 'FAILED'] as Payment['status'][]
   )[i % 4],
   amountMinor: 19900 + (i % 5) * 1000,
   createdAt: new Date(Date.now() - i * 3600000).toISOString()
 }))
 const formatTHB = (m: number) =>
-  (m / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+  (m / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
@@ -113,9 +113,9 @@ function useDebounce<T>(v: T, ms = 300) {
 
 export default function AdminPaymentsPage() {
   const router = useRouter()
-  const [q, setQ] = useState("")
-  const [provider, setProvider] = useState<Payment["provider"] | "ALL">("ALL")
-  const [status, setStatus] = useState<Payment["status"] | "ALL">("ALL")
+  const [q, setQ] = useState('')
+  const [provider, setProvider] = useState<Payment['provider'] | 'ALL'>('ALL')
+  const [status, setStatus] = useState<Payment['status'] | 'ALL'>('ALL')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
@@ -150,8 +150,8 @@ export default function AdminPaymentsPage() {
     let base = MOCK
     const t = q.toLowerCase().trim()
     if (t) base = base.filter((p) => p.orderCode.toLowerCase().includes(t))
-    if (provider !== "ALL") base = base.filter((p) => p.provider === provider)
-    if (status !== "ALL") base = base.filter((p) => p.status === status)
+    if (provider !== 'ALL') base = base.filter((p) => p.provider === provider)
+    if (status !== 'ALL') base = base.filter((p) => p.status === status)
     return base
   }, [q, provider, status])
 
@@ -220,7 +220,7 @@ export default function AdminPaymentsPage() {
                             {s.orderCode}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {s.provider}/{s.method} · {s.status} ·{" "}
+                            {s.provider}/{s.method} · {s.status} ·{' '}
                             {formatTHB(s.amountMinor)}
                           </div>
                         </button>
@@ -236,7 +236,7 @@ export default function AdminPaymentsPage() {
                 <Select
                   value={provider}
                   onValueChange={(v) => {
-                    setProvider(v as "stripe" | "omise" | "paypal" | "mock")
+                    setProvider(v as 'stripe' | 'omise' | 'paypal' | 'mock')
                     setPage(1)
                   }}
                 >
@@ -258,7 +258,7 @@ export default function AdminPaymentsPage() {
                   value={status}
                   onValueChange={(v) => {
                     setStatus(
-                      v as "AUTHORIZED" | "CAPTURED" | "REFUNDED" | "FAILED"
+                      v as 'AUTHORIZED' | 'CAPTURED' | 'REFUNDED' | 'FAILED'
                     )
                     setPage(1)
                   }}

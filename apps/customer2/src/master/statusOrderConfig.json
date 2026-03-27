@@ -1,6 +1,6 @@
 {
   "PENDING": {
-    "id": "pending", 
+    "id": "pending",
     "icon": "Clock",
     "color": "bg-amber-100 text-amber-700 border-amber-300",
     "activeColor": "bg-amber-500 text-white border-amber-600",
@@ -26,9 +26,8 @@
   "DELIVERED": {
     "label": "delivered",
     "value": "DELIVERED",
-    "status": ["DELIVERED","CANCELED_REFUND"]
-  }
-  ,
+    "status": ["DELIVERED", "CANCELED_REFUND"]
+  },
   "COMPLETE": {
     "label": "complete",
     "value": "COMPLETE",
@@ -48,8 +47,8 @@
       "AWAITING_RETURN",
       "RECEIVE_RETURN",
       "RETURN_VERIFIED",
-      "RETURN_FAIL", 
-      "REFUND_APPROVED", 
+      "RETURN_FAIL",
+      "REFUND_APPROVED",
       "REFUND_PROCESSING",
       "REFUND_SUCCESS",
       "REFUND_FAIL",

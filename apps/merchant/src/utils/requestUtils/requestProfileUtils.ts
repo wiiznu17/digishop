@@ -1,17 +1,17 @@
-import axios from "@/lib/axios"
+import axios from '@/lib/axios'
 import {
   MerchantAddressForm,
   MerchantProfileFormValues
-} from "@/types/props/userProp"
+} from '@/types/props/userProp'
 
 export async function fetchMerchantProfileRequester(): Promise<MerchantProfileFormValues | null> {
   try {
-    const res = await axios.get("/api/merchant/profile", {
+    const res = await axios.get('/api/merchant/profile', {
       withCredentials: true
     })
     return res.data.user
   } catch (error) {
-    console.error("Error fetching user:", error)
+    console.error('Error fetching user:', error)
     return null
   }
 }
@@ -21,25 +21,25 @@ export async function updateMerchantProfileRequester(
   images: File[] = []
 ): Promise<MerchantProfileFormValues | null> {
   try {
-    console.log("updateMerchantProfileRequester profileData:", profileData)
-    console.log("updateMerchantProfileRequester images:", images)
+    console.log('updateMerchantProfileRequester profileData:', profileData)
+    console.log('updateMerchantProfileRequester images:', images)
     const formData = new FormData()
-    formData.append("profileData", JSON.stringify(profileData))
+    formData.append('profileData', JSON.stringify(profileData))
 
     if (images && images.length > 0) {
       // โปรไฟล์มีรูปเดียว → ส่งรูปเดียว
-      formData.append("images", images[0])
+      formData.append('images', images[0])
     }
 
-    const res = await axios.put("/api/merchant/profile", formData, {
+    const res = await axios.put('/api/merchant/profile', formData, {
       withCredentials: true,
       headers: {
-        "Content-Type": "multipart/form-data"
+        'Content-Type': 'multipart/form-data'
       }
     })
     return res.data
   } catch (error) {
-    console.error("Error updating user profile:", error)
+    console.error('Error updating user profile:', error)
     return null
   }
 }
@@ -59,7 +59,7 @@ export async function updateMerchantAddressRequester(
     )
     return res.data
   } catch (error) {
-    console.error("Error updating merchant address:", error)
+    console.error('Error updating merchant address:', error)
     throw error
   }
 }

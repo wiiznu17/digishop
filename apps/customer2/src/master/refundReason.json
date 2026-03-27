@@ -1,23 +1,23 @@
 {
-    "RF01":{
-        "label":"I don't want this the order"
-    },
-    "RF02":{
-        "label":"The item arrived damaged"
-    },
-    "RF03":{
-        "label":"The order is incomplete"
-    },
-    "RF04":{
-        "label":"I received the wrong item"
-    },
-    "RF05":{
-        "label":"The delivery was delayed"
-    },
-    "RF06":{
-        "label":"I an not satisfied with the product"
-    },
-    "RF00":{
-        "label":"other"
-    }
+  "RF01": {
+    "label": "I don't want this the order"
+  },
+  "RF02": {
+    "label": "The item arrived damaged"
+  },
+  "RF03": {
+    "label": "The order is incomplete"
+  },
+  "RF04": {
+    "label": "I received the wrong item"
+  },
+  "RF05": {
+    "label": "The delivery was delayed"
+  },
+  "RF06": {
+    "label": "I an not satisfied with the product"
+  },
+  "RF00": {
+    "label": "other"
+  }
 }

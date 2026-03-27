@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   ArrowLeft,
   Package,
@@ -15,12 +15,12 @@ import {
   Mail,
   Clock,
   Undo2
-} from "lucide-react"
+} from 'lucide-react'
 
-import { MerchantHeader } from "@/components/dashboard-header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { MerchantHeader } from '@/components/dashboard-header'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -28,33 +28,33 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 
-import { Order, OrderStatus } from "@/types/props/orderProp"
-import { OrderStatusManager } from "@/components/order/orderManager"
-import { useOrderStatus } from "@/hooks/useOrderStatus"
+import { Order, OrderStatus } from '@/types/props/orderProp'
+import { OrderStatusManager } from '@/components/order/orderManager'
+import { useOrderStatus } from '@/hooks/useOrderStatus'
 import {
   getOrderByIdRequester,
   handOverOrderRequester,
   updateOrderRequester
-} from "@/utils/requestUtils/requestOrderUtils"
-import { useToast } from "@/hooks/use-toast"
+} from '@/utils/requestUtils/requestOrderUtils'
+import { useToast } from '@/hooks/use-toast'
 
 /** ---------- helpers ---------- */
 const fmtTHB = (n?: number) =>
-  `฿${(n ?? 0).toLocaleString("th-TH", { maximumFractionDigits: 0 })}`
+  `฿${(n ?? 0).toLocaleString('th-TH', { maximumFractionDigits: 0 })}`
 
 const fmtDate = (iso?: string) =>
   iso
-    ? new Intl.DateTimeFormat("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+    ? new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
         hour12: false
       }).format(new Date(iso))
-    : "-"
+    : '-'
 
 /** ---------- page ---------- */
 export default function OrderDetailPage() {
@@ -90,12 +90,12 @@ export default function OrderDetailPage() {
       const res = await updateOrderRequester(id, { status: newStatus })
       setOrder(res.data)
       toast({
-        title: "Status updated",
+        title: 'Status updated',
         description: getStatusText(res.data.status)
       })
     } catch (e) {
       setOrder(prev)
-      toast({ title: "Failed to update", variant: "destructive" })
+      toast({ title: 'Failed to update', variant: 'destructive' })
     }
   }
 
@@ -109,10 +109,10 @@ export default function OrderDetailPage() {
     try {
       const res = await updateOrderRequester(id, { trackingNumber })
       setOrder(res.data)
-      toast({ title: "Tracking updated" })
+      toast({ title: 'Tracking updated' })
     } catch (e) {
       setOrder(prev)
-      toast({ title: "Failed to update tracking", variant: "destructive" })
+      toast({ title: 'Failed to update tracking', variant: 'destructive' })
     }
   }
 
@@ -125,20 +125,20 @@ export default function OrderDetailPage() {
     const prev = order
     setOrder({
       ...order,
-      status: "HANDED_OVER",
+      status: 'HANDED_OVER',
       statusHistory: [
         ...(order.statusHistory ?? [order.status]),
-        "HANDED_OVER"
+        'HANDED_OVER'
       ],
       trackingNumber
     })
     try {
       const res = await handOverOrderRequester(id, trackingNumber, carrier)
       setOrder(res.data)
-      toast({ title: "Parcel handed over" })
+      toast({ title: 'Parcel handed over' })
     } catch (e) {
       setOrder(prev)
-      toast({ title: "Failed to hand over", variant: "destructive" })
+      toast({ title: 'Failed to hand over', variant: 'destructive' })
     }
   }
 
@@ -182,7 +182,7 @@ export default function OrderDetailPage() {
             <div className="space-y-1">
               <div className="text-sm text-muted-foreground">Order code</div>
               <div className="font-medium font-mono">
-                {order?.orderCode ?? "-"}
+                {order?.orderCode ?? '-'}
               </div>
             </div>
             <div className="space-y-1">
@@ -320,8 +320,8 @@ export default function OrderDetailPage() {
                             </div>
                           )}
                           <div className="text-xs text-muted-foreground mt-1">
-                            {fmtDate(e.occurredAt)}{" "}
-                            {e.location ? `• ${e.location}` : ""}
+                            {fmtDate(e.occurredAt)}{' '}
+                            {e.location ? `• ${e.location}` : ''}
                           </div>
                         </div>
                       </div>
@@ -355,7 +355,7 @@ export default function OrderDetailPage() {
                           <div className="text-xs text-muted-foreground">
                             {rs.trackingNumber
                               ? `Tracking: ${rs.trackingNumber}`
-                              : "No tracking"}
+                              : 'No tracking'}
                           </div>
                         </div>
                         {rs.events?.length ? (
@@ -438,16 +438,16 @@ export default function OrderDetailPage() {
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">
-                    {order?.customerName || "N/A"}
+                    {order?.customerName || 'N/A'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{order?.customerEmail || "-"}</span>
+                  <span>{order?.customerEmail || '-'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{order?.customerPhone || "-"}</span>
+                  <span>{order?.customerPhone || '-'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -473,7 +473,7 @@ export default function OrderDetailPage() {
                     <div>{order.shippingAddress.street}</div>
                     <div>{order.shippingAddress.district}</div>
                     <div>
-                      {order.shippingAddress.province}{" "}
+                      {order.shippingAddress.province}{' '}
                       {order.shippingAddress.postalCode}
                     </div>
                     <div className="text-muted-foreground">
@@ -491,7 +491,7 @@ export default function OrderDetailPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Truck className="h-4 w-4 text-muted-foreground" />
                     <code className="text-sm bg-muted px-2 py-1 rounded">
-                      {order?.trackingNumber ?? "—"}
+                      {order?.trackingNumber ?? '—'}
                     </code>
                     {order?.carrier && (
                       <span className="text-xs text-muted-foreground">
@@ -515,13 +515,13 @@ export default function OrderDetailPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Provider</span>
                   <span className="font-medium">
-                    {order?.payment?.provider ?? "-"}
+                    {order?.payment?.provider ?? '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Channel</span>
                   <span className="font-medium">
-                    {order?.payment?.channel ?? "-"}
+                    {order?.payment?.channel ?? '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -547,7 +547,7 @@ export default function OrderDetailPage() {
                   <span className="font-medium">
                     {order?.payment?.paidAt
                       ? fmtDate(order.payment.paidAt)
-                      : "-"}
+                      : '-'}
                   </span>
                 </div>
               </CardContent>

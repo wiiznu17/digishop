@@ -1,17 +1,17 @@
 // apps/portal/src/app/(main)/admin/payouts/page.tsx
-"use client"
+'use client'
 
-import { useEffect, useMemo, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -19,23 +19,23 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
+} from '@/components/ui/select'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { CalendarDays, Eye, Search, Timer } from "lucide-react"
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { CalendarDays, Eye, Search, Timer } from 'lucide-react'
 
 // ================= Mock data =================
 
@@ -53,12 +53,12 @@ type Txn = {
 }
 
 type PayoutStatus =
-  | "PENDING" // ยังไม่ยิงจ่าย
-  | "SCHEDULED" // cron ตั้งคิวไว้แล้ว
-  | "PROCESSING" // กำลังโอน
-  | "PAID" // โอนสำเร็จ
-  | "FAILED" // โอนล้มเหลว
-  | "ON_HOLD" // ระงับ
+  | 'PENDING' // ยังไม่ยิงจ่าย
+  | 'SCHEDULED' // cron ตั้งคิวไว้แล้ว
+  | 'PROCESSING' // กำลังโอน
+  | 'PAID' // โอนสำเร็จ
+  | 'FAILED' // โอนล้มเหลว
+  | 'ON_HOLD' // ระงับ
 
 // ร้านค้า (สมมติ)
 const MERCHANTS: Merchant[] = Array.from({ length: 36 }).map((_, i) => ({
@@ -90,7 +90,7 @@ const TXNS: Txn[] = (() => {
 // ================= Helpers =================
 
 const fmtTHB = (minor: number) =>
-  (minor / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+  (minor / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 function startOfMonth(d = new Date()) {
   return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
@@ -116,7 +116,7 @@ function useDebounce<T>(val: T, ms = 300) {
 
 // ================= Page =================
 
-type PeriodMode = "THIS_MONTH" | "LAST_MONTH" | "CUSTOM"
+type PeriodMode = 'THIS_MONTH' | 'LAST_MONTH' | 'CUSTOM'
 
 type Row = {
   merchantId: number
@@ -147,10 +147,10 @@ function Pager({
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="text-sm text-muted-foreground">
-        Showing{" "}
+        Showing{' '}
         <span className="font-medium">
           {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)}
-        </span>{" "}
+        </span>{' '}
         of <span className="font-medium">{total}</span>
       </div>
       <div className="flex items-center gap-2">
@@ -195,7 +195,7 @@ export default function AdminPayoutsPage() {
   const router = useRouter()
 
   // ------- search + suggest -------
-  const [q, setQ] = useState("")
+  const [q, setQ] = useState('')
   const debounceQ = useDebounce(q, 300)
   const [openSuggest, setOpenSuggest] = useState(false)
   const [loadingSuggest, setLoadingSuggest] = useState(false)
@@ -227,14 +227,14 @@ export default function AdminPayoutsPage() {
   }, [debounceQ])
 
   // ------- filters -------
-  const [period, setPeriod] = useState<PeriodMode>("THIS_MONTH")
+  const [period, setPeriod] = useState<PeriodMode>('THIS_MONTH')
   const [dateFrom, setDateFrom] = useState<string>(() =>
     startOfMonth().toISOString().slice(0, 10)
   )
   const [dateTo, setDateTo] = useState<string>(() =>
     endOfMonth().toISOString().slice(0, 10)
   )
-  const [status, setStatus] = useState<PayoutStatus | "ALL">("ALL")
+  const [status, setStatus] = useState<PayoutStatus | 'ALL'>('ALL')
 
   // ------- pagination -------
   const [page, setPage] = useState(1)
@@ -242,10 +242,10 @@ export default function AdminPayoutsPage() {
 
   // ------- derive period range -------
   const { fromDate, toDate } = useMemo(() => {
-    if (period === "THIS_MONTH") {
+    if (period === 'THIS_MONTH') {
       return { fromDate: startOfMonth(), toDate: endOfMonth() }
     }
-    if (period === "LAST_MONTH") {
+    if (period === 'LAST_MONTH') {
       const { from, to } = lastMonthRange()
       return { fromDate: from, toDate: to }
     }
@@ -278,14 +278,14 @@ export default function AdminPayoutsPage() {
 
       // สถานะสมมติ: ถ้า net=0 ให้ ON_HOLD, ถ้ามากกว่า 0 หมุนเวียนสถานะ
       const statusPool: PayoutStatus[] = [
-        "PENDING",
-        "SCHEDULED",
-        "PROCESSING",
-        "PAID",
-        "FAILED"
+        'PENDING',
+        'SCHEDULED',
+        'PROCESSING',
+        'PAID',
+        'FAILED'
       ]
       const st: PayoutStatus =
-        net <= 0 ? "ON_HOLD" : statusPool[idx % statusPool.length]
+        net <= 0 ? 'ON_HOLD' : statusPool[idx % statusPool.length]
 
       // กำหนดวันโอน (เช่น สิ้นเดือน + 3 วัน)
       const scheduled = new Date(toDate)
@@ -315,7 +315,7 @@ export default function AdminPayoutsPage() {
           r.storeName.toLowerCase().includes(t) ||
           r.email.toLowerCase().includes(t)
       )
-    if (status !== "ALL") base = base.filter((r) => r.status === status)
+    if (status !== 'ALL') base = base.filter((r) => r.status === status)
     // sort: net desc
     base = [...base].sort((a, b) => b.netMinor - a.netMinor)
     return base
@@ -354,7 +354,7 @@ export default function AdminPayoutsPage() {
           <div className="flex items-center gap-2 text-sm rounded-md border p-3 bg-muted/30">
             <Timer className="h-4 w-4" />
             <div>
-              Next cron run:{" "}
+              Next cron run:{' '}
               <span className="font-medium">{nextCron.toLocaleString()}</span> ·
               Policy: โอนภายใน 3 วันหลังสิ้นงวด (mock)
             </div>
@@ -379,7 +379,7 @@ export default function AdminPayoutsPage() {
                         setTimeout(() => setOpenSuggest(false), 120)
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") setOpenSuggest(false)
+                        if (e.key === 'Enter') setOpenSuggest(false)
                       }}
                     />
                     <Button
@@ -436,10 +436,10 @@ export default function AdminPayoutsPage() {
                 value={period}
                 onValueChange={(v: PeriodMode) => {
                   setPeriod(v)
-                  if (v === "THIS_MONTH") {
+                  if (v === 'THIS_MONTH') {
                     setDateFrom(startOfMonth().toISOString().slice(0, 10))
                     setDateTo(endOfMonth().toISOString().slice(0, 10))
-                  } else if (v === "LAST_MONTH") {
+                  } else if (v === 'LAST_MONTH') {
                     const { from, to } = lastMonthRange()
                     setDateFrom(from.toISOString().slice(0, 10))
                     setDateTo(to.toISOString().slice(0, 10))
@@ -492,7 +492,7 @@ export default function AdminPayoutsPage() {
                   <Input
                     type="date"
                     value={dateFrom}
-                    disabled={period !== "CUSTOM"}
+                    disabled={period !== 'CUSTOM'}
                     onChange={(e) => setDateFrom(e.target.value)}
                   />
                 </div>
@@ -504,7 +504,7 @@ export default function AdminPayoutsPage() {
                   <Input
                     type="date"
                     value={dateTo}
-                    disabled={period !== "CUSTOM"}
+                    disabled={period !== 'CUSTOM'}
                     onChange={(e) => setDateTo(e.target.value)}
                   />
                 </div>
@@ -547,7 +547,7 @@ export default function AdminPayoutsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <span
-                        className={r.netMinor <= 0 ? "text-destructive" : ""}
+                        className={r.netMinor <= 0 ? 'text-destructive' : ''}
                       >
                         {fmtTHB(r.netMinor)}
                       </span>
@@ -555,23 +555,23 @@ export default function AdminPayoutsPage() {
                     <TableCell>
                       {r.scheduledAt
                         ? new Date(r.scheduledAt).toLocaleDateString()
-                        : "-"}
+                        : '-'}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
                         className={
-                          r.status === "PAID"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                            : r.status === "FAILED"
-                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                              : r.status === "PROCESSING"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                                : r.status === "SCHEDULED"
-                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
-                                  : r.status === "ON_HOLD"
-                                    ? "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                                    : ""
+                          r.status === 'PAID'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                            : r.status === 'FAILED'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                              : r.status === 'PROCESSING'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                : r.status === 'SCHEDULED'
+                                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300'
+                                  : r.status === 'ON_HOLD'
+                                    ? 'bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                                    : ''
                         }
                       >
                         {r.status}
@@ -657,7 +657,7 @@ export default function AdminPayoutsPage() {
                   </div>
                   <div
                     className={`font-medium ${
-                      current.netMinor <= 0 ? "text-destructive" : ""
+                      current.netMinor <= 0 ? 'text-destructive' : ''
                     }`}
                   >
                     {fmtTHB(current.netMinor)}
@@ -676,7 +676,7 @@ export default function AdminPayoutsPage() {
                 <span className="text-muted-foreground">Scheduled: </span>
                 {current.scheduledAt
                   ? new Date(current.scheduledAt).toLocaleString()
-                  : "-"}
+                  : '-'}
               </div>
               <Button
                 className="mt-2"

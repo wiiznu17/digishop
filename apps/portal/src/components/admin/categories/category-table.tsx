@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -8,9 +8,9 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Eye, EyeOff, Pencil, Trash2, Info } from "lucide-react"
-import type { AdminCategoryItem } from "@/utils/requesters/categoryRequester"
+} from '@/components/ui/table'
+import { Eye, EyeOff, Pencil, Trash2, Info } from 'lucide-react'
+import type { AdminCategoryItem } from '@/utils/requesters/categoryRequester'
 
 type Props = {
   loading: boolean
@@ -119,14 +119,14 @@ export function CategoryTable({
                     </Button> */}
                     <Button
                       variant={
-                        row.productCountTotal > 0 ? "outline" : "destructive"
+                        row.productCountTotal > 0 ? 'outline' : 'destructive'
                       }
                       size="sm"
                       onClick={() => onDelete(row)}
                       title={
                         row.productCountTotal > 0
-                          ? "ลบไม่ได้ (มีสินค้า) — เลือกย้ายสินค้า"
-                          : "Delete"
+                          ? 'ลบไม่ได้ (มีสินค้า) — เลือกย้ายสินค้า'
+                          : 'Delete'
                       }
                     >
                       <Trash2 className="h-4 w-4" />

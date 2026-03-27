@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -18,42 +18,42 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import {
   fetchAdminRefundListRequester,
   fetchAdminOrderSuggestByCode,
   AdminRefundLite
-} from "@/utils/requesters/refundRequester"
-import { Pager } from "@/components/common/Pager"
-import AuthGuard from "@/components/AuthGuard"
+} from '@/utils/requesters/refundRequester'
+import { Pager } from '@/components/common/Pager'
+import AuthGuard from '@/components/AuthGuard'
 import {
   RefundStatus,
   RefundStatusBadge
-} from "@/components/commerce/orders/RefundStatusBadge"
-import { DashboardHeader } from "@/components/dashboard-header"
+} from '@/components/commerce/orders/RefundStatusBadge'
+import { DashboardHeader } from '@/components/dashboard-header'
 
 const formatTHB = (m: number) =>
-  (m / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+  (m / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 function AdminRefundsPage() {
   const router = useRouter()
 
   // Filters
-  const [status, setStatus] = useState<string>("ALL")
-  const [dateFrom, setDateFrom] = useState<string>("")
-  const [dateTo, setDateTo] = useState<string>("")
+  const [status, setStatus] = useState<string>('ALL')
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
   // Search (order id / customer name)
-  const [q, setQ] = useState<string>("")
+  const [q, setQ] = useState<string>('')
   // Suggest (order_code)
-  const [orderCode, setOrderCode] = useState<string>("")
+  const [orderCode, setOrderCode] = useState<string>('')
   const [suggests, setSuggests] = useState<
     Array<{ id: number; orderCode: string }>
   >([])
@@ -78,8 +78,8 @@ function AdminRefundsPage() {
       dateTo,
       page,
       pageSize,
-      sortBy: "createdAt",
-      sortDir: "desc"
+      sortBy: 'createdAt',
+      sortDir: 'desc'
     })
     if (response) {
       setRows(response.data)
@@ -125,7 +125,7 @@ function AdminRefundsPage() {
 
   return (
     <div>
-      {" "}
+      {' '}
       <DashboardHeader
         title="Refund Orders"
         description="View all order that requested refunds"
@@ -160,7 +160,7 @@ function AdminRefundsPage() {
                       size="sm"
                       variant="ghost"
                       className="absolute right-1 top-1 h-7 px-2"
-                      onClick={() => setOrderCode("")}
+                      onClick={() => setOrderCode('')}
                     >
                       Clear
                     </Button>
@@ -187,12 +187,12 @@ function AdminRefundsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {[
-                      "ALL",
-                      "REQUESTED",
-                      "APPROVED",
-                      "SUCCESS",
-                      "FAIL",
-                      "CANCELED"
+                      'ALL',
+                      'REQUESTED',
+                      'APPROVED',
+                      'SUCCESS',
+                      'FAIL',
+                      'CANCELED'
                     ].map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
@@ -254,9 +254,9 @@ function AdminRefundsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span>{r.customerName ?? "—"}</span>
+                          <span>{r.customerName ?? '—'}</span>
                           <span className="text-xs text-muted-foreground">
-                            {r.customerEmail ?? ""}
+                            {r.customerEmail ?? ''}
                           </span>
                         </div>
                       </TableCell>
@@ -269,10 +269,10 @@ function AdminRefundsPage() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="text-xs">
-                            Req:{" "}
+                            Req:{' '}
                             {r.requestedAt
                               ? new Date(r.requestedAt).toLocaleString()
-                              : "—"}
+                              : '—'}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             Created: {new Date(r.createdAt).toLocaleString()}
@@ -340,8 +340,8 @@ function AdminRefundsPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["REFUNDS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['REFUNDS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

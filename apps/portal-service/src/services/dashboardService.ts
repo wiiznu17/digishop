@@ -1,90 +1,116 @@
-import { OrderStatus } from "@digishop/db";
-import { Op, WhereOptions } from "sequelize";
-import { BadRequestError } from "../errors/AppError";
-import { dashboardRepository } from "../repositories/dashboardRepository";
+import { OrderStatus } from '@digishop/db'
+import { Op, WhereOptions } from 'sequelize'
+import { BadRequestError } from '../errors/AppError'
+import { dashboardRepository } from '../repositories/dashboardRepository'
 
-type SeriesByStatus = Record<OrderStatus, number>;
+type SeriesByStatus = Record<OrderStatus, number>
 
 type SeriesPoint = {
-  date: string;
-  gmvMinor: number;
-  orders: number;
-  byStatus: SeriesByStatus;
-};
+  date: string
+  gmvMinor: number
+  orders: number
+  byStatus: SeriesByStatus
+}
 
 type DashboardKpis = {
-  gmvMinor: number;
-  orders: number;
-  activeStores: number;
-  newUsers: number;
-};
+  gmvMinor: number
+  orders: number
+  activeStores: number
+  newUsers: number
+}
 
-type StatusDistRow = { name: OrderStatus; value: number };
-type TopStore = { name: string; gmvMinor: number };
+type StatusDistRow = { name: OrderStatus; value: number }
+type TopStore = { name: string; gmvMinor: number }
 
 function toNum(v: string | number | null | undefined): number {
-  if (typeof v === "number") return v;
-  if (typeof v === "string") {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
+  if (typeof v === 'number') return v
+  if (typeof v === 'string') {
+    const n = Number(v)
+    return Number.isFinite(n) ? n : 0
   }
-  return 0;
+  return 0
 }
 
 function isDateStr(s: string | undefined): s is string {
-  if (!s) return false;
-  const t = new Date(s).getTime();
-  return Number.isFinite(t);
+  if (!s) return false
+  const t = new Date(s).getTime()
+  return Number.isFinite(t)
 }
 
-function parseRange(query: Record<string, string | undefined>): { from: string; to: string } {
+function parseRange(query: Record<string, string | undefined>): {
+  from: string
+  to: string
+} {
   if (!isDateStr(query.from) || !isDateStr(query.to)) {
-    throw new BadRequestError("Invalid date range: 'from' or 'to'");
+    throw new BadRequestError("Invalid date range: 'from' or 'to'")
   }
-  return { from: query.from, to: query.to };
+  return { from: query.from, to: query.to }
 }
 
 function whereBetweenCreatedAt(r: { from: string; to: string }): WhereOptions {
-  const startDate = new Date(r.from);
-  startDate.setHours(0, 0, 0, 0);
+  const startDate = new Date(r.from)
+  startDate.setHours(0, 0, 0, 0)
 
-  const endDate = new Date(r.to);
-  endDate.setHours(23, 59, 59, 999);
+  const endDate = new Date(r.to)
+  endDate.setHours(23, 59, 59, 999)
 
   return {
     createdAt: { [Op.between]: [startDate, endDate] }
-  };
+  }
 }
 
 export class DashboardService {
   async getDashboardKpis(query: Record<string, string | undefined>) {
-    const range = parseRange(query);
-    const where = whereBetweenCreatedAt(range);
+    const range = parseRange(query)
+    const where = whereBetweenCreatedAt(range)
 
-    const rows = (await dashboardRepository.getKpisOrdersData(where)) as unknown as Array<{ gmvMinor: string | number; orders: string | number; activeStores: string | number }>;
+    const rows = (await dashboardRepository.getKpisOrdersData(
+      where
+    )) as unknown as Array<{
+      gmvMinor: string | number
+      orders: string | number
+      activeStores: string | number
+    }>
 
-    const r0 = rows[0];
+    const r0 = rows[0]
     const kpis: DashboardKpis = {
       gmvMinor: toNum(r0?.gmvMinor),
       orders: toNum(r0?.orders),
       activeStores: toNum(r0?.activeStores),
-      newUsers: await dashboardRepository.getKpisNewUsers(whereBetweenCreatedAt(range))
-    };
+      newUsers: await dashboardRepository.getKpisNewUsers(
+        whereBetweenCreatedAt(range)
+      )
+    }
 
-    return kpis;
+    return kpis
   }
 
   async getDashboardSeries(query: Record<string, string | undefined>) {
-    const range = parseRange(query);
-    const where = whereBetweenCreatedAt(range);
+    const range = parseRange(query)
+    const where = whereBetweenCreatedAt(range)
 
-    const dailyTotals = (await dashboardRepository.getDailyTotals(where)) as unknown as Array<{ day: string; gmvMinor: string | number; orders: string | number }>;
-    const byStatusDaily = (await dashboardRepository.getDailyByStatus(where)) as unknown as Array<{ day: string; status: OrderStatus; c: string | number }>;
+    const dailyTotals = (await dashboardRepository.getDailyTotals(
+      where
+    )) as unknown as Array<{
+      day: string
+      gmvMinor: string | number
+      orders: string | number
+    }>
+    const byStatusDaily = (await dashboardRepository.getDailyByStatus(
+      where
+    )) as unknown as Array<{
+      day: string
+      status: OrderStatus
+      c: string | number
+    }>
 
-    const mapTotals = new Map<string, { gmvMinor: number; orders: number }>();
+    const mapTotals = new Map<string, { gmvMinor: number; orders: number }>()
     dailyTotals.forEach((r) =>
-      mapTotals.set(r.day, { gmvMinor: toNum(r.gmvMinor), orders: toNum(r.orders) })
-    );
+      mapTotals.set(r.day, {
+        gmvMinor: toNum(r.gmvMinor),
+        orders: toNum(r.orders)
+      })
+    )
 
     const emptyStatus: SeriesByStatus = {
       [OrderStatus.CANCELED_REFUND]: 0,
@@ -111,36 +137,40 @@ export class DashboardService {
       [OrderStatus.REFUND_SUCCESS]: 0,
       [OrderStatus.REFUND_FAIL]: 0,
       [OrderStatus.REFUND_RETRY]: 0
-    };
+    }
 
-    const mapStatus = new Map<string, SeriesByStatus>();
+    const mapStatus = new Map<string, SeriesByStatus>()
     byStatusDaily.forEach((r) => {
-      const cur = mapStatus.get(r.day) ?? { ...emptyStatus };
-      const next: SeriesByStatus = { ...cur };
-      next[r.status] = (next[r.status] ?? 0) + toNum(r.c);
-      mapStatus.set(r.day, next);
-    });
+      const cur = mapStatus.get(r.day) ?? { ...emptyStatus }
+      const next: SeriesByStatus = { ...cur }
+      next[r.status] = (next[r.status] ?? 0) + toNum(r.c)
+      mapStatus.set(r.day, next)
+    })
 
-    const allDays = Array.from(new Set([...mapTotals.keys(), ...mapStatus.keys()])).sort();
+    const allDays = Array.from(
+      new Set([...mapTotals.keys(), ...mapStatus.keys()])
+    ).sort()
 
     const series: SeriesPoint[] = allDays.map((day) => {
-      const t = mapTotals.get(day) ?? { gmvMinor: 0, orders: 0 };
+      const t = mapTotals.get(day) ?? { gmvMinor: 0, orders: 0 }
       return {
         date: day,
         gmvMinor: t.gmvMinor,
         orders: t.orders,
         byStatus: mapStatus.get(day) ?? { ...emptyStatus }
-      };
-    });
+      }
+    })
 
-    return series;
+    return series
   }
 
   async getDashboardStatusDist(query: Record<string, string | undefined>) {
-    const range = parseRange(query);
-    const where = whereBetweenCreatedAt(range);
+    const range = parseRange(query)
+    const where = whereBetweenCreatedAt(range)
 
-    const rows = (await dashboardRepository.getStatusDist(where)) as unknown as Array<{ name: OrderStatus; value: string | number }>;
+    const rows = (await dashboardRepository.getStatusDist(
+      where
+    )) as unknown as Array<{ name: OrderStatus; value: string | number }>
 
     const names: OrderStatus[] = [
       OrderStatus.CANCELED_REFUND,
@@ -167,27 +197,32 @@ export class DashboardService {
       OrderStatus.REFUND_SUCCESS,
       OrderStatus.REFUND_FAIL,
       OrderStatus.REFUND_RETRY
-    ];
-    const m = new Map<OrderStatus, number>();
-    rows.forEach((r) => m.set(r.name, toNum(r.value)));
-    const dist: StatusDistRow[] = names.map((n) => ({ name: n, value: m.get(n) ?? 0 }));
+    ]
+    const m = new Map<OrderStatus, number>()
+    rows.forEach((r) => m.set(r.name, toNum(r.value)))
+    const dist: StatusDistRow[] = names.map((n) => ({
+      name: n,
+      value: m.get(n) ?? 0
+    }))
 
-    return dist;
+    return dist
   }
 
   async getDashboardTopStores(query: Record<string, string | undefined>) {
-    const range = parseRange(query);
-    const where = whereBetweenCreatedAt(range);
+    const range = parseRange(query)
+    const where = whereBetweenCreatedAt(range)
 
-    const rows = (await dashboardRepository.getTopStores(where)) as unknown as Array<{ gmvMinor: string | number; name: string | null }>;
+    const rows = (await dashboardRepository.getTopStores(
+      where
+    )) as unknown as Array<{ gmvMinor: string | number; name: string | null }>
 
     const data: TopStore[] = rows.map((r) => ({
-      name: String(r.name ?? "Unknown"),
+      name: String(r.name ?? 'Unknown'),
       gmvMinor: Number(r.gmvMinor) || 0
-    }));
+    }))
 
-    return data;
+    return data
   }
 }
 
-export const dashboardService = new DashboardService();
+export const dashboardService = new DashboardService()

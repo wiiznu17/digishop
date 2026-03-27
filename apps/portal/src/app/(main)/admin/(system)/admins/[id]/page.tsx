@@ -1,17 +1,17 @@
 // apps/portal/src/app/(main)/admin/(system)/admins/[id]/page.tsx
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -19,26 +19,26 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import type {
   AdminDetail,
   AdminRoleSlug,
   RolesDetail
-} from "@/types/system/admin"
+} from '@/types/system/admin'
 import {
   fetchAdminDetail,
   sendAdminInviteById,
   resetAdminPasswordById,
   fetchRoleOptions,
   updateAdminRoles
-} from "@/utils/requesters/adminRequester"
+} from '@/utils/requesters/adminRequester'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
-} from "@/components/ui/popover"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronDown } from "lucide-react"
+} from '@/components/ui/popover'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ChevronDown } from 'lucide-react'
 
 export default function AdminDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -93,11 +93,11 @@ export default function AdminDetailPage() {
     const sec = Math.ceil(ms / 1000)
     const mm = Math.floor(sec / 60)
     const ss = sec % 60
-    return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`
+    return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
   }, [data?.reinviteAvailableAt, now])
 
   function formatDT(iso?: string | null) {
-    if (!iso) return "-"
+    if (!iso) return '-'
     try {
       return new Date(iso).toLocaleString()
     } catch {
@@ -110,12 +110,12 @@ export default function AdminDetailPage() {
     setSendingInvite(true)
     try {
       await sendAdminInviteById(data.id)
-      alert("Invite email has been sent.")
+      alert('Invite email has been sent.')
       const res = await fetchAdminDetail(Number(id))
       setData(res)
     } catch (e) {
       console.error(e)
-      alert("Failed to send invite.")
+      alert('Failed to send invite.')
     } finally {
       setSendingInvite(false)
     }
@@ -126,10 +126,10 @@ export default function AdminDetailPage() {
     setResettingPass(true)
     try {
       await resetAdminPasswordById(data.id)
-      alert("Password reset email has been sent.")
+      alert('Password reset email has been sent.')
     } catch (e) {
       console.error(e)
-      alert("Failed to send reset email.")
+      alert('Failed to send reset email.')
     } finally {
       setResettingPass(false)
     }
@@ -148,7 +148,7 @@ export default function AdminDetailPage() {
   async function handleSaveRoles() {
     if (!data) return
     if (roleDraft.length === 0) {
-      alert("Select at least one role.")
+      alert('Select at least one role.')
       return
     }
     setSavingRoles(true)
@@ -161,7 +161,7 @@ export default function AdminDetailPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error(e)
-      alert(e?.response?.data?.error ?? "Failed to update roles.")
+      alert(e?.response?.data?.error ?? 'Failed to update roles.')
     } finally {
       setSavingRoles(false)
     }
@@ -172,7 +172,7 @@ export default function AdminDetailPage() {
       <Card>
         <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
-            <CardTitle className="text-xl">{data?.name ?? "Admin"}</CardTitle>
+            <CardTitle className="text-xl">{data?.name ?? 'Admin'}</CardTitle>
             <CardDescription>
               Admin detail (roles, sessions, permissions)
             </CardDescription>
@@ -256,7 +256,7 @@ export default function AdminDetailPage() {
                             onClick={handleSaveRoles}
                             disabled={savingRoles || !hasRoleChanged}
                           >
-                            {savingRoles ? "Saving..." : "Save"}
+                            {savingRoles ? 'Saving...' : 'Save'}
                           </Button>
                         </div>
                       </div>
@@ -265,18 +265,18 @@ export default function AdminDetailPage() {
                 </div>
 
                 <div>
-                  <span className="text-muted-foreground">Last login:</span>{" "}
+                  <span className="text-muted-foreground">Last login:</span>{' '}
                   {data.lastLoginAt
                     ? new Date(data.lastLoginAt).toLocaleString()
-                    : "-"}
+                    : '-'}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Created:</span>{" "}
-                  {data ? new Date(data.createdAt).toLocaleString() : "-"}
+                  <span className="text-muted-foreground">Created:</span>{' '}
+                  {data ? new Date(data.createdAt).toLocaleString() : '-'}
                 </div>
                 {data.lastInviteAt && (
                   <div>
-                    <span className="text-muted-foreground">Last invite:</span>{" "}
+                    <span className="text-muted-foreground">Last invite:</span>{' '}
                     <span title={data.lastInviteAt}>
                       {formatDT(data.lastInviteAt)}
                     </span>
@@ -284,7 +284,7 @@ export default function AdminDetailPage() {
                 )}
                 {data.reinviteAvailableAt && countdown && (
                   <div>
-                    <span className="text-muted-foreground">Re-invite in:</span>{" "}
+                    <span className="text-muted-foreground">Re-invite in:</span>{' '}
                     <span
                       title={formatDT(data.reinviteAvailableAt)}
                       className="font-mono"
@@ -304,7 +304,7 @@ export default function AdminDetailPage() {
                 onClick={handleReinvite}
                 disabled={sendingInvite || !data}
               >
-                {sendingInvite ? "Sending..." : "Re-invite"}
+                {sendingInvite ? 'Sending...' : 'Re-invite'}
               </Button>
             )}
             {!Boolean(data?.canReinvite) &&
@@ -324,12 +324,12 @@ export default function AdminDetailPage() {
                 onClick={handleResetPassword}
                 disabled={resettingPass || !data}
               >
-                {resettingPass ? "Sending..." : "Reset password"}
+                {resettingPass ? 'Sending...' : 'Reset password'}
               </Button>
             )}
             <Button
               variant="outline"
-              onClick={() => router.push("/admin/system/admins")}
+              onClick={() => router.push('/admin/system/admins')}
             >
               Back
             </Button>
@@ -377,9 +377,9 @@ export default function AdminDetailPage() {
                           <Badge
                             variant="outline"
                             className={
-                              p.effect === "ALLOW"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                              p.effect === 'ALLOW'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                             }
                           >
                             {p.effect}
@@ -431,12 +431,12 @@ export default function AdminDetailPage() {
                         <TableCell className="font-mono text-xs">
                           {s.jti}
                         </TableCell>
-                        <TableCell>{s.ip ?? "-"}</TableCell>
+                        <TableCell>{s.ip ?? '-'}</TableCell>
                         <TableCell
                           className="max-w-[320px] truncate"
-                          title={s.userAgent ?? ""}
+                          title={s.userAgent ?? ''}
                         >
-                          {s.userAgent ?? "-"}
+                          {s.userAgent ?? '-'}
                         </TableCell>
                         <TableCell>
                           {new Date(s.expiresAt).toLocaleString()}
@@ -444,7 +444,7 @@ export default function AdminDetailPage() {
                         <TableCell>
                           {s.revokedAt
                             ? new Date(s.revokedAt).toLocaleString()
-                            : "-"}
+                            : '-'}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -491,10 +491,10 @@ export default function AdminDetailPage() {
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">
-                                {h.roleName ?? "-"}
+                                {h.roleName ?? '-'}
                               </span>
                               <span className="text-xs text-muted-foreground font-mono">
-                                {h.roleSlug ?? "-"}
+                                {h.roleSlug ?? '-'}
                               </span>
                             </div>
                           </TableCell>
@@ -502,9 +502,9 @@ export default function AdminDetailPage() {
                             <Badge
                               variant="outline"
                               className={
-                                h.status === "ACTIVE"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                                h.status === 'ACTIVE'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                               }
                             >
                               {h.status}

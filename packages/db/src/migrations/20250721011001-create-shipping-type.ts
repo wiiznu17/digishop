@@ -1,4 +1,4 @@
-import { DataTypes, QueryInterface } from 'sequelize';
+import { DataTypes, QueryInterface } from 'sequelize'
 
 export default {
   async up(queryInterface: QueryInterface) {
@@ -6,45 +6,45 @@ export default {
       id: {
         type: DataTypes.INTEGER.UNSIGNED,
         autoIncrement: true,
-        primaryKey: true,
+        primaryKey: true
       },
       name: {
         type: DataTypes.STRING(100),
-        allowNull: false,
+        allowNull: false
       },
       description: {
         type: DataTypes.STRING(255),
-        allowNull: true,
+        allowNull: true
       },
       estimatedDays: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 3, // ค่า default เช่น 3 วัน
+        defaultValue: 3 // ค่า default เช่น 3 วัน
       },
       price: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0.0,
+        defaultValue: 0.0
       },
       isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true,
+        defaultValue: true
       },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        defaultValue: DataTypes.NOW
       },
       updatedAt: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-    });
+        defaultValue: DataTypes.NOW
+      }
+    })
   },
 
   async down(queryInterface: QueryInterface) {
-    await queryInterface.dropTable('SHIPPING_TYPES');
-  },
-};
+    await queryInterface.dropTable('SHIPPING_TYPES')
+  }
+}

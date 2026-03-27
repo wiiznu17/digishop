@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Package,
   Clock,
@@ -9,15 +9,15 @@ import {
   CircleHelp,
   CheckCircle2, // NEW
   XCircle
-} from "lucide-react"
+} from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger
-} from "@/components/ui/tooltip"
-import type { OrderSummary } from "@/utils/requestUtils/requestOrderUtils"
-import { cn } from "@/utils/tailwindUtils"
+} from '@/components/ui/tooltip'
+import type { OrderSummary } from '@/utils/requestUtils/requestOrderUtils'
+import { cn } from '@/utils/tailwindUtils'
 
 interface OrderStatsProps {
   summary: OrderSummary | null
@@ -43,14 +43,14 @@ function StatCard({
   return (
     <Card
       className={cn(
-        "relative",
-        onClick && "cursor-pointer hover:bg-muted/40 transition-colors"
+        'relative',
+        onClick && 'cursor-pointer hover:bg-muted/40 transition-colors'
       )}
       onClick={onClick}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className={cn("rounded-md p-1", colorClass)}>
+        <div className={cn('rounded-md p-1', colorClass)}>
           <div className="h-7 w-7 [&>svg]:h-full [&>svg]:w-full">{icon}</div>
         </div>
       </CardHeader>
@@ -88,24 +88,24 @@ function StatCard({
 
 export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
   const s = summary
-  const val = (n?: number) => (loading ? "…" : (n ?? 0))
+  const val = (n?: number) => (loading ? '…' : (n ?? 0))
   const money = (n?: number) =>
-    loading ? "…" : `฿${(n ?? 0).toLocaleString()}`
-  const PAID_STATUS = ["PAID", "PROCESSING"]
+    loading ? '…' : `฿${(n ?? 0).toLocaleString()}`
+  const PAID_STATUS = ['PAID', 'PROCESSING']
 
   const DESCS = {
-    totalOrders: "จำนวนออเดอร์ทั้งหมดในระบบ",
-    pendingPayment: "ออเดอร์ที่ลูกค้ายังไม่ชำระเงิน",
-    paidOrders: "ออเดอร์ที่ชำระเงินแล้วและรอการยืนยัน/เตรียมจัดส่งจากร้านค้า",
-    processing: "ออเดอร์ระหว่างเตรียมสินค้า/รอขนส่งเข้ารับ",
+    totalOrders: 'จำนวนออเดอร์ทั้งหมดในระบบ',
+    pendingPayment: 'ออเดอร์ที่ลูกค้ายังไม่ชำระเงิน',
+    paidOrders: 'ออเดอร์ที่ชำระเงินแล้วและรอการยืนยัน/เตรียมจัดส่งจากร้านค้า',
+    processing: 'ออเดอร์ระหว่างเตรียมสินค้า/รอขนส่งเข้ารับ',
     handedOver:
-      "ออเดอร์อยู่ระหว่างขนส่ง (HANDED_OVER/SHIPPED/TRANSIT_LACK/RE_TRANSIT)",
-    refundRequests: "ออเดอร์ที่ลูกค้าร้องขอคืนเงิน (ยังไม่สำเร็จ)",
-    canceledOrders: "ออเดอร์ที่ถูกยกเลิกโดยลูกค้าหรือร้านค้า",
+      'ออเดอร์อยู่ระหว่างขนส่ง (HANDED_OVER/SHIPPED/TRANSIT_LACK/RE_TRANSIT)',
+    refundRequests: 'ออเดอร์ที่ลูกค้าร้องขอคืนเงิน (ยังไม่สำเร็จ)',
+    canceledOrders: 'ออเดอร์ที่ถูกยกเลิกโดยลูกค้าหรือร้านค้า',
     totalRevenue:
-      "ยอดสั่งซื้อ (ไม่รวมออเดอร์ที่ยกเลิกและออเดอร์ที่คืนเงินสำเร็จ)",
-    refundSuccessOrders: "ออเดอร์ที่คืนเงินสำเร็จ",
-    completed: "ออเดอร์ที่สำเร็จ"
+      'ยอดสั่งซื้อ (ไม่รวมออเดอร์ที่ยกเลิกและออเดอร์ที่คืนเงินสำเร็จ)',
+    refundSuccessOrders: 'ออเดอร์ที่คืนเงินสำเร็จ',
+    completed: 'ออเดอร์ที่สำเร็จ'
   }
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
@@ -123,7 +123,7 @@ export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
         icon={<Clock />}
         colorClass="text-yellow-600"
         description={DESCS.pendingPayment}
-        onClick={() => onStatClick?.({ statuses: ["PENDING"] })}
+        onClick={() => onStatClick?.({ statuses: ['PENDING'] })}
       />
 
       <StatCard
@@ -142,7 +142,7 @@ export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
         colorClass="text-blue-600"
         description={DESCS.processing}
         onClick={() =>
-          onStatClick?.({ statuses: ["PROCESSING", "READY_TO_SHIP"] })
+          onStatClick?.({ statuses: ['PROCESSING', 'READY_TO_SHIP'] })
         }
       />
 
@@ -154,7 +154,7 @@ export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
         description={DESCS.handedOver}
         onClick={() =>
           onStatClick?.({
-            statuses: ["HANDED_OVER", "SHIPPED", "TRANSIT_LACK", "RE_TRANSIT"]
+            statuses: ['HANDED_OVER', 'SHIPPED', 'TRANSIT_LACK', 'RE_TRANSIT']
           })
         }
       />
@@ -165,7 +165,7 @@ export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
         icon={<RotateCcw />}
         colorClass="text-orange-600"
         description={DESCS.refundRequests}
-        onClick={() => onStatClick?.({ statuses: ["REFUND_REQUEST"] })}
+        onClick={() => onStatClick?.({ statuses: ['REFUND_REQUEST'] })}
       />
 
       <StatCard
@@ -174,7 +174,7 @@ export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
         icon={<CheckCircle2 />}
         colorClass="text-emerald-600"
         description={DESCS.completed}
-        onClick={() => onStatClick?.({ statuses: ["COMPLETE"] })}
+        onClick={() => onStatClick?.({ statuses: ['COMPLETE'] })}
       />
       {/* NEW: Canceled Orders */}
       <StatCard
@@ -185,7 +185,7 @@ export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
         description={DESCS.canceledOrders}
         onClick={() =>
           onStatClick?.({
-            statuses: ["CUSTOMER_CANCELED", "MERCHANT_CANCELED"]
+            statuses: ['CUSTOMER_CANCELED', 'MERCHANT_CANCELED']
           })
         }
       />
@@ -197,12 +197,12 @@ export function OrderStats({ summary, loading, onStatClick }: OrderStatsProps) {
         icon={<DollarSign />}
         colorClass="text-red-600"
         description={DESCS.refundSuccessOrders}
-        onClick={() => onStatClick?.({ statuses: ["REFUND_SUCCESS"] })}
+        onClick={() => onStatClick?.({ statuses: ['REFUND_SUCCESS'] })}
       />
 
       <StatCard
         title="Total Revenue"
-        value={loading ? "…" : `฿${(s?.totalRevenue ?? 0).toLocaleString()}`}
+        value={loading ? '…' : `฿${(s?.totalRevenue ?? 0).toLocaleString()}`}
         icon={<DollarSign />}
         colorClass="text-green-600"
         description={DESCS.totalRevenue}

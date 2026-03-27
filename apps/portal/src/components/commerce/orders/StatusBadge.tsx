@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import React from "react"
-import { Badge } from "@/components/ui/badge"
-import { AdminOrderStatus } from "@/types/commerce/orders"
-import { useOrderStatus } from "@/hooks/useOrderStatus"
+import React from 'react'
+import { Badge } from '@/components/ui/badge'
+import { AdminOrderStatus } from '@/types/commerce/orders'
+import { useOrderStatus } from '@/hooks/useOrderStatus'
 
 export const StatusBadge = React.memo(function StatusBadge({
   status

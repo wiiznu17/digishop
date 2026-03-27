@@ -1,140 +1,140 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import {
-  User,
-  Mail,
-  Lock,
-  Pen
-} from "lucide-react";
-import { useRouter} from "next/navigation";
-import { Profile } from "@/types/props/userProp";
-import { logoutUser } from "@/utils/requestUtils/requestLoginUtils";
-import { useAuth } from "@/contexts/auth-context";
+'use client'
+import React, { useEffect, useState } from 'react'
+import { User, Mail, Lock, Pen } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Profile } from '@/types/props/userProp'
+import { logoutUser } from '@/utils/requestUtils/requestLoginUtils'
+import { useAuth } from '@/contexts/auth-context'
 import {
   createAddress,
   getAddress,
   getUserDetail,
   updateUserName
-} from "@/utils/requestUtils/requestUserUtils";
-import { Address } from "@/types/props/addressProp";
-import { DialogAddress } from "@/components/createAddress";
-import {AddressCardForSetting} from "@/components/addressCard";
-import Button from "@/components/button";
-import InputField from "@/components/inputField";
-import { sendResetPassword } from "@/utils/requestUtils/requestAuthUtils";
+} from '@/utils/requestUtils/requestUserUtils'
+import { Address } from '@/types/props/addressProp'
+import { DialogAddress } from '@/components/createAddress'
+import { AddressCardForSetting } from '@/components/addressCard'
+import Button from '@/components/button'
+import InputField from '@/components/inputField'
+import { sendResetPassword } from '@/utils/requestUtils/requestAuthUtils'
 
 const UserProfilePage = () => {
-  const router = useRouter();
-  const { user } = useAuth();
+  const router = useRouter()
+  const { user } = useAuth()
   const WEBSITE_MERCHANT_URL = process.env.WEBSITE_MERCHANT_URL ?? ''
   const WEBSITE_MERCHANT_REGISTER = process.env.WEBSITE_MERCHANT_REGISTER ?? ''
-  const [isShowAddress, setIsShowAddress] = useState(false);
+  const [isShowAddress, setIsShowAddress] = useState(false)
   const [isEditName, setIsEditName] = useState(false)
-  const [currentUser, setCurrentUser] = useState<Profile>();
-  const [addressUser, setAddressUser] = useState<Address[]>();
+  const [currentUser, setCurrentUser] = useState<Profile>()
+  const [addressUser, setAddressUser] = useState<Address[]>()
   const [address, setAddress] = useState<Address>({
-    recipientName: "",
-    phone: "",
-    province: "",
-    address_number: "",
-    building: "",
-    subStreet: "",
-    street: "",
-    subdistrict: "",
-    district: "",
-    country: "",
-    postalCode: "",
+    recipientName: '',
+    phone: '',
+    province: '',
+    address_number: '',
+    building: '',
+    subStreet: '',
+    street: '',
+    subdistrict: '',
+    district: '',
+    country: '',
+    postalCode: '',
     isDefault: false,
-    addressType: "HOME",
-  });
+    addressType: 'HOME'
+  })
   const [name, setName] = useState({
-   firstName: '',
+    firstName: '',
     lastName: '',
     middleName: ''
   })
-  
-  const handleChangeName = async() => {
-    if(!user || !name) return
-    const changeData = (await updateUserName(user.id , name)) as {data: string}
+
+  const handleChangeName = async () => {
+    if (!user || !name) return
+    const changeData = (await updateUserName(user.id, name)) as { data: string }
     setIsEditName(false)
-    if(changeData.data){
+    if (changeData.data) {
       window.location.reload()
     }
   }
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName({...name, [e.target.name]: e.target.value })
+    setName({ ...name, [e.target.name]: e.target.value })
   }
   const handleOnClickAddress = (): void => {
-    setIsShowAddress(true);
-  };
+    setIsShowAddress(true)
+  }
   const handleOnCancelAddress = (): void => {
-    setIsShowAddress(false);
+    setIsShowAddress(false)
     setAddress({
-      recipientName: "",
-      phone: "",
-      address_number: "",
-      building: "",
-      subStreet: "",
-      street: "",
-      subdistrict: "",
-      district: "",
-      country: "",
-      province: "",
-      postalCode: "",
+      recipientName: '',
+      phone: '',
+      address_number: '',
+      building: '',
+      subStreet: '',
+      street: '',
+      subdistrict: '',
+      district: '',
+      country: '',
+      province: '',
+      postalCode: '',
       isDefault: false,
-      addressType: "HOME",
-    });
-  };
+      addressType: 'HOME'
+    })
+  }
   const handleOnConfirmAddress = async (): Promise<void> => {
-    const axiosData = { ...address, userId: user?.id };
-    const res = (await createAddress(axiosData)) as {data: Address};
+    const axiosData = { ...address, userId: user?.id }
+    const res = (await createAddress(axiosData)) as { data: Address }
     if (res.data) {
-      setIsShowAddress(false);
+      setIsShowAddress(false)
     }
-  };
+  }
 
   const handleLogout = async () => {
-    await logoutUser();
-    router.replace("/");
-  };
-  
+    await logoutUser()
+    router.replace('/')
+  }
+
   useEffect(() => {
     const fetchData = async () => {
-      const resUser = (await getUserDetail(user?.id)) as { data: Profile};
-      const resAddress = (await getAddress(user?.id)) as { data: Address[]};
-      setCurrentUser(resUser.data);
-      setAddressUser(resAddress.data);
-      
-    };
-    fetchData();
-  }, [user, isShowAddress]);
+      const resUser = (await getUserDetail(user?.id)) as { data: Profile }
+      const resAddress = (await getAddress(user?.id)) as { data: Address[] }
+      setCurrentUser(resUser.data)
+      setAddressUser(resAddress.data)
+    }
+    fetchData()
+  }, [user, isShowAddress])
   useEffect(() => {
-    if(!currentUser)return
+    if (!currentUser) return
     setName({
-            firstName: currentUser.firstName,
-            lastName: currentUser.lastName,
-            middleName: currentUser.middleName
-          })
-  },[currentUser])
-  const formatName = (firstName: string|undefined , middleName: string|undefined ,lastName: string|undefined) => {
-    return [
-      firstName,
-      middleName,
-      lastName
-    ]
-      .filter(Boolean)
-      .join(' ')
+      firstName: currentUser.firstName,
+      lastName: currentUser.lastName,
+      middleName: currentUser.middleName
+    })
+  }, [currentUser])
+  const formatName = (
+    firstName: string | undefined,
+    middleName: string | undefined,
+    lastName: string | undefined
+  ) => {
+    return [firstName, middleName, lastName].filter(Boolean).join(' ')
   }
-  
-  const handleEmailSubmit = async() => {
-      if(currentUser){
-        const res = (await sendResetPassword(currentUser.email)) as {data: string}
-        if(res){
-          alert( 'Click the link in the email to reset your password. The link will expire in 1 hour.' )
-        }
+
+  const handleEmailSubmit = async () => {
+    if (currentUser) {
+      const res = (await sendResetPassword(currentUser.email)) as {
+        data: string
       }
-    };
-  const username = formatName(currentUser?.firstName , currentUser?.middleName, currentUser?.lastName)
+      if (res) {
+        alert(
+          'Click the link in the email to reset your password. The link will expire in 1 hour.'
+        )
+      }
+    }
+  }
+  const username = formatName(
+    currentUser?.firstName,
+    currentUser?.middleName,
+    currentUser?.lastName
+  )
   return (
     <div>
       {/* Main Content */}
@@ -164,7 +164,9 @@ const UserProfilePage = () => {
               <div className="space-y-6">
                 {currentUser && (
                   <>
-                    <div className="border-b py-2 text-xl">Customer Profile</div>
+                    <div className="border-b py-2 text-xl">
+                      Customer Profile
+                    </div>
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                         <User size={18} className="text-gray-600" />
@@ -173,63 +175,69 @@ const UserProfilePage = () => {
                         <label className="block text-base font-medium text-gray-700 mb-1">
                           User Name
                         </label>
-                        {
-                          !isEditName && (
-                            <div className="flex">
-                              <p className="text-gray-800 text-lg border-b w-1/2">
-                                {username}
-                              </p>
-                              <button className=" hover:bg-gray-300/50 cursor-pointer p-2 rounded-full" onClick={() => setIsEditName(true)}>
-                                <Pen />
-                              </button>
-                            </div>
-                          )
-                        }
-                        {
-                          isEditName && (
-                            <div>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <InputField
-                                  label="First Name"
-                                  name="firstName"
-                                  value={name.firstName}
-                                  onChange={handleInputChange}
-                                  placeholder="Enter your first name"
-                                  type="text"
-                                  // error={errors.firstName}
-                                />
-                                <InputField
-                                  label="Middle Name"
-                                  name="middleName"
-                                  value={name.middleName}
-                                  onChange={handleInputChange}
-                                  placeholder="Enter your middle name"
-                                  type="text"
-                                  // error={errors.firstName}
-                                />
+                        {!isEditName && (
+                          <div className="flex">
+                            <p className="text-gray-800 text-lg border-b w-1/2">
+                              {username}
+                            </p>
+                            <button
+                              className=" hover:bg-gray-300/50 cursor-pointer p-2 rounded-full"
+                              onClick={() => setIsEditName(true)}
+                            >
+                              <Pen />
+                            </button>
+                          </div>
+                        )}
+                        {isEditName && (
+                          <div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                              <InputField
+                                label="First Name"
+                                name="firstName"
+                                value={name.firstName}
+                                onChange={handleInputChange}
+                                placeholder="Enter your first name"
+                                type="text"
+                                // error={errors.firstName}
+                              />
+                              <InputField
+                                label="Middle Name"
+                                name="middleName"
+                                value={name.middleName}
+                                onChange={handleInputChange}
+                                placeholder="Enter your middle name"
+                                type="text"
+                                // error={errors.firstName}
+                              />
 
-                                <InputField
-                                  label="Last Name"
-                                  name="lastName"
-                                  value={name.lastName}
-                                  onChange={handleInputChange}
-                                  placeholder="Enter your last name"
-                                  type="text"
-                                  // error={errors.lastName}
-                                />
-                              </div>
-                              <div className="flex justify-end items-end">
-                                <Button size="sm" onClick={() => setIsEditName(false)}>
-                                  cancel
-                                </Button>
-                                <Button size="sm" onClick={handleChangeName} className="ml-4" color="bg-green-300">
-                                  confirm
-                                </Button>
-                              </div>
-                        
+                              <InputField
+                                label="Last Name"
+                                name="lastName"
+                                value={name.lastName}
+                                onChange={handleInputChange}
+                                placeholder="Enter your last name"
+                                type="text"
+                                // error={errors.lastName}
+                              />
                             </div>
-                          )
-                        }
+                            <div className="flex justify-end items-end">
+                              <Button
+                                size="sm"
+                                onClick={() => setIsEditName(false)}
+                              >
+                                cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={handleChangeName}
+                                className="ml-4"
+                                color="bg-green-300"
+                              >
+                                confirm
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -255,7 +263,10 @@ const UserProfilePage = () => {
                         <label className="block text-base font-medium text-gray-700 mb-1">
                           Password
                         </label>
-                        <Button className="text-gray-800 text-lg" onClick={handleEmailSubmit}>
+                        <Button
+                          className="text-gray-800 text-lg"
+                          onClick={handleEmailSubmit}
+                        >
                           reset password
                         </Button>
                       </div>
@@ -264,17 +275,23 @@ const UserProfilePage = () => {
                 )}
                 <div>
                   <div className="border-b py-2 text-xl">Merchant Profile</div>
-                  {
-                    currentUser?.role === 'CUSTOMER' && (
-                      <Button className="mt-3 text-lg bg-blue-600/80 text-white" onClick={() => router.push(WEBSITE_MERCHANT_REGISTER)}>create merchant profile</Button>
-                    )
-                  }
+                  {currentUser?.role === 'CUSTOMER' && (
+                    <Button
+                      className="mt-3 text-lg bg-blue-600/80 text-white"
+                      onClick={() => router.push(WEBSITE_MERCHANT_REGISTER)}
+                    >
+                      create merchant profile
+                    </Button>
+                  )}
                 </div>
-                  {
-                    currentUser?.role === 'MERCHANT' && (
-                      <Button className="mt-3" onClick={() => router.push(WEBSITE_MERCHANT_URL)}>switch to merchant profile</Button>
-                    )
-                  }
+                {currentUser?.role === 'MERCHANT' && (
+                  <Button
+                    className="mt-3"
+                    onClick={() => router.push(WEBSITE_MERCHANT_URL)}
+                  >
+                    switch to merchant profile
+                  </Button>
+                )}
               </div>
             </div>
             <div className="px-8 py-6">
@@ -282,13 +299,13 @@ const UserProfilePage = () => {
                 Address Information
               </h3>
               {addressUser?.map((item: Address, index: number) => (
-                <div
-                  key={index}
-                >
+                <div key={index}>
                   <AddressCardForSetting item={item} />
                 </div>
               ))}
-              <Button onClick={handleOnClickAddress} border="border-black">create address</Button>
+              <Button onClick={handleOnClickAddress} border="border-black">
+                create address
+              </Button>
             </div>
           </div>
         </div>
@@ -307,7 +324,7 @@ const UserProfilePage = () => {
         setAddress={setAddress}
       />
     </div>
-  );
-};
+  )
+}
 
-export default UserProfilePage;
+export default UserProfilePage

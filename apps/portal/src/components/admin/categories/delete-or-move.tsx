@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,16 +8,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import type { AdminCategoryItem } from "@/utils/requesters/categoryRequester"
+} from '@/components/ui/select'
+import type { AdminCategoryItem } from '@/utils/requesters/categoryRequester'
 
 export function DeleteOrMoveDialog({
   item,
@@ -31,7 +31,7 @@ export function DeleteOrMoveDialog({
   onMoveAndDelete: (targetUuid: string) => Promise<void> | void
 }) {
   const open = !!item
-  const [target, setTarget] = useState<string>("")
+  const [target, setTarget] = useState<string>('')
 
   // filter: do not allow selecting itself/its descendants
   // (assume backend also enforces this)
@@ -51,7 +51,7 @@ export function DeleteOrMoveDialog({
 
         <div className="space-y-3">
           <div className="text-sm">
-            Category to delete:{" "}
+            Category to delete:{' '}
             <span className="font-medium">{item?.name}</span>
           </div>
           <div>

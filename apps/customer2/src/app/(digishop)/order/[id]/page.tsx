@@ -1,54 +1,54 @@
-"use client";
-import { useAuth } from "@/contexts/auth-context";
-import { Address } from "@/types/props/addressProp";
+'use client'
+import { useAuth } from '@/contexts/auth-context'
+import { Address } from '@/types/props/addressProp'
 import {
   Order,
   OrderDetail,
   Shipping,
-  ShoppingCartProps,
-} from "@/types/props/orderProp";
+  ShoppingCartProps
+} from '@/types/props/orderProp'
 import {
   createOrder,
   fetchOrders,
   getShippingType,
   deleteOrder,
-  createWishList,
-} from "@/utils/requestUtils/requestOrderUtils";
+  createWishList
+} from '@/utils/requestUtils/requestOrderUtils'
 import {
   createAddress,
-  getAddress,
-} from "@/utils/requestUtils/requestUserUtils";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import ShippingCardDetail from "@/components/shippingCard";
-import { DialogSelectAddress } from "@/components/dialogSelectAddress";
-import { PaymentMethod } from "../../../../../../../packages/db/src/types/enum";
-import InputField from "@/components/inputField";
-import Button from "@/components/button";
+  getAddress
+} from '@/utils/requestUtils/requestUserUtils'
+import { useParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import ShippingCardDetail from '@/components/shippingCard'
+import { DialogSelectAddress } from '@/components/dialogSelectAddress'
+import { PaymentMethod } from '../../../../../../../packages/db/src/types/enum'
+import InputField from '@/components/inputField'
+import Button from '@/components/button'
 import {
   CircleCheck,
   ClipboardList,
   Home,
   RefreshCw,
-  XCircle,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import PaymentMethodMaster from "../../../../master/paymentMethod.json";
-import creditMethodLogo from "../../../creaditMethod.png";
-import qrLogo from "../../../qrLogo.png";
-import Image from "next/image";
+  XCircle
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import PaymentMethodMaster from '../../../../master/paymentMethod.json'
+import creditMethodLogo from '../../../creaditMethod.png'
+import qrLogo from '../../../qrLogo.png'
+import Image from 'next/image'
 import {
   formatAddress,
   formatSku,
   sumPriceTotal,
-  sumPrice,
-} from "@/lib/function";
-import { DialogAddress } from "@/components/createAddress";
+  sumPrice
+} from '@/lib/function'
+import { DialogAddress } from '@/components/createAddress'
 export default function OrderPage() {
-  const { id } = useParams();
-  const orderCode = String(id);
-  const router = useRouter();
-  const { user } = useAuth();
+  const { id } = useParams()
+  const orderCode = String(id)
+  const router = useRouter()
+  const { user } = useAuth()
   const [order, setOrder] = useState<Order>({
     orderCode: orderCode,
     customerId: 0,
@@ -56,85 +56,85 @@ export default function OrderPage() {
     shippingTypeId: 0,
     shippingAddress: 0,
     productprice: 0,
-    shippingfee: 0,
-  });
-  const [note, setNote] = useState<string>("");
-  const [addresses, setAddresses] = useState<Address[]>();
-  const [selectAddress, setSelectAddress] = useState<Address>();
-  const [shipping, setShipping] = useState<Shipping[]>();
-  const [paymentMethod, setPaymentMethod] = useState<string>("CREDIT_CARD");
-  const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1);
-  const [isShowSelectAddress, setIsShowSelectAddress] = useState(false);
-  const [orderDetail, setOrderDetail] = useState<OrderDetail[]>();
-  const [nextPath, setNextPath] = useState<string | null>("/");
-  const [showModal, setShowModel] = useState(false);
-  const [cart, setCart] = useState<ShoppingCartProps>();
-  const [isShowAddress, setIsShowAddress] = useState(false);
+    shippingfee: 0
+  })
+  const [note, setNote] = useState<string>('')
+  const [addresses, setAddresses] = useState<Address[]>()
+  const [selectAddress, setSelectAddress] = useState<Address>()
+  const [shipping, setShipping] = useState<Shipping[]>()
+  const [paymentMethod, setPaymentMethod] = useState<string>('CREDIT_CARD')
+  const [selectShippingTypeId, setSelectShippingTypeId] = useState<number>(1)
+  const [isShowSelectAddress, setIsShowSelectAddress] = useState(false)
+  const [orderDetail, setOrderDetail] = useState<OrderDetail[]>()
+  const [nextPath, setNextPath] = useState<string | null>('/')
+  const [showModal, setShowModel] = useState(false)
+  const [cart, setCart] = useState<ShoppingCartProps>()
+  const [isShowAddress, setIsShowAddress] = useState(false)
   const [address, setAddress] = useState<Address>({
-    recipientName: "",
-    phone: "",
-    province: "",
-    address_number: "",
-    building: "",
-    subStreet: "",
-    street: "",
-    subdistrict: "",
-    district: "",
-    country: "",
-    postalCode: "",
+    recipientName: '',
+    phone: '',
+    province: '',
+    address_number: '',
+    building: '',
+    subStreet: '',
+    street: '',
+    subdistrict: '',
+    district: '',
+    country: '',
+    postalCode: '',
     isDefault: false,
-    addressType: "HOME",
-  });
+    addressType: 'HOME'
+  })
   const handleOnClickAddress = (): void => {
-    setIsShowAddress(true);
-  };
+    setIsShowAddress(true)
+  }
   const handleOnCancelAddress = (): void => {
-    setIsShowAddress(false);
+    setIsShowAddress(false)
     setAddress({
-      recipientName: "",
-      phone: "",
-      address_number: "",
-      building: "",
-      subStreet: "",
-      street: "",
-      subdistrict: "",
-      district: "",
-      country: "",
-      province: "",
-      postalCode: "",
+      recipientName: '',
+      phone: '',
+      address_number: '',
+      building: '',
+      subStreet: '',
+      street: '',
+      subdistrict: '',
+      district: '',
+      country: '',
+      province: '',
+      postalCode: '',
       isDefault: false,
-      addressType: "HOME",
-    });
-  };
+      addressType: 'HOME'
+    })
+  }
   const handleOnConfirmAddress = async (): Promise<void> => {
-    const axiosData = { ...address, userId: user?.id };
-    const res = (await createAddress(axiosData)) as { data: Address };
+    const axiosData = { ...address, userId: user?.id }
+    const res = (await createAddress(axiosData)) as { data: Address }
     if (res.data) {
-      setIsShowAddress(false);
-      window.location.reload();
+      setIsShowAddress(false)
+      window.location.reload()
     }
-  };
+  }
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return;
+      if (!user) return
       const resProduct = (await fetchOrders(orderCode, user.id)) as {
-        body: OrderDetail[];
-      };
-      const resAddress = (await getAddress(user?.id)) as { data: Address[] };
-      const resShipping = (await getShippingType()) as { data: Shipping[] };
-      setOrderDetail(resProduct.body);
-      setAddresses(resAddress.data);
-      setShipping(resShipping.data);
-    };
-    fetchData();
-  }, [user, orderCode]);
-  const firstOrder = orderDetail?.[0];
-  useEffect(() => {
-    const isMain = addresses?.filter((item) => item.isDefault === true);
-    if (isMain) {
-      setSelectAddress(isMain[0]);
+        body: OrderDetail[]
+      }
+      const resAddress = (await getAddress(user?.id)) as { data: Address[] }
+      const resShipping = (await getShippingType()) as { data: Shipping[] }
+      setOrderDetail(resProduct.body)
+      setAddresses(resAddress.data)
+      setShipping(resShipping.data)
     }
-  }, [addresses]);
+    fetchData()
+  }, [user, orderCode])
+  const firstOrder = orderDetail?.[0]
+  useEffect(() => {
+    const isMain = addresses?.filter((item) => item.isDefault === true)
+    if (isMain) {
+      setSelectAddress(isMain[0])
+    }
+  }, [addresses])
   useEffect(() => {
     if (
       !user ||
@@ -144,19 +144,19 @@ export default function OrderPage() {
       !shipping ||
       !orderDetail
     )
-      return;
+      return
     const productItemsId = firstOrder?.items
       .map((item) => item.productItem.id)
-      .filter((id): id is number => typeof id === "number");
+      .filter((id): id is number => typeof id === 'number')
     const productItemsquatity = firstOrder?.items
       .map((item) => item.quantity)
-      .filter((id): id is number => typeof id === "number");
-    if (!productItemsId || !productItemsquatity) return;
+      .filter((id): id is number => typeof id === 'number')
+    if (!productItemsId || !productItemsquatity) return
     setCart({
       customerId: user.id,
       productItemId: productItemsId,
-      quantity: productItemsquatity,
-    });
+      quantity: productItemsquatity
+    })
     setOrder({
       orderCode: orderCode,
       customerId: user.id,
@@ -165,8 +165,8 @@ export default function OrderPage() {
       paymentMethod: paymentMethod,
       orderNote: note,
       productprice: sumPriceTotal(orderDetail) * 100,
-      shippingfee: shipping[selectShippingTypeId - 1].price,
-    });
+      shippingfee: shipping[selectShippingTypeId - 1].price
+    })
   }, [
     orderCode,
     user,
@@ -176,69 +176,67 @@ export default function OrderPage() {
     note,
     paymentMethod,
     shipping,
-    firstOrder,
-  ]);
+    firstOrder
+  ])
 
   useEffect(() => {
-    window.history.pushState(null, "", window.location.pathname);
+    window.history.pushState(null, '', window.location.pathname)
     const handlePopStateBeforePayment = () => {
-      setShowModel(true);
-      setNextPath("/");
-    };
+      setShowModel(true)
+      setNextPath('/')
+    }
 
-    if (!orderDetail) return;
-    window.addEventListener("popstate", handlePopStateBeforePayment);
-
-  }, [orderDetail, router, showModal, orderCode]);
+    if (!orderDetail) return
+    window.addEventListener('popstate', handlePopStateBeforePayment)
+  }, [orderDetail, router, showModal, orderCode])
   const handleCancel = () => {
-    setShowModel(false);
-  };
+    setShowModel(false)
+  }
   const handleConfirmCancel = async () => {
-    setShowModel(false);
-    if (!cart) return;
-    const cancel = (await deleteOrder(orderCode)) as { data: string };
+    setShowModel(false)
+    if (!cart) return
+    const cancel = (await deleteOrder(orderCode)) as { data: string }
     const addCart = (await createWishList(cart)) as {
       data: {
-        cartId: number;
-        productItemId: number;
-        quantity: number;
-        unitPriceMinor: number;
-      };
-    };
-    if (nextPath && cancel.data && addCart.data) {
-      router.push(nextPath);
+        cartId: number
+        productItemId: number
+        quantity: number
+        unitPriceMinor: number
+      }
     }
-  };
+    if (nextPath && cancel.data && addCart.data) {
+      router.push(nextPath)
+    }
+  }
 
   const handleOrder = async () => {
-    if (!order) return;
+    if (!order) return
     const res = (await createOrder(order)) as {
-      data: { redirect_url: string };
-    };
-    if (res.data.redirect_url) {
-      router.push(res.data.redirect_url);
-      
+      data: { redirect_url: string }
     }
-  };
+    if (res.data.redirect_url) {
+      router.push(res.data.redirect_url)
+    }
+  }
 
   const handleOnClickSelectAddress = (): void => {
-    setIsShowSelectAddress(true);
-  };
+    setIsShowSelectAddress(true)
+  }
   const handleOnCancelSelectAddress = (): void => {
-    setIsShowSelectAddress(false);
-  };
+    setIsShowSelectAddress(false)
+  }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNote(e.target.value);
-  };
+    setNote(e.target.value)
+  }
   const handlePayment = (e: string) => {
-    setPaymentMethod(e);
-  };
-  if (!shipping || !user) return;
+    setPaymentMethod(e)
+  }
+  if (!shipping || !user) return
 
-  if (!firstOrder) return;
+  if (!firstOrder) return
   return !firstOrder.checkout?.payment ? (
     <div className="">
-      {firstOrder.status == "PENDING" && (
+      {firstOrder.status == 'PENDING' && (
         <div className="flex justify-center p-2 bg-gradient-to-br from-blue-100 to-slate-100 ">
           {showModal && (
             <div className="fixed inset-0 flex items-center justify-center z-100000 bg-black/50">
@@ -317,10 +315,10 @@ export default function OrderPage() {
                                     )}
                                   </div>
                                   <div className="absolute bottom-7 right-0 text-xl text-gray-500 ">
-                                    ฿{" "}
+                                    ฿{' '}
                                     {(value.unitPriceMinor / 100)
                                       .toString()
-                                      .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                      .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                                   </div>
                                   <div className="absolute bottom-0 right-0 text-base text-gray-500 ">
                                     x {String(value.quantity)}
@@ -332,10 +330,10 @@ export default function OrderPage() {
                         ))}
                         <div className="flex justify-end items-end">
                           <span className="flex justify-end items-end text-xl font-medium border-t w-fit">
-                            total ฿{" "}
+                            total ฿{' '}
                             {sumPrice(values.items)
                               .toString()
-                              .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                              .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                           </span>
                         </div>
                       </div>
@@ -352,7 +350,7 @@ export default function OrderPage() {
 
                 <div className="rounded-lg shadow-md p-6  bg-white">
                   <div className="text-xl font-medium pb-3 ">
-                    select your shipping address{" "}
+                    select your shipping address{' '}
                   </div>
                   {addresses?.length === 0 && (
                     //address form
@@ -393,7 +391,7 @@ export default function OrderPage() {
                   )}
 
                   <div className="text-xl font-medium">
-                    select your shipping type{" "}
+                    select your shipping type{' '}
                   </div>
 
                   {shipping?.map((item: Shipping, index: number) => (
@@ -401,8 +399,8 @@ export default function OrderPage() {
                       key={index}
                       className=""
                       onClick={() => {
-                        if (typeof item.id === "number") {
-                          setSelectShippingTypeId(item.id);
+                        if (typeof item.id === 'number') {
+                          setSelectShippingTypeId(item.id)
                         }
                       }}
                     >
@@ -434,14 +432,14 @@ export default function OrderPage() {
                     <span className="text-lg font-medium">
                       {sumPriceTotal(orderDetail)
                         .toString()
-                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     </span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex">
                       <span className="text-gray-600">Shipping</span>
                       <div
-                        className={`ml-2 text-gray-400 ${orderDetail.length > 1 ? "opacity-100" : "opacity-0"}`}
+                        className={`ml-2 text-gray-400 ${orderDetail.length > 1 ? 'opacity-100' : 'opacity-0'}`}
                       >
                         x {orderDetail.length}
                       </div>
@@ -462,7 +460,7 @@ export default function OrderPage() {
                         sumPriceTotal(orderDetail)
                       )
                         .toString()
-                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     </span>
                   </div>
                 </div>
@@ -480,7 +478,7 @@ export default function OrderPage() {
                     ([payment, config]) => (
                       <div
                         key={payment}
-                        className={`flex m-2 border p-3 rounded-xs w-1/2 items-start ${!config.valid ? "border-gray-300" : ""}`}
+                        className={`flex m-2 border p-3 rounded-xs w-1/2 items-start ${!config.valid ? 'border-gray-300' : ''}`}
                       >
                         <input
                           type="radio"
@@ -494,11 +492,11 @@ export default function OrderPage() {
                         />
                         <label
                           htmlFor="config.label"
-                          className={`${!config.valid ? "text-gray-300" : ""}`}
+                          className={`${!config.valid ? 'text-gray-300' : ''}`}
                         >
                           <div className="ml-2">
                             <div className="text-lg">{config.label}</div>
-                            {config.label === "CREDIT CARD" && (
+                            {config.label === 'CREDIT CARD' && (
                               <Image
                                 src={creditMethodLogo}
                                 alt="credit method pricture"
@@ -506,7 +504,7 @@ export default function OrderPage() {
                                 className="py-4"
                               />
                             )}
-                            {config.label === "PROMPT PAY" && (
+                            {config.label === 'PROMPT PAY' && (
                               <Image
                                 src={qrLogo}
                                 alt="qr method pricture"
@@ -530,7 +528,7 @@ export default function OrderPage() {
               <div className=" flex justify-end ">
                 <Button
                   onClick={handleOrder}
-                  color={`${!selectAddress ? "bg-gray-300 hover:bg-gray-300" : "bg-green-400 hover:bg-green-600"}`}
+                  color={`${!selectAddress ? 'bg-gray-300 hover:bg-gray-300' : 'bg-green-400 hover:bg-green-600'}`}
                   disabled={!selectAddress}
                 >
                   confirm
@@ -560,8 +558,7 @@ export default function OrderPage() {
     </div>
   ) : (
     <div>
-      {firstOrder.checkout.payment.pgw_status == "PENDING" && (
-
+      {firstOrder.checkout.payment.pgw_status == 'PENDING' && (
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -595,7 +592,11 @@ export default function OrderPage() {
               {/* Action Buttons */}
               <div className="space-y-3">
                 <button
-                  onClick={() => router.replace(`/product/${firstOrder.items[0].productItem.product.uuid}`)}
+                  onClick={() =>
+                    router.replace(
+                      `/product/${firstOrder.items[0].productItem.product.uuid}`
+                    )
+                  }
                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <RefreshCw className="w-5 h-5" />
@@ -603,7 +604,7 @@ export default function OrderPage() {
                 </button>
 
                 <button
-                  onClick={() => router.replace("/")}
+                  onClick={() => router.replace('/')}
                   className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
                 >
                   <Home className="w-5 h-5" />
@@ -611,11 +612,10 @@ export default function OrderPage() {
                 </button>
               </div>
             </div>
- 
           </div>
         </div>
       )}
-      {firstOrder.checkout.payment.pgw_status == "APPROVED" && (
+      {firstOrder.checkout.payment.pgw_status == 'APPROVED' && (
         <div className="min-h-screen bg- bg-green-500/40 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -634,7 +634,8 @@ export default function OrderPage() {
               </h1>
 
               <p className="text-lg text-gray-500 mb-8">
-                Waiting merchant to approve your order. Order will be update in the status page.
+                Waiting merchant to approve your order. Order will be update in
+                the status page.
               </p>
 
               {/* Order ID */}
@@ -646,7 +647,7 @@ export default function OrderPage() {
               {/* Action Buttons */}
               <div className="space-y-3">
                 <button
-                  onClick={() => router.replace("/order/status")}
+                  onClick={() => router.replace('/order/status')}
                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <ClipboardList className="w-5 h-5" />
@@ -654,7 +655,7 @@ export default function OrderPage() {
                 </button>
 
                 <button
-                  onClick={() => router.replace("/")}
+                  onClick={() => router.replace('/')}
                   className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
                 >
                   <Home className="w-5 h-5" />
@@ -662,10 +663,10 @@ export default function OrderPage() {
                 </button>
               </div>
             </div>
-        </div>
+          </div>
         </div>
       )}
-      {firstOrder.checkout.payment.pgw_status == "CANCELED" && (
+      {firstOrder.checkout.payment.pgw_status == 'CANCELED' && (
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -683,7 +684,9 @@ export default function OrderPage() {
                 Order Error
               </h1>
 
-              <p className="text-gray-600 mb-2 text-base">you are cancel this order</p>
+              <p className="text-gray-600 mb-2 text-base">
+                you are cancel this order
+              </p>
 
               {/* <p className="text-lg text-gray-500 mb-8">
                 We encountered an issue processing your order. Don&apos;t worry,
@@ -699,7 +702,7 @@ export default function OrderPage() {
               {/* Action Buttons */}
               <div className="space-y-3">
                 <button
-                  onClick={() => router.replace("/order/status")}
+                  onClick={() => router.replace('/order/status')}
                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <ClipboardList className="w-5 h-5" />
@@ -707,7 +710,7 @@ export default function OrderPage() {
                 </button>
 
                 <button
-                  onClick={() => router.replace("/")}
+                  onClick={() => router.replace('/')}
                   className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
                 >
                   <Home className="w-5 h-5" />
@@ -718,7 +721,7 @@ export default function OrderPage() {
           </div>
         </div>
       )}
-      {firstOrder.checkout.payment.pgw_status == "FAILED" && (
+      {firstOrder.checkout.payment.pgw_status == 'FAILED' && (
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
           <div className="max-w-md w-full">
             {/* Error Card */}
@@ -735,7 +738,9 @@ export default function OrderPage() {
                 Order Failed
               </h1>
 
-              <p className="text-gray-600 mb-2 text-base">Bank authorized failed</p>
+              <p className="text-gray-600 mb-2 text-base">
+                Bank authorized failed
+              </p>
 
               <p className="text-lg text-gray-500 mb-8">
                 We encountered an issue processing your order. Don&apos;t worry,
@@ -751,7 +756,11 @@ export default function OrderPage() {
               {/* Action Buttons */}
               <div className="space-y-3">
                 <button
-                  onClick={() => router.replace(`/product/${firstOrder.items[0].productItem.product.uuid}`)}
+                  onClick={() =>
+                    router.replace(
+                      `/product/${firstOrder.items[0].productItem.product.uuid}`
+                    )
+                  }
                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <RefreshCw className="w-5 h-5" />
@@ -759,17 +768,17 @@ export default function OrderPage() {
                 </button>
 
                 <button
-                  onClick={() => router.replace("/")}
+                  onClick={() => router.replace('/')}
                   className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl cursor-pointer font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 hover:scale-105"
                 >
                   <Home className="w-5 h-5" />
                   Back First Page
                 </button>
               </div>
-            </div> 
+            </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

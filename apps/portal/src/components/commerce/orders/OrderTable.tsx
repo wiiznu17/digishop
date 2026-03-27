@@ -1,8 +1,8 @@
 // apps/portal/src/components/commerce/orders/OrdersTable.tsx
-"use client"
+'use client'
 
-import React from "react"
-import { Button } from "@/components/ui/button"
+import React from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -10,15 +10,15 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Eye } from "lucide-react"
-import { AdminOrderListItem } from "@/types/commerce/orders"
-import { StatusBadge } from "./StatusBadge"
+} from '@/components/ui/table'
+import { Eye } from 'lucide-react'
+import { AdminOrderListItem } from '@/types/commerce/orders'
+import { StatusBadge } from './StatusBadge'
 
 const THB = (n?: number | null) =>
   n == null
-    ? "-"
-    : (n / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+    ? '-'
+    : (n / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 type OrdersTableProps = {
   rows: AdminOrderListItem[]

@@ -1,4 +1,4 @@
-import SetPasswordClient from "./set-password-client"
+import SetPasswordClient from './set-password-client'
 
 export const revalidate = 0
 
@@ -10,7 +10,7 @@ export default async function SetPasswordPage({
   const sp = await searchParams
 
   const get1 = (v: unknown) =>
-    typeof v === "string" ? v : Array.isArray(v) ? (v[0] ?? "") : ""
+    typeof v === 'string' ? v : Array.isArray(v) ? (v[0] ?? '') : ''
 
   const token = get1(sp.token)
   const email = get1(sp.email)

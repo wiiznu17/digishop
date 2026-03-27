@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { ResponsiveContainer, AreaChart, Area } from "recharts"
+import { ResponsiveContainer, AreaChart, Area } from 'recharts'
 
 export default function TinySparkline({
   data

@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import Image from "next/image"
+import Link from 'next/link'
+import Image from 'next/image'
 import {
   Home,
   ShoppingCart,
@@ -13,7 +13,7 @@ import {
   Shield,
   User,
   ChevronUp
-} from "lucide-react"
+} from 'lucide-react'
 
 import {
   Sidebar,
@@ -25,18 +25,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import { Button } from "./ui/button"
-import { logout } from "@/utils/requesters/authRequester"
-import { useAuth } from "@/components/AuthGuard"
-import { useMemo } from "react"
-import { useRouter, usePathname } from "next/navigation" // ⬅️ เพิ่ม usePathname
+} from '@/components/ui/dropdown-menu'
+import { Button } from './ui/button'
+import { logout } from '@/utils/requesters/authRequester'
+import { useAuth } from '@/components/AuthGuard'
+import { useMemo } from 'react'
+import { useRouter, usePathname } from 'next/navigation' // ⬅️ เพิ่ม usePathname
 
 type NavItem = {
   title: string
@@ -49,70 +49,70 @@ type NavGroup = { label: string; items: NavItem[] }
 
 const groups: NavGroup[] = [
   {
-    label: "Commerce",
+    label: 'Commerce',
     items: [
       {
-        title: "Orders",
-        url: "/admin/orders",
+        title: 'Orders',
+        url: '/admin/orders',
         icon: ShoppingCart,
-        perms: ["ORDERS_READ"]
+        perms: ['ORDERS_READ']
       },
       {
-        title: "Refund orders",
-        url: "/admin/refunds",
+        title: 'Refund orders',
+        url: '/admin/refunds',
         icon: RotateCcw,
-        perms: ["REFUNDS_READ"]
+        perms: ['REFUNDS_READ']
       }
     ]
   },
   {
-    label: "Catalog",
+    label: 'Catalog',
     items: [
       {
-        title: "Products",
-        url: "/admin/products",
+        title: 'Products',
+        url: '/admin/products',
         icon: Package,
-        perms: ["PRODUCTS_READ"]
+        perms: ['PRODUCTS_READ']
       },
       {
-        title: "Categories",
-        url: "/admin/categories",
+        title: 'Categories',
+        url: '/admin/categories',
         icon: FolderTree,
-        perms: ["CATEGORIES_READ"]
+        perms: ['CATEGORIES_READ']
       }
     ]
   },
   {
-    label: "Users & Merchants",
+    label: 'Users & Merchants',
     items: [
       {
-        title: "Customers",
-        url: "/admin/customers",
+        title: 'Customers',
+        url: '/admin/customers',
         icon: Users,
-        perms: ["CUSTOMERS_READ"]
+        perms: ['CUSTOMERS_READ']
       },
       {
-        title: "Merchants",
-        url: "/admin/merchants",
+        title: 'Merchants',
+        url: '/admin/merchants',
         icon: UserCog,
-        perms: ["MERCHANTS_READ"]
+        perms: ['MERCHANTS_READ']
       }
     ]
   },
   {
-    label: "System",
+    label: 'System',
     items: [
       {
-        title: "Admin Users",
-        url: "/admin/admins",
+        title: 'Admin Users',
+        url: '/admin/admins',
         icon: Shield,
-        perms: ["ADMIN_USERS_READ"]
+        perms: ['ADMIN_USERS_READ']
       },
       {
-        title: "Roles",
-        url: "/admin/roles",
+        title: 'Roles',
+        url: '/admin/roles',
         icon: Shield,
-        perms: ["ROLES_READ"]
+        perms: ['ROLES_READ']
       }
     ]
   }
@@ -143,7 +143,7 @@ export function AdminSidebar() {
 
   // กำหนด active เมื่อ path ตรงหรือเป็น path ย่อย
   const isActive = (url: string) =>
-    pathname === url || pathname.startsWith(url + "/")
+    pathname === url || pathname.startsWith(url + '/')
 
   return (
     <Sidebar>
@@ -187,8 +187,8 @@ export function AdminSidebar() {
                           isActive={active} // เผื่อคอมโพเนนต์รองรับ
                           className={
                             active
-                              ? "bg-gray-100 text-gray-900 hover:bg-gray-300" // พื้นหลังเทาเมื่อ active
-                              : ""
+                              ? 'bg-gray-100 text-gray-900 hover:bg-gray-300' // พื้นหลังเทาเมื่อ active
+                              : ''
                           }
                         >
                           <Link
@@ -235,10 +235,10 @@ export function AdminSidebar() {
                     onClick={async () => {
                       try {
                         await logout()
-                        router.replace("/login")
+                        router.replace('/login')
                         window.setTimeout(() => window.location.reload(), 50)
                       } catch {
-                        router.replace("/login")
+                        router.replace('/login')
                       }
                     }}
                   >

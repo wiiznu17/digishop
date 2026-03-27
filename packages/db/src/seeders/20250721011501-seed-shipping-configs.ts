@@ -1,5 +1,5 @@
-import { QueryInterface } from 'sequelize';
-import { ShippingType } from '../types/enum';
+import { QueryInterface } from 'sequelize'
+import { ShippingType } from '../types/enum'
 
 export default {
   up: async (queryInterface: QueryInterface) => {
@@ -12,7 +12,7 @@ export default {
         is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
+        deleted_at: null
       },
       {
         store_id: 1,
@@ -22,11 +22,11 @@ export default {
         is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
-      },
-    ]);
+        deleted_at: null
+      }
+    ])
   },
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete('Shipping_Configs', {}, {});
-  },
-};
+    await queryInterface.bulkDelete('Shipping_Configs', {}, {})
+  }
+}

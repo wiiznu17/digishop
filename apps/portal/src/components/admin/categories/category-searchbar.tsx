@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useEffect, useRef, useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useEffect, useRef, useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import { Search, RotateCcw } from "lucide-react"
+} from '@/components/ui/select'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+import { Search, RotateCcw } from 'lucide-react'
 // import type { AdminCategoryStatus } from "@/utils/requesters/categoryRequester"
 
 type Props = {
@@ -55,9 +55,9 @@ export function CategorySearchBar({ defaultValue, onApply, suggest }: Props) {
 
   const apply = () => onApply({ q })
   const reset = () => {
-    setQ("")
+    setQ('')
     // setStatus("ALL")
-    onApply({ q: "" })
+    onApply({ q: '' })
   }
 
   return (
@@ -73,7 +73,7 @@ export function CategorySearchBar({ defaultValue, onApply, suggest }: Props) {
                 onChange={(e) => setQ(e.target.value)}
                 onFocus={() => q.trim() && setOpen(true)}
                 onBlur={() => setTimeout(() => setOpen(false), 120)}
-                onKeyDown={(e) => e.key === "Enter" && apply()}
+                onKeyDown={(e) => e.key === 'Enter' && apply()}
                 autoComplete="off"
               />
             </PopoverAnchor>

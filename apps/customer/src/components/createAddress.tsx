@@ -1,22 +1,22 @@
-"use client";
+'use client'
 
-import { JSX, SetStateAction } from "react";
-import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
-import InputField from "@/components/inputField";
-import { Address } from "@/types/props/addressProp";
-import { Rubik } from "next/font/google";
-import Button from "./button";
+import { JSX, SetStateAction } from 'react'
+import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react'
+import InputField from '@/components/inputField'
+import { Address } from '@/types/props/addressProp'
+import { Rubik } from 'next/font/google'
+import Button from './button'
 const rubik = Rubik({
-  subsets: ["latin"],
-  weight: "500"
+  subsets: ['latin'],
+  weight: '500'
 })
 interface CreateAddress {
-  isShowAddress: boolean;
-  setIsShowAddress: React.Dispatch<SetStateAction<boolean>>;
-  handleOnCancel: () => void;
-  handleOnConfirm: (e: React.FormEvent) => Promise<void>;
-  address: Address;
-  setAddress: React.Dispatch<SetStateAction<Address>>;
+  isShowAddress: boolean
+  setIsShowAddress: React.Dispatch<SetStateAction<boolean>>
+  handleOnCancel: () => void
+  handleOnConfirm: (e: React.FormEvent) => Promise<void>
+  address: Address
+  setAddress: React.Dispatch<SetStateAction<Address>>
 }
 export const DialogAddress = ({
   isShowAddress,
@@ -24,40 +24,40 @@ export const DialogAddress = ({
   handleOnCancel,
   handleOnConfirm,
   address,
-  setAddress,
+  setAddress
 }: CreateAddress): JSX.Element => {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setAddress({
       ...address,
-      [e.target.name]: e.target.value,
-    });
-  };
+      [e.target.name]: e.target.value
+    })
+  }
   const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
+    const newErrors: { [key: string]: string } = {}
 
     if (!address.recipientName) {
-      newErrors.recipientName = "recipientName is required";
+      newErrors.recipientName = 'recipientName is required'
     }
     if (!address.phone) {
-      newErrors.phone = "phone is required";
+      newErrors.phone = 'phone is required'
     }
     if (!address.province) {
-      newErrors.province = "province is required";
+      newErrors.province = 'province is required'
     }
     if (!address.postalCode) {
-      newErrors.postalCode = "postalCode is required";
+      newErrors.postalCode = 'postalCode is required'
     }
 
-    return Object.keys(newErrors).length === 0; // true = valid form
-  };
+    return Object.keys(newErrors).length === 0 // true = valid form
+  }
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddress({
       ...address,
-      [e.target.name]: e.target.value,
-    });
-  };
+      [e.target.name]: e.target.value
+    })
+  }
 
-  if (!isShowAddress) return <></>;
+  if (!isShowAddress) return <></>
   return (
     <div>
       <Dialog
@@ -70,7 +70,9 @@ export const DialogAddress = ({
           className="bg-black/50 fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
 
-        <div className={`fixed inset-0 z-100 w-screen overflow-y-auto ${rubik.className}`}>
+        <div
+          className={`fixed inset-0 z-100 w-screen overflow-y-auto ${rubik.className}`}
+        >
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <DialogPanel
               transition
@@ -209,7 +211,6 @@ export const DialogAddress = ({
                           </select>
                         </div>
                       </div>
-                      
                     </form>
                   </div>
                 </div>
@@ -218,7 +219,7 @@ export const DialogAddress = ({
                 <button
                   onClick={handleOnConfirm}
                   disabled={!validateForm()}
-                  className={`${!validateForm() ? "bg-gray-300 text-black" : "bg-green-500 text-white "}  sm:ml-3 sm:w-auto px-4 py-2 text-sm font-medium hover:cursor-pointer rounded-full  `}
+                  className={`${!validateForm() ? 'bg-gray-300 text-black' : 'bg-green-500 text-white '}  sm:ml-3 sm:w-auto px-4 py-2 text-sm font-medium hover:cursor-pointer rounded-full  `}
                 >
                   Confirm
                 </button>
@@ -235,5 +236,5 @@ export const DialogAddress = ({
         </div>
       </Dialog>
     </div>
-  );
-};
+  )
+}

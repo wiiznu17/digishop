@@ -1,4 +1,4 @@
-import axios from "@/lib/axios"
+import axios from '@/lib/axios'
 
 // export type AdminCategoryStatus = "ACTIVE" | "HIDDEN"
 export type AdminCategoryItem = {
@@ -22,39 +22,39 @@ export type ListCategoriesParams = {
 
 export async function listCategoriesRequester(params: ListCategoriesParams) {
   try {
-    console.log("hi from list req")
-    const res = await axios.get("/api/admin/categories/list", { params })
+    console.log('hi from list req')
+    const res = await axios.get('/api/admin/categories/list', { params })
     return res.data as {
       data: AdminCategoryItem[]
       meta: { total: number; totalPages: number }
     }
   } catch (e) {
-    console.error("listCategoriesRequester", e)
+    console.error('listCategoriesRequester', e)
     return { data: [], meta: { total: 0, totalPages: 1 } }
   }
 }
 
 export async function listAllFlatCategoriesRequester() {
   try {
-    console.log("hi from list flat req")
-    const res = await axios.get("/api/admin/categories/list", {
-      params: { mode: "flat" }
+    console.log('hi from list flat req')
+    const res = await axios.get('/api/admin/categories/list', {
+      params: { mode: 'flat' }
     })
     return (res.data?.data ?? []) as AdminCategoryItem[]
   } catch (e) {
-    console.error("listAllFlatCategoriesRequester", e)
+    console.error('listAllFlatCategoriesRequester', e)
     return []
   }
 }
 
 export async function suggestCategoriesRequester(q: string) {
   try {
-    const res = await axios.get("/api/admin/categories/suggest", {
+    const res = await axios.get('/api/admin/categories/suggest', {
       params: { q }
     })
     return (res.data ?? []) as { uuid: string; name: string }[]
   } catch (e) {
-    console.error("suggestCategoriesRequester", e)
+    console.error('suggestCategoriesRequester', e)
     return []
   }
 }
@@ -64,7 +64,7 @@ export async function getCategoryDetailRequester(uuid: string) {
     const res = await axios.get(`/api/admin/categories/${uuid}`)
     return res.data as { uuid: string; name: string; parentUuid: string | null }
   } catch (e) {
-    console.error("getCategoryDetailRequester", e)
+    console.error('getCategoryDetailRequester', e)
     return null
   }
 }
@@ -74,7 +74,7 @@ export async function createCategoryRequester(payload: {
   // status: AdminCategoryStatus
   parentUuid: string | null
 }) {
-  await axios.post("/api/admin/categories", payload)
+  await axios.post('/api/admin/categories', payload)
 }
 
 export async function updateCategoryRequester(

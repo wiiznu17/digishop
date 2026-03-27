@@ -1,7 +1,7 @@
-import type { Order, OrderStatus } from "@/types/props/orderProp"
-import axios from "@/lib/axios"
+import type { Order, OrderStatus } from '@/types/props/orderProp'
+import axios from '@/lib/axios'
 
-export type SortDir = "ASC" | "DESC"
+export type SortDir = 'ASC' | 'DESC'
 
 export interface ListOrdersParams {
   page?: number
@@ -13,8 +13,8 @@ export interface ListOrdersParams {
   endDate?: string
   minTotalMinor?: number
   maxTotalMinor?: number
-  hasTracking?: "true" | "false"
-  sortBy?: "id" | "createdAt" | "updatedAt" | "grandTotalMinor"
+  hasTracking?: 'true' | 'false'
+  sortBy?: 'id' | 'createdAt' | 'updatedAt' | 'grandTotalMinor'
   sortDir?: SortDir
   signal?: AbortSignal
 }
@@ -27,7 +27,7 @@ export interface ListOrdersResponse {
 export async function listOrdersRequester(
   params: ListOrdersParams = {}
 ): Promise<ListOrdersResponse> {
-  const res = await axios.get<ListOrdersResponse>("/api/merchant/orders", {
+  const res = await axios.get<ListOrdersResponse>('/api/merchant/orders', {
     params
   })
   return res.data
@@ -63,7 +63,7 @@ export async function handOverOrderRequester(
 ): Promise<UpdateOrderResponse> {
   return updateOrderRequester(
     orderId,
-    { status: "HANDED_OVER", trackingNumber, ...(carrier ? { carrier } : {}) },
+    { status: 'HANDED_OVER', trackingNumber, ...(carrier ? { carrier } : {}) },
     signal
   )
 }
@@ -90,7 +90,7 @@ export async function fetchOrderSummary(
   } = {}
 ): Promise<OrderSummary> {
   const res = await axios.get<{ data: OrderSummary }>(
-    "/api/merchant/orders/summary",
+    '/api/merchant/orders/summary',
     { params }
   )
   return res.data.data

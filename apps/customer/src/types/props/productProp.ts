@@ -1,13 +1,12 @@
-
 export interface ProductItem {
-    id: number;
-    productId: number
-    sku: string;
-    stockQuantity: number;
-    priceMinor: number;
-    imageUrl?: string | undefined;
-    configurations: Configurations[]
-    productItemImage?: ProductItemImages
+  id: number
+  productId: number
+  sku: string
+  stockQuantity: number
+  priceMinor: number
+  imageUrl?: string | undefined
+  configurations: Configurations[]
+  productItemImage?: ProductItemImages
 }
 export interface Configurations {
   id: number
@@ -33,11 +32,11 @@ export interface ProductImages {
   sortOrder: number
 }
 export interface ProductItemImages {
-  id: number;
-  uuid: string;
-  url: string;
-  blobName: string;
-  fileName: string;
+  id: number
+  uuid: string
+  url: string
+  blobName: string
+  fileName: string
 }
 export interface Product {
   id: number

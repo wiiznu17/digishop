@@ -1,20 +1,20 @@
-"use client"
+'use client'
 
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   StatusBadge,
   ORDER_STATUS_CLASS,
   PAYMENT_STATUS_CLASS
-} from "./StatusBadge"
-import type { AdminOrderDetail } from "@/types/commerce/orders"
+} from './StatusBadge'
+import type { AdminOrderDetail } from '@/types/commerce/orders'
 
 export function OrderHeaderCard({
   data,
@@ -46,7 +46,7 @@ export function OrderHeaderCard({
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => router.push("/admin/orders")}
+            onClick={() => router.push('/admin/orders')}
           >
             Back
           </Button>
@@ -74,7 +74,7 @@ export function OrderHeaderCard({
                   </div>
                 </>
               ) : (
-                "—"
+                '—'
               )}
             </div>
           </div>
@@ -85,7 +85,7 @@ export function OrderHeaderCard({
               {data.store ? (
                 <span title={data.store.uuid}>{data.store.name}</span>
               ) : (
-                "—"
+                '—'
               )}
             </div>
           </div>
@@ -104,7 +104,7 @@ export function OrderHeaderCard({
                     text={data.payment.status}
                     className={
                       PAYMENT_STATUS_CLASS[data.payment.status] ??
-                      "bg-muted text-foreground"
+                      'bg-muted text-foreground'
                     }
                   />
                   <span className="text-xs text-muted-foreground">
@@ -112,7 +112,7 @@ export function OrderHeaderCard({
                   </span>
                 </div>
               ) : (
-                "—"
+                '—'
               )}
             </div>
           </div>

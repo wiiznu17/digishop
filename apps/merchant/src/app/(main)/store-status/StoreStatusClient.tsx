@@ -1,25 +1,25 @@
-"use client"
+'use client'
 
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic'
 export const revalidate = 0
-export const fetchCache = "force-no-store"
+export const fetchCache = 'force-no-store'
 
-import { useSearchParams, useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { useAuth } from "@/contexts/auth-context"
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { useAuth } from '@/contexts/auth-context'
 
 const statusTextMap: Record<string, { title: string; desc: string }> = {
   PENDING: {
-    title: "Your store is pending approval",
-    desc: "Our team is reviewing your store information. Please wait for confirmation. If it takes too long, please contact support."
+    title: 'Your store is pending approval',
+    desc: 'Our team is reviewing your store information. Please wait for confirmation. If it takes too long, please contact support.'
   },
   REJECTED: {
-    title: "Your store has been rejected",
-    desc: "Sorry, your store application was not approved. Please review your information and resubmit your request or contact support for assistance."
+    title: 'Your store has been rejected',
+    desc: 'Sorry, your store application was not approved. Please review your information and resubmit your request or contact support for assistance.'
   },
   SUSPENDED: {
-    title: "Your store has been suspended",
-    desc: "Your store account has been temporarily suspended. Please contact support for more details."
+    title: 'Your store has been suspended',
+    desc: 'Your store account has been temporarily suspended. Please contact support for more details.'
   }
 }
 
@@ -28,25 +28,25 @@ export default function StoreStatusPage() {
   const router = useRouter()
   const { storeStatus, isLoading } = useAuth()
 
-  const queryStatus = (sp.get("status") || "").toUpperCase()
+  const queryStatus = (sp.get('status') || '').toUpperCase()
 
   // ดึง URL หลักจาก env เช่น https://digishop.example.com
   const DIGISHOP_URL =
-    process.env.NEXT_PUBLIC_DIGISHOP_URL ?? "https://digishop.localhost"
+    process.env.NEXT_PUBLIC_DIGISHOP_URL ?? 'https://digishop.localhost'
 
   useEffect(() => {
-    if (!isLoading && storeStatus === "APPROVED") {
-      router.replace("/")
+    if (!isLoading && storeStatus === 'APPROVED') {
+      router.replace('/')
     }
   }, [isLoading, storeStatus, router])
 
   const info =
     statusTextMap[queryStatus] ??
-    statusTextMap[storeStatus ?? "PENDING"] ??
-    statusTextMap["PENDING"]
+    statusTextMap[storeStatus ?? 'PENDING'] ??
+    statusTextMap['PENDING']
 
   const btnBase =
-    "px-4 py-2 rounded-lg border transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+    'px-4 py-2 rounded-lg border transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2'
 
   return (
     <div className="min-h-screen w-full grid place-items-center p-6">

@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 import {
   listCategoriesRequester,
@@ -25,34 +25,34 @@ import {
   type AdminCategoryItem,
   // type AdminCategoryStatus,
   type ListCategoriesParams
-} from "@/utils/requesters/categoryRequester"
+} from '@/utils/requesters/categoryRequester'
 
-import { CategoryBreadcrumbs } from "@/components/admin/categories/category-breadcrumbs"
-import { CategorySearchBar } from "@/components/admin/categories/category-searchbar"
-import { CategoryTable } from "@/components/admin/categories/category-table"
-import { AdminPagination } from "@/components/common/pagination"
-import { CategoryQuickViewDialog } from "@/components/admin/categories/category-quickview"
-import { CategoryFormDialog } from "@/components/admin/categories/category-form"
+import { CategoryBreadcrumbs } from '@/components/admin/categories/category-breadcrumbs'
+import { CategorySearchBar } from '@/components/admin/categories/category-searchbar'
+import { CategoryTable } from '@/components/admin/categories/category-table'
+import { AdminPagination } from '@/components/common/pagination'
+import { CategoryQuickViewDialog } from '@/components/admin/categories/category-quickview'
+import { CategoryFormDialog } from '@/components/admin/categories/category-form'
 // import { ConfirmHideDialog } from "@/components/admin/categories/confirm-hide"
-import { DeleteOrMoveDialog } from "@/components/admin/categories/delete-or-move"
-import { DashboardHeader } from "@/components/dashboard-header"
-import AuthGuard from "@/components/AuthGuard"
+import { DeleteOrMoveDialog } from '@/components/admin/categories/delete-or-move'
+import { DashboardHeader } from '@/components/dashboard-header'
+import AuthGuard from '@/components/AuthGuard'
 
 // ——— URL query helpers ———
 function useQueryState() {
   const router = useRouter()
   const sp = useSearchParams()
 
-  const parentUuid = sp.get("parent") || null
-  const q = sp.get("q") ?? ""
+  const parentUuid = sp.get('parent') || null
+  const q = sp.get('q') ?? ''
   // const status = (sp.get("status") as AdminCategoryStatus | "ALL") ?? "ALL"
-  const page = Number(sp.get("page") ?? 1)
-  const pageSize = Number(sp.get("pageSize") ?? 20)
+  const page = Number(sp.get('page') ?? 1)
+  const pageSize = Number(sp.get('pageSize') ?? 20)
 
   const push = (patch: Record<string, string | number | null | undefined>) => {
     const next = new URLSearchParams(sp.toString())
     Object.entries(patch).forEach(([k, v]) => {
-      if (v === undefined || v === null || v === "") next.delete(k)
+      if (v === undefined || v === null || v === '') next.delete(k)
       else next.set(k, String(v))
     })
     router.push(`/admin/categories?${next.toString()}`)
@@ -72,7 +72,7 @@ function AdminCategoriesPage() {
 
   // breadcrumbs
   const [crumbs, setCrumbs] = useState<{ uuid: string | null; name: string }[]>(
-    [{ uuid: null, name: "Root" }]
+    [{ uuid: null, name: 'Root' }]
   )
 
   // dialogs / modals state
@@ -104,7 +104,7 @@ function AdminCategoriesPage() {
   // build breadcrumb by walking parents
   const loadCrumbs = useCallback(async () => {
     const trail: { uuid: string | null; name: string }[] = [
-      { uuid: null, name: "Root" }
+      { uuid: null, name: 'Root' }
     ]
     if (!parentUuid) {
       setCrumbs(trail)
@@ -301,12 +301,12 @@ function AdminCategoriesPage() {
                   parentUuid: editItem.parentUuid
                 }
               : {
-                  name: "",
+                  name: '',
                   // status: "ACTIVE",
                   parentUuid: parentUuid ?? null
                 }
           }
-          parentDefaultName={crumbs[crumbs.length - 1]?.name ?? "Root"}
+          parentDefaultName={crumbs[crumbs.length - 1]?.name ?? 'Root'}
           onSubmit={onSubmitForm}
         />
 
@@ -333,8 +333,8 @@ function AdminCategoriesPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["CATEGORIES_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['CATEGORIES_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

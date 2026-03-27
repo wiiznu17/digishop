@@ -1,31 +1,31 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { MerchantHeader } from "@/components/dashboard-header"
-import { User, Building, Save, Edit, CheckCircle } from "lucide-react"
+} from '@/components/ui/select'
+import { MerchantHeader } from '@/components/dashboard-header'
+import { User, Building, Save, Edit, CheckCircle } from 'lucide-react'
 import {
   fetchMerchantProfileRequester,
   updateMerchantAddressRequester,
   updateMerchantProfileRequester
-} from "@/utils/requestUtils/requestProfileUtils"
+} from '@/utils/requestUtils/requestProfileUtils'
 import {
   defaultMerchant,
   MerchantProfileFormValues,
@@ -33,20 +33,20 @@ import {
   ProfileMerchantImage,
   MerchantAddressForm,
   AddressType
-} from "@/types/props/userProp"
-import { ProfileLogoUpload } from "@/components/profile/profileUpload"
+} from '@/types/props/userProp'
+import { ProfileLogoUpload } from '@/components/profile/profileUpload'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter
-} from "@/components/ui/dialog"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { cn } from "@/utils/tailwindUtils"
+} from '@/components/ui/dialog'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { cn } from '@/utils/tailwindUtils'
 
 function normalizeImages(
-  imgs: MerchantProfileFormValues["store"]["profileImages"]
+  imgs: MerchantProfileFormValues['store']['profileImages']
 ): ProfileMerchantImage[] {
   if (!imgs) return []
   return Array.isArray(imgs) ? imgs : [imgs]
@@ -74,18 +74,18 @@ export default function ProfilePage() {
   }, [])
   const emptyAddress = (): MerchantAddressForm => ({
     // id: undefined, // ใหม่ยังไม่มี id
-    ownerName: "",
-    phone: "",
-    address_number: "",
-    subStreet: "",
-    street: "",
-    building: "",
-    subdistrict: "",
-    district: "",
-    province: "",
-    postalCode: "",
+    ownerName: '',
+    phone: '',
+    address_number: '',
+    subStreet: '',
+    street: '',
+    building: '',
+    subdistrict: '',
+    district: '',
+    province: '',
+    postalCode: '',
     addressType: AddressType.HOME,
-    country: "Thailand",
+    country: 'Thailand',
     isDefault: profileData.store.addresses.length === 0 // อันแรกให้ default
   })
   const openAddDialog = () => {
@@ -159,7 +159,7 @@ export default function ProfilePage() {
         setProfileData(currentProfile)
       }
     } catch (error) {
-      console.error("Error fetching merchant profile:", error)
+      console.error('Error fetching merchant profile:', error)
     } finally {
       setIsLoading(false)
     }
@@ -216,7 +216,7 @@ export default function ProfilePage() {
       const imgList = normalizeImages(profileData.store.profileImages)
 
       const imageFiles: File[] = []
-      if (imgList.length > 0 && imgList[0].url?.startsWith?.("blob:")) {
+      if (imgList.length > 0 && imgList[0].url?.startsWith?.('blob:')) {
         try {
           const response = await fetch(imgList[0].url)
           const blob = await response.blob()
@@ -225,7 +225,7 @@ export default function ProfilePage() {
           })
           imageFiles.push(file)
         } catch (error) {
-          console.error("Error converting blob to file:", error)
+          console.error('Error converting blob to file:', error)
         }
       }
 
@@ -234,15 +234,15 @@ export default function ProfilePage() {
         imageFiles
       )
       if (result) {
-        if (imgList.length > 0 && imgList[0].url?.startsWith?.("blob:")) {
+        if (imgList.length > 0 && imgList[0].url?.startsWith?.('blob:')) {
           URL.revokeObjectURL(imgList[0].url)
         }
         await handleFetchMerchantProfile()
-        alert("Profile updated successfully!")
+        alert('Profile updated successfully!')
       }
     } catch (error) {
-      console.error("Error saving profile:", error)
-      alert("Error saving profile. Please try again.")
+      console.error('Error saving profile:', error)
+      alert('Error saving profile. Please try again.')
     } finally {
       setIsSaving(false)
     }
@@ -258,7 +258,7 @@ export default function ProfilePage() {
     // Guard: ensure we have an id to update
     if (editingAddress.id == null) {
       // handle this case: either create new address or show an error
-      alert("Cannot update address: missing id.")
+      alert('Cannot update address: missing id.')
       return
     }
 
@@ -268,7 +268,7 @@ export default function ProfilePage() {
       await handleFetchMerchantProfile()
     } catch (e) {
       console.error(e)
-      alert("Update address failed")
+      alert('Update address failed')
     }
   }
 
@@ -282,7 +282,7 @@ export default function ProfilePage() {
       >
         <Button onClick={handleSave} disabled={isSaving || isLoading}>
           <Save className="mr-2 h-4 w-4" />
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </MerchantHeader>
 
@@ -307,7 +307,7 @@ export default function ProfilePage() {
                     id="storeName"
                     value={profileData.store.storeName}
                     onChange={(e) =>
-                      handleStoreChange("storeName", e.target.value)
+                      handleStoreChange('storeName', e.target.value)
                     }
                   />
                 </div>
@@ -316,9 +316,9 @@ export default function ProfilePage() {
                   <Label htmlFor="ownerName">Owner Name</Label>
                   <Input
                     id="ownerName"
-                    value={profileData.store.addresses[0]?.ownerName || ""}
+                    value={profileData.store.addresses[0]?.ownerName || ''}
                     onChange={(e) =>
-                      handleAddressChange(0, "ownerName", e.target.value)
+                      handleAddressChange(0, 'ownerName', e.target.value)
                     }
                   />
                 </div>
@@ -331,7 +331,7 @@ export default function ProfilePage() {
                     id="email"
                     type="email"
                     value={profileData.store.email}
-                    onChange={(e) => handleStoreChange("email", e.target.value)}
+                    onChange={(e) => handleStoreChange('email', e.target.value)}
                   />
                 </div>
 
@@ -340,7 +340,7 @@ export default function ProfilePage() {
                   <Input
                     id="phone"
                     value={profileData.store.phone}
-                    onChange={(e) => handleStoreChange("phone", e.target.value)}
+                    onChange={(e) => handleStoreChange('phone', e.target.value)}
                   />
                 </div>
               </div>
@@ -366,26 +366,26 @@ export default function ProfilePage() {
                       <div
                         key={addr.id ?? idx}
                         className={cn(
-                          "border rounded-lg p-3 flex items-start gap-3",
-                          addr.isDefault && "border-primary"
+                          'border rounded-lg p-3 flex items-start gap-3',
+                          addr.isDefault && 'border-primary'
                         )}
                       >
                         <RadioGroupItem value={String(idx)} className="mt-1" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">
-                              {addr.addressType} {addr.isDefault && "(Default)"}
+                              {addr.addressType} {addr.isDefault && '(Default)'}
                             </span>
                             {addr.isDefault && (
                               <CheckCircle className="h-4 w-4 text-green-600" />
                             )}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {addr.address_number}{" "}
-                            {addr.subStreet && `, ${addr.subStreet}`}{" "}
-                            {addr.street && `, ${addr.street}`}{" "}
-                            {addr.building && `, ${addr.building}`} ,{" "}
-                            {addr.subdistrict}, {addr.district}, {addr.province}{" "}
+                            {addr.address_number}{' '}
+                            {addr.subStreet && `, ${addr.subStreet}`}{' '}
+                            {addr.street && `, ${addr.street}`}{' '}
+                            {addr.building && `, ${addr.building}`} ,{' '}
+                            {addr.subdistrict}, {addr.district}, {addr.province}{' '}
                             {addr.postalCode}
                           </div>
                         </div>
@@ -403,8 +403,8 @@ export default function ProfilePage() {
                           disabled={profileData.store.addresses.length <= 1}
                           title={
                             profileData.store.addresses.length <= 1
-                              ? "Must keep at least one address"
-                              : "Delete"
+                              ? 'Must keep at least one address'
+                              : 'Delete'
                           }
                         >
                           Delete
@@ -432,12 +432,12 @@ export default function ProfilePage() {
                         <Input
                           id="addressNumber"
                           value={
-                            profileData.store.addresses[0]?.address_number || ""
+                            profileData.store.addresses[0]?.address_number || ''
                           }
                           onChange={(e) =>
                             handleAddressChange(
                               0,
-                              "address_number",
+                              'address_number',
                               e.target.value
                             )
                           }
@@ -451,10 +451,10 @@ export default function ProfilePage() {
                         <Input
                           id="addressSubStreet"
                           value={
-                            profileData.store.addresses[0]?.subStreet || ""
+                            profileData.store.addresses[0]?.subStreet || ''
                           }
                           onChange={(e) =>
-                            handleAddressChange(0, "subStreet", e.target.value)
+                            handleAddressChange(0, 'subStreet', e.target.value)
                           }
                           placeholder="Address SubStreet"
                         />
@@ -465,9 +465,9 @@ export default function ProfilePage() {
                         </Label>
                         <Input
                           id="addressStreet"
-                          value={profileData.store.addresses[0]?.street || ""}
+                          value={profileData.store.addresses[0]?.street || ''}
                           onChange={(e) =>
-                            handleAddressChange(0, "street", e.target.value)
+                            handleAddressChange(0, 'street', e.target.value)
                           }
                           placeholder="Address Street"
                         />
@@ -478,9 +478,9 @@ export default function ProfilePage() {
                         </Label>
                         <Input
                           id="addressBuilding"
-                          value={profileData.store.addresses[0]?.building || ""}
+                          value={profileData.store.addresses[0]?.building || ''}
                           onChange={(e) =>
-                            handleAddressChange(0, "building", e.target.value)
+                            handleAddressChange(0, 'building', e.target.value)
                           }
                           placeholder="Address Building"
                         />
@@ -495,12 +495,12 @@ export default function ProfilePage() {
                         <Input
                           id="addressSubdistrict"
                           value={
-                            profileData.store.addresses[0]?.subdistrict || ""
+                            profileData.store.addresses[0]?.subdistrict || ''
                           }
                           onChange={(e) =>
                             handleAddressChange(
                               0,
-                              "subdistrict",
+                              'subdistrict',
                               e.target.value
                             )
                           }
@@ -513,9 +513,9 @@ export default function ProfilePage() {
                         </Label>
                         <Input
                           id="addressDistrict"
-                          value={profileData.store.addresses[0]?.district || ""}
+                          value={profileData.store.addresses[0]?.district || ''}
                           onChange={(e) =>
-                            handleAddressChange(0, "district", e.target.value)
+                            handleAddressChange(0, 'district', e.target.value)
                           }
                           placeholder="Address District"
                         />
@@ -526,9 +526,9 @@ export default function ProfilePage() {
                         </Label>
                         <Input
                           id="addressProvince"
-                          value={profileData.store.addresses[0]?.province || ""}
+                          value={profileData.store.addresses[0]?.province || ''}
                           onChange={(e) =>
-                            handleAddressChange(0, "province", e.target.value)
+                            handleAddressChange(0, 'province', e.target.value)
                           }
                           placeholder="Address Province"
                         />
@@ -540,10 +540,10 @@ export default function ProfilePage() {
                         <Input
                           id="addressZip"
                           value={
-                            profileData.store.addresses[0]?.postalCode || ""
+                            profileData.store.addresses[0]?.postalCode || ''
                           }
                           onChange={(e) =>
-                            handleAddressChange(0, "postalCode", e.target.value)
+                            handleAddressChange(0, 'postalCode', e.target.value)
                           }
                           placeholder="Address Zip"
                         />
@@ -559,7 +559,7 @@ export default function ProfilePage() {
                   <Select
                     value={profileData.store.businessType}
                     onValueChange={(value) =>
-                      handleStoreChange("businessType", value)
+                      handleStoreChange('businessType', value)
                     }
                   >
                     <SelectTrigger>
@@ -588,7 +588,7 @@ export default function ProfilePage() {
                     id="website"
                     value={profileData.store.website}
                     onChange={(e) =>
-                      handleStoreChange("website", e.target.value)
+                      handleStoreChange('website', e.target.value)
                     }
                     placeholder="https://yourwebsite.com"
                   />
@@ -601,7 +601,7 @@ export default function ProfilePage() {
                   id="description"
                   value={profileData.store.description}
                   onChange={(e) =>
-                    handleStoreChange("description", e.target.value)
+                    handleStoreChange('description', e.target.value)
                   }
                   rows={3}
                 />
@@ -632,7 +632,7 @@ export default function ProfilePage() {
                   <span className="text-sm font-medium">
                     {metrics?.memberSince
                       ? new Date(metrics.memberSince).toLocaleDateString()
-                      : "-"}
+                      : '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">

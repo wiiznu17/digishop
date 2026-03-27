@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Package,
@@ -12,47 +12,47 @@ import {
   BarChart3,
   Users,
   FileText
-} from "lucide-react"
+} from 'lucide-react'
 
 const navigationItems = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
+    title: 'Dashboard',
+    href: '/dashboard',
     icon: LayoutDashboard
   },
   {
-    title: "Products",
-    href: "/products",
+    title: 'Products',
+    href: '/products',
     icon: Package
   },
   {
-    title: "Orders",
-    href: "/orders",
+    title: 'Orders',
+    href: '/orders',
     icon: ShoppingCart
   },
   {
-    title: "Customers",
-    href: "/customers",
+    title: 'Customers',
+    href: '/customers',
     icon: Users
   },
   {
-    title: "Analytics",
-    href: "/analytics",
+    title: 'Analytics',
+    href: '/analytics',
     icon: BarChart3
   },
   {
-    title: "Profile",
-    href: "/profile",
+    title: 'Profile',
+    href: '/profile',
     icon: User
   },
   {
-    title: "Reports",
-    href: "/reports",
+    title: 'Reports',
+    href: '/reports',
     icon: FileText
   },
   {
-    title: "Settings",
-    href: "/settings",
+    title: 'Settings',
+    href: '/settings',
     icon: Settings
   }
 ]
@@ -78,10 +78,10 @@ export function SidebarNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
             >
               <item.icon className="h-5 w-5" />

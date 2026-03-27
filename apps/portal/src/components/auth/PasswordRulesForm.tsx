@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useMemo, useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Check, X } from "lucide-react"
+import { useMemo, useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Check, X } from 'lucide-react'
 
 type Props = {
   onSubmit: (payload: {
@@ -32,12 +32,12 @@ function validatePassword(pw: string) {
   const ok = minLen && lower && upper && digit && symbol && noSpace
 
   const rules: Rule[] = [
-    { ok: minLen, label: "At least 10 characters long" },
-    { ok: lower, label: "Contains a lowercase letter (a–z)" },
-    { ok: upper, label: "Contains an uppercase letter (A–Z)" },
-    { ok: digit, label: "Contains a number (0–9)" },
-    { ok: symbol, label: "Contains a symbol (!@#$…)" },
-    { ok: noSpace, label: "No whitespace" }
+    { ok: minLen, label: 'At least 10 characters long' },
+    { ok: lower, label: 'Contains a lowercase letter (a–z)' },
+    { ok: upper, label: 'Contains an uppercase letter (A–Z)' },
+    { ok: digit, label: 'Contains a number (0–9)' },
+    { ok: symbol, label: 'Contains a symbol (!@#$…)' },
+    { ok: noSpace, label: 'No whitespace' }
   ]
 
   let score = 0
@@ -48,16 +48,16 @@ function validatePassword(pw: string) {
 export default function PasswordRulesForm({
   onSubmit,
   showNameField,
-  defaultName = "",
+  defaultName = '',
   emailForPII, // kept for backward compatibility
-  submitLabel = "Save password",
+  submitLabel = 'Save password',
   submitting,
   externalError,
-  title = "Set your password"
+  title = 'Set your password'
 }: Props) {
   const [name, setName] = useState(defaultName)
-  const [password, setPassword] = useState("")
-  const [confirm, setConfirm] = useState("")
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
 
   const v = useMemo(() => validatePassword(password), [password])
@@ -69,8 +69,8 @@ export default function PasswordRulesForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLocalError(null)
-    if (!v.ok) return setLocalError("Password does not meet the rules.")
-    if (!match) return setLocalError("Passwords do not match.")
+    if (!v.ok) return setLocalError('Password does not meet the rules.')
+    if (!match) return setLocalError('Passwords do not match.')
     await onSubmit({
       password,
       name: showNameField ? name.trim() || undefined : undefined
@@ -106,10 +106,10 @@ export default function PasswordRulesForm({
           <div
             className={`h-2 transition-all ${
               strengthPct < 50
-                ? "bg-red-500"
+                ? 'bg-red-500'
                 : strengthPct < 80
-                  ? "bg-yellow-500"
-                  : "bg-green-600"
+                  ? 'bg-yellow-500'
+                  : 'bg-green-600'
             }`}
             style={{ width: `${strengthPct}%` }}
           />
@@ -119,7 +119,7 @@ export default function PasswordRulesForm({
             <li
               key={i}
               className={`flex items-center gap-2 ${
-                r.ok ? "text-green-600" : "text-muted-foreground"
+                r.ok ? 'text-green-600' : 'text-muted-foreground'
               }`}
             >
               {r.ok ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
@@ -150,7 +150,7 @@ export default function PasswordRulesForm({
       )}
 
       <Button type="submit" className="w-full" disabled={!canSubmit}>
-        {submitting ? "Saving..." : submitLabel}
+        {submitting ? 'Saving...' : submitLabel}
       </Button>
     </form>
   )

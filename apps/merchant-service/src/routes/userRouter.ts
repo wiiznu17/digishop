@@ -9,7 +9,7 @@ import {
 import { authenticate } from '../middlewares/middleware'
 import { upload } from '../middlewares/upload'
 
-const router: express.Router = express.Router();
+const router: express.Router = express.Router()
 
 router.get('/profile', authenticate, getMerchantProfile)
 
@@ -18,16 +18,12 @@ router.post('/register', createStoreForUser)
 router.delete('/:id', deleteUser)
 
 router.put(
-  "/profile",
+  '/profile',
   authenticate,
-  upload.array("images", 1) as any,
+  upload.array('images', 1) as any,
   updateMerchantProfile
 )
 
-router.put(
-  "/profile/address/:id",
-  authenticate,
-  updateMerchantAddress
-)
+router.put('/profile/address/:id', authenticate, updateMerchantAddress)
 
 export default router

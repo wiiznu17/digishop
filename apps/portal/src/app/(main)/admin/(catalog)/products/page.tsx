@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import {
   Card,
@@ -9,10 +9,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -20,48 +20,48 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
+} from '@/components/ui/table'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { Eye, Package, Search } from "lucide-react"
+} from '@/components/ui/dialog'
+import { Eye, Package, Search } from 'lucide-react'
 
 import {
   fetchAdminProductsRequester,
   fetchAdminCategoriesRequester,
   fetchAdminProductSuggestionsRequester
-} from "@/utils/requesters/productRequester"
-import { DashboardHeader } from "@/components/dashboard-header"
+} from '@/utils/requesters/productRequester'
+import { DashboardHeader } from '@/components/dashboard-header'
 import {
   AdminCategoryDto,
   AdminFetchProductsParams,
   AdminProductListItem,
   AdminSuggestResponse
-} from "@/types/admin/catalog"
-import AuthGuard from "@/components/AuthGuard"
+} from '@/types/admin/catalog'
+import AuthGuard from '@/components/AuthGuard'
 
 // ========= helpers =========
 const fmtTHB = (minor?: number | null) =>
   minor == null
-    ? "-"
-    : (minor / 100).toLocaleString("th-TH", {
-        style: "currency",
-        currency: "THB"
+    ? '-'
+    : (minor / 100).toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
       })
 
 function cx(...cls: (string | false | null | undefined)[]) {
-  return cls.filter(Boolean).join(" ")
+  return cls.filter(Boolean).join(' ')
 }
 
 function Pager({
@@ -128,11 +128,11 @@ function Pager({
   )
 }
 
-type SortBy = AdminFetchProductsParams["sortBy"]
-type SortDir = AdminFetchProductsParams["sortDir"]
-type StockFilter = "in" | "out" | "all"
-type ReqStatus = "PENDING" | "APPROVED" | "REJECT"
-type PStatus = "ACTIVE" | "INACTIVE"
+type SortBy = AdminFetchProductsParams['sortBy']
+type SortDir = AdminFetchProductsParams['sortDir']
+type StockFilter = 'in' | 'out' | 'all'
+type ReqStatus = 'PENDING' | 'APPROVED' | 'REJECT'
+type PStatus = 'ACTIVE' | 'INACTIVE'
 
 export type AdminProductFilterState = {
   q: string
@@ -144,29 +144,29 @@ export type AdminProductFilterState = {
   sortDir: SortDir
 }
 
-const ALL = "__ALL__"
+const ALL = '__ALL__'
 const DEFAULT_FILTERS: AdminProductFilterState = {
-  q: "",
+  q: '',
   categoryUuid: undefined,
   reqStatus: undefined, // default UI = All
   status: undefined,
-  stock: "all",
-  sortBy: "createdAt",
-  sortDir: "desc"
+  stock: 'all',
+  sortBy: 'createdAt',
+  sortDir: 'desc'
 }
 
 // สำหรับจำค่าฟิลเตอร์ล่าสุดข้ามหน้า/รีเฟรช
-const STORAGE_KEY = "adminProductsFilters.v1"
+const STORAGE_KEY = 'adminProductsFilters.v1'
 const PERSIST_KEYS = [
-  "q",
-  "categoryUuid",
-  "reqStatus",
-  "status",
-  "inStock",
-  "sortBy",
-  "sortDir",
-  "page",
-  "pageSize"
+  'q',
+  'categoryUuid',
+  'reqStatus',
+  'status',
+  'inStock',
+  'sortBy',
+  'sortDir',
+  'page',
+  'pageSize'
 ] as const
 type PersistKey = (typeof PERSIST_KEYS)[number]
 
@@ -186,8 +186,8 @@ function AdminProductFilters({
   const v = value
 
   // search q (store name only)
-  const [localQ, setLocalQ] = useState(v.q ?? "")
-  useEffect(() => setLocalQ(v.q ?? ""), [v.q])
+  const [localQ, setLocalQ] = useState(v.q ?? '')
+  useEffect(() => setLocalQ(v.q ?? ''), [v.q])
 
   const [open, setOpen] = useState(false)
   const [suggest, setSuggest] = useState<AdminSuggestResponse>({ products: [] })
@@ -244,7 +244,7 @@ function AdminProductFilters({
                   setTimeout(() => setOpen(false), 150)
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") applyNow()
+                  if (e.key === 'Enter') applyNow()
                 }}
                 autoComplete="off"
               />
@@ -424,23 +424,23 @@ function AdminProductsPage() {
   const sp = useSearchParams()
 
   // parse from URL
-  const page = Number(sp.get("page") ?? 1)
-  const pageSize = Number(sp.get("pageSize") ?? 20)
-  const q = sp.get("q") ?? ""
-  const categoryUuid = sp.get("categoryUuid") ?? undefined
+  const page = Number(sp.get('page') ?? 1)
+  const pageSize = Number(sp.get('pageSize') ?? 20)
+  const q = sp.get('q') ?? ''
+  const categoryUuid = sp.get('categoryUuid') ?? undefined
 
-  const rawReq = sp.get("reqStatus") // "__ALL__" | "PENDING" | "APPROVED" | "REJECT" | null
+  const rawReq = sp.get('reqStatus') // "__ALL__" | "PENDING" | "APPROVED" | "REJECT" | null
   // default All: ถ้า missing หรือ "__ALL__" = undefined (ไม่กรอง)
   const reqStatusParsed: ReqStatus | undefined =
     rawReq == null || rawReq === ALL
       ? undefined
       : ((rawReq as ReqStatus) ?? undefined)
 
-  const status = sp.get("status") as PStatus | null
-  const inStockParam = sp.get("inStock")
-  const inStock = inStockParam == null ? undefined : inStockParam === "true"
-  const sortBy = (sp.get("sortBy") as SortBy) ?? "createdAt"
-  const sortDir = (sp.get("sortDir") as SortDir) ?? "desc"
+  const status = sp.get('status') as PStatus | null
+  const inStockParam = sp.get('inStock')
+  const inStock = inStockParam == null ? undefined : inStockParam === 'true'
+  const sortBy = (sp.get('sortBy') as SortBy) ?? 'createdAt'
+  const sortDir = (sp.get('sortDir') as SortDir) ?? 'desc'
 
   // UI state
   const [filters, setFilters] = useState<AdminProductFilterState>({
@@ -448,14 +448,14 @@ function AdminProductsPage() {
     categoryUuid,
     reqStatus: reqStatusParsed, // UI = All เมื่อไม่มี/ALL
     status: status ?? undefined,
-    stock: inStock === undefined ? "all" : inStock ? "in" : "out",
+    stock: inStock === undefined ? 'all' : inStock ? 'in' : 'out',
     sortBy,
     sortDir
   })
 
   // sync UI จาก URL
   useEffect(() => {
-    const rawReq = sp.get("reqStatus")
+    const rawReq = sp.get('reqStatus')
     const parsed: ReqStatus | undefined =
       rawReq == null || rawReq === ALL
         ? undefined
@@ -465,8 +465,8 @@ function AdminProductsPage() {
       q,
       categoryUuid,
       reqStatus: parsed,
-      status: (sp.get("status") as PStatus | null) ?? undefined,
-      stock: inStock === undefined ? "all" : inStock ? "in" : "out",
+      status: (sp.get('status') as PStatus | null) ?? undefined,
+      stock: inStock === undefined ? 'all' : inStock ? 'in' : 'out',
       sortBy,
       sortDir
     })
@@ -478,7 +478,7 @@ function AdminProductsPage() {
   ) => {
     const next = new URLSearchParams(sp.toString())
     Object.entries(kv).forEach(([k, v]) => {
-      if (v === undefined || v === "" || v === null) next.delete(k)
+      if (v === undefined || v === '' || v === null) next.delete(k)
       else next.set(k, String(v))
     })
     router.push(`/admin/products?${next.toString()}`)
@@ -516,8 +516,8 @@ function AdminProductsPage() {
         // ไม่มีค่าเก่า → ตั้ง default = All
         pushQuery({
           reqStatus: ALL,
-          sortBy: "createdAt",
-          sortDir: "desc",
+          sortBy: 'createdAt',
+          sortDir: 'desc',
           page: 1,
           pageSize: 20
         })
@@ -526,8 +526,8 @@ function AdminProductsPage() {
       // fallback ปลอดภัย
       pushQuery({
         reqStatus: ALL,
-        sortBy: "createdAt",
-        sortDir: "desc",
+        sortBy: 'createdAt',
+        sortDir: 'desc',
         page: 1,
         pageSize: 20
       })
@@ -554,7 +554,7 @@ function AdminProductsPage() {
       reqStatus: filters.reqStatus ?? ALL, // persist ALL ใน URL
       status: filters.status,
       inStock:
-        filters.stock === "all" ? undefined : String(filters.stock === "in"),
+        filters.stock === 'all' ? undefined : String(filters.stock === 'in'),
       sortBy: filters.sortBy,
       sortDir: filters.sortDir,
       page: 1
@@ -569,8 +569,8 @@ function AdminProductsPage() {
       reqStatus: ALL, // reset เป็น All และคงไว้ใน URL
       status: undefined,
       inStock: undefined,
-      sortBy: "createdAt",
-      sortDir: "desc",
+      sortBy: 'createdAt',
+      sortDir: 'desc',
       page: 1,
       pageSize
     })
@@ -715,23 +715,23 @@ function AdminProductsPage() {
                         </TableCell>
 
                         <TableCell className="max-w-[220px] truncate">
-                          {r.store?.storeName ?? "-"}
+                          {r.store?.storeName ?? '-'}
                         </TableCell>
 
                         <TableCell className="max-w-[220px] truncate">
-                          {r.category?.name ?? "-"}
+                          {r.category?.name ?? '-'}
                         </TableCell>
 
                         <TableCell>
                           <Badge
                             className={cx(
-                              "border",
-                              r.reqStatus === "PENDING" &&
-                                "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-                              r.reqStatus === "APPROVED" &&
-                                "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-                              r.reqStatus === "REJECT" &&
-                                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              'border',
+                              r.reqStatus === 'PENDING' &&
+                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                              r.reqStatus === 'APPROVED' &&
+                                'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                              r.reqStatus === 'REJECT' &&
+                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                             )}
                             variant="outline"
                           >
@@ -742,10 +742,10 @@ function AdminProductsPage() {
                         <TableCell>
                           <Badge
                             className={cx(
-                              "border",
-                              r.status === "ACTIVE"
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+                              'border',
+                              r.status === 'ACTIVE'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                             )}
                             variant="outline"
                           >
@@ -759,7 +759,7 @@ function AdminProductsPage() {
 
                         <TableCell className="text-right">
                           <span
-                            className={!r.totalStock ? "text-destructive" : ""}
+                            className={!r.totalStock ? 'text-destructive' : ''}
                           >
                             {r.totalStock}
                           </span>
@@ -842,12 +842,12 @@ function AdminProductsPage() {
 
                 <div>
                   <span className="text-muted-foreground">Store: </span>
-                  {current.store?.storeName ?? "-"}
+                  {current.store?.storeName ?? '-'}
                 </div>
 
                 <div>
                   <span className="text-muted-foreground">Category: </span>
-                  {current.category?.name ?? "-"}
+                  {current.category?.name ?? '-'}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -855,7 +855,7 @@ function AdminProductsPage() {
                   <Badge variant="outline">{current.reqStatus}</Badge>
                 </div>
 
-                {current.reqStatus === "REJECT" && !!current.rejectReason && (
+                {current.reqStatus === 'REJECT' && !!current.rejectReason && (
                   <div className="rounded border p-2 bg-destructive/10">
                     <div className="text-xs text-muted-foreground">
                       Reject Reason
@@ -899,8 +899,8 @@ function AdminProductsPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["PRODUCTS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['PRODUCTS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

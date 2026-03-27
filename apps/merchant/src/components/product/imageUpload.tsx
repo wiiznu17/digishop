@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
+import { useState, useRef } from 'react'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
 import {
   X,
   Upload,
@@ -13,21 +13,21 @@ import {
   Crop as CropIcon,
   ChevronLeft,
   ChevronRight
-} from "lucide-react"
+} from 'lucide-react'
 import {
   deleteProductImageRequester,
   updateProductImageRequester,
   reorderProductImagesRequester
-} from "@/utils/requestUtils/requestProductUtils"
-import Cropper from "react-easy-crop"
-import type { Area } from "react-easy-crop"
+} from '@/utils/requestUtils/requestProductUtils'
+import Cropper from 'react-easy-crop'
+import type { Area } from 'react-easy-crop'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 
 // รองรับทั้ง id/uuid
 export type ImageLike = {
@@ -44,21 +44,21 @@ interface ImageUploadProps {
   onImagesChange: (images: ImageLike[]) => void
   maxImages?: number
 
-  mode?: "local" | "server"
+  mode?: 'local' | 'server'
   productUuid?: string
 
   cropAspect?: number
-  variant?: "default" | "compact"
+  variant?: 'default' | 'compact'
 }
 
 export function ImageUpload({
   images,
   onImagesChange,
   maxImages = 5,
-  mode = "local",
+  mode = 'local',
   productUuid,
   cropAspect = 1,
-  variant = "default"
+  variant = 'default'
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -67,7 +67,7 @@ export function ImageUpload({
   // สำหรับ compact: กำลังจะเปลี่ยนภาพ index ไหน
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null)
 
-  const isBlob = (u: string) => u.startsWith("blob:")
+  const isBlob = (u: string) => u.startsWith('blob:')
 
   // ===== Crop =====
   const [cropOpen, setCropOpen] = useState(false)
@@ -95,12 +95,12 @@ export function ImageUpload({
     try {
       const { blob, mime } = await getCroppedBlob(img.url, croppedAreaPixels)
       const newUrl = URL.createObjectURL(blob)
-      const ext = mime.includes("png")
-        ? "png"
-        : mime.includes("webp")
-          ? "webp"
-          : "jpg"
-      const base = img.fileName.replace(/\.[^.]+$/, "")
+      const ext = mime.includes('png')
+        ? 'png'
+        : mime.includes('webp')
+          ? 'webp'
+          : 'jpg'
+      const base = img.fileName.replace(/\.[^.]+$/, '')
       const newName = `${base}-cropped-${Date.now()}.${ext}`
 
       const next = images.map((it, i) =>
@@ -116,8 +116,8 @@ export function ImageUpload({
       )
       onImagesChange(next.map((x, i) => ({ ...x, sortOrder: i })))
     } catch (e) {
-      console.error("crop failed", e)
-      alert("Crop failed")
+      console.error('crop failed', e)
+      alert('Crop failed')
     } finally {
       setCropOpen(false)
       setCropIndex(null)
@@ -129,11 +129,11 @@ export function ImageUpload({
     area: Area
   ): Promise<{ blob: Blob; mime: string }> {
     const imgEl = await loadImage(src)
-    const canvas = document.createElement("canvas")
+    const canvas = document.createElement('canvas')
     canvas.width = Math.max(1, Math.floor(area.width))
     canvas.height = Math.max(1, Math.floor(area.height))
-    const ctx = canvas.getContext("2d")
-    if (!ctx) throw new Error("Canvas not supported")
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas not supported')
 
     ctx.drawImage(
       imgEl,
@@ -147,7 +147,7 @@ export function ImageUpload({
       canvas.height
     )
 
-    let mime = "image/jpeg"
+    let mime = 'image/jpeg'
     try {
       const resp = await fetch(src)
       const b = await resp.blob()
@@ -158,7 +158,7 @@ export function ImageUpload({
 
     const blob: Blob = await new Promise((resolve, reject) =>
       canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("toBlob error"))),
+        (b) => (b ? resolve(b) : reject(new Error('toBlob error'))),
         mime,
         0.92
       )
@@ -169,7 +169,7 @@ export function ImageUpload({
   function loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image()
-      img.crossOrigin = "anonymous"
+      img.crossOrigin = 'anonymous'
       img.onload = () => resolve(img)
       img.onerror = (e) => reject(e)
       img.src = src
@@ -191,12 +191,12 @@ export function ImageUpload({
     const files = event.target.files
     if (!files || files.length === 0) return
 
-    const chosen = variant === "compact" ? [files[0]] : Array.from(files)
+    const chosen = variant === 'compact' ? [files[0]] : Array.from(files)
     const willHave =
       replaceIndex != null ? images.length : images.length + chosen.length
     if (willHave > maxImages) {
       alert(`You can maximum upload ${maxImages} pictures`)
-      if (fileInputRef.current) fileInputRef.current.value = ""
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
@@ -204,7 +204,7 @@ export function ImageUpload({
     try {
       const newThumbs: ImageLike[] = []
       for (const file of chosen) {
-        if (!file.type.startsWith("image/")) {
+        if (!file.type.startsWith('image/')) {
           alert(`${file.name} Not image file`)
           continue
         }
@@ -219,7 +219,7 @@ export function ImageUpload({
         })
       }
 
-      if (variant === "compact") {
+      if (variant === 'compact') {
         // replace ที่ index ระบุ
         const idx = replaceIndex ?? (images.length ? 0 : null)
         if (idx == null) {
@@ -254,13 +254,13 @@ export function ImageUpload({
         )
       }
     } catch (err) {
-      console.error("Error processing files:", err)
-      alert("Error to processing files")
+      console.error('Error processing files:', err)
+      alert('Error to processing files')
     } finally {
       setUploading(false)
       setReplaceIndex(null)
       // reset input value + recreate key กันเลือกไฟล์เดิมแล้วไม่ยิง onChange
-      if (fileInputRef.current) fileInputRef.current.value = ""
+      if (fileInputRef.current) fileInputRef.current.value = ''
       setFileInputKey((k) => k + 1)
     }
   }
@@ -273,12 +273,12 @@ export function ImageUpload({
     const img = images[index]
     const imageUuid = img.uuid ?? img.id
 
-    if (mode === "server" && productUuid && imageUuid && !isBlob(img.url)) {
+    if (mode === 'server' && productUuid && imageUuid && !isBlob(img.url)) {
       try {
         await deleteProductImageRequester(productUuid, imageUuid)
       } catch (e) {
-        console.error("Error deleting image from server:", e)
-        alert("Error deleting image")
+        console.error('Error deleting image from server:', e)
+        alert('Error deleting image')
         return
       }
     }
@@ -287,7 +287,7 @@ export function ImageUpload({
     if (img.isMain && updated.length > 0) updated[0].isMain = true
     onImagesChange(updated.map((x, i) => ({ ...x, sortOrder: i })))
 
-    if (mode === "server" && productUuid) {
+    if (mode === 'server' && productUuid) {
       const orders = updated
         .filter((x) => x.uuid)
         .map((x, i) => ({ imageUuid: x.uuid!, sortOrder: i }))
@@ -295,7 +295,7 @@ export function ImageUpload({
         try {
           await reorderProductImagesRequester(productUuid, orders)
         } catch (e) {
-          console.error("reorder after delete failed:", e)
+          console.error('reorder after delete failed:', e)
         }
       }
     }
@@ -308,7 +308,7 @@ export function ImageUpload({
     const updated = images.map((img, i) => ({ ...img, isMain: i === index }))
     onImagesChange(updated)
 
-    if (mode === "server" && productUuid) {
+    if (mode === 'server' && productUuid) {
       const selected = updated[index]
       const imageUuid = selected.uuid ?? selected.id
       if (imageUuid && !isBlob(selected.url)) {
@@ -317,8 +317,8 @@ export function ImageUpload({
             isMain: true
           })
         } catch (e) {
-          console.error("Error setting main image on server:", e)
-          alert("Error setting main image")
+          console.error('Error setting main image on server:', e)
+          alert('Error setting main image')
         }
       }
     }
@@ -335,7 +335,7 @@ export function ImageUpload({
     const re = next.map((x, i) => ({ ...x, sortOrder: i }))
     onImagesChange(re)
 
-    if (mode === "server" && productUuid) {
+    if (mode === 'server' && productUuid) {
       const orders = re
         .filter((x) => x.uuid && !isBlob(x.url))
         .map((x) => ({ imageUuid: x.uuid!, sortOrder: x.sortOrder ?? 0 }))
@@ -343,7 +343,7 @@ export function ImageUpload({
         try {
           await reorderProductImagesRequester(productUuid, orders)
         } catch (e) {
-          console.error("Error reordering on server:", e)
+          console.error('Error reordering on server:', e)
         }
       }
     }
@@ -370,7 +370,7 @@ export function ImageUpload({
 
   // ===== UI Helpers =====
   const actionBtnClass =
-    "pointer-events-auto rounded-full transition-all duration-150 ease-out hover:scale-110 hover:shadow-lg hover:ring-2 hover:ring-white/80"
+    'pointer-events-auto rounded-full transition-all duration-150 ease-out hover:scale-110 hover:shadow-lg hover:ring-2 hover:ring-white/80'
 
   // ===== UI (Compact) =====
   const CompactUI = () => {
@@ -386,7 +386,7 @@ export function ImageUpload({
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && hasImage) openPreviewAt(0)
+          if (e.key === 'Enter' && hasImage) openPreviewAt(0)
         }}
       >
         {/* input ไฟล์ — แยกออก ไม่ห่อด้วย label */}
@@ -479,7 +479,7 @@ export function ImageUpload({
             disabled={uploading}
           >
             <Upload className="h-4 w-4 mr-2" />
-            {uploading ? "Uploading..." : "Add image"}
+            {uploading ? 'Uploading...' : 'Add image'}
           </Button>
         )}
       </div>
@@ -613,7 +613,7 @@ export function ImageUpload({
 
   return (
     <>
-      {variant === "compact" ? <CompactUI /> : <DefaultUI />}
+      {variant === 'compact' ? <CompactUI /> : <DefaultUI />}
 
       {/* ===== Crop Dialog ===== */}
       <Dialog open={cropOpen} onOpenChange={setCropOpen}>

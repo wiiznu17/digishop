@@ -1,5 +1,13 @@
-import { CheckOut, Order, OrderItem, Product, Store, StoreStatus, User } from "@digishop/db";
-import { Op, col, fn, where as sqlWhere, WhereOptions } from "sequelize";
+import {
+  CheckOut,
+  Order,
+  OrderItem,
+  Product,
+  Store,
+  StoreStatus,
+  User
+} from '@digishop/db'
+import { Op, col, fn, where as sqlWhere, WhereOptions } from 'sequelize'
 
 export class StoreRepository {
   async findAndCountStores(
@@ -14,54 +22,54 @@ export class StoreRepository {
     return Store.findAndCountAll({
       where,
       attributes: [
-        "id",
-        "uuid",
-        ["store_name", "storeName"],
-        "email",
-        "status",
-        ["created_at", "createdAt"],
-        [orderTotalExpr, "orderTotalMinor"],
-        [orderCountExpr, "orderCount"],
+        'id',
+        'uuid',
+        ['store_name', 'storeName'],
+        'email',
+        'status',
+        ['created_at', 'createdAt'],
+        [orderTotalExpr, 'orderTotalMinor'],
+        [orderCountExpr, 'orderCount']
       ],
       include: [
         {
           model: User,
-          as: "owner",
+          as: 'owner',
           required: false,
           attributes: [
-            [col("first_name"), "firstName"],
-            [col("last_name"), "lastName"],
-            "email",
-          ],
+            [col('first_name'), 'firstName'],
+            [col('last_name'), 'lastName'],
+            'email'
+          ]
         },
         {
           model: Order,
-          as: "storeOrders",
+          as: 'storeOrders',
           attributes: [],
-          required: false,
-        },
+          required: false
+        }
       ],
-      group: ["Store.id", "owner.id"],
+      group: ['Store.id', 'owner.id'],
       having: havingAnd.length ? { [Op.and]: havingAnd } : undefined,
       order: orderBy,
       offset,
       limit,
       distinct: true,
-      subQuery: false,
-    });
+      subQuery: false
+    })
   }
 
   async getProductCountsForStores(storeIds: number[]) {
-    if (!storeIds.length) return [];
+    if (!storeIds.length) return []
     return Product.findAll({
       where: { storeId: { [Op.in]: storeIds } },
       attributes: [
-        ["store_id", "storeId"],
-        [fn("COUNT", col("Product.id")), "productCount"],
+        ['store_id', 'storeId'],
+        [fn('COUNT', col('Product.id')), 'productCount']
       ],
-      group: ["storeId"],
-      raw: true,
-    });
+      group: ['storeId'],
+      raw: true
+    })
   }
 
   async suggestStores(term: string) {
@@ -72,10 +80,10 @@ export class StoreRepository {
           { email: { [Op.like]: term } }
         ]
       },
-      attributes: ["id", ["store_name", "storeName"]],
+      attributes: ['id', ['store_name', 'storeName']],
       limit: 8,
-      order: [[col("Store.created_at"), "DESC"]],
-    });
+      order: [[col('Store.created_at'), 'DESC']]
+    })
   }
 
   async getStoreDetail(id: number) {
@@ -84,54 +92,70 @@ export class StoreRepository {
       include: [
         {
           model: User,
-          as: "owner",
+          as: 'owner',
           required: false,
-          attributes: [[col("first_name"), "firstName"], [col("last_name"), "lastName"], "email"]
+          attributes: [
+            [col('first_name'), 'firstName'],
+            [col('last_name'), 'lastName'],
+            'email'
+          ]
         },
-        { model: Product, as: "products", attributes: [], required: false },
-        { model: Order, as: "storeOrders", attributes: [], required: false },
+        { model: Product, as: 'products', attributes: [], required: false },
+        { model: Order, as: 'storeOrders', attributes: [], required: false }
       ],
       attributes: [
-        "id",
-        "uuid",
-        ["store_name", "storeName"],
-        "email",
-        "status",
-        ["created_at", "createdAt"],
-        [fn("COUNT", fn("DISTINCT", col("products.id"))), "productCount"],
-        [fn("COALESCE", fn("SUM", col("storeOrders.grand_total_minor")), 0), "orderTotalMinor"],
-        [fn("COUNT", col("storeOrders.id")), "orderCount"],
+        'id',
+        'uuid',
+        ['store_name', 'storeName'],
+        'email',
+        'status',
+        ['created_at', 'createdAt'],
+        [fn('COUNT', fn('DISTINCT', col('products.id'))), 'productCount'],
+        [
+          fn('COALESCE', fn('SUM', col('storeOrders.grand_total_minor')), 0),
+          'orderTotalMinor'
+        ],
+        [fn('COUNT', col('storeOrders.id')), 'orderCount']
       ],
-      group: ["Store.id", "owner.id"],
-    });
+      group: ['Store.id', 'owner.id']
+    })
   }
 
   async getOrderSummary(storeId: number) {
     return Order.findAll({
       where: { storeId },
       attributes: [
-        [fn("COUNT", col("Order.id")), "totalOrders"],
-        [fn("COALESCE", fn("SUM", col("Order.grand_total_minor")), 0), "totalSalesMinor"],
-        [fn("COALESCE", fn("AVG", col("Order.grand_total_minor")), 0), "averageOrderMinor"],
-        [fn("MAX", col("Order.created_at")), "lastOrderAt"],
+        [fn('COUNT', col('Order.id')), 'totalOrders'],
+        [
+          fn('COALESCE', fn('SUM', col('Order.grand_total_minor')), 0),
+          'totalSalesMinor'
+        ],
+        [
+          fn('COALESCE', fn('AVG', col('Order.grand_total_minor')), 0),
+          'averageOrderMinor'
+        ],
+        [fn('MAX', col('Order.created_at')), 'lastOrderAt']
       ],
-      raw: true,
-    });
+      raw: true
+    })
   }
 
   async getMonthlySales(storeId: number, monthExpr: any) {
     return Order.findAll({
       where: { storeId },
       attributes: [
-        [monthExpr, "month"],
-        [fn("COALESCE", fn("SUM", col("Order.grand_total_minor")), 0), "totalSalesMinor"],
-        [fn("COUNT", col("Order.id")), "orderCount"],
+        [monthExpr, 'month'],
+        [
+          fn('COALESCE', fn('SUM', col('Order.grand_total_minor')), 0),
+          'totalSalesMinor'
+        ],
+        [fn('COUNT', col('Order.id')), 'orderCount']
       ],
       group: [monthExpr],
-      order: [[monthExpr, "DESC"]],
+      order: [[monthExpr, 'DESC']],
       limit: 18,
-      raw: true,
-    });
+      raw: true
+    })
   }
 
   async getRecentOrders(storeId: number) {
@@ -140,55 +164,74 @@ export class StoreRepository {
       include: [
         {
           model: CheckOut,
-          as: "checkout",
+          as: 'checkout',
           required: true,
-          attributes: ["orderCode"],
+          attributes: ['orderCode'],
           include: [
             {
               model: User,
-              as: "customer",
+              as: 'customer',
               required: true,
-              attributes: ["id", [col("first_name"), "firstName"], [col("last_name"), "lastName"], "email"],
-            },
-          ],
-        },
+              attributes: [
+                'id',
+                [col('first_name'), 'firstName'],
+                [col('last_name'), 'lastName'],
+                'email'
+              ]
+            }
+          ]
+        }
       ],
-      attributes: ["id", "reference", "status", ["grand_total_minor", "grandTotalMinor"], ["currency_code", "currencyCode"], ["created_at", "createdAt"]],
-      order: [[col("Order.created_at"), "DESC"]],
-      limit: 10,
-    });
+      attributes: [
+        'id',
+        'reference',
+        'status',
+        ['grand_total_minor', 'grandTotalMinor'],
+        ['currency_code', 'currencyCode'],
+        ['created_at', 'createdAt']
+      ],
+      order: [[col('Order.created_at'), 'DESC']],
+      limit: 10
+    })
   }
 
   async getRecentOrderItems(orderIds: number[]) {
-    if (!orderIds.length) return [];
+    if (!orderIds.length) return []
     return OrderItem.findAll({
       where: { orderId: orderIds },
       include: [
         {
           model: Product,
-          as: "product",
+          as: 'product',
           required: false,
-          attributes: ["id", "uuid", "name"]
-        },
+          attributes: ['id', 'uuid', 'name']
+        }
       ],
-      attributes: ["orderId"],
-      limit: 200,
-    });
+      attributes: ['orderId'],
+      limit: 200
+    })
   }
 
   async findStoreById(id: number) {
     return Store.findOne({
       where: { id },
-      attributes: ["id", "uuid", ["store_name", "storeName"], "email", "status", ["created_at", "createdAt"]],
-    });
+      attributes: [
+        'id',
+        'uuid',
+        ['store_name', 'storeName'],
+        'email',
+        'status',
+        ['created_at', 'createdAt']
+      ]
+    })
   }
 
   async approveStore(id: number) {
     return Store.update(
       { status: StoreStatus.APPROVED },
       { where: { id, status: StoreStatus.PENDING } }
-    );
+    )
   }
 }
 
-export const storeRepository = new StoreRepository();
+export const storeRepository = new StoreRepository()

@@ -1,7 +1,14 @@
-import { CheckOut, Order, RefundOrder } from "@digishop/db";
+import { CheckOut, Order, RefundOrder } from '@digishop/db'
 
 export class RefundRepository {
-  async findAndCountRefunds(whereRefund: any, include: any, orderBy: any, offset: number, limit: number, attributes: any) {
+  async findAndCountRefunds(
+    whereRefund: any,
+    include: any,
+    orderBy: any,
+    offset: number,
+    limit: number,
+    attributes: any
+  ) {
     return RefundOrder.findAndCountAll({
       where: whereRefund,
       include,
@@ -10,9 +17,9 @@ export class RefundRepository {
       offset,
       limit,
       subQuery: false,
-      distinct: true,
-    });
+      distinct: true
+    })
   }
 }
 
-export const refundRepository = new RefundRepository();
+export const refundRepository = new RefundRepository()

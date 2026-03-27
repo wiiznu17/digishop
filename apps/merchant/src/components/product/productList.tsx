@@ -1,31 +1,31 @@
-"use client"
+'use client'
 
-import Link from "next/link"
+import Link from 'next/link'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Plus, Trash2 } from "lucide-react"
-import { ProductTable } from "./productTable"
-import type { ProductListItem } from "@/types/props/productProp"
-import { ProductFilters, type ProductFilterState } from "./productFilters"
-import { type CategoryDto } from "@/utils/requestUtils/requestProductUtils"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Plus, Trash2 } from 'lucide-react'
+import { ProductTable } from './productTable'
+import type { ProductListItem } from '@/types/props/productProp'
+import { ProductFilters, type ProductFilterState } from './productFilters'
+import { type CategoryDto } from '@/utils/requestUtils/requestProductUtils'
 import {
   bulkDeleteProductsRequester,
   bulkUpdateProductStatusRequester
-} from "@/utils/requestUtils/requestProductUtils"
+} from '@/utils/requestUtils/requestProductUtils'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { useMemo, useState } from "react"
+} from '@/components/ui/select'
+import { useMemo, useState } from 'react'
 
 type ProductListProps = {
   products: ProductListItem[]
@@ -60,7 +60,7 @@ export function ProductList({
   // ==== selection state ====
   const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set())
   const [applying, setApplying] = useState<boolean>(false)
-  const [statusChoice, setStatusChoice] = useState<string>("ACTIVE")
+  const [statusChoice, setStatusChoice] = useState<string>('ACTIVE')
   const [statusOpen, setStatusOpen] = useState<boolean>(false)
 
   const onToggleRow = (uuid: string, checked: boolean) => {
@@ -99,7 +99,7 @@ export function ProductList({
         statusChoice
       )
       if (updated == null) {
-        alert("Bulk update status failed")
+        alert('Bulk update status failed')
       } else {
         clearSelection()
         await onBulkCompleted?.()
@@ -117,7 +117,7 @@ export function ProductList({
     try {
       const done = await bulkDeleteProductsRequester(selectedArray)
       if (!done) {
-        alert("Bulk delete failed")
+        alert('Bulk delete failed')
       } else {
         clearSelection()
         await onBulkCompleted?.()
@@ -218,7 +218,7 @@ export function ProductList({
                   onClick={applyBulkStatus}
                   disabled={selectedCount === 0 || applying}
                 >
-                  {applying ? "Applying..." : "Apply"}
+                  {applying ? 'Applying...' : 'Apply'}
                 </Button>
               </div>
 

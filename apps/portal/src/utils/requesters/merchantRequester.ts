@@ -1,5 +1,5 @@
-import axios from "@/lib/axios"
-import type { AdminStoreLite, AdminStoreDetail } from "@/types/admin/stores"
+import axios from '@/lib/axios'
+import type { AdminStoreLite, AdminStoreDetail } from '@/types/admin/stores'
 
 type ListMeta = {
   page: number
@@ -22,17 +22,17 @@ export async function fetchAdminStoreListRequester(params: {
   orderCountMax?: number
   page?: number
   pageSize?: number
-  sortBy?: "createdAt" | "status" | "storeName" | "productCount"
-  sortDir?: "asc" | "desc"
+  sortBy?: 'createdAt' | 'status' | 'storeName' | 'productCount'
+  sortDir?: 'asc' | 'desc'
 }) {
   try {
     const r = await axios.get<{ data: AdminStoreLite[]; meta: ListMeta }>(
-      "/api/admin/stores/list",
+      '/api/admin/stores/list',
       { params }
     )
     return r.data
   } catch (error) {
-    console.log("fetchAdminStoreListRequester error", error)
+    console.log('fetchAdminStoreListRequester error', error)
     return {
       data: [] as AdminStoreLite[],
       meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 }
@@ -44,12 +44,12 @@ export async function fetchAdminStoreSuggest(q: string) {
   try {
     if (!q.trim()) return [] as Array<{ id: number; storeName: string }>
     const r = await axios.get<Array<{ id: number; storeName: string }>>(
-      "/api/admin/stores/suggest",
+      '/api/admin/stores/suggest',
       { params: { q } }
     )
     return r.data
   } catch (error) {
-    console.log("fetchAdminStoreSuggest error", error)
+    console.log('fetchAdminStoreSuggest error', error)
     return [] as Array<{ id: number; storeName: string }>
   }
 }
@@ -61,7 +61,7 @@ export async function fetchAdminStoreDetail(id: number) {
     )
     return r.data
   } catch (error) {
-    console.log("fetchAdminStoreDetail error", error)
+    console.log('fetchAdminStoreDetail error', error)
     return null
   }
 }
@@ -82,7 +82,7 @@ export async function approveAdminStore(id: number): Promise<{
     )
     return {
       ok: true,
-      message: r.data?.message ?? "Store approved",
+      message: r.data?.message ?? 'Store approved',
       store: r.data?.store
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,8 +92,8 @@ export async function approveAdminStore(id: number): Promise<{
       error?.response?.data?.error ||
       error?.response?.data?.message ||
       error?.message ||
-      "Approve store failed"
-    console.log("approveAdminStore error", error)
+      'Approve store failed'
+    console.log('approveAdminStore error', error)
     return { ok: false, message: msg }
   }
 }

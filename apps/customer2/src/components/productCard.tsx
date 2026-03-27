@@ -1,18 +1,17 @@
-"use client";
-import { Product, ProductImages } from "@/types/props/productProp";
-import Image from "next/image";
-import { useState } from "react";
-import { minPrice } from "@/lib/function";
+'use client'
+import { Product, ProductImages } from '@/types/props/productProp'
+import Image from 'next/image'
+import { useState } from 'react'
+import { minPrice } from '@/lib/function'
 
 interface cardProp {
-  data: Product;
+  data: Product
 }
 
-
 const findMain = (images: ProductImages[]) =>
-  images.filter((image) => image.isMain == true);
+  images.filter((image) => image.isMain == true)
 export const Card = ({ data }: cardProp) => {
-  const [shownPic, setShownPic] = useState(findMain(data.images)[0]);
+  const [shownPic, setShownPic] = useState(findMain(data.images)[0])
   return (
     <div>
       <button className="relative text-black bg-white cursor-pointer border hover:scale-105 duration-120 rounded-b-2xl">
@@ -20,7 +19,7 @@ export const Card = ({ data }: cardProp) => {
         <Image
           src={shownPic.url}
           alt={shownPic.fileName}
-          width={96*10}
+          width={96 * 10}
           height={80}
           className="object-contain w-96 h-80"
         />
@@ -30,8 +29,8 @@ export const Card = ({ data }: cardProp) => {
               <Image
                 src={image.url}
                 alt={image.fileName}
-                width={20*5}
-                height={20*5}
+                width={20 * 5}
+                height={20 * 5}
                 onMouseEnter={() => setShownPic(image)}
                 className=" object-fill w-[80px] h-[80px] rounded-2xl p-2 "
               />
@@ -49,10 +48,10 @@ export const Card = ({ data }: cardProp) => {
         </div>
       </button>
     </div>
-  );
-};
+  )
+}
 export const CardStore = ({ data }: cardProp) => {
-  const [shownPic, setShownPic] = useState(findMain(data.images)[0]);
+  const [shownPic, setShownPic] = useState(findMain(data.images)[0])
   return (
     <div>
       <button className="relative text-black bg-white cursor-pointer border hover:scale-105 duration-120 rounded-b-2xl">
@@ -60,8 +59,8 @@ export const CardStore = ({ data }: cardProp) => {
         <Image
           src={shownPic.url}
           alt={shownPic.fileName}
-          height={80*2}
-          width={96*2}
+          height={80 * 2}
+          width={96 * 2}
           className="object-contain h-80 w-96"
         />
         <div className="flex">
@@ -86,5 +85,5 @@ export const CardStore = ({ data }: cardProp) => {
         </div>
       </button>
     </div>
-  );
-};
+  )
+}

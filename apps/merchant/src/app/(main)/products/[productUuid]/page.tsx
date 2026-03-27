@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { MerchantHeader } from "@/components/dashboard-header"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { MerchantHeader } from '@/components/dashboard-header'
 import {
   fetchProductDetailRequester,
   deleteProductRequester,
   duplicateProductRequester,
   updateProductItemRequester // toggle enable
-} from "@/utils/requestUtils/requestProductUtils"
+} from '@/utils/requestUtils/requestProductUtils'
 
 import {
   Card,
@@ -16,28 +16,28 @@ import {
   CardHeader,
   CardTitle,
   CardDescription
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { ProductItemLite } from "@/types/props/productProp"
+} from '@/components/ui/dialog'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ProductItemLite } from '@/types/props/productProp'
 
 type ProductDetail = Awaited<ReturnType<typeof fetchProductDetailRequester>>
 
 // ช่วย format วันที่ โดยไม่ต้อง cast any
 const formatDate = (v: unknown) => {
   if (v instanceof Date) return v.toLocaleString()
-  if (typeof v === "string" || typeof v === "number") {
+  if (typeof v === 'string' || typeof v === 'number') {
     const d = new Date(v)
-    return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString()
+    return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString()
   }
-  return "-"
+  return '-'
 }
 
 export default function ProductDetailPage() {
@@ -83,9 +83,9 @@ export default function ProductDetailPage() {
   }, [productUuid])
 
   const handleDelete = async () => {
-    if (!confirm("Delete this product?")) return
+    if (!confirm('Delete this product?')) return
     const ok = await deleteProductRequester(productUuid)
-    if (ok) router.push("/products")
+    if (ok) router.push('/products')
   }
 
   const handleDuplicate = async () => {
@@ -115,7 +115,7 @@ export default function ProductDetailPage() {
       const res = await updateProductItemRequester(productUuid, itemUuid, {
         isEnable: next
       })
-      if (!res) throw new Error("Update failed")
+      if (!res) throw new Error('Update failed')
     } catch {
       // revert
       setData((prevData) =>
@@ -128,7 +128,7 @@ export default function ProductDetailPage() {
             } as ProductDetail)
           : prevData
       )
-      alert("Failed to update enable status")
+      alert('Failed to update enable status')
     }
   }
 
@@ -149,17 +149,17 @@ export default function ProductDetailPage() {
     if (items.length === 0) return null
     let min = Number.POSITIVE_INFINITY
     for (const it of items) {
-      if (typeof it.priceMinor === "number") min = Math.min(min, it.priceMinor)
+      if (typeof it.priceMinor === 'number') min = Math.min(min, it.priceMinor)
     }
     return Number.isFinite(min) ? min : null
   }, [data])
 
   const formatTHB = (minor: number | null) =>
     minor == null
-      ? "-"
-      : (minor / 100).toLocaleString("th-TH", {
-          style: "currency",
-          currency: "THB"
+      ? '-'
+      : (minor / 100).toLocaleString('th-TH', {
+          style: 'currency',
+          currency: 'THB'
         })
 
   // แกลเลอรีทั้งหมดของ product
@@ -203,7 +203,7 @@ export default function ProductDetailPage() {
                         )
                       )
                     }
-                    title={mainImage ? "Click to preview" : undefined}
+                    title={mainImage ? 'Click to preview' : undefined}
                   >
                     {mainImage ? (
                       <img
@@ -224,7 +224,7 @@ export default function ProductDetailPage() {
                       UUID: {data.uuid}
                     </CardDescription> */}
                     <p className="text-sm text-muted-foreground mt-2">
-                      {data.description || "—"}
+                      {data.description || '—'}
                     </p>
 
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -247,9 +247,9 @@ export default function ProductDetailPage() {
                       </div>
                     </div>
 
-                    {data.reqStatus === "REJECT" && !!data.rejectReason && (
+                    {data.reqStatus === 'REJECT' && !!data.rejectReason && (
                       <div className="mt-3 text-sm rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2">
-                        <span className="font-medium">Rejected reason:</span>{" "}
+                        <span className="font-medium">Rejected reason:</span>{' '}
                         <span className="opacity-90">{data.rejectReason}</span>
                       </div>
                     )}
@@ -260,7 +260,7 @@ export default function ProductDetailPage() {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => router.push("/products")}
+                    onClick={() => router.push('/products')}
                   >
                     Back
                   </Button>
@@ -383,7 +383,7 @@ export default function ProductDetailPage() {
                               {o.value}
                             </span>
                           ))
-                        : "—"}
+                        : '—'}
                     </div>
                   </div>
                 ))}
@@ -426,7 +426,7 @@ export default function ProductDetailPage() {
                             it.sku ||
                             (it as ProductItemLite).productItemImage
                               ?.fileName ||
-                            "Item image"
+                            'Item image'
                           return (
                             <tr key={it.uuid} className="border-t">
                               <td className="p-2">
@@ -454,12 +454,12 @@ export default function ProductDetailPage() {
                                   </div>
                                 )}
                               </td>
-                              <td className="p-2">{it.sku || "-"}</td>
+                              <td className="p-2">{it.sku || '-'}</td>
                               <td className="p-2 text-xs text-muted-foreground">
                                 {(it.configurations ?? [])
                                   .map((c) => c.variationOption?.value)
                                   .filter(Boolean)
-                                  .join(" · ") || "—"}
+                                  .join(' · ') || '—'}
                               </td>
                               <td className="p-2 text-right">
                                 {formatTHB(it.priceMinor ?? null)}
@@ -481,7 +481,7 @@ export default function ProductDetailPage() {
                                     aria-label={`Toggle enable for ${it.sku}`}
                                   />
                                   <span className="text-xs text-muted-foreground">
-                                    {enabled ? "Enabled" : "Disabled"}
+                                    {enabled ? 'Enabled' : 'Disabled'}
                                   </span>
                                 </div>
                               </td>
@@ -510,7 +510,7 @@ export default function ProductDetailPage() {
             {previewList[previewIndex] && (
               <img
                 src={previewList[previewIndex].url}
-                alt={previewList[previewIndex].label ?? "preview"}
+                alt={previewList[previewIndex].label ?? 'preview'}
                 className="max-h-[80vh] w-full object-contain"
               />
             )}

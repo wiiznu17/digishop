@@ -1,29 +1,29 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { CalendarDays, Activity } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import BlockKpis from "@/components/overview/analytic/blocks/BlockKpis"
-import BlockTrends from "@/components/overview/analytic/blocks/BlockTrends"
-import BlockStatusPie from "@/components/overview/analytic/blocks/BlockStatusPie"
-import BlockStoreLeaderboard from "@/components/overview/analytic/blocks/BlockStoreLeaderboard"
-import AuthGuard from "@/components/AuthGuard"
+} from '@/components/ui/select'
+import { CalendarDays, Activity } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import BlockKpis from '@/components/overview/analytic/blocks/BlockKpis'
+import BlockTrends from '@/components/overview/analytic/blocks/BlockTrends'
+import BlockStatusPie from '@/components/overview/analytic/blocks/BlockStatusPie'
+import BlockStoreLeaderboard from '@/components/overview/analytic/blocks/BlockStoreLeaderboard'
+import AuthGuard from '@/components/AuthGuard'
 
 const startOfMonth = (d = new Date()) =>
   new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
@@ -31,8 +31,8 @@ const endOfMonth = (d = new Date()) =>
   new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
 
 function AnalyticsPage() {
-  const [period, setPeriod] = useState<"THIS_MONTH" | "LAST_30" | "CUSTOM">(
-    "THIS_MONTH"
+  const [period, setPeriod] = useState<'THIS_MONTH' | 'LAST_30' | 'CUSTOM'>(
+    'THIS_MONTH'
   )
   const [from, setFrom] = useState(startOfMonth().toISOString().slice(0, 10))
   const [to, setTo] = useState(endOfMonth().toISOString().slice(0, 10))
@@ -44,10 +44,10 @@ function AnalyticsPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    if (period === "THIS_MONTH") {
+    if (period === 'THIS_MONTH') {
       setFrom(startOfMonth().toISOString().slice(0, 10))
       setTo(endOfMonth().toISOString().slice(0, 10))
-    } else if (period === "LAST_30") {
+    } else if (period === 'LAST_30') {
       const t = new Date()
       const f = new Date(Date.now() - 29 * 86400000)
       setFrom(f.toISOString().slice(0, 10))
@@ -86,7 +86,7 @@ function AnalyticsPage() {
             <label className="block text-sm mb-1">Period</label>
             <Select
               value={period}
-              onValueChange={(v: "THIS_MONTH" | "LAST_30" | "CUSTOM") =>
+              onValueChange={(v: 'THIS_MONTH' | 'LAST_30' | 'CUSTOM') =>
                 setPeriod(v)
               }
             >
@@ -107,7 +107,7 @@ function AnalyticsPage() {
               <Input
                 type="date"
                 value={from}
-                disabled={period !== "CUSTOM"}
+                disabled={period !== 'CUSTOM'}
                 onChange={(e) => setFrom(e.target.value)}
               />
             </div>
@@ -119,7 +119,7 @@ function AnalyticsPage() {
               <Input
                 type="date"
                 value={to}
-                disabled={period !== "CUSTOM"}
+                disabled={period !== 'CUSTOM'}
                 onChange={(e) => setTo(e.target.value)}
               />
             </div>
@@ -165,8 +165,8 @@ function AnalyticsPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["ANALYTICS_VIEW"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['ANALYTICS_VIEW']}>{children}</AuthGuard>
 }
 
 export default function Page() {

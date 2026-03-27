@@ -1,7 +1,13 @@
-import { AdminSystemLog } from "@digishop/db/src/models/portal/AdminSystemLog";
+import { AdminSystemLog } from '@digishop/db/src/models/portal/AdminSystemLog'
 
-export async function writeAdminLog(req: any, action: string, targetEntity: string, targetId?: number, metadata?: any) {
-  const adminId = req.adminId ?? null;
+export async function writeAdminLog(
+  req: any,
+  action: string,
+  targetEntity: string,
+  targetId?: number,
+  metadata?: any
+) {
+  const adminId = req.adminId ?? null
   await AdminSystemLog.create({
     adminId,
     action,
@@ -11,8 +17,8 @@ export async function writeAdminLog(req: any, action: string, targetEntity: stri
     ip: req.ip || null,
     userAgent: req.headers['user-agent'] || null,
     metadataJson: metadata ?? null,
-    timestamp: new Date(),
-  } as any);
+    timestamp: new Date()
+  } as any)
 }
- // in controller 
- // await writeAdminLog(req, 'PRODUCT.UPDATE', 'PRODUCT', product.id, { fieldsChanged });
+// in controller
+// await writeAdminLog(req, 'PRODUCT.UPDATE', 'PRODUCT', product.id, { fieldsChanged });

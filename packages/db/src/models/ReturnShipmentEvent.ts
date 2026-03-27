@@ -29,7 +29,10 @@ export type ReturnShipmentEventCreationAttributes = Optional<
 >
 
 export class ReturnShipmentEvent
-  extends Model<ReturnShipmentEventAttributes, ReturnShipmentEventCreationAttributes>
+  extends Model<
+    ReturnShipmentEventAttributes,
+    ReturnShipmentEventCreationAttributes
+  >
   implements ReturnShipmentEventAttributes
 {
   public id!: number

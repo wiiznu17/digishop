@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, {
   createContext,
@@ -8,34 +8,34 @@ import React, {
   useRef,
   useMemo,
   type ReactNode
-} from "react"
-import { usePathname, useRouter } from "next/navigation"
+} from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 
 import {
   type UserAuth,
   type AuthContextType,
   type StoreStatus
-} from "../types/props/userProp"
+} from '../types/props/userProp'
 
 import {
   fetchUser,
   fetchStoreStatus,
   loginUser,
   logoutUser
-} from "../utils/requestUtils/requestAuthUtils"
+} from '../utils/requestUtils/requestAuthUtils'
 
-const MERCHANT_HOME = "/orders"
+const MERCHANT_HOME = '/orders'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 function isLoginPath(p: string) {
-  return p.startsWith("/login")
+  return p.startsWith('/login')
 }
 function isRegisterPath(p: string) {
-  return p.startsWith("/register")
+  return p.startsWith('/register')
 }
 function isStoreStatusPath(p: string) {
-  return p.startsWith("/store-status")
+  return p.startsWith('/store-status')
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.replace(MERCHANT_HOME)
   }
   function goToStoreStatus(status: StoreStatus | null) {
-    router.replace(`/store-status?status=${status ?? "PENDING"}`)
+    router.replace(`/store-status?status=${status ?? 'PENDING'}`)
   }
 
   async function loadUserIfNeeded(): Promise<UserAuth | null> {
@@ -82,13 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // ไม่มี session ⇒ อยู่หน้า login ได้
           return
         }
-        if (u.role === "CUSTOMER") {
-          router.replace("/register")
+        if (u.role === 'CUSTOMER') {
+          router.replace('/register')
           return
         }
         const s = await loadStoreStatusIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
-        if (s && s !== "APPROVED") {
+        if (s && s !== 'APPROVED') {
           goToStoreStatus(s)
           return
         }
@@ -100,15 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const u = await loadUserIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (!u) {
-          router.replace("/login")
+          router.replace('/login')
           return
         }
-        if (u.role === "CUSTOMER") {
+        if (u.role === 'CUSTOMER') {
           return // ok อยู่หน้า register ได้
         }
         const s = await loadStoreStatusIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
-        if (s && s !== "APPROVED") {
+        if (s && s !== 'APPROVED') {
           goToStoreStatus(s)
           return
         }
@@ -120,16 +120,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const u = await loadUserIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
         if (!u) {
-          router.replace("/login")
+          router.replace('/login')
           return
         }
-        if (u.role === "CUSTOMER") {
-          router.replace("/register")
+        if (u.role === 'CUSTOMER') {
+          router.replace('/register')
           return
         }
         const s = await loadStoreStatusIfNeeded()
         if (activeRef.current !== mySeq || !mountedRef.current) return
-        if (s && s !== "APPROVED") {
+        if (s && s !== 'APPROVED') {
           return // ok อยู่หน้า store-status ได้
         }
         goToMerchantHome()
@@ -140,16 +140,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const u = await loadUserIfNeeded()
       if (activeRef.current !== mySeq || !mountedRef.current) return
       if (!u) {
-        router.replace("/login")
+        router.replace('/login')
         return
       }
-      if (u.role === "CUSTOMER") {
-        router.replace("/register")
+      if (u.role === 'CUSTOMER') {
+        router.replace('/register')
         return
       }
       const s = await loadStoreStatusIfNeeded()
       if (activeRef.current !== mySeq || !mountedRef.current) return
-      if (s && s !== "APPROVED") {
+      if (s && s !== 'APPROVED') {
         goToStoreStatus(s)
         return
       }
@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logoutUser()
     setUser(null)
     setStoreStatus(null)
-    router.replace("/login")
+    router.replace('/login')
   }
 
   const value = useMemo<AuthContextType>(
@@ -205,6 +205,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error("useAuth must be used within an AuthProvider")
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider')
   return ctx
 }

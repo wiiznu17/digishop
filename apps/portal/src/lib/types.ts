@@ -21,7 +21,7 @@ export interface Product {
   sku: string
   stock: number
   images: string[]
-  status: "active" | "inactive" | "out_of_stock"
+  status: 'active' | 'inactive' | 'out_of_stock'
   createdAt: Date
   updatedAt: Date
 }
@@ -61,13 +61,13 @@ export interface Order {
   shipping: number
   total: number
   status:
-    | "pending"
-    | "confirmed"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-  paymentStatus: "pending" | "paid" | "failed" | "refunded"
+    | 'pending'
+    | 'confirmed'
+    | 'processing'
+    | 'shipped'
+    | 'delivered'
+    | 'cancelled'
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
   shippingAddress: {
     street: string
     city: string

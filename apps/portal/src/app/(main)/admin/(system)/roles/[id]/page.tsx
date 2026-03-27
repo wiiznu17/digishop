@@ -1,22 +1,22 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import {
   fetchRoleDetail,
   type AdminRoleDetail
-} from "@/utils/requesters/rolesRequester"
+} from '@/utils/requesters/rolesRequester'
 
 type Grouped = Record<
   string,
@@ -25,11 +25,11 @@ type Grouped = Record<
     slug: string
     resource: string
     action: string
-    effect: "ALLOW" | "DENY"
+    effect: 'ALLOW' | 'DENY'
   }[]
 >
 
-function groupByResource(perms: AdminRoleDetail["allPermissions"]): Grouped {
+function groupByResource(perms: AdminRoleDetail['allPermissions']): Grouped {
   return perms.reduce((acc, p) => {
     acc[p.resource] = acc[p.resource] || []
     acc[p.resource].push(p)
@@ -44,7 +44,7 @@ export default function RoleViewPage() {
   const [loading, setLoading] = useState(false)
 
   // สำหรับแสดงผลเท่านั้น
-  const [filterText, setFilterText] = useState("")
+  const [filterText, setFilterText] = useState('')
 
   useEffect(() => {
     let alive = true
@@ -94,7 +94,7 @@ export default function RoleViewPage() {
       <Card>
         <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
-            <CardTitle className="text-xl">{data?.name ?? "Role"}</CardTitle>
+            <CardTitle className="text-xl">{data?.name ?? 'Role'}</CardTitle>
             <CardDescription>View role & permissions</CardDescription>
             {!!data && (
               <div className="mt-2 text-sm space-y-1">
@@ -105,7 +105,7 @@ export default function RoleViewPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">System:</span>
                   <Badge variant="outline">
-                    {data.isSystem ? "Yes" : "No"}
+                    {data.isSystem ? 'Yes' : 'No'}
                   </Badge>
                 </div>
                 {data.description && (
@@ -115,8 +115,8 @@ export default function RoleViewPage() {
                   </div>
                 )}
                 <div>
-                  <span className="text-muted-foreground">Updated:</span>{" "}
-                  {data ? new Date(data.updatedAt).toLocaleString() : "-"}
+                  <span className="text-muted-foreground">Updated:</span>{' '}
+                  {data ? new Date(data.updatedAt).toLocaleString() : '-'}
                 </div>
               </div>
             )}
@@ -124,7 +124,7 @@ export default function RoleViewPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => router.push("/admin/system/roles")}
+              onClick={() => router.push('/admin/system/roles')}
             >
               Back
             </Button>
@@ -156,7 +156,7 @@ export default function RoleViewPage() {
                   />
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Granted:{" "}
+                  Granted:{' '}
                   <span className="font-medium">{grantedSet.size}</span>
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function RoleViewPage() {
                           <div
                             key={p.id}
                             className={`flex items-center justify-between rounded border p-2 ${
-                              granted ? "bg-green-50 dark:bg-green-950/20" : ""
+                              granted ? 'bg-green-50 dark:bg-green-950/20' : ''
                             }`}
                           >
                             <div className="flex-1 min-w-0">
@@ -194,10 +194,10 @@ export default function RoleViewPage() {
                               </div> */}
                             </div>
                             <Badge
-                              variant={granted ? "default" : "outline"}
+                              variant={granted ? 'default' : 'outline'}
                               className="ml-2 shrink-0"
                             >
-                              {granted ? "GRANTED" : "NOT GRANTED"}
+                              {granted ? 'GRANTED' : 'NOT GRANTED'}
                             </Badge>
                           </div>
                         )

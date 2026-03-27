@@ -4,7 +4,11 @@ import multer from 'multer'
 const storage = multer.memoryStorage()
 
 // File filter สำหรับรูปภาพ
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   // ตรวจสอบว่าเป็นไฟล์รูปภาพหรือไม่
   if (file.mimetype.startsWith('image/')) {
     cb(null, true)

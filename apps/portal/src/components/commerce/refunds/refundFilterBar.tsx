@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { X, Search, RotateCcw } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from 'react'
+import { X, Search, RotateCcw } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type Filters = {
   q?: string
@@ -20,12 +20,12 @@ export type RefundsFilterBarProps = {
 }
 
 const STATUS_OPTIONS = [
-  { value: "ALL", label: "All statuses" },
-  { value: "REQUESTED", label: "REQUESTED" },
-  { value: "APPROVED", label: "APPROVED" },
-  { value: "PROCESSING", label: "PROCESSING" },
-  { value: "SUCCESS", label: "SUCCESS" },
-  { value: "FAIL", label: "FAIL" }
+  { value: 'ALL', label: 'All statuses' },
+  { value: 'REQUESTED', label: 'REQUESTED' },
+  { value: 'APPROVED', label: 'APPROVED' },
+  { value: 'PROCESSING', label: 'PROCESSING' },
+  { value: 'SUCCESS', label: 'SUCCESS' },
+  { value: 'FAIL', label: 'FAIL' }
 ]
 
 export default function RefundsFilterBar({
@@ -34,35 +34,35 @@ export default function RefundsFilterBar({
   onApply,
   onClear
 }: RefundsFilterBarProps) {
-  const [q, setQ] = React.useState(defaultFilters?.q ?? "")
+  const [q, setQ] = React.useState(defaultFilters?.q ?? '')
   const [orderCode, setOrderCode] = React.useState(
-    defaultFilters?.orderCode ?? ""
+    defaultFilters?.orderCode ?? ''
   )
-  const [status, setStatus] = React.useState(defaultFilters?.status ?? "ALL")
-  const [dateFrom, setDateFrom] = React.useState(defaultFilters?.dateFrom ?? "")
-  const [dateTo, setDateTo] = React.useState(defaultFilters?.dateTo ?? "")
+  const [status, setStatus] = React.useState(defaultFilters?.status ?? 'ALL')
+  const [dateFrom, setDateFrom] = React.useState(defaultFilters?.dateFrom ?? '')
+  const [dateTo, setDateTo] = React.useState(defaultFilters?.dateTo ?? '')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onApply({
       q: q.trim() || undefined,
       orderCode: orderCode.trim() || undefined,
-      status: status || "ALL",
+      status: status || 'ALL',
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined
     })
   }
 
   const handleClear = () => {
-    setQ("")
-    setOrderCode("")
-    setStatus("ALL")
-    setDateFrom("")
-    setDateTo("")
+    setQ('')
+    setOrderCode('')
+    setStatus('ALL')
+    setDateFrom('')
+    setDateTo('')
     onApply({
       q: undefined,
       orderCode: undefined,
-      status: "ALL",
+      status: 'ALL',
       dateFrom: undefined,
       dateTo: undefined
     })
@@ -72,7 +72,7 @@ export default function RefundsFilterBar({
   const hasAnyFilter =
     !!q.trim() ||
     !!orderCode.trim() ||
-    (status && status !== "ALL") ||
+    (status && status !== 'ALL') ||
     !!dateFrom ||
     !!dateTo
 
@@ -80,7 +80,7 @@ export default function RefundsFilterBar({
     <form
       onSubmit={handleSubmit}
       className={cn(
-        "w-full rounded-xl border bg-background/50 p-3 sm:p-4 shadow-sm",
+        'w-full rounded-xl border bg-background/50 p-3 sm:p-4 shadow-sm',
         className
       )}
     >
@@ -101,7 +101,7 @@ export default function RefundsFilterBar({
             {!!q && (
               <button
                 type="button"
-                onClick={() => setQ("")}
+                onClick={() => setQ('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100"
                 aria-label="clear"
               >
@@ -181,7 +181,7 @@ export default function RefundsFilterBar({
       {/* แสดงว่ามีตัวกรองอยู่ */}
       {hasAnyFilter && (
         <div className="mt-2 text-xs text-muted-foreground">
-          Filters applied. Click{" "}
+          Filters applied. Click{' '}
           <span className="font-medium">Clear filters</span> to reset.
         </div>
       )}

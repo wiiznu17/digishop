@@ -1,23 +1,23 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react"
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -25,24 +25,24 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { Eye, Search, Shield, UserPlus } from "lucide-react"
-import Link from "next/link"
+} from '@/components/ui/dialog'
+import { Eye, Search, Shield, UserPlus } from 'lucide-react'
+import Link from 'next/link'
 
 import {
   fetchAdminList,
   fetchAdminSuggest
-} from "@/utils/requesters/adminRequester"
-import type { AdminListItem } from "@/types/system/admin"
-import { Pager } from "@/components/common/Pager"
-import { DashboardHeader } from "@/components/dashboard-header"
+} from '@/utils/requesters/adminRequester'
+import type { AdminListItem } from '@/types/system/admin'
+import { Pager } from '@/components/common/Pager'
+import { DashboardHeader } from '@/components/dashboard-header'
 
 // simple pager
 // function Pager({ page, pageSize, total, onPage, onPageSize }: any) {
@@ -99,14 +99,14 @@ function useDebounce<T>(v: T, ms = 250) {
 
 export default function AdminUsersRolesPage() {
   // filters (draft)
-  const [qDraft, setQDraft] = useState("")
-  const [roleDraft, setRoleDraft] = useState<string | "ALL">("ALL")
-  const [statusDraft, setStatusDraft] = useState<string | "ALL">("ALL")
+  const [qDraft, setQDraft] = useState('')
+  const [roleDraft, setRoleDraft] = useState<string | 'ALL'>('ALL')
+  const [statusDraft, setStatusDraft] = useState<string | 'ALL'>('ALL')
 
   // submitted
-  const [q, setQ] = useState("")
-  const [role, setRole] = useState<string | "ALL">("ALL")
-  const [status, setStatus] = useState<string | "ALL">("ALL")
+  const [q, setQ] = useState('')
+  const [role, setRole] = useState<string | 'ALL'>('ALL')
+  const [status, setStatus] = useState<string | 'ALL'>('ALL')
 
   // list state
   const [rows, setRows] = useState<AdminListItem[]>([])
@@ -118,10 +118,10 @@ export default function AdminUsersRolesPage() {
   const params = useMemo(
     () => ({
       q: q || undefined,
-      role: role === "ALL" ? undefined : role,
-      status: status === "ALL" ? undefined : status,
-      sortBy: "createdAt" as const,
-      sortDir: "desc" as const,
+      role: role === 'ALL' ? undefined : role,
+      status: status === 'ALL' ? undefined : status,
+      sortBy: 'createdAt' as const,
+      sortDir: 'desc' as const,
       page,
       pageSize
     }),
@@ -176,7 +176,7 @@ export default function AdminUsersRolesPage() {
 
   // Actions
   const handleSubmit = useCallback(() => {
-    setQ(qDraft.trim() || "")
+    setQ(qDraft.trim() || '')
     setRole(roleDraft)
     setStatus(statusDraft)
     setPage(1)
@@ -184,12 +184,12 @@ export default function AdminUsersRolesPage() {
   }, [qDraft, roleDraft, statusDraft, load])
 
   const handleClear = useCallback(() => {
-    setQDraft("")
-    setRoleDraft("ALL")
-    setStatusDraft("ALL")
-    setQ("")
-    setRole("ALL")
-    setStatus("ALL")
+    setQDraft('')
+    setRoleDraft('ALL')
+    setStatusDraft('ALL')
+    setQ('')
+    setRole('ALL')
+    setStatus('ALL')
     setPage(1)
     setTimeout(() => void load(), 0)
   }, [load])
@@ -239,7 +239,7 @@ export default function AdminUsersRolesPage() {
                           setTimeout(() => setOpenSuggest(false), 120)
                         }
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSubmit()
+                          if (e.key === 'Enter') handleSubmit()
                         }}
                       />
                     </div>
@@ -373,9 +373,9 @@ export default function AdminUsersRolesPage() {
                           <Badge
                             variant="outline"
                             className={
-                              a.status === "ACTIVE"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                              a.status === 'ACTIVE'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                             }
                           >
                             {a.status}
@@ -384,7 +384,7 @@ export default function AdminUsersRolesPage() {
                         <TableCell>
                           {a.lastLoginAt
                             ? new Date(a.lastLoginAt).toLocaleString()
-                            : "-"}
+                            : '-'}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -447,13 +447,13 @@ export default function AdminUsersRolesPage() {
                   Name: <span className="font-medium">{current.name}</span>
                 </div>
                 <div>Email: {current.email}</div>
-                <div>Roles: {current.roles.join(", ")}</div>
+                <div>Roles: {current.roles.join(', ')}</div>
                 <div>Status: {current.status}</div>
                 <div>
-                  Last login:{" "}
+                  Last login:{' '}
                   {current.lastLoginAt
                     ? new Date(current.lastLoginAt).toLocaleString()
-                    : "-"}
+                    : '-'}
                 </div>
               </div>
             )}

@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -18,27 +18,27 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
+} from '@/components/ui/table'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Search } from "lucide-react"
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Search } from 'lucide-react'
 
-import type { AdminStoreLite } from "@/types/admin/stores"
+import type { AdminStoreLite } from '@/types/admin/stores'
 import {
   fetchAdminStoreListRequester,
   fetchAdminStoreSuggest
-} from "@/utils/requesters/merchantRequester"
-import { Pager } from "@/components/common/Pager"
-import AuthGuard from "@/components/AuthGuard"
-import { StatusBadge } from "@/components/admin/merchants/merchantColorBadge"
-import { DashboardHeader } from "@/components/dashboard-header"
+} from '@/utils/requesters/merchantRequester'
+import { Pager } from '@/components/common/Pager'
+import AuthGuard from '@/components/AuthGuard'
+import { StatusBadge } from '@/components/admin/merchants/merchantColorBadge'
+import { DashboardHeader } from '@/components/dashboard-header'
 
 function formatMoneyMinor(minor?: number) {
   const n = Number(minor ?? 0)
@@ -49,14 +49,14 @@ function AdminMerchantsPage() {
   const router = useRouter()
 
   // input states
-  const [qInput, setQInput] = useState("")
-  const [statusInput, setStatusInput] = useState<string | "ALL">("ALL")
-  const [dateFromInput, setDateFromInput] = useState<string>("")
-  const [dateToInput, setDateToInput] = useState<string>("")
-  const [salesMinInput, setSalesMinInput] = useState<string>("")
-  const [salesMaxInput, setSalesMaxInput] = useState<string>("")
-  const [orderCountMinInput, setOrderCountMinInput] = useState<string>("")
-  const [orderCountMaxInput, setOrderCountMaxInput] = useState<string>("")
+  const [qInput, setQInput] = useState('')
+  const [statusInput, setStatusInput] = useState<string | 'ALL'>('ALL')
+  const [dateFromInput, setDateFromInput] = useState<string>('')
+  const [dateToInput, setDateToInput] = useState<string>('')
+  const [salesMinInput, setSalesMinInput] = useState<string>('')
+  const [salesMaxInput, setSalesMaxInput] = useState<string>('')
+  const [orderCountMinInput, setOrderCountMinInput] = useState<string>('')
+  const [orderCountMaxInput, setOrderCountMaxInput] = useState<string>('')
 
   const [openSuggest, setOpenSuggest] = useState(false)
   const [suggest, setSuggest] = useState<
@@ -99,8 +99,8 @@ function AdminMerchantsPage() {
         orderCountMax: applied.orderCountMax,
         page,
         pageSize,
-        sortBy: "createdAt",
-        sortDir: "desc"
+        sortBy: 'createdAt',
+        sortDir: 'desc'
       })
       setRows(data)
       setTotal(meta.total)
@@ -138,7 +138,7 @@ function AdminMerchantsPage() {
   const onSearch = () => {
     setApplied({
       q: qInput.trim() || undefined,
-      status: statusInput === "ALL" ? undefined : statusInput,
+      status: statusInput === 'ALL' ? undefined : statusInput,
       dateFrom: dateFromInput || undefined,
       dateTo: dateToInput || undefined,
       salesMin: salesMinInput ? Number(salesMinInput) : undefined,
@@ -153,14 +153,14 @@ function AdminMerchantsPage() {
   }
 
   const onClear = () => {
-    setQInput("")
-    setStatusInput("ALL")
-    setDateFromInput("")
-    setDateToInput("")
-    setSalesMinInput("")
-    setSalesMaxInput("")
-    setOrderCountMinInput("")
-    setOrderCountMaxInput("")
+    setQInput('')
+    setStatusInput('ALL')
+    setDateFromInput('')
+    setDateToInput('')
+    setSalesMinInput('')
+    setSalesMaxInput('')
+    setOrderCountMinInput('')
+    setOrderCountMaxInput('')
     setApplied({})
     setPage(1)
     setOpenSuggest(false)
@@ -440,8 +440,8 @@ function AdminMerchantsPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["MERCHANTS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['MERCHANTS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {

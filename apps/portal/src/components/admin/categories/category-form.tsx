@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,16 +8,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 // import type { AdminCategoryStatus } from "@/utils/requesters/categoryRequester"
 
 export function CategoryFormDialog({
@@ -51,7 +51,7 @@ export function CategoryFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {initial.name ? "Edit Category" : "Add Category"}
+            {initial.name ? 'Edit Category' : 'Add Category'}
           </DialogTitle>
           <DialogDescription>Parent: {parentDefaultName}</DialogDescription>
         </DialogHeader>

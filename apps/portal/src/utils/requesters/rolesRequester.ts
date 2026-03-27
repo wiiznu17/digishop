@@ -1,4 +1,4 @@
-import axios from "@/lib/axios"
+import axios from '@/lib/axios'
 
 export type AdminRoleListItem = {
   id: number
@@ -28,25 +28,25 @@ export type AdminRoleDetail = {
     slug: string
     resource: string
     action: string
-    effect: "ALLOW" | "DENY"
+    effect: 'ALLOW' | 'DENY'
   }[]
   allPermissions: {
     id: number
     slug: string
     resource: string
     action: string
-    effect: "ALLOW" | "DENY"
+    effect: 'ALLOW' | 'DENY'
   }[]
 }
 
 export async function fetchRoleList(params: {
   q?: string
-  sortBy?: "createdAt" | "name" | "slug"
-  sortDir?: "asc" | "desc"
+  sortBy?: 'createdAt' | 'name' | 'slug'
+  sortDir?: 'asc' | 'desc'
   page?: number
   pageSize?: number
 }) {
-  const r = await axios.get<AdminRoleListResponse>("/api/admin/roles/list", {
+  const r = await axios.get<AdminRoleListResponse>('/api/admin/roles/list', {
     params,
     withCredentials: true
   })
@@ -66,7 +66,7 @@ export async function createRole(payload: {
   description?: string | null
 }) {
   const r = await axios.post<{ id: number }>(
-    "/api/admin/roles/create",
+    '/api/admin/roles/create',
     payload,
     { withCredentials: true }
   )
@@ -87,7 +87,7 @@ export async function replaceRolePermissions(
   id: number,
   permissionIds: number[]
 ) {
-  console.log("replaceRolePermissions", id, permissionIds)
+  console.log('replaceRolePermissions', id, permissionIds)
   const r = await axios.put(
     `/api/admin/roles/${id}/permissions`,
     { permissionIds },

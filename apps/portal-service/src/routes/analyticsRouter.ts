@@ -1,26 +1,30 @@
-import express from "express"
-import { requirePerms } from "../middlewares/auth"
+import express from 'express'
+import { requirePerms } from '../middlewares/auth'
 import {
   anaKpis,
   anaTrends,
   anaStatusDist,
-  anaStoreLeaderboard,
-} from "../controllers/analyticsController"
+  anaStoreLeaderboard
+} from '../controllers/analyticsController'
 
-const router: express.Router = express.Router();
-router.get("/kpis",        
+const router: express.Router = express.Router()
+router.get(
+  '/kpis',
   // requirePerms("REPORT.READ"),
   anaKpis
 )
-router.get("/trends",
+router.get(
+  '/trends',
   // requirePerms("REPORT.READ"),
   anaTrends
 )
-router.get("/status-dist",
+router.get(
+  '/status-dist',
   // requirePerms("REPORT.READ"),
   anaStatusDist
 )
-router.get("/stores",
+router.get(
+  '/stores',
   // requirePerms("REPORT.READ"),
   anaStoreLeaderboard
 )

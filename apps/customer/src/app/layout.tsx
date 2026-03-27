@@ -1,23 +1,19 @@
-import { AuthProvider } from '@/contexts/auth-context';
+import { AuthProvider } from '@/contexts/auth-context'
 import './globals.css'
 export const metadata = {
-    title: "Next.js",
-};
-
+  title: 'Next.js'
+}
 
 export default function SettingLayout({
-    children,
+  children
 }: {
-    children: React.ReactNode
+  children: React.ReactNode
 }) {
-    return (
-        <AuthProvider>
-        <html lang="en">
-            <body >
-                {children}
-            </body>
-        </html>
-        </AuthProvider>
-       
-    )
+  return (
+    <AuthProvider>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </AuthProvider>
+  )
 }

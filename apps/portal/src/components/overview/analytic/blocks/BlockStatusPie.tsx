@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts"
-import { Badge } from "@/components/ui/badge"
-import { fetchAnaStatusDist } from "@/utils/requesters/analyticsRequester"
-import type { StatusDistItem } from "@/types/admin/analytics"
+} from '@/components/ui/card'
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
+import { Badge } from '@/components/ui/badge'
+import { fetchAnaStatusDist } from '@/utils/requesters/analyticsRequester'
+import type { StatusDistItem } from '@/types/admin/analytics'
 
 export default function BlockStatusPie({
   from,
@@ -43,12 +43,12 @@ export default function BlockStatusPie({
   }, [from, to, refreshKey])
 
   const pieColors = [
-    "#4f46e5",
-    "#06b6d4",
-    "#22c55e",
-    "#f59e0b",
-    "#ef4444",
-    "#8b5cf6"
+    '#4f46e5',
+    '#06b6d4',
+    '#22c55e',
+    '#f59e0b',
+    '#ef4444',
+    '#8b5cf6'
   ]
 
   return (
@@ -56,7 +56,7 @@ export default function BlockStatusPie({
       <CardHeader>
         <CardTitle>Order status distribution</CardTitle>
         <CardDescription>
-          {loading ? "Loading…" : "สัดส่วนสถานะออเดอร์"}
+          {loading ? 'Loading…' : 'สัดส่วนสถานะออเดอร์'}
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[360px]">

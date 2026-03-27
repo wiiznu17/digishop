@@ -1,37 +1,37 @@
-import { QueryInterface } from "sequelize";
+import { QueryInterface } from 'sequelize'
 
 // mapping ชื่อสินค้า
 const PRODUCT_NAME: Record<number, string> = {
-  1001: "Smartphone X",
-  1003: "Laptop Pro 15",
-  1004: "Wireless Earbuds",
-};
+  1001: 'Smartphone X',
+  1003: 'Laptop Pro 15',
+  1004: 'Wireless Earbuds'
+}
 
 // mapping sku ตาม product_item_id
 const PRODUCT_ITEM_SKU: Record<number, string> = {
   // 1001
-  1: "X-BLK-128",
-  2: "X-SLV-256",
-  3: "X-BLK-128",
-  4: "X-SLV-256",
+  1: 'X-BLK-128',
+  2: 'X-SLV-256',
+  3: 'X-BLK-128',
+  4: 'X-SLV-256',
   // 1002
-  5: "Y-BLU",
-  6: "Y-BLU",
+  5: 'Y-BLU',
+  6: 'Y-BLU',
   // 1003
-  7: "L15-16-512",
-  8: "L15-32-1TB",
-  9: "L15-32-512",
-  10: "L15-16-1TB",
+  7: 'L15-16-512',
+  8: 'L15-32-1TB',
+  9: 'L15-32-512',
+  10: 'L15-16-1TB',
   // 1004
-  11: "EB-WHT",
+  11: 'EB-WHT',
   // 1005
-  12: "SWZ-S",
-  13: "SWZ-M",
-  14: "SWZ-L"
-};
+  12: 'SWZ-S',
+  13: 'SWZ-M',
+  14: 'SWZ-L'
+}
 
-const minor = (baht: number) => Math.round(baht * 100);
-const now = () => new Date();
+const minor = (baht: number) => Math.round(baht * 100)
+const now = () => new Date()
 
 function row(
   orderId: number,
@@ -40,10 +40,10 @@ function row(
   quantity: number,
   unitPriceBaht: number
 ) {
-  const name = PRODUCT_NAME[productId] ?? `Product #${productId}`;
-  const sku = PRODUCT_ITEM_SKU[productItemId] ?? `SKU-${productItemId}`;
-  const unitPriceMinor = minor(unitPriceBaht);
-  const lineTotalMinor = unitPriceMinor * quantity;
+  const name = PRODUCT_NAME[productId] ?? `Product #${productId}`
+  const sku = PRODUCT_ITEM_SKU[productItemId] ?? `SKU-${productItemId}`
+  const unitPriceMinor = minor(unitPriceBaht)
+  const lineTotalMinor = unitPriceMinor * quantity
 
   return {
     order_id: orderId,
@@ -52,7 +52,7 @@ function row(
     quantity,
     unit_price_minor: unitPriceMinor,
     discount_minor: 0,
-    tax_rate: "0.0000",
+    tax_rate: '0.0000',
     line_total_minor: lineTotalMinor,
     product_name_snapshot: name,
     product_sku_snapshot: sku,
@@ -61,19 +61,19 @@ function row(
       itemId: productItemId,
       name,
       sku,
-      priceMinor: unitPriceMinor,
+      priceMinor: unitPriceMinor
     }),
     created_at: now(),
     updated_at: now(),
-    deleted_at: null,
-  };
+    deleted_at: null
+  }
 }
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    // - ทุกออเดอร์ store_id = 1 
+    // - ทุกออเดอร์ store_id = 1
 
-    await queryInterface.bulkInsert("ORDER_ITEMS", [
+    await queryInterface.bulkInsert('ORDER_ITEMS', [
       // 6001 = 1200
       row(6001, 1003, 7, 1, 1200),
 
@@ -171,16 +171,16 @@ export default {
 
       // 6022 = 4100 (500*7 + 150*4)
       row(6022, 1001, 1, 7, 500),
-      row(6022, 1004, 11, 4, 150),
-    ]);
+      row(6022, 1004, 11, 4, 150)
+    ])
   },
 
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete("ORDER_ITEMS", {
+    await queryInterface.bulkDelete('ORDER_ITEMS', {
       order_id: [
-        6001, 6002, 6003, 6004, 6005, 6006, 6007, 6008, 6009, 6010,
-        6011, 6012, 6013, 6014, 6015, 6016, 6017, 6018, 6019, 6020, 6021,
-      ],
-    });
-  },
-};
+        6001, 6002, 6003, 6004, 6005, 6006, 6007, 6008, 6009, 6010, 6011, 6012,
+        6013, 6014, 6015, 6016, 6017, 6018, 6019, 6020, 6021
+      ]
+    })
+  }
+}

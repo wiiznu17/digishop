@@ -1,10 +1,10 @@
-import AuthGuard from "@/components/AuthGuard"
-import React from "react"
+import AuthGuard from '@/components/AuthGuard'
+import React from 'react'
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
+  'use client'
   return (
-    <AuthGuard requiredPerms={["ADMIN_USERS_READ"]} redirectTo="/login">
+    <AuthGuard requiredPerms={['ADMIN_USERS_READ']} redirectTo="/login">
       {children}
     </AuthGuard>
   )

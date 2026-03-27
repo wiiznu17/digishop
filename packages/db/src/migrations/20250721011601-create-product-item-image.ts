@@ -9,61 +9,64 @@ export default {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           autoIncrement: true,
-          primaryKey: true,
+          primaryKey: true
         },
         uuid: {
           // เก็บเป็น CHAR(36); default uuid v4 ให้ที่ Model/Seeder (MySQL ไม่มี uuidv4() ใน DB)
           type: DataTypes.STRING(36),
           allowNull: false,
-          unique: true,
+          unique: true
         },
         product_item_id: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           references: {
             model: 'PRODUCT_ITEMS',
-            key: 'id',
+            key: 'id'
           },
           onDelete: 'CASCADE',
-          onUpdate: 'CASCADE',
+          onUpdate: 'CASCADE'
         },
         url: {
           type: DataTypes.TEXT,
-          allowNull: false,
+          allowNull: false
         },
         blob_name: {
           type: DataTypes.STRING(255),
-          allowNull: false,
+          allowNull: false
         },
         file_name: {
           type: DataTypes.STRING(255),
-          allowNull: false,
+          allowNull: false
         },
         created_at: {
           type: DataTypes.DATE,
-          allowNull: false,
+          allowNull: false
         },
         updated_at: {
           type: DataTypes.DATE,
-          allowNull: false,
+          allowNull: false
         },
         deleted_at: {
           type: DataTypes.DATE,
-          allowNull: true,
-        },
+          allowNull: true
+        }
       },
       {
         engine: 'InnoDB',
         charset: 'utf8mb4',
-        collate: 'utf8mb4_unicode_ci',
+        collate: 'utf8mb4_unicode_ci'
       }
     )
 
     // Indexes
-    await queryInterface.addIndex('PRODUCT_ITEM_IMAGES', ['uuid'], { unique: true, name: 'uq_product_item_images_uuid' })
+    await queryInterface.addIndex('PRODUCT_ITEM_IMAGES', ['uuid'], {
+      unique: true,
+      name: 'uq_product_item_images_uuid'
+    })
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
     await queryInterface.dropTable('PRODUCT_ITEM_IMAGES')
-  },
+  }
 }

@@ -1,25 +1,25 @@
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
-import "./globals.css"
-import ClientBody from "./ClientBody"
-import Script from "next/script"
-import { ThemeProvider } from "@/components/theme/theme-provider"
-import { AuthProvider } from "@/contexts/auth-context"
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import ClientBody from './ClientBody'
+import Script from 'next/script'
+import { ThemeProvider } from '@/components/theme/theme-provider'
+import { AuthProvider } from '@/contexts/auth-context'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"]
+  variable: '--font-geist-sans',
+  subsets: ['latin']
 })
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"]
+  variable: '--font-geist-mono',
+  subsets: ['latin']
 })
 
 export const metadata: Metadata = {
-  title: "Merchant Dashboard",
+  title: 'Merchant Dashboard',
   description:
-    "Complete merchant management platform for products, orders, and business insights"
+    'Complete merchant management platform for products, orders, and business insights'
 }
 
 export default function RootLayout({

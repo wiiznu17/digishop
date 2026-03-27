@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -15,20 +15,20 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { fetchAnaStores } from "@/utils/requesters/analyticsRequester"
-import type { StoreLeaderboardResponse } from "@/types/admin/analytics"
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { fetchAnaStores } from '@/utils/requesters/analyticsRequester'
+import type { StoreLeaderboardResponse } from '@/types/admin/analytics'
 
 const fmtTHB = (minor: number) =>
-  (minor / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+  (minor / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 export default function BlockStoreLeaderboard({
   from,
@@ -39,8 +39,8 @@ export default function BlockStoreLeaderboard({
   to: string
   refreshKey: number
 }) {
-  const [segment, setSegment] = useState<"ALL" | "TOP" | "LOW">("ALL")
-  const [q, setQ] = useState("")
+  const [segment, setSegment] = useState<'ALL' | 'TOP' | 'LOW'>('ALL')
+  const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [data, setData] = useState<StoreLeaderboardResponse>({
@@ -87,7 +87,7 @@ export default function BlockStoreLeaderboard({
       <CardHeader>
         <CardTitle>Top Stores (by GMV)</CardTitle>
         <CardDescription>
-          {loading ? "Loading…" : "เรียงจากมากไปน้อยตามช่วงวันที่เลือก"}
+          {loading ? 'Loading…' : 'เรียงจากมากไปน้อยตามช่วงวันที่เลือก'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -100,7 +100,7 @@ export default function BlockStoreLeaderboard({
           />
           <Select
             value={segment}
-            onValueChange={(v: "ALL" | "TOP" | "LOW") => setSegment(v)}
+            onValueChange={(v: 'ALL' | 'TOP' | 'LOW') => setSegment(v)}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue />
@@ -147,7 +147,7 @@ export default function BlockStoreLeaderboard({
             </TableHeader>
             <TableBody>
               {data.rows.map((r, idx) => (
-                <TableRow key={`${r.storeId ?? "null"}:${idx}`}>
+                <TableRow key={`${r.storeId ?? 'null'}:${idx}`}>
                   <TableCell>{(page - 1) * pageSize + idx + 1}</TableCell>
                   <TableCell>{r.name}</TableCell>
                   <TableCell className="text-right">

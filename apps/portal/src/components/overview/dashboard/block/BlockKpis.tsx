@@ -1,22 +1,22 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { TrendingUp, ShoppingCart, Store, Users } from "lucide-react"
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { TrendingUp, ShoppingCart, Store, Users } from 'lucide-react'
 import type {
   DashboardKpis,
   DashboardSeriesPoint
-} from "@/types/admin/dashboard"
+} from '@/types/admin/dashboard'
 import {
   fetchDashboardKpis,
   fetchDashboardSeries
-} from "@/utils/requesters/dashboardRequester"
-import MetricMoney from "../MetricMoney"
-import { toNum } from "../format"
-import MetricCount from "../MetricCount"
+} from '@/utils/requesters/dashboardRequester'
+import MetricMoney from '../MetricMoney'
+import { toNum } from '../format'
+import MetricCount from '../MetricCount'
 
 function useDateSparks(series: DashboardSeriesPoint[]) {
-  const toSpark = (key: "gmvMinor" | "orders") =>
+  const toSpark = (key: 'gmvMinor' | 'orders') =>
     (series ?? []).map((d) => ({ x: d.date, y: d[key] }))
   return { toSpark }
 }
@@ -63,22 +63,22 @@ export default function BlockKpis({
         title="GMV"
         valueMinor={toNum(kpis?.gmvMinor ?? 0)}
         icon={TrendingUp}
-        hint={loading ? "Loading…" : "Live"}
-        series={toSpark("gmvMinor")}
+        hint={loading ? 'Loading…' : 'Live'}
+        series={toSpark('gmvMinor')}
       />
       <MetricCount
         title="Orders"
         value={toNum(kpis?.orders ?? 0)}
         icon={ShoppingCart}
-        hint={loading ? "Loading…" : "Live"}
-        series={toSpark("orders")}
+        hint={loading ? 'Loading…' : 'Live'}
+        series={toSpark('orders')}
       />
       <MetricCount
         title="Active Stores"
         value={toNum(kpis?.activeStores ?? 0)}
         icon={Store}
-        hint={loading ? "Loading…" : "Live"}
-        series={toSpark("orders").map((x) => ({
+        hint={loading ? 'Loading…' : 'Live'}
+        series={toSpark('orders').map((x) => ({
           ...x,
           y: Math.round(x.y * 0.35)
         }))}
@@ -87,8 +87,8 @@ export default function BlockKpis({
         title="New Users"
         value={toNum(kpis?.newUsers ?? 0)}
         icon={Users}
-        hint={loading ? "Loading…" : "Live"}
-        series={toSpark("orders").map((x) => ({
+        hint={loading ? 'Loading…' : 'Live'}
+        series={toSpark('orders').map((x) => ({
           ...x,
           y: Math.round(x.y * 0.55)
         }))}

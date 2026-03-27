@@ -1,24 +1,24 @@
-import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
-import { ReturnShipmentStatus } from '../types/enum';
+import { Model, DataTypes, Optional, Sequelize } from 'sequelize'
+import { ReturnShipmentStatus } from '../types/enum'
 
 export interface ReturnShipmentAttributes {
-  id: number;
-  orderId: number;
-  refundOrderId?: number | null;
-  carrier?: string | null;
-  trackingNumber?: string | null;
-  status: ReturnShipmentStatus;
-  shippedAt?: Date | null;
-  deliveredBackAt?: Date | null;
+  id: number
+  orderId: number
+  refundOrderId?: number | null
+  carrier?: string | null
+  trackingNumber?: string | null
+  status: ReturnShipmentStatus
+  shippedAt?: Date | null
+  deliveredBackAt?: Date | null
   deadlineDropoffAt: Date
 
-  fromAddressSnapshot?: object | null;
-  toAddressSnapshot?: object | null;
-  metadata?: object | null;
+  fromAddressSnapshot?: object | null
+  toAddressSnapshot?: object | null
+  metadata?: object | null
 
-  createdAt?: Date;
-  updatedAt?: Date;
-  deletedAt?: Date | null;
+  createdAt?: Date
+  updatedAt?: Date
+  deletedAt?: Date | null
 }
 
 export interface ReturnShipmentCreationAttributes
@@ -44,23 +44,23 @@ export class ReturnShipment
   extends Model<ReturnShipmentAttributes, ReturnShipmentCreationAttributes>
   implements ReturnShipmentAttributes
 {
-  public id!: number;
-  public orderId!: number;
-  public refundOrderId!: number | null;
-  public carrier!: string | null;
-  public trackingNumber!: string | null;
-  public status!: ReturnShipmentStatus;
-  public shippedAt!: Date | null;
-  public deliveredBackAt!: Date | null;
-  public deadlineDropoffAt!: Date;
+  public id!: number
+  public orderId!: number
+  public refundOrderId!: number | null
+  public carrier!: string | null
+  public trackingNumber!: string | null
+  public status!: ReturnShipmentStatus
+  public shippedAt!: Date | null
+  public deliveredBackAt!: Date | null
+  public deadlineDropoffAt!: Date
 
-  public fromAddressSnapshot!: object | null;
-  public toAddressSnapshot!: object | null;
-  public metadata!: object | null;
+  public fromAddressSnapshot!: object | null
+  public toAddressSnapshot!: object | null
+  public metadata!: object | null
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-  public readonly deletedAt!: Date | null;
+  public readonly createdAt!: Date
+  public readonly updatedAt!: Date
+  public readonly deletedAt!: Date | null
 
   static initModel(sequelize: Sequelize): typeof ReturnShipment {
     ReturnShipment.init(
@@ -162,7 +162,7 @@ export class ReturnShipment
           { fields: ['created_at'] }
         ]
       }
-    );
-    return ReturnShipment;
+    )
+    return ReturnShipment
   }
 }

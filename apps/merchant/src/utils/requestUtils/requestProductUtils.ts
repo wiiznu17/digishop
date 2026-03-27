@@ -1,15 +1,15 @@
-import axios from "@/lib/axios"
-import type { Product, ProductListItem } from "@/types/props/productProp"
+import axios from '@/lib/axios'
+import type { Product, ProductListItem } from '@/types/props/productProp'
 
 //  light-weight เพื่อลด coupling
-export type SortBy = "createdAt" | "updatedAt" | "name" | "price"
-export type SortDir = "asc" | "desc"
-export type reqStatus = "PENDING" | "APPROVED" | "REJECT"
+export type SortBy = 'createdAt' | 'updatedAt' | 'name' | 'price'
+export type SortDir = 'asc' | 'desc'
+export type reqStatus = 'PENDING' | 'APPROVED' | 'REJECT'
 
 export type FetchProductsParams = {
   q?: string
   categoryUuid?: string
-  status?: "ACTIVE" | "INACTIVE"
+  status?: 'ACTIVE' | 'INACTIVE'
   reqStatus?: reqStatus
   inStock?: boolean
   sortBy?: SortBy
@@ -86,14 +86,14 @@ export type CategoryDto = {
 // ดึงหมวดหมู่แบบ flat
 export async function fetchCategoriesRequester(): Promise<CategoryDto[]> {
   try {
-    const res = await axios.get("/api/merchant/products/categories/list", {
+    const res = await axios.get('/api/merchant/products/categories/list', {
       withCredentials: true,
-      params: { flat: "true" }
+      params: { flat: 'true' }
     })
     // console.log("categories: ", res.data)
     return (res.data ?? []) as CategoryDto[]
   } catch (error) {
-    console.error("Error fetching categories:", error)
+    console.error('Error fetching categories:', error)
     return []
   }
 }
@@ -103,13 +103,13 @@ export async function fetchProductSuggestionsRequester(
 ): Promise<SuggestResponse | null> {
   try {
     if (!q.trim()) return { products: [], skus: [] }
-    const res = await axios.get("/api/merchant/products/suggest", {
+    const res = await axios.get('/api/merchant/products/suggest', {
       withCredentials: true,
       params: { q }
     })
     return res.data as SuggestResponse
   } catch (error) {
-    console.error("Error fetching product suggestions:", error)
+    console.error('Error fetching product suggestions:', error)
     return null
   }
 }
@@ -118,9 +118,9 @@ export async function fetchProductSuggestionsRequester(
 export async function fetchProductsRequester(
   params: FetchProductsParams = {}
 ): Promise<ProductListResponse | null> {
-  console.log("params: ", params)
+  console.log('params: ', params)
   try {
-    const res = await axios.get("/api/merchant/products/list", {
+    const res = await axios.get('/api/merchant/products/list', {
       withCredentials: true,
       params: {
         ...params,
@@ -128,10 +128,10 @@ export async function fetchProductsRequester(
           params.inStock === undefined ? undefined : String(params.inStock)
       }
     })
-    console.log("product data: ", res.data as ProductListResponse)
+    console.log('product data: ', res.data as ProductListResponse)
     return res.data as ProductListResponse
   } catch (error) {
-    console.error("Error fetching product list:", error)
+    console.error('Error fetching product list:', error)
     return null
   }
 }
@@ -143,10 +143,10 @@ export async function fetchProductDetailRequester(
     const res = await axios.get(`/api/merchant/products/${productUuid}`, {
       withCredentials: true
     })
-    console.log("Product detail in Req: ", res.data)
+    console.log('Product detail in Req: ', res.data)
     return res.data as Product
   } catch (error) {
-    console.error("Error fetching product detail:", error)
+    console.error('Error fetching product detail:', error)
     return null
   }
 }
@@ -161,7 +161,7 @@ export async function deleteProductRequester(
     })
     return true
   } catch (error) {
-    console.error("Error deleting product:", error)
+    console.error('Error deleting product:', error)
     return false
   }
 }
@@ -170,7 +170,7 @@ export async function duplicateProductRequester(
   productUuid: string
 ): Promise<{ uuid: string; name: string } | null> {
   try {
-    console.log("duplicate product: ", productUuid)
+    console.log('duplicate product: ', productUuid)
     const res = await axios.post(
       `/api/merchant/products/${productUuid}/duplicate`,
       null,
@@ -178,7 +178,7 @@ export async function duplicateProductRequester(
     )
     return res.data as { uuid: string; name: string }
   } catch (error) {
-    console.error("Error duplicating product:", error)
+    console.error('Error duplicating product:', error)
     return null
   }
 }
@@ -190,19 +190,19 @@ export async function addProductImagesRequester(
 ): Promise<unknown[] | null> {
   try {
     const formData = new FormData()
-    images.forEach((f) => formData.append("images", f))
+    images.forEach((f) => formData.append('images', f))
 
     const res = await axios.post(
       `/api/merchant/products/${productUuid}/images`,
       formData,
       {
         withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { 'Content-Type': 'multipart/form-data' }
       }
     )
     return res.data as unknown[]
   } catch (error) {
-    console.error("Error adding product images:", error)
+    console.error('Error adding product images:', error)
     return null
   }
 }
@@ -218,7 +218,7 @@ export async function deleteProductImageRequester(
     )
     return true
   } catch (error) {
-    console.error("Error deleting product image:", error)
+    console.error('Error deleting product image:', error)
     return false
   }
 }
@@ -236,18 +236,18 @@ export async function updateProductImageRequester(
     )
     return true
   } catch (error) {
-    console.error("Error updating product image:", error)
+    console.error('Error updating product image:', error)
     return false
   }
 }
 
 export async function reorderProductImagesRequester(
   productUuid: string,
-  orders: ReorderImagePayload["orders"]
+  orders: ReorderImagePayload['orders']
 ): Promise<boolean> {
   try {
-    console.log("product uuid: ", productUuid)
-    console.log("orders for reoder: ", orders)
+    console.log('product uuid: ', productUuid)
+    console.log('orders for reoder: ', orders)
     await axios.patch(
       `/api/merchant/products/${productUuid}/images/reorder`,
       { orders },
@@ -255,7 +255,7 @@ export async function reorderProductImagesRequester(
     )
     return true
   } catch (error) {
-    console.error("Error reordering product images:", error)
+    console.error('Error reordering product images:', error)
     return false
   }
 }
@@ -267,13 +267,13 @@ export async function bulkUpdateProductStatusRequester(
 ): Promise<number | null> {
   try {
     const res = await axios.patch(
-      "/api/merchant/products/bulk/status",
+      '/api/merchant/products/bulk/status',
       { productUuids, status },
       { withCredentials: true }
     )
     return (res.data?.updated ?? 0) as number
   } catch (error) {
-    console.error("Error bulk updating status:", error)
+    console.error('Error bulk updating status:', error)
     return null
   }
 }
@@ -282,13 +282,13 @@ export async function bulkDeleteProductsRequester(
   productUuids: string[]
 ): Promise<boolean> {
   try {
-    await axios.delete("/api/merchant/products/bulk/delete", {
+    await axios.delete('/api/merchant/products/bulk/delete', {
       withCredentials: true,
       data: { productUuids }
     })
     return true
   } catch (error) {
-    console.error("Error bulk deleting products:", error)
+    console.error('Error bulk deleting products:', error)
     return false
   }
 }
@@ -306,7 +306,7 @@ export async function updateProductItemRequester( // for enable/disable items
     )
     return res.data
   } catch (error) {
-    console.error("Error updating product item:", error)
+    console.error('Error updating product item:', error)
     return null
   }
 }
@@ -373,17 +373,17 @@ export async function createProductDesiredRequester(
 ): Promise<Product | null> {
   try {
     const form = new FormData()
-    form.append("desired", JSON.stringify(payload))
-    productImages.forEach((f) => form.append("productImages", f, f.name))
-    itemImages.forEach((f) => form.append("itemImages", f, f.name))
+    form.append('desired', JSON.stringify(payload))
+    productImages.forEach((f) => form.append('productImages', f, f.name))
+    itemImages.forEach((f) => form.append('itemImages', f, f.name))
     console.log(form.append)
-    const res = await axios.post("/api/merchant/products/desired", form, {
+    const res = await axios.post('/api/merchant/products/desired', form, {
       withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" }
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
     return res.data as Product
   } catch (e) {
-    console.error("createProductDesiredRequester error:", e)
+    console.error('createProductDesiredRequester error:', e)
     return null
   }
 }
@@ -396,21 +396,21 @@ export async function updateProductDesiredRequester(
 ): Promise<Product | null> {
   try {
     const form = new FormData()
-    form.append("desired", JSON.stringify(payload))
-    productImages.forEach((f) => form.append("productImages", f, f.name))
-    itemImages.forEach((f) => form.append("itemImages", f, f.name))
+    form.append('desired', JSON.stringify(payload))
+    productImages.forEach((f) => form.append('productImages', f, f.name))
+    itemImages.forEach((f) => form.append('itemImages', f, f.name))
 
     const res = await axios.put(
       `/api/merchant/products/${productUuid}/desired`,
       form,
       {
         withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { 'Content-Type': 'multipart/form-data' }
       }
     )
     return res.data as Product
   } catch (e) {
-    console.error("updateProductDesiredRequester error:", e)
+    console.error('updateProductDesiredRequester error:', e)
     return null
   }
 }

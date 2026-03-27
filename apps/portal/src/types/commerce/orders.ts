@@ -1,35 +1,35 @@
 export type AdminOrderStatus =
-  | "PENDING"
-  | "PAID"
-  | "PROCESSING"
-  | "READY_TO_SHIP"
-  | "HANDED_OVER"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "COMPLETE"
-  | "MERCHANT_CANCELED"
-  | "REFUND_REQUEST"
-  | "REFUND_PROCESSING"
-  | "REFUND_SUCCESS"
-  | "REFUND_FAIL"
-  | "CUSTOMER_CANCELED"
-  | "REFUND_REJECTED"
-  | "AWAITING_RETURN"
-  | "RECEIVE_RETURN"
-  | "RETURN_VERIFIED"
-  | "RETURN_FAIL"
-  | "REFUND_APPROVED"
-  | "REFUND_RETRY"
-  | "TRANSIT_LACK"
-  | "RE_TRANSIT"
+  | 'PENDING'
+  | 'PAID'
+  | 'PROCESSING'
+  | 'READY_TO_SHIP'
+  | 'HANDED_OVER'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'COMPLETE'
+  | 'MERCHANT_CANCELED'
+  | 'REFUND_REQUEST'
+  | 'REFUND_PROCESSING'
+  | 'REFUND_SUCCESS'
+  | 'REFUND_FAIL'
+  | 'CUSTOMER_CANCELED'
+  | 'REFUND_REJECTED'
+  | 'AWAITING_RETURN'
+  | 'RECEIVE_RETURN'
+  | 'RETURN_VERIFIED'
+  | 'RETURN_FAIL'
+  | 'REFUND_APPROVED'
+  | 'REFUND_RETRY'
+  | 'TRANSIT_LACK'
+  | 'RE_TRANSIT'
 
 export type AdminFetchOrdersParams = {
   q?: string
   status?: AdminOrderStatus
   dateFrom?: string
   dateTo?: string
-  sortBy?: "createdAt" | "grandTotal" | "status"
-  sortDir?: "asc" | "desc"
+  sortBy?: 'createdAt' | 'grandTotal' | 'status'
+  sortDir?: 'asc' | 'desc'
   page?: number
   pageSize?: number
   customerEmail?: string
@@ -56,25 +56,25 @@ export type AdminOrderStatusHistoryItem = {
   id: number
   fromStatus?: AdminOrderStatus | null
   toStatus: AdminOrderStatus
-  changedByType: "ADMIN" | "CUSTOMER" | "SYSTEM"
+  changedByType: 'ADMIN' | 'CUSTOMER' | 'SYSTEM'
   reason?: string | null
   source?: string | null
   createdAt: string
 }
 
 export type AdminRefundStatus =
-  | "REQUESTED"
-  | "APPROVED"
-  | "SUCCESS"
-  | "FAIL"
-  | "CANCELED"
+  | 'REQUESTED'
+  | 'APPROVED'
+  | 'SUCCESS'
+  | 'FAIL'
+  | 'CANCELED'
 
 export type AdminRefundStatusHistoryItem = {
   id: number
   fromStatus?: AdminRefundStatus | null
   toStatus: AdminRefundStatus
   reason?: string | null
-  changedByType?: "ADMIN" | "CUSTOMER" | "SYSTEM" | null
+  changedByType?: 'ADMIN' | 'CUSTOMER' | 'SYSTEM' | null
   source?: string | null
   createdAt: string
 }
@@ -87,7 +87,7 @@ export type AdminRefundOrderLite = {
   reason?: string | null
   refundChannel?: string | null
   refundRef?: string | null
-  requestedBy?: "CUSTOMER" | "MERCHANT" | null
+  requestedBy?: 'CUSTOMER' | 'MERCHANT' | null
   requestedAt?: string | null
   approvedAt?: string | null
   refundedAt?: string | null

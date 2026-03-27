@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Dialog,
@@ -7,20 +7,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Building2, Lock, User, AlertCircle, Plus, Loader2 } from "lucide-react"
-import { useState, useEffect } from "react"
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Building2, Lock, User, AlertCircle, Plus, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 interface BankAccountFormData {
   bankName: string
@@ -45,35 +45,35 @@ export function BankAccountDialog({
   saving = false
 }: BankAccountDialogProps) {
   const [formData, setFormData] = useState({
-    bankName: "",
-    accountNumber: "",
-    confirmAccountNumber: "",
-    accountHolderName: "",
+    bankName: '',
+    accountNumber: '',
+    confirmAccountNumber: '',
+    accountHolderName: '',
     setAsDefault: false
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const banks = [
-    "Bangkok Bank",
-    "Kasikornbank",
-    "SCB (Siam Commercial Bank)",
-    "Krungthai Bank",
-    "TMBThanachart Bank",
-    "Krungsri",
-    "GSB",
-    "GHB",
-    "UOB",
-    "Citibank"
+    'Bangkok Bank',
+    'Kasikornbank',
+    'SCB (Siam Commercial Bank)',
+    'Krungthai Bank',
+    'TMBThanachart Bank',
+    'Krungsri',
+    'GSB',
+    'GHB',
+    'UOB',
+    'Citibank'
   ] as const
 
   // Reset form when dialog open/close
   useEffect(() => {
     setFormData({
-      bankName: "",
-      accountNumber: "",
-      confirmAccountNumber: "",
-      accountHolderName: "",
+      bankName: '',
+      accountNumber: '',
+      confirmAccountNumber: '',
+      accountHolderName: '',
       setAsDefault: false
     })
     setErrors({})
@@ -84,20 +84,20 @@ export function BankAccountDialog({
     const newErrors: Record<string, string> = {}
 
     if (!formData.bankName) {
-      newErrors.bankName = "Please select a bank"
+      newErrors.bankName = 'Please select a bank'
     }
     if (!formData.accountNumber) {
-      newErrors.accountNumber = "Please enter your account number"
+      newErrors.accountNumber = 'Please enter your account number'
     } else if (
       formData.accountNumber.length < 10 ||
       formData.accountNumber.length > 15
     ) {
-      newErrors.accountNumber = "Account number is invalid"
+      newErrors.accountNumber = 'Account number is invalid'
     }
     if (!formData.confirmAccountNumber) {
-      newErrors.confirmAccountNumber = "Please confirm your account number"
+      newErrors.confirmAccountNumber = 'Please confirm your account number'
     } else if (formData.accountNumber !== formData.confirmAccountNumber) {
-      newErrors.confirmAccountNumber = "Account numbers do not match"
+      newErrors.confirmAccountNumber = 'Account numbers do not match'
     }
     if (!formData.accountHolderName.trim()) {
       newErrors.accountHolderName = "Please enter the account holder's name"
@@ -120,10 +120,10 @@ export function BankAccountDialog({
       }
       // onOpenChange?.(false)
       setFormData({
-        bankName: "",
-        accountNumber: "",
-        confirmAccountNumber: "",
-        accountHolderName: "",
+        bankName: '',
+        accountNumber: '',
+        confirmAccountNumber: '',
+        accountHolderName: '',
         setAsDefault: false
       })
       setErrors({})
@@ -138,12 +138,12 @@ export function BankAccountDialog({
   const handleInputChange = (field: string, value: string): void => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
+      setErrors((prev) => ({ ...prev, [field]: '' }))
     }
   }
 
   const handleNumberInputChange = (field: string, value: string): void => {
-    const numericValue = value.replace(/[^0-9]/g, "")
+    const numericValue = value.replace(/[^0-9]/g, '')
     handleInputChange(field, numericValue)
   }
 
@@ -173,10 +173,10 @@ export function BankAccountDialog({
               <Label htmlFor="bank-name">Bank</Label>
               <Select
                 value={formData.bankName}
-                onValueChange={(value) => handleInputChange("bankName", value)}
+                onValueChange={(value) => handleInputChange('bankName', value)}
               >
                 <SelectTrigger
-                  className={errors.bankName ? "border-red-500" : ""}
+                  className={errors.bankName ? 'border-red-500' : ''}
                 >
                   <SelectValue placeholder="Select a bank" />
                 </SelectTrigger>
@@ -203,10 +203,10 @@ export function BankAccountDialog({
                 placeholder="Enter account number (10-15 digits)"
                 value={formData.accountNumber}
                 onChange={(e) =>
-                  handleNumberInputChange("accountNumber", e.target.value)
+                  handleNumberInputChange('accountNumber', e.target.value)
                 }
                 maxLength={15}
-                className={errors.accountNumber ? "border-red-500" : ""}
+                className={errors.accountNumber ? 'border-red-500' : ''}
               />
               {errors.accountNumber && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -226,12 +226,12 @@ export function BankAccountDialog({
                 value={formData.confirmAccountNumber}
                 onChange={(e) =>
                   handleNumberInputChange(
-                    "confirmAccountNumber",
+                    'confirmAccountNumber',
                     e.target.value
                   )
                 }
                 maxLength={15}
-                className={errors.confirmAccountNumber ? "border-red-500" : ""}
+                className={errors.confirmAccountNumber ? 'border-red-500' : ''}
               />
               {errors.confirmAccountNumber && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -254,9 +254,9 @@ export function BankAccountDialog({
                 placeholder="Enter account holder name (as in bank book)"
                 value={formData.accountHolderName}
                 onChange={(e) =>
-                  handleInputChange("accountHolderName", e.target.value)
+                  handleInputChange('accountHolderName', e.target.value)
                 }
-                className={errors.accountHolderName ? "border-red-500" : ""}
+                className={errors.accountHolderName ? 'border-red-500' : ''}
               />
               {errors.accountHolderName && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -317,7 +317,7 @@ export function BankAccountDialog({
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              {saving ? "Linking..." : "Link Account"}
+              {saving ? 'Linking...' : 'Link Account'}
             </Button>
           </div>
         </form>

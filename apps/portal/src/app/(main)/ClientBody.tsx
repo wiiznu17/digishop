@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { AdminSidebar } from "@/components/app-sidebar"
-import AuthGuard from "@/components/AuthGuard"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { useEffect } from "react"
+import { AdminSidebar } from '@/components/app-sidebar'
+import AuthGuard from '@/components/AuthGuard'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { useEffect } from 'react'
 
 export default function ClientBody({
   children
@@ -12,7 +12,7 @@ export default function ClientBody({
 }) {
   useEffect(() => {
     // This runs only on the client after hydration
-    document.body.className = "antialiased"
+    document.body.className = 'antialiased'
   }, [])
 
   return (

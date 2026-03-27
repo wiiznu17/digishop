@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Card,
@@ -6,13 +6,13 @@ import {
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
+} from '@/components/ui/card'
 // import { VerticalTimeline, TimelineItem } from "./VerticalTimeline"
 import type {
   AdminOrderDetail
   // AdminOrderStatus
-} from "@/types/commerce/orders"
-import { SHIPPING_STATUS_CLASS, StatusBadge } from "./StatusBadge"
+} from '@/types/commerce/orders'
+import { SHIPPING_STATUS_CLASS, StatusBadge } from './StatusBadge'
 
 export function ShippingSection({
   data,
@@ -51,7 +51,7 @@ export function ShippingSection({
                   text={data.shipping.shippingStatus}
                   className={
                     SHIPPING_STATUS_CLASS[data.shipping.shippingStatus] ??
-                    "bg-muted text-foreground"
+                    'bg-muted text-foreground'
                   }
                 />
                 <span className="text-xs text-muted-foreground">
@@ -59,7 +59,7 @@ export function ShippingSection({
                 </span>
               </div>
             ) : (
-              "—"
+              '—'
             )}
           </div>
         </div>
@@ -76,19 +76,19 @@ export function ShippingSection({
               {data.shipping.carrier ?? "—"}
             </div> */}
             <div>
-              <span className="text-muted-foreground">Tracking:</span>{" "}
-              {data.shipping.trackingNumber ?? "—"}
+              <span className="text-muted-foreground">Tracking:</span>{' '}
+              {data.shipping.trackingNumber ?? '—'}
             </div>
             <div>
-              <span className="text-muted-foreground">Method:</span>{" "}
+              <span className="text-muted-foreground">Method:</span>{' '}
               {data.shipping.shippingTypeName} (
               {THB(data.shipping.shippingPriceMinor)})
             </div>
             <div>
-              <span className="text-muted-foreground">Shipped at:</span>{" "}
+              <span className="text-muted-foreground">Shipped at:</span>{' '}
               {data.shipping.shippedAt
                 ? new Date(data.shipping.shippedAt).toLocaleString()
-                : "—"}
+                : '—'}
             </div>
           </div>
         )}

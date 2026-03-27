@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from '@/components/ui/card'
 import {
   ResponsiveContainer,
   BarChart,
@@ -16,10 +16,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip
-} from "recharts"
-import { fmtTHB } from "../format"
-import type { DashboardTopStore } from "@/types/admin/dashboard"
-import { fetchDashboardTopStores } from "@/utils/requesters/dashboardRequester"
+} from 'recharts'
+import { fmtTHB } from '../format'
+import type { DashboardTopStore } from '@/types/admin/dashboard'
+import { fetchDashboardTopStores } from '@/utils/requesters/dashboardRequester'
 
 export default function BlockTopStores({
   from,
@@ -55,7 +55,7 @@ export default function BlockTopStores({
       <CardHeader>
         <CardTitle>Top stores by GMV</CardTitle>
         <CardDescription>
-          {loading ? "Loading…" : "10 อันดับแรก"}
+          {loading ? 'Loading…' : '10 อันดับแรก'}
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[360px]">

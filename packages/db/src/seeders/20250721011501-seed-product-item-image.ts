@@ -15,7 +15,7 @@ export default {
         file_name: 'smartphone-x-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -25,7 +25,7 @@ export default {
         file_name: 'smartphone-x-side.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -35,7 +35,7 @@ export default {
         file_name: 'smartphone-y-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -45,7 +45,7 @@ export default {
         file_name: 'laptop-pro15-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -55,7 +55,7 @@ export default {
         file_name: 'earbuds-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -65,7 +65,7 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -75,7 +75,7 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -85,7 +85,7 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -95,7 +95,7 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -105,7 +105,7 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -115,7 +115,7 @@ export default {
         file_name: 'wireless-earbuds.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -125,7 +125,7 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -135,7 +135,7 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -145,12 +145,12 @@ export default {
         file_name: 'smartwatch-z-main.jpg',
         created_at: now,
         updated_at: now,
-        deleted_at: null,
-      },
+        deleted_at: null
+      }
     ])
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
     await queryInterface.bulkDelete('PRODUCT_IMAGES', {}, {})
-  },
+  }
 }

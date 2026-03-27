@@ -2,7 +2,7 @@ export type AdminAuditLogItem = {
   id: number
   actorEmail: string
   actorName: string
-  action: "LOGIN" | "LOGOUT" | "CREATE" | "UPDATE" | "DELETE" | "ASSIGN_ROLE"
+  action: 'LOGIN' | 'LOGOUT' | 'CREATE' | 'UPDATE' | 'DELETE' | 'ASSIGN_ROLE'
   resource: string
   targetId?: number | null
   ip?: string | null

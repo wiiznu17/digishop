@@ -1,21 +1,21 @@
-"use client"
+'use client'
 
-import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import type { ProductListResponse } from "@/utils/requestUtils/requestProductUtils"
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { ProductListResponse } from '@/utils/requestUtils/requestProductUtils'
 
-type ProductRow = ProductListResponse["data"][number]
+type ProductRow = ProductListResponse['data'][number]
 
 interface ProductDialogProps {
   isOpen: boolean
@@ -59,7 +59,7 @@ export function ProductDialog({
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span>{product?.name ?? "-"}</span>
+            <span>{product?.name ?? '-'}</span>
             {product?.status && (
               <Badge variant="secondary">{product.status}</Badge>
             )}
@@ -74,7 +74,7 @@ export function ProductDialog({
               {gallery[idx] ? (
                 <img
                   src={gallery[idx].url}
-                  alt={gallery[idx].label ?? "preview"}
+                  alt={gallery[idx].label ?? 'preview'}
                   className="w-full max-h-[380px] object-contain"
                 />
               ) : main ? (
@@ -112,7 +112,7 @@ export function ProductDialog({
             </div>
             <div className="px-3 py-2 text-xs text-muted-foreground flex items-center justify-between">
               <span className="truncate">
-                {gallery[idx]?.label ?? main?.fileName ?? "-"}
+                {gallery[idx]?.label ?? main?.fileName ?? '-'}
               </span>
               <span>{totalImages ?? 0} images</span>
             </div>
@@ -121,14 +121,14 @@ export function ProductDialog({
           {/* right: info */}
           <div className="space-y-3">
             <div className="text-sm text-muted-foreground">
-              {product?.description || "—"}
+              {product?.description || '—'}
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="rounded border p-2">
                 <div className="text-xs text-muted-foreground">Category</div>
                 <div className="font-medium">
-                  {product?.category?.name ?? "—"}
+                  {product?.category?.name ?? '—'}
                 </div>
               </div>
               <div className="rounded border p-2">
@@ -142,10 +142,10 @@ export function ProductDialog({
                 <div className="font-medium">
                   {product?.minPriceMinor != null
                     ? (Number(product.minPriceMinor) / 100).toLocaleString(
-                        "th-TH",
-                        { style: "currency", currency: "THB" }
+                        'th-TH',
+                        { style: 'currency', currency: 'THB' }
                       )
-                    : "-"}
+                    : '-'}
                 </div>
               </div>
               <div className="rounded border p-2">

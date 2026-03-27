@@ -1,10 +1,10 @@
-import { QueryInterface } from 'sequelize';
+import { QueryInterface } from 'sequelize'
 
 export default {
   async up(queryInterface: QueryInterface) {
     await queryInterface.bulkInsert('MERCHANT_ADDRESSES', [
       {
-        store_id: 1,  // Merchant One
+        store_id: 1, // Merchant One
         owner_name: 'Merchant One',
         phone: '0898765432',
         address_number: '23/4',
@@ -20,10 +20,10 @@ export default {
         address_type: 'OFFICE',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
+        deleted_at: null
       },
       {
-        store_id: 1,  // Merchant One
+        store_id: 1, // Merchant One
         owner_name: 'C One',
         phone: '0983358976',
         address_number: '456/7',
@@ -39,10 +39,10 @@ export default {
         address_type: 'HOME',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
-      },  
+        deleted_at: null
+      },
       {
-        store_id: 2,  // Merchant One
+        store_id: 2, // Merchant One
         owner_name: 'C One',
         phone: '0983358976',
         address_number: '456/7',
@@ -58,10 +58,10 @@ export default {
         address_type: 'HOME',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
+        deleted_at: null
       },
       {
-        store_id: 2,  // Merchant One
+        store_id: 2, // Merchant One
         owner_name: 'C One',
         phone: '0983358976',
         address_number: '456/7',
@@ -77,12 +77,12 @@ export default {
         address_type: 'HOME',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
-      },
-    ]);
+        deleted_at: null
+      }
+    ])
   },
 
   async down(queryInterface: QueryInterface) {
-    await queryInterface.bulkDelete('MERCHANT_ADDRESSES', {}, {});
-  },
-};
+    await queryInterface.bulkDelete('MERCHANT_ADDRESSES', {}, {})
+  }
+}

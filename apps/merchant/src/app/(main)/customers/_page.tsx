@@ -1,15 +1,15 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -25,10 +25,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger
-} from "@/components/ui/dialog"
-import { MerchantHeader } from "@/components/dashboard-header"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+} from '@/components/ui/dialog'
+import { MerchantHeader } from '@/components/dashboard-header'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/app-sidebar'
 import {
   Users,
   Mail,
@@ -39,7 +39,7 @@ import {
   DollarSign,
   Search,
   Eye
-} from "lucide-react"
+} from 'lucide-react'
 
 interface Customer {
   id: string
@@ -51,69 +51,69 @@ interface Customer {
   totalOrders: number
   totalSpent: number
   lastOrder: string
-  status: "Active" | "Inactive"
+  status: 'Active' | 'Inactive'
 }
 
 const initialCustomers: Customer[] = [
   {
-    id: "CUST-001",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-    phone: "+1 (555) 123-4567",
-    location: "New York, NY",
-    joinDate: "2023-08-15",
+    id: 'CUST-001',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@email.com',
+    phone: '+1 (555) 123-4567',
+    location: 'New York, NY',
+    joinDate: '2023-08-15',
     totalOrders: 12,
     totalSpent: 1456.78,
-    lastOrder: "2024-01-10",
-    status: "Active"
+    lastOrder: '2024-01-10',
+    status: 'Active'
   },
   {
-    id: "CUST-002",
-    name: "Michael Chen",
-    email: "michael.chen@email.com",
-    phone: "+1 (555) 234-5678",
-    location: "San Francisco, CA",
-    joinDate: "2023-09-22",
+    id: 'CUST-002',
+    name: 'Michael Chen',
+    email: 'michael.chen@email.com',
+    phone: '+1 (555) 234-5678',
+    location: 'San Francisco, CA',
+    joinDate: '2023-09-22',
     totalOrders: 8,
     totalSpent: 892.45,
-    lastOrder: "2024-01-08",
-    status: "Active"
+    lastOrder: '2024-01-08',
+    status: 'Active'
   },
   {
-    id: "CUST-003",
-    name: "Emily Rodriguez",
-    email: "emily.rodriguez@email.com",
-    phone: "+1 (555) 345-6789",
-    location: "Austin, TX",
-    joinDate: "2023-07-10",
+    id: 'CUST-003',
+    name: 'Emily Rodriguez',
+    email: 'emily.rodriguez@email.com',
+    phone: '+1 (555) 345-6789',
+    location: 'Austin, TX',
+    joinDate: '2023-07-10',
     totalOrders: 15,
     totalSpent: 2134.56,
-    lastOrder: "2024-01-12",
-    status: "Active"
+    lastOrder: '2024-01-12',
+    status: 'Active'
   },
   {
-    id: "CUST-004",
-    name: "David Wilson",
-    email: "david.wilson@email.com",
-    phone: "+1 (555) 456-7890",
-    location: "Chicago, IL",
-    joinDate: "2023-11-03",
+    id: 'CUST-004',
+    name: 'David Wilson',
+    email: 'david.wilson@email.com',
+    phone: '+1 (555) 456-7890',
+    location: 'Chicago, IL',
+    joinDate: '2023-11-03',
     totalOrders: 3,
     totalSpent: 267.89,
-    lastOrder: "2023-12-15",
-    status: "Inactive"
+    lastOrder: '2023-12-15',
+    status: 'Inactive'
   },
   {
-    id: "CUST-005",
-    name: "Lisa Thompson",
-    email: "lisa.thompson@email.com",
-    phone: "+1 (555) 567-8901",
-    location: "Miami, FL",
-    joinDate: "2023-06-28",
+    id: 'CUST-005',
+    name: 'Lisa Thompson',
+    email: 'lisa.thompson@email.com',
+    phone: '+1 (555) 567-8901',
+    location: 'Miami, FL',
+    joinDate: '2023-06-28',
     totalOrders: 20,
     totalSpent: 3245.67,
-    lastOrder: "2024-01-14",
-    status: "Active"
+    lastOrder: '2024-01-14',
+    status: 'Active'
   }
 ]
 
@@ -123,7 +123,7 @@ export default function CustomersPage() {
     null
   )
   const [isDetailOpen, setIsDetailOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
 
   const filteredCustomers = customers.filter(
     (customer) =>
@@ -137,7 +137,7 @@ export default function CustomersPage() {
     setIsDetailOpen(true)
   }
 
-  const activeCustomers = customers.filter((c) => c.status === "Active").length
+  const activeCustomers = customers.filter((c) => c.status === 'Active').length
   const totalRevenue = customers.reduce(
     (sum, customer) => sum + customer.totalSpent,
     0
@@ -300,9 +300,9 @@ export default function CustomersPage() {
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
-                          customer.status === "Active"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                            : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+                          customer.status === 'Active'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                         }`}
                       >
                         {customer.status}
@@ -373,7 +373,7 @@ export default function CustomersPage() {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        Joined:{" "}
+                        Joined:{' '}
                         {new Date(
                           selectedCustomer.joinDate
                         ).toLocaleDateString()}
@@ -451,22 +451,22 @@ export default function CustomersPage() {
                   <div className="space-y-3">
                     {[
                       {
-                        id: "ORD-101",
-                        date: "2024-01-14",
+                        id: 'ORD-101',
+                        date: '2024-01-14',
                         amount: 89.99,
-                        status: "Delivered"
+                        status: 'Delivered'
                       },
                       {
-                        id: "ORD-089",
-                        date: "2024-01-08",
+                        id: 'ORD-089',
+                        date: '2024-01-08',
                         amount: 156.78,
-                        status: "Delivered"
+                        status: 'Delivered'
                       },
                       {
-                        id: "ORD-067",
-                        date: "2023-12-22",
+                        id: 'ORD-067',
+                        date: '2023-12-22',
                         amount: 245.99,
-                        status: "Delivered"
+                        status: 'Delivered'
                       }
                     ].map((order, index) => (
                       <div

@@ -1,5 +1,5 @@
-import { BankAccount } from '@digishop/db';
-import { Transaction } from 'sequelize';
+import { BankAccount } from '@digishop/db'
+import { Transaction } from 'sequelize'
 
 /**
  * Sets a specific bank account as the default for a store,
@@ -18,16 +18,16 @@ export const setDefaultAccountForStore = async (
     { isDefault: false },
     {
       where: { storeId },
-      transaction,
+      transaction
     }
-  );
+  )
 
   // Step 2: Set the chosen bank account to isDefault: true
   await BankAccount.update(
     { isDefault: true },
     {
       where: { id: newDefaultAccountId, storeId }, // Ensure it belongs to the store
-      transaction,
+      transaction
     }
-  );
-};
+  )
+}

@@ -1,10 +1,7 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  "globalEnv": [
-    "JWT_SECRET",
-    "NEXT_PUBLIC_*"
-  ],
+  "globalEnv": ["JWT_SECRET", "NEXT_PUBLIC_*"],
 
   "tasks": {
     "build": {

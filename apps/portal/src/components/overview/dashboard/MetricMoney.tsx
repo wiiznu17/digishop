@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { motion } from "framer-motion"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import TinySparkline from "./TinySparkline"
-import useAnimatedNumber from "./useAnimatedNumber"
-import { fmtTHB } from "./format"
+import { motion } from 'framer-motion'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import TinySparkline from './TinySparkline'
+import useAnimatedNumber from './useAnimatedNumber'
+import { fmtTHB } from './format'
 
 type IconType = React.ComponentType<React.SVGProps<SVGSVGElement>>
 

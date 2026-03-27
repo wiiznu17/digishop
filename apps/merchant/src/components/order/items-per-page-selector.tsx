@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 
 interface ItemsPerPageSelectorProps {
   value: number
@@ -17,7 +17,7 @@ export function ItemsPerPageSelector({
   value,
   onValueChange,
   options = [10, 20, 50, 100],
-  className = ""
+  className = ''
 }: ItemsPerPageSelectorProps) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>

@@ -1,40 +1,40 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { MerchantHeader } from "@/components/dashboard-header"
-import { ImageUpload, type ImageLike } from "@/components/product/imageUpload"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { MerchantHeader } from '@/components/dashboard-header'
+import { ImageUpload, type ImageLike } from '@/components/product/imageUpload'
 import {
   fetchCategoriesRequester,
   type CategoryDto,
   createProductDesiredRequester,
   type DesiredPayload
-} from "@/utils/requestUtils/requestProductUtils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from '@/utils/requestUtils/requestProductUtils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import PRODUCT_STATUS_MASTER from "@/constants/master/productStatusMaster.json"
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import PRODUCT_STATUS_MASTER from '@/constants/master/productStatusMaster.json'
 import VariationBuilder, {
   type VariationDraft,
   type ItemDraft
-} from "@/components/product/variationBuilder"
+} from '@/components/product/variationBuilder'
 
 export default function AddProductPage() {
   const router = useRouter()
 
-  const [name, setName] = useState("")
+  const [name, setName] = useState('')
   const [categoryUuid, setCategoryUuid] = useState<string | undefined>(
     undefined
   )
-  const [status, setStatus] = useState<string>("DRAFT")
-  const [description, setDescription] = useState<string>("")
+  const [status, setStatus] = useState<string>('DRAFT')
+  const [description, setDescription] = useState<string>('')
 
   const [uiImages, setUiImages] = useState<ImageLike[]>([])
   const [creating, setCreating] = useState(false)
@@ -45,7 +45,7 @@ export default function AddProductPage() {
   const [variations, setVariations] = useState<VariationDraft[]>([])
   const [rows, setRows] = useState<ItemDraft[]>([])
 
-  const NONE_VALUE = "__NONE__"
+  const NONE_VALUE = '__NONE__'
 
   useEffect(() => {
     const run = async () => {
@@ -63,7 +63,7 @@ export default function AddProductPage() {
     return Number.isNaN(n) ? 0 : Math.round(n * 100)
   }
   const toInt = (val: string) => {
-    const n = parseInt(val || "0", 10)
+    const n = parseInt(val || '0', 10)
     return Number.isNaN(n) ? 0 : n
   }
   const randomKey = () => Math.random().toString(36).slice(2, 10)
@@ -72,27 +72,27 @@ export default function AddProductPage() {
   const toFileFromBlobUrl = async (img: ImageLike, uploadKey: string) => {
     const resp = await fetch(img.url)
     const blob = await resp.blob()
-    const ext = img.fileName?.split(".").pop() ?? "jpg"
+    const ext = img.fileName?.split('.').pop() ?? 'jpg'
     const fileName = `${uploadKey}__${img.fileName || `image.${ext}`}`
     return new File([blob], fileName, { type: blob.type || undefined })
   }
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      alert("Please fill product name")
+      alert('Please fill product name')
       return
     }
     if (rows.length < 1) {
-      alert("Please add at least 1 SKU (add a variation and an option).")
+      alert('Please add at least 1 SKU (add a variation and an option).')
       return
     }
 
     // ----- build desired payload -----
     const productImageFiles: File[] = []
-    const desiredImages: DesiredPayload["images"]["product"] = []
+    const desiredImages: DesiredPayload['images']['product'] = []
     for (let idx = 0; idx < uiImages.length; idx++) {
       const img = uiImages[idx]
-      if (img.url.startsWith("blob:")) {
+      if (img.url.startsWith('blob:')) {
         const uploadKey = `p-${randomKey()}`
         const f = await toFileFromBlobUrl(img, uploadKey)
         productImageFiles.push(f)
@@ -129,8 +129,8 @@ export default function AddProductPage() {
     const itemImageFiles: File[] = []
     const desiredItems = await Promise.all(
       rows.map(async (r) => {
-        let image: DesiredPayload["items"][number]["image"] = null
-        if (r.image && r.image.url.startsWith("blob:")) {
+        let image: DesiredPayload['items'][number]['image'] = null
+        if (r.image && r.image.url.startsWith('blob:')) {
           const uploadKey = `it-${randomKey()}`
           const f = await toFileFromBlobUrl(r.image, uploadKey)
           itemImageFiles.push(f)
@@ -138,7 +138,7 @@ export default function AddProductPage() {
         }
         return {
           clientKey: r.key,
-          sku: (r.sku || "").trim() || undefined,
+          sku: (r.sku || '').trim() || undefined,
           priceMinor: toMinor(r.price),
           stockQuantity: toInt(r.stock),
           isEnable: !!r.enabled,
@@ -162,24 +162,24 @@ export default function AddProductPage() {
 
     setCreating(true)
     try {
-      console.log("create product with: ", payload)
-      console.log("create product image with: ", productImageFiles)
-      console.log("create product item image with: ", itemImageFiles)
+      console.log('create product with: ', payload)
+      console.log('create product image with: ', productImageFiles)
+      console.log('create product item image with: ', itemImageFiles)
       const created = await createProductDesiredRequester(
         payload,
         productImageFiles,
         itemImageFiles
       )
       if (!created?.uuid) {
-        alert("Create failed")
+        alert('Create failed')
         setCreating(false)
         return
       }
-      alert("Created")
+      alert('Created')
       router.push(`/products/${created.uuid}`)
     } catch (e) {
       console.error(e)
-      alert("Error while creating")
+      alert('Error while creating')
     } finally {
       setCreating(false)
     }
@@ -218,7 +218,7 @@ export default function AddProductPage() {
             >
               <SelectTrigger>
                 <SelectValue
-                  placeholder={catLoading ? "Loading..." : "Select category"}
+                  placeholder={catLoading ? 'Loading...' : 'Select category'}
                 />
               </SelectTrigger>
               <SelectContent>
@@ -277,11 +277,11 @@ export default function AddProductPage() {
         {/* Actions */}
         <div className="flex gap-3">
           <Button onClick={handleCreate} disabled={creating}>
-            {creating ? "Creating..." : "Create"}
+            {creating ? 'Creating...' : 'Create'}
           </Button>
           <Button
             variant="outline"
-            onClick={() => router.push("/products")}
+            onClick={() => router.push('/products')}
             disabled={creating}
           >
             Cancel

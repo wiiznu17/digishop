@@ -1,23 +1,23 @@
-"use client"
+'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -25,21 +25,21 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { CalendarDays, Search, Eye } from "lucide-react"
-import Link from "next/link"
+} from '@/components/ui/dialog'
+import { CalendarDays, Search, Eye } from 'lucide-react'
+import Link from 'next/link'
 import {
   fetchAuditLogs,
   fetchAuditLogSuggest
-} from "@/utils/requesters/auditLogRequester"
-import type { AdminAuditLogItem } from "@/types/admin/audit"
-import { Pager } from "@/components/common/Pager"
+} from '@/utils/requesters/auditLogRequester'
+import type { AdminAuditLogItem } from '@/types/admin/audit'
+import { Pager } from '@/components/common/Pager'
 
 function useDebounce<T>(v: T, ms = 300) {
   const [s, setS] = useState(v)
@@ -94,10 +94,10 @@ function useDebounce<T>(v: T, ms = 300) {
 
 export default function AuditLogsPage() {
   // filters (draft)
-  const [qDraft, setQDraft] = useState("")
+  const [qDraft, setQDraft] = useState('')
   const [actionDraft, setActionDraft] = useState<
-    "ALL" | AdminAuditLogItem["action"]
-  >("ALL")
+    'ALL' | AdminAuditLogItem['action']
+  >('ALL')
   const [fromDraft, setFromDraft] = useState(() =>
     new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
   )
@@ -106,9 +106,9 @@ export default function AuditLogsPage() {
   )
 
   // submitted
-  const [q, setQ] = useState("")
-  const [action, setAction] = useState<"ALL" | AdminAuditLogItem["action"]>(
-    "ALL"
+  const [q, setQ] = useState('')
+  const [action, setAction] = useState<'ALL' | AdminAuditLogItem['action']>(
+    'ALL'
   )
   const [from, setFrom] = useState(fromDraft)
   const [to, setTo] = useState(toDraft)
@@ -154,11 +154,11 @@ export default function AuditLogsPage() {
   const params = useMemo(
     () => ({
       q: q || undefined,
-      action: action === "ALL" ? undefined : action,
+      action: action === 'ALL' ? undefined : action,
       dateFrom: from || undefined,
       dateTo: to || undefined,
-      sortBy: "createdAt" as const,
-      sortDir: "desc" as const,
+      sortBy: 'createdAt' as const,
+      sortDir: 'desc' as const,
       page,
       pageSize
     }),
@@ -195,12 +195,12 @@ export default function AuditLogsPage() {
       .toISOString()
       .slice(0, 10)
     const defTo = new Date().toISOString().slice(0, 10)
-    setQDraft("")
-    setActionDraft("ALL")
+    setQDraft('')
+    setActionDraft('ALL')
     setFromDraft(defFrom)
     setToDraft(defTo)
-    setQ("")
-    setAction("ALL")
+    setQ('')
+    setAction('ALL')
     setFrom(defFrom)
     setTo(defTo)
     setPage(1)
@@ -236,7 +236,7 @@ export default function AuditLogsPage() {
                       setTimeout(() => setOpenSuggest(false), 120)
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") onSearch()
+                      if (e.key === 'Enter') onSearch()
                     }}
                   />
                 </div>
@@ -278,7 +278,7 @@ export default function AuditLogsPage() {
             <label className="block text-sm mb-1">Action</label>
             <Select
               value={actionDraft}
-              onValueChange={(v: AdminAuditLogItem["action"]) =>
+              onValueChange={(v: AdminAuditLogItem['action']) =>
                 setActionDraft(v)
               }
             >
@@ -372,19 +372,19 @@ export default function AuditLogsPage() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium">
-                            {l.actorName || "-"}
+                            {l.actorName || '-'}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {l.actorEmail || "-"}
+                            {l.actorEmail || '-'}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>{l.action}</TableCell>
                       <TableCell>
                         {l.resource}
-                        {l.targetId ? `#${l.targetId}` : ""}
+                        {l.targetId ? `#${l.targetId}` : ''}
                       </TableCell>
-                      <TableCell>{l.ip ?? "-"}</TableCell>
+                      <TableCell>{l.ip ?? '-'}</TableCell>
                       <TableCell>
                         {new Date(l.createdAt).toLocaleString()}
                       </TableCell>
@@ -447,21 +447,21 @@ export default function AuditLogsPage() {
             <div className="text-sm space-y-2">
               <div>ID: #{current.id}</div>
               <div>
-                Actor: {current.actorName || "-"} &lt;
-                {current.actorEmail || "-"}&gt;
+                Actor: {current.actorName || '-'} &lt;
+                {current.actorEmail || '-'}&gt;
               </div>
               <div>Action: {current.action}</div>
               <div>
                 Resource: {current.resource}
-                {current.targetId ? `#${current.targetId}` : ""}
+                {current.targetId ? `#${current.targetId}` : ''}
               </div>
-              <div>IP: {current.ip || "-"}</div>
+              <div>IP: {current.ip || '-'}</div>
               <div>Date: {new Date(current.createdAt).toLocaleString()}</div>
               {current.correlationId && (
                 <div>Correlation: {current.correlationId}</div>
               )}
               <div className="text-xs text-muted-foreground">
-                Meta:{" "}
+                Meta:{' '}
                 <pre className="whitespace-pre-wrap break-words">
                   {JSON.stringify(current.meta ?? {}, null, 2)}
                 </pre>

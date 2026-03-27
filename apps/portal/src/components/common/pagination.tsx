@@ -1,14 +1,14 @@
 // apps/portal/src/components/common/pagination.tsx
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 
 type Props = {
   currentPage: number
@@ -63,7 +63,7 @@ export function AdminPagination({
             Prev
           </Button>
           <div className="text-sm">
-            Page <span className="font-medium">{currentPage}</span> /{" "}
+            Page <span className="font-medium">{currentPage}</span> /{' '}
             {Math.max(1, totalPages)}
           </div>
           <Button

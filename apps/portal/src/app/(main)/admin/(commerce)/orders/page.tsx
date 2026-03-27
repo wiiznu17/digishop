@@ -1,92 +1,92 @@
-"use client"
+'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { DashboardHeader } from "@/components/dashboard-header"
+} from '@/components/ui/dialog'
+import { DashboardHeader } from '@/components/dashboard-header'
 
-import { OrdersSearchBox } from "@/components/commerce/orders/OrderSearchBox"
-import { OrdersFilterBar } from "@/components/commerce/orders/OrderFilterBar"
-import { OrdersTable } from "@/components/commerce/orders/OrderTable"
-import { StatusBadge } from "@/components/commerce/orders/StatusBadge"
-import { Pager } from "@/components/common/Pager"
+import { OrdersSearchBox } from '@/components/commerce/orders/OrderSearchBox'
+import { OrdersFilterBar } from '@/components/commerce/orders/OrderFilterBar'
+import { OrdersTable } from '@/components/commerce/orders/OrderTable'
+import { StatusBadge } from '@/components/commerce/orders/StatusBadge'
+import { Pager } from '@/components/common/Pager'
 
 import {
   AdminFetchOrdersParams,
   AdminOrderListItem,
   AdminOrderStatus
-} from "@/types/commerce/orders"
+} from '@/types/commerce/orders'
 
-import { fetchAdminOrdersRequester } from "@/utils/requesters/orderRequester"
-import { CustomerEmailSearchBox } from "@/components/commerce/orders/CustomerEmailSearchBox"
-import { Store } from "lucide-react"
-import { StoreNameSearchBox } from "@/components/commerce/orders/storeNameSearchBox"
-import AuthGuard from "@/components/AuthGuard"
+import { fetchAdminOrdersRequester } from '@/utils/requesters/orderRequester'
+import { CustomerEmailSearchBox } from '@/components/commerce/orders/CustomerEmailSearchBox'
+import { Store } from 'lucide-react'
+import { StoreNameSearchBox } from '@/components/commerce/orders/storeNameSearchBox'
+import AuthGuard from '@/components/AuthGuard'
 
 const THB = (n?: number | null) =>
   n == null
-    ? "-"
-    : (n / 100).toLocaleString("th-TH", { style: "currency", currency: "THB" })
+    ? '-'
+    : (n / 100).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })
 
 function AdminOrdersPage() {
   const router = useRouter()
   const sp = useSearchParams()
 
-  const [qDraft, setQDraft] = useState(sp.get("q") ?? "")
-  const [statusDraft, setStatusDraft] = useState<AdminOrderStatus | "ALL">(
-    (sp.get("status") as AdminOrderStatus) ?? "ALL"
+  const [qDraft, setQDraft] = useState(sp.get('q') ?? '')
+  const [statusDraft, setStatusDraft] = useState<AdminOrderStatus | 'ALL'>(
+    (sp.get('status') as AdminOrderStatus) ?? 'ALL'
   )
-  const [dateFromDraft, setDateFromDraft] = useState(sp.get("dateFrom") ?? "")
-  const [dateToDraft, setDateToDraft] = useState(sp.get("dateTo") ?? "")
+  const [dateFromDraft, setDateFromDraft] = useState(sp.get('dateFrom') ?? '')
+  const [dateToDraft, setDateToDraft] = useState(sp.get('dateTo') ?? '')
 
-  const [q, setQ] = useState(sp.get("q") ?? "")
-  const [status, setStatus] = useState<AdminOrderStatus | "ALL">(
-    (sp.get("status") as AdminOrderStatus) ?? "ALL"
+  const [q, setQ] = useState(sp.get('q') ?? '')
+  const [status, setStatus] = useState<AdminOrderStatus | 'ALL'>(
+    (sp.get('status') as AdminOrderStatus) ?? 'ALL'
   )
-  const [dateFrom, setDateFrom] = useState(sp.get("dateFrom") ?? "")
-  const [dateTo, setDateTo] = useState(sp.get("dateTo") ?? "")
-  const [page, setPage] = useState<number>(Number(sp.get("page") ?? 1))
+  const [dateFrom, setDateFrom] = useState(sp.get('dateFrom') ?? '')
+  const [dateTo, setDateTo] = useState(sp.get('dateTo') ?? '')
+  const [page, setPage] = useState<number>(Number(sp.get('page') ?? 1))
   const [pageSize, setPageSize] = useState<number>(
-    Number(sp.get("pageSize") ?? 20)
+    Number(sp.get('pageSize') ?? 20)
   )
 
   const [rows, setRows] = useState<AdminOrderListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)
   const [customerEmailDraft, setCustomerEmailDraft] = useState(
-    sp.get("customerEmail") ?? ""
+    sp.get('customerEmail') ?? ''
   )
   const [customerEmail, setCustomerEmail] = useState(
-    sp.get("customerEmail") ?? ""
+    sp.get('customerEmail') ?? ''
   )
   const [storeNameDraft, setStoreNameDraft] = useState(
-    sp.get("storeName") ?? ""
+    sp.get('storeName') ?? ''
   )
-  const [storeName, setStoreName] = useState(sp.get("storeName") ?? "")
+  const [storeName, setStoreName] = useState(sp.get('storeName') ?? '')
 
   const params: AdminFetchOrdersParams = useMemo(
     () => ({
       q: q || undefined,
-      status: status === "ALL" ? undefined : status,
+      status: status === 'ALL' ? undefined : status,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
       customerEmail: customerEmail || undefined,
       storeName: storeName || undefined,
-      sortBy: "createdAt",
-      sortDir: "desc",
+      sortBy: 'createdAt',
+      sortDir: 'desc',
       page,
       pageSize
     }),
@@ -108,15 +108,15 @@ function AdminOrdersPage() {
   }, [fetchList])
   useEffect(() => {
     const next = new URLSearchParams()
-    if (q) next.set("q", q)
-    if (status !== "ALL") next.set("status", status)
-    if (dateFrom) next.set("dateFrom", dateFrom)
-    if (dateTo) next.set("dateTo", dateTo)
-    if (customerEmail) next.set("customerEmail", customerEmail)
-    if (storeName) next.set("storeName", storeName)
-    if (page !== 1) next.set("page", String(page))
-    if (pageSize !== 20) next.set("pageSize", String(pageSize))
-    router.push(`/admin/orders${next.toString() ? `?${next.toString()}` : ""}`)
+    if (q) next.set('q', q)
+    if (status !== 'ALL') next.set('status', status)
+    if (dateFrom) next.set('dateFrom', dateFrom)
+    if (dateTo) next.set('dateTo', dateTo)
+    if (customerEmail) next.set('customerEmail', customerEmail)
+    if (storeName) next.set('storeName', storeName)
+    if (page !== 1) next.set('page', String(page))
+    if (pageSize !== 20) next.set('pageSize', String(pageSize))
+    router.push(`/admin/orders${next.toString() ? `?${next.toString()}` : ''}`)
   }, [
     router,
     q,
@@ -169,20 +169,20 @@ function AdminOrdersPage() {
   )
   const handleClearFilters = useCallback(() => {
     // ล้างค่า draft
-    setQDraft("")
-    setStatusDraft("ALL")
-    setDateFromDraft("")
-    setDateToDraft("")
-    setCustomerEmailDraft("")
-    setStoreNameDraft("")
+    setQDraft('')
+    setStatusDraft('ALL')
+    setDateFromDraft('')
+    setDateToDraft('')
+    setCustomerEmailDraft('')
+    setStoreNameDraft('')
 
     // ล้างค่า submitted
-    setQ("")
-    setStatus("ALL")
-    setDateFrom("")
-    setDateTo("")
-    setCustomerEmail("")
-    setStoreName("")
+    setQ('')
+    setStatus('ALL')
+    setDateFrom('')
+    setDateTo('')
+    setCustomerEmail('')
+    setStoreName('')
 
     // รีเซ็ตหน้า
     setPage(1)
@@ -288,7 +288,7 @@ function AdminOrdersPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                Order Quick View {current ? `— ${current.orderCode}` : ""}
+                Order Quick View {current ? `— ${current.orderCode}` : ''}
               </DialogTitle>
             </DialogHeader>
             {current && (
@@ -328,12 +328,12 @@ function AdminOrdersPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["ORDERS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['ORDERS_READ']}>{children}</AuthGuard>
 }
 
 export default function Page() {
-  console.log("Hi from order page")
+  console.log('Hi from order page')
   return (
     <Guard>
       <AdminOrdersPage />

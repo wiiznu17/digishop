@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { Suspense, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
-import { Mail, Lock, Eye, EyeOff } from "lucide-react"
-import { login } from "@/utils/requesters/authRequester"
-import { ModeToggle } from "@/components/mode-toggle"
+import { Suspense, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { login } from '@/utils/requesters/authRequester'
+import { ModeToggle } from '@/components/mode-toggle'
 
 export default function LoginPage() {
   return (
@@ -22,25 +22,25 @@ export default function LoginPage() {
 }
 
 function LoginInner() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string>("")
+  const [errorMsg, setErrorMsg] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
 
   const router = useRouter()
   const search = useSearchParams()
 
   const nextPath = useMemo(() => {
-    const next = search.get("next")
-    if (!next || !next.startsWith("/")) return "/"
+    const next = search.get('next')
+    if (!next || !next.startsWith('/')) return '/'
     return next
   }, [search])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (submitting) return
-    setErrorMsg("")
+    setErrorMsg('')
     setSubmitting(true)
 
     try {
@@ -50,7 +50,7 @@ function LoginInner() {
       const msg =
         (isAxiosError(err) &&
           (err.response?.data as { error?: string })?.error) ||
-        (err instanceof Error ? err.message : "Login failed")
+        (err instanceof Error ? err.message : 'Login failed')
       setErrorMsg(humanizeError(msg))
     } finally {
       setSubmitting(false)
@@ -121,7 +121,7 @@ function LoginInner() {
               </span>
               <input
                 className="w-full rounded-md border p-2 pl-9 pr-10 outline-none focus:ring-2 focus:ring-fuchsia-300/70"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
                 value={password}
@@ -130,7 +130,7 @@ function LoginInner() {
               />
               <button
                 type="button"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-sky-600 hover:text-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-300/70"
               >
@@ -160,7 +160,7 @@ function LoginInner() {
             className="w-full rounded-md bg-[linear-gradient(90deg,_#38bdf8,_#f472b6,_#8b5cf6)] px-3 py-2 font-medium text-white shadow-md hover:brightness-105 disabled:opacity-50"
             aria-busy={submitting}
           >
-            {submitting ? "Signing in…" : "Login"}
+            {submitting ? 'Signing in…' : 'Login'}
           </button>
 
           {/* No extra links since admin access is by invite only */}
@@ -176,18 +176,18 @@ function LoginInner() {
 function isAxiosError(
   e: unknown
 ): e is { isAxiosError: boolean; response?: { data?: unknown } } {
-  return typeof e === "object" && e !== null && "isAxiosError" in e
+  return typeof e === 'object' && e !== null && 'isAxiosError' in e
 }
 
 function humanizeError(codeOrMsg: string): string {
   switch (codeOrMsg) {
-    case "EMAIL_PASSWORD_REQUIRED":
-      return "Please enter email and password."
-    case "INVALID_CREDENTIALS":
-      return "Email or password is incorrect."
-    case "ACCOUNT_SUSPENDED":
-      return "Your account is suspended. Contact administrator."
+    case 'EMAIL_PASSWORD_REQUIRED':
+      return 'Please enter email and password.'
+    case 'INVALID_CREDENTIALS':
+      return 'Email or password is incorrect.'
+    case 'ACCOUNT_SUSPENDED':
+      return 'Your account is suspended. Contact administrator.'
     default:
-      return "Login failed. Please try again."
+      return 'Login failed. Please try again.'
   }
 }

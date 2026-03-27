@@ -1,27 +1,27 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { type VariantProps, cva } from "class-variance-authority"
-import { X } from "lucide-react"
-import { cn } from "@/utils/tailwindUtils"
+import * as React from 'react'
+import { type VariantProps, cva } from 'class-variance-authority'
+import { X } from 'lucide-react'
+import { cn } from '@/utils/tailwindUtils'
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full',
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: 'border bg-background text-foreground',
         destructive:
-          "destructive border-destructive bg-destructive text-destructive-foreground"
+          'destructive border-destructive bg-destructive text-destructive-foreground'
       }
     },
     defaultVariants: {
-      variant: "default"
+      variant: 'default'
     }
   }
 )
 
-type ToastProps = React.ComponentPropsWithoutRef<"div"> &
+type ToastProps = React.ComponentPropsWithoutRef<'div'> &
   VariantProps<typeof toastVariants> & {
     title?: string
     description?: string
@@ -34,7 +34,7 @@ interface Toast extends ToastProps {
 
 interface ToastContextValue {
   toasts: Toast[]
-  addToast: (toast: Omit<Toast, "id">) => void
+  addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
 }
 
@@ -45,10 +45,10 @@ const ToastContext = React.createContext<ToastContextValue | undefined>(
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([])
 
-  const addToast = React.useCallback((toast: Omit<Toast, "id">) => {
+  const addToast = React.useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9)
     setToasts((prev) => [...prev, { ...toast, id }])
-    console.log("toast: ", toasts)
+    console.log('toast: ', toasts)
 
     // Auto remove after 5 seconds
     setTimeout(() => {
@@ -72,7 +72,7 @@ export function useToast() {
   const context = React.useContext(ToastContext)
 
   if (!context) {
-    throw new Error("useToast must be used within a ToastProvider")
+    throw new Error('useToast must be used within a ToastProvider')
   }
 
   return {

@@ -4,57 +4,68 @@ import {
   OrderStatus,
   ReturnShipment,
   ReturnShipmentEvent,
-  ReturnShipmentStatus,
-} from "@digishop/db";
-import { CreationAttributes, Transaction } from "sequelize";
-import { returnCarrierRepository } from "../repositories/returnCarrierRepository";
+  ReturnShipmentStatus
+} from '@digishop/db'
+import { CreationAttributes, Transaction } from 'sequelize'
+import { returnCarrierRepository } from '../repositories/returnCarrierRepository'
 import {
   MarkReturnFailedInput,
   ReturnCarrierWebhookInput,
-  ReturnCarrierWebhookSuccessResponse,
-} from "../types/returnCarrier.types";
-import { AppError } from "../errors/AppError";
+  ReturnCarrierWebhookSuccessResponse
+} from '../types/returnCarrier.types'
+import { AppError } from '../errors/AppError'
 
 export class ReturnCarrierServiceError extends AppError {
-  public readonly body: Record<string, unknown>;
+  public readonly body: Record<string, unknown>
 
-  constructor(
-    statusCode: number,
-    body: Record<string, unknown>,
-  ) {
-    super(String(body.error ?? body.message ?? "Return carrier service error"), statusCode, true, body);
-    this.name = "ReturnCarrierServiceError";
-    this.body = body;
+  constructor(statusCode: number, body: Record<string, unknown>) {
+    super(
+      String(body.error ?? body.message ?? 'Return carrier service error'),
+      statusCode,
+      true,
+      body
+    )
+    this.name = 'ReturnCarrierServiceError'
+    this.body = body
   }
 }
 
-export const RETURN_ALLOW_NEXT: Partial<Record<ReturnShipmentStatus, ReadonlyArray<ReturnShipmentStatus>>> = {
+export const RETURN_ALLOW_NEXT: Partial<
+  Record<ReturnShipmentStatus, ReadonlyArray<ReturnShipmentStatus>>
+> = {
   [ReturnShipmentStatus.AWAITING_DROP]: [
     ReturnShipmentStatus.RETURN_IN_TRANSIT,
-    ReturnShipmentStatus.RETURN_TIME_OUT,
+    ReturnShipmentStatus.RETURN_TIME_OUT
   ],
   [ReturnShipmentStatus.RETURN_IN_TRANSIT]: [
     ReturnShipmentStatus.DELIVERED_BACK,
-    ReturnShipmentStatus.RETURN_FAILED,
+    ReturnShipmentStatus.RETURN_FAILED
   ],
   [ReturnShipmentStatus.DELIVERED_BACK]: [],
   [ReturnShipmentStatus.RETURN_FAILED]: [],
-  [ReturnShipmentStatus.RETURN_TIME_OUT]: [],
-};
+  [ReturnShipmentStatus.RETURN_TIME_OUT]: []
+}
 
-const canReturnTransition = (from: ReturnShipmentStatus, to: ReturnShipmentStatus) => {
-  return RETURN_ALLOW_NEXT[from]?.includes(to) ?? false;
-};
+const canReturnTransition = (
+  from: ReturnShipmentStatus,
+  to: ReturnShipmentStatus
+) => {
+  return RETURN_ALLOW_NEXT[from]?.includes(to) ?? false
+}
 
 export class ReturnCarrierService {
   private async moveOrderStatus(
     order: Order,
     toStatus: OrderStatus,
     transaction: Transaction,
-    reason?: string,
+    reason?: string
   ) {
-    const fromStatus = order.status as OrderStatus;
-    await returnCarrierRepository.updateOrderStatus(order, toStatus, transaction);
+    const fromStatus = order.status as OrderStatus
+    await returnCarrierRepository.updateOrderStatus(
+      order,
+      toStatus,
+      transaction
+    )
     await returnCarrierRepository.createOrderStatusHistory(
       {
         orderId: order.id,
@@ -63,16 +74,18 @@ export class ReturnCarrierService {
         changedByType: ActorType.SYSTEM,
         changedById: 0,
         reason: reason ?? null,
-        source: "SYSTEM",
+        source: 'SYSTEM',
         correlationId: null,
-        metadata: {},
+        metadata: {}
       },
-      transaction,
-    );
+      transaction
+    )
   }
 
-  async processWebhook(input: ReturnCarrierWebhookInput): Promise<ReturnCarrierWebhookSuccessResponse> {
-    const ctx = input.context;
+  async processWebhook(
+    input: ReturnCarrierWebhookInput
+  ): Promise<ReturnCarrierWebhookSuccessResponse> {
+    const ctx = input.context
     const {
       carrierCode,
       payload,
@@ -83,18 +96,20 @@ export class ReturnCarrierService {
       isDuplicateEvent,
       orderRecord,
       nextOrderStatus,
-      lastEventStatus,
-    } = ctx;
+      lastEventStatus
+    } = ctx
 
     if (isDuplicateEvent) {
-      return { ok: true, skipped: "duplicate_event" };
+      return { ok: true, skipped: 'duplicate_event' }
     }
 
-    const shipment = returnShipment as ReturnShipment | undefined;
-    const order = orderRecord as Order | undefined;
+    const shipment = returnShipment as ReturnShipment | undefined
+    const order = orderRecord as Order | undefined
 
     if (!shipment) {
-      throw new ReturnCarrierServiceError(500, { error: "Return webhook processing failed" });
+      throw new ReturnCarrierServiceError(500, {
+        error: 'Return webhook processing failed'
+      })
     }
 
     await returnCarrierRepository.withTransaction(async (transaction) => {
@@ -105,38 +120,45 @@ export class ReturnCarrierService {
           toStatus: nextReturnStatus,
           occurredAt: eventTime,
           description:
-            (payload as { description?: string | null } | undefined)?.description ?? null,
-          location: (payload as { location?: string | null } | undefined)?.location ?? null,
-          rawPayload: (payload as object | null | undefined) ?? null,
+            (payload as { description?: string | null } | undefined)
+              ?.description ?? null,
+          location:
+            (payload as { location?: string | null } | undefined)?.location ??
+            null,
+          rawPayload: (payload as object | null | undefined) ?? null
         } as CreationAttributes<ReturnShipmentEvent>,
-        transaction,
-      );
+        transaction
+      )
 
-      const currentStatus = shipment.status as ReturnShipmentStatus;
+      const currentStatus = shipment.status as ReturnShipmentStatus
       if (canReturnTransition(currentStatus, nextReturnStatus)) {
         const patch: Partial<CreationAttributes<ReturnShipment>> = {
-          status: nextReturnStatus,
-        };
+          status: nextReturnStatus
+        }
 
         if (
           nextReturnStatus === ReturnShipmentStatus.RETURN_IN_TRANSIT &&
           !shipment.trackingNumber
         ) {
-          Object.assign(patch, { trackingNumber });
+          Object.assign(patch, { trackingNumber })
         }
 
         if (
           nextReturnStatus === ReturnShipmentStatus.DELIVERED_BACK &&
           !shipment.deliveredBackAt
         ) {
-          Object.assign(patch, { deliveredBackAt: eventTime });
+          Object.assign(patch, { deliveredBackAt: eventTime })
         }
 
         if (!shipment.carrier) {
-          Object.assign(patch, { carrier: carrierCode });
+          Object.assign(patch, { carrier: carrierCode })
         }
 
-        await returnCarrierRepository.updateReturnShipment(shipment, patch, transaction);
+        await returnCarrierRepository.updateReturnShipment(
+          shipment,
+          patch,
+          transaction
+        )
       }
 
       if (order && nextOrderStatus) {
@@ -144,40 +166,48 @@ export class ReturnCarrierService {
           order,
           nextOrderStatus,
           transaction,
-          `Auto from return carrier (${carrierCode})`,
-        );
+          `Auto from return carrier (${carrierCode})`
+        )
       }
-    });
+    })
 
     return {
       ok: true,
       updateReturnStatus: nextReturnStatus,
       updateOrderStatus: order
-        ? ((ctx.nextOrderStatus as OrderStatus) ?? (order.status as OrderStatus))
-        : null,
-    };
+        ? ((ctx.nextOrderStatus as OrderStatus) ??
+          (order.status as OrderStatus))
+        : null
+    }
   }
 
   async markReturnFailed(input: MarkReturnFailedInput) {
-    const shipment = await returnCarrierRepository.findReturnShipmentByPk(input.returnShipmentId);
+    const shipment = await returnCarrierRepository.findReturnShipmentByPk(
+      input.returnShipmentId
+    )
     if (!shipment) {
-      throw new ReturnCarrierServiceError(404, { error: "return_shipment_not_found" });
+      throw new ReturnCarrierServiceError(404, {
+        error: 'return_shipment_not_found'
+      })
     }
 
     if (shipment.status !== ReturnShipmentStatus.AWAITING_DROP) {
-      throw new ReturnCarrierServiceError(409, { error: "invalid_state" });
+      throw new ReturnCarrierServiceError(409, { error: 'invalid_state' })
     }
 
-    if (!shipment.deadlineDropoffAt || shipment.deadlineDropoffAt > new Date()) {
-      throw new ReturnCarrierServiceError(409, { error: "not_due_yet" });
+    if (
+      !shipment.deadlineDropoffAt ||
+      shipment.deadlineDropoffAt > new Date()
+    ) {
+      throw new ReturnCarrierServiceError(409, { error: 'not_due_yet' })
     }
 
     await returnCarrierRepository.withTransaction(async (transaction) => {
       await returnCarrierRepository.updateReturnShipment(
         shipment,
         { status: ReturnShipmentStatus.RETURN_FAILED },
-        transaction,
-      );
+        transaction
+      )
 
       await returnCarrierRepository.createReturnShipmentEvent(
         {
@@ -185,19 +215,27 @@ export class ReturnCarrierService {
           fromStatus: ReturnShipmentStatus.AWAITING_DROP,
           toStatus: ReturnShipmentStatus.RETURN_FAILED,
           occurredAt: new Date(),
-          description: "Auto fail by deadline",
+          description: 'Auto fail by deadline'
         },
-        transaction,
-      );
+        transaction
+      )
 
-      const order = await returnCarrierRepository.findOrderByPk(shipment.orderId, transaction);
+      const order = await returnCarrierRepository.findOrderByPk(
+        shipment.orderId,
+        transaction
+      )
       if (order && order.status === OrderStatus.AWAITING_RETURN) {
-        await this.moveOrderStatus(order, OrderStatus.RETURN_FAIL, transaction, "Deadline missed");
+        await this.moveOrderStatus(
+          order,
+          OrderStatus.RETURN_FAIL,
+          transaction,
+          'Deadline missed'
+        )
       }
-    });
+    })
 
-    return { ok: true };
+    return { ok: true }
   }
 }
 
-export const returnCarrierService = new ReturnCarrierService();
+export const returnCarrierService = new ReturnCarrierService()

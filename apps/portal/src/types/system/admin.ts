@@ -1,12 +1,12 @@
 // ── enums / unions ─────────────────────────────────────────────
 export enum AdminUserStatus {
-  ACTIVE = "ACTIVE",
-  SUSPENDED = "SUSPENDED"
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED'
 }
 
-export type AdminRoleSlug = "SUPER_ADMIN" | "ADMIN" | "MODERATOR" | "VIEWER"
+export type AdminRoleSlug = 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | 'VIEWER'
 
-export type PermissionEffect = "ALLOW" | "DENY"
+export type PermissionEffect = 'ALLOW' | 'DENY'
 
 // ── list / suggest ─────────────────────────────────────────────
 export type AdminListItem = {
@@ -62,7 +62,7 @@ export type AdminRoleHistoryItem = {
   createdAt: string
   updatedAt: string
   deletedAt: string | null
-  status: "ACTIVE" | "INACTIVE"
+  status: 'ACTIVE' | 'INACTIVE'
 }
 
 export type AdminDetail = {

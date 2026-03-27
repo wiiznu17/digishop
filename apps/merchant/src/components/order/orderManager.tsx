@@ -1,21 +1,21 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -23,12 +23,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Clock } from "lucide-react"
-import { OrderStatus } from "@/types/props/orderProp"
-import { useOrderStatus } from "@/hooks/useOrderStatus"
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Clock } from 'lucide-react'
+import { OrderStatus } from '@/types/props/orderProp'
+import { useOrderStatus } from '@/hooks/useOrderStatus'
 
 interface OrderStatusManagerProps {
   currentStatus: OrderStatus
@@ -56,9 +56,9 @@ export function OrderStatusManager({
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [newTrackingNumber, setNewTrackingNumber] = useState(
-    trackingNumber || ""
+    trackingNumber || ''
   )
-  const [carrier, setCarrier] = useState<string>("") // NEW
+  const [carrier, setCarrier] = useState<string>('') // NEW
 
   // --- Hook helpers for order status ---
   const {
@@ -75,7 +75,7 @@ export function OrderStatusManager({
 
   const handleStatusUpdate = () => {
     if (selectedStatus) {
-      if (selectedStatus === "HANDED_OVER") {
+      if (selectedStatus === 'HANDED_OVER') {
         // ต้องมี tracking + carrier
         onHandedOver?.(orderId, newTrackingNumber, carrier)
       } else {
@@ -83,7 +83,7 @@ export function OrderStatusManager({
       }
     } else if (editableStatuses.length === 1) {
       const next = editableStatuses[0]
-      if (next === "HANDED_OVER") {
+      if (next === 'HANDED_OVER') {
         onHandedOver?.(orderId, newTrackingNumber, carrier)
       } else {
         onStatusChange(orderId, next)
@@ -93,7 +93,7 @@ export function OrderStatusManager({
     // update tracking number แยก กรณี status อื่น
     if (
       newTrackingNumber !== trackingNumber &&
-      selectedStatus !== "HANDED_OVER"
+      selectedStatus !== 'HANDED_OVER'
     ) {
       onTrackingNumberUpdate(orderId, newTrackingNumber)
     }
@@ -112,7 +112,7 @@ export function OrderStatusManager({
 
   const getConfirmMessage = () => {
     const targetStatus = selectedStatus
-    if (!targetStatus) return ""
+    if (!targetStatus) return ''
     return `Do you want to change the status from "${getStatusText(
       currentStatus
     )}" to "${getStatusText(targetStatus)}"?`
@@ -151,10 +151,10 @@ export function OrderStatusManager({
                   <div
                     className={`pt-1.5 ${
                       isActive
-                        ? "font-bold"
+                        ? 'font-bold'
                         : isPassed
-                          ? "text-foreground"
-                          : "text-muted-foreground"
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                     }`}
                   >
                     <p className="text-sm">{getStatusText(status)}</p>
@@ -176,7 +176,7 @@ export function OrderStatusManager({
                   <div className="space-y-2">
                     <Label>Select next status:</Label>
                     <Select
-                      value={selectedStatus || ""}
+                      value={selectedStatus || ''}
                       onValueChange={(value) =>
                         setSelectedStatus(value as OrderStatus)
                       }
@@ -225,8 +225,8 @@ export function OrderStatusManager({
               </div>
 
               {/* Tracking + Carrier Inputs */}
-              {(currentStatus === "READY_TO_SHIP" ||
-                editableStatuses.includes("HANDED_OVER")) && (
+              {(currentStatus === 'READY_TO_SHIP' ||
+                editableStatuses.includes('HANDED_OVER')) && (
                 <div className="space-y-2">
                   <Label htmlFor="tracking">Tracking Number:</Label>
                   <Input

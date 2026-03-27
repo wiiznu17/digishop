@@ -6,9 +6,11 @@ import {
   setDefaultBankAccount
 } from '../controllers/bankController'
 import { authenticate, requireApprovedStore } from '../middlewares/middleware'
-import { attachStore } from "../middlewares/storeMiddleware"
+import { attachStore } from '../middlewares/storeMiddleware'
+import { zodValidate } from '../lib/zod/validate'
+import { AddBankAccountSchema } from '../lib/zod/schemas/storeSchemas'
 
-const router: express.Router = express.Router();
+const router: express.Router = express.Router()
 
 router.get(
   '/bank-list',
@@ -23,6 +25,7 @@ router.post(
   authenticate,
   requireApprovedStore(),
   attachStore(),
+  zodValidate(AddBankAccountSchema),
   addBankAccountToStore
 )
 

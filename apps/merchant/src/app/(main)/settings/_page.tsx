@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { usePathname } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { MerchantHeader } from "@/components/dashboard-header"
+import { usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { MerchantHeader } from '@/components/dashboard-header'
 
 export default function SettingsPage() {
   const { user, isLoading } = useAuth()
@@ -14,9 +14,9 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login")
-      } else if (user.role !== "MERCHANT") {
-        router.replace("/register")
+        router.push('/login')
+      } else if (user.role !== 'MERCHANT') {
+        router.replace('/register')
       }
     }
   }, [user, isLoading, router])

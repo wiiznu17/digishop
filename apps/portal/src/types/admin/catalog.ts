@@ -1,10 +1,10 @@
 export type Uuid = string
 export type MinorBaht = number // integer (สตางค์)
 
-export type ReqStatus = "PENDING" | "APPROVED" | "REJECT"
-export type ProductStatus = "ACTIVE" | "INACTIVE"
-export type SortDir = "asc" | "desc"
-export type SortBy = "createdAt" | "updatedAt" | "name" | "price"
+export type ReqStatus = 'PENDING' | 'APPROVED' | 'REJECT'
+export type ProductStatus = 'ACTIVE' | 'INACTIVE'
+export type SortDir = 'asc' | 'desc'
+export type SortBy = 'createdAt' | 'updatedAt' | 'name' | 'price'
 
 export type AdminCategoryDto = {
   uuid: Uuid
@@ -152,9 +152,9 @@ export type AdminProductDetail = {
 }
 
 // ===== Moderate Payload (discriminated union) =====
-export type ModerateApprovePayload = { reqStatus: "APPROVED" }
+export type ModerateApprovePayload = { reqStatus: 'APPROVED' }
 export type ModerateRejectPayload = {
-  reqStatus: "REJECT"
+  reqStatus: 'REJECT'
   rejectReason: string
 }
 export type AdminModeratePayload =

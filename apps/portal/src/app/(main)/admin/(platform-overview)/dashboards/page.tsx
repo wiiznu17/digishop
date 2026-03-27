@@ -1,30 +1,30 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { CalendarDays, DownloadCloud, Activity } from "lucide-react"
-import BlockKpis from "@/components/overview/dashboard/block/BlockKpis"
-import BlockGmvOverTime from "@/components/overview/dashboard/block/BlockGmvOverTime"
-import BlockOrdersOverTime from "@/components/overview/dashboard/block/BlockOrdersOverTime"
-import BlockStatusPie from "@/components/overview/dashboard/block/BlockStatusPie"
-import BlockTopStores from "@/components/overview/dashboard/block/BlockTopStores"
-import AuthGuard from "@/components/AuthGuard"
+} from '@/components/ui/select'
+import { CalendarDays, DownloadCloud, Activity } from 'lucide-react'
+import BlockKpis from '@/components/overview/dashboard/block/BlockKpis'
+import BlockGmvOverTime from '@/components/overview/dashboard/block/BlockGmvOverTime'
+import BlockOrdersOverTime from '@/components/overview/dashboard/block/BlockOrdersOverTime'
+import BlockStatusPie from '@/components/overview/dashboard/block/BlockStatusPie'
+import BlockTopStores from '@/components/overview/dashboard/block/BlockTopStores'
+import AuthGuard from '@/components/AuthGuard'
 
 const startOfMonth = (d = new Date()) =>
   new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
@@ -33,8 +33,8 @@ const endOfMonth = (d = new Date()) =>
 
 function AdminDashboardPage() {
   const [period, setPeriod] = useState<
-    "THIS_MONTH" | "LAST_7" | "LAST_30" | "CUSTOM"
-  >("THIS_MONTH")
+    'THIS_MONTH' | 'LAST_7' | 'LAST_30' | 'CUSTOM'
+  >('THIS_MONTH')
   const [from, setFrom] = useState(startOfMonth().toISOString().slice(0, 10))
   const [to, setTo] = useState(endOfMonth().toISOString().slice(0, 10))
   const [pendingApply, setPendingApply] = useState(false)
@@ -45,15 +45,15 @@ function AdminDashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    if (period === "THIS_MONTH") {
+    if (period === 'THIS_MONTH') {
       setFrom(startOfMonth().toISOString().slice(0, 10))
       setTo(endOfMonth().toISOString().slice(0, 10))
-    } else if (period === "LAST_7") {
+    } else if (period === 'LAST_7') {
       const t = new Date()
       const f = new Date(Date.now() - 6 * 86400000)
       setFrom(f.toISOString().slice(0, 10))
       setTo(t.toISOString().slice(0, 10))
-    } else if (period === "LAST_30") {
+    } else if (period === 'LAST_30') {
       const t = new Date()
       const f = new Date(Date.now() - 29 * 86400000)
       setFrom(f.toISOString().slice(0, 10))
@@ -110,7 +110,7 @@ function AdminDashboardPage() {
             <Select
               value={period}
               onValueChange={(
-                v: "THIS_MONTH" | "LAST_7" | "LAST_30" | "CUSTOM"
+                v: 'THIS_MONTH' | 'LAST_7' | 'LAST_30' | 'CUSTOM'
               ) => setPeriod(v)}
             >
               <SelectTrigger>
@@ -131,7 +131,7 @@ function AdminDashboardPage() {
               <Input
                 type="date"
                 value={from}
-                disabled={period !== "CUSTOM"}
+                disabled={period !== 'CUSTOM'}
                 onChange={(e) => setFrom(e.target.value)}
               />
             </div>
@@ -143,7 +143,7 @@ function AdminDashboardPage() {
               <Input
                 type="date"
                 value={to}
-                disabled={period !== "CUSTOM"}
+                disabled={period !== 'CUSTOM'}
                 onChange={(e) => setTo(e.target.value)}
               />
             </div>
@@ -200,8 +200,8 @@ function AdminDashboardPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["DASHBOARD_VIEW"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['DASHBOARD_VIEW']}>{children}</AuthGuard>
 }
 
 export default function Page() {

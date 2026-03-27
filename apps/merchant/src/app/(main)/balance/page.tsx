@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Card,
@@ -6,10 +6,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { MerchantHeader } from "@/components/dashboard-header"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { MerchantHeader } from '@/components/dashboard-header'
 import {
   Building2,
   CheckCircle,
@@ -18,10 +18,10 @@ import {
   Trash2,
   AlertCircle,
   Loader2
-} from "lucide-react"
-import { useState, useEffect } from "react"
-import BankAccountDialog from "@/components/balance/linkBankAccount"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useState, useEffect } from 'react'
+import BankAccountDialog from '@/components/balance/linkBankAccount'
+import { useToast } from '@/hooks/use-toast'
 import {
   getBankAccountsRequester,
   createBankAccountRequester,
@@ -29,7 +29,7 @@ import {
   setDefaultBankAccountRequester,
   type BankAccount,
   type CreateBankAccountRequest
-} from "../../../utils/requestUtils/requestBankUtils"
+} from '../../../utils/requestUtils/requestBankUtils'
 
 interface BankAccountFormData {
   bankName: string
@@ -42,7 +42,7 @@ interface BankAccountFormData {
 function maskAccountNumber(accountNumber: string) {
   if (!accountNumber) return accountNumber
   if (accountNumber.length <= 6) return accountNumber
-  return accountNumber.slice(0, 2) + "xxxxxx" + accountNumber.slice(-4)
+  return accountNumber.slice(0, 2) + 'xxxxxx' + accountNumber.slice(-4)
 }
 
 export default function AccountLinking() {
@@ -78,24 +78,24 @@ export default function AccountLinking() {
       if (newAccount) {
         setLinkedAccounts((prev) => [...prev, newAccount])
         toast({
-          title: "Success",
-          description: "Bank account added successfully"
+          title: 'Success',
+          description: 'Bank account added successfully'
         })
         setShowBankDialog(false)
         await loadBankAccounts() // refresh data
       } else {
         toast({
-          title: "Error",
-          description: "Failed to add bank account",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to add bank account',
+          variant: 'destructive'
         })
       }
     } catch (error) {
-      console.error("Error adding bank account:", error)
+      console.error('Error adding bank account:', error)
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive'
       })
     }
   }
@@ -108,17 +108,17 @@ export default function AccountLinking() {
         setLinkedAccounts(accounts)
       } else {
         toast({
-          title: "Error",
-          description: "Failed to load bank accounts",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to load bank accounts',
+          variant: 'destructive'
         })
       }
     } catch (error) {
-      console.log("Error to load bank account: ", error)
+      console.log('Error to load bank account: ', error)
       toast({
-        title: "Error",
-        description: "Failed to load bank accounts",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to load bank accounts',
+        variant: 'destructive'
       })
     } finally {
       setLoading(false)
@@ -126,7 +126,7 @@ export default function AccountLinking() {
   }
 
   const handleRemoveAccount = async (accountId: number) => {
-    if (!confirm("Are you sure you want to remove this bank account?")) {
+    if (!confirm('Are you sure you want to remove this bank account?')) {
       return
     }
     setRemovingAccountId(accountId)
@@ -135,22 +135,22 @@ export default function AccountLinking() {
       if (success) {
         setLinkedAccounts((prev) => prev.filter((acc) => acc.id !== accountId))
         toast({
-          title: "Success",
-          description: "Bank account removed successfully"
+          title: 'Success',
+          description: 'Bank account removed successfully'
         })
       } else {
         toast({
-          title: "Error",
-          description: "Failed to remove bank account",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to remove bank account',
+          variant: 'destructive'
         })
       }
     } catch (error) {
-      console.log("Error to remove bank account: ", error)
+      console.log('Error to remove bank account: ', error)
       toast({
-        title: "Error",
-        description: "Failed to remove bank account",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to remove bank account',
+        variant: 'destructive'
       })
     } finally {
       setRemovingAccountId(null)
@@ -170,22 +170,22 @@ export default function AccountLinking() {
           }))
         )
         toast({
-          title: "Success",
-          description: "Default bank account updated successfully"
+          title: 'Success',
+          description: 'Default bank account updated successfully'
         })
       } else {
         toast({
-          title: "Error",
-          description: "Failed to set default bank account",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to set default bank account',
+          variant: 'destructive'
         })
       }
     } catch (error) {
-      console.log("Error to set default for this bank account: ", error)
+      console.log('Error to set default for this bank account: ', error)
       toast({
-        title: "Error",
-        description: "Failed to set default bank account",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to set default bank account',
+        variant: 'destructive'
       })
     } finally {
       setDefaultingAccountId(null)
@@ -193,23 +193,23 @@ export default function AccountLinking() {
     }
   }
 
-  const getStatusBadge = (status: BankAccount["status"]) => {
+  const getStatusBadge = (status: BankAccount['status']) => {
     switch (status) {
-      case "VERIFIED":
+      case 'VERIFIED':
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Verified
           </Badge>
         )
-      case "PENDING":
+      case 'PENDING':
         return (
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Pending
           </Badge>
         )
-      case "FAILED":
+      case 'FAILED':
         return (
           <Badge variant="destructive">
             <XCircle className="w-3 h-3 mr-1" />
@@ -263,7 +263,7 @@ export default function AccountLinking() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {
-                  linkedAccounts.filter((acc) => acc.status === "VERIFIED")
+                  linkedAccounts.filter((acc) => acc.status === 'VERIFIED')
                     .length
                 }
               </div>
@@ -282,7 +282,7 @@ export default function AccountLinking() {
             <CardContent>
               <div className="text-lg font-bold">
                 {linkedAccounts.find((acc) => acc.isDefault)?.bankName ||
-                  "Not set"}
+                  'Not set'}
               </div>
               <p className="text-xs text-muted-foreground">
                 Main account for receiving funds
@@ -353,7 +353,7 @@ export default function AccountLinking() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!account.isDefault && account.status === "VERIFIED" && (
+                      {!account.isDefault && account.status === 'VERIFIED' && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -363,7 +363,7 @@ export default function AccountLinking() {
                           {defaultingAccountId === account.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            "Set as Default"
+                            'Set as Default'
                           )}
                         </Button>
                       )}

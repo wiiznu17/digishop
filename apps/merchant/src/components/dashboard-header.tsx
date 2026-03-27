@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import { ModeToggle } from "@/components/mode-toggle"
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { ModeToggle } from '@/components/mode-toggle'
 
 interface DashboardHeaderProps {
   title: string

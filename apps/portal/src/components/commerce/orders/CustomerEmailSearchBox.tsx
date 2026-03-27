@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import React, { useEffect, useState, useTransition } from "react"
-import { Input } from "@/components/ui/input"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import { fetchAdminCustomerEmailSuggestRequester } from "@/utils/requesters/orderRequester"
-import type { AdminCustomerEmailSuggestItem } from "@/types/commerce/orders"
+import React, { useEffect, useState, useTransition } from 'react'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+import { fetchAdminCustomerEmailSuggestRequester } from '@/utils/requesters/orderRequester'
+import type { AdminCustomerEmailSuggestItem } from '@/types/commerce/orders'
 
 function useDebounce<T>(val: T, ms = 250) {
   const [v, setV] = useState(val)
@@ -18,7 +18,7 @@ function useDebounce<T>(val: T, ms = 250) {
 export function CustomerEmailSearchBox({
   value,
   onChange,
-  placeholder = "Customer email eg. user@example.com"
+  placeholder = 'Customer email eg. user@example.com'
 }: {
   value: string
   onChange: (v: string) => void
@@ -100,11 +100,11 @@ export function CustomerEmailSearchBox({
                   <div>{s.snapshotsEmail[0]}</div>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {s.customerName ?? "-"} · {s.snapshotStats.orderCount ?? 0}{" "}
+                  {s.customerName ?? '-'} · {s.snapshotStats.orderCount ?? 0}{' '}
                   orders
                   {s.lastOrderedAt
                     ? ` · ${new Date(s.lastOrderedAt).toLocaleString()}`
-                    : ""}
+                    : ''}
                 </div>
               </button>
             ))

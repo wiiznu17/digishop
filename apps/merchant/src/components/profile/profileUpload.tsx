@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useRef, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { X, Upload, Image as ImageIcon } from "lucide-react"
-import { ProfileMerchantImage } from "@/types/props/userProp"
+import { useState, useRef, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { X, Upload, Image as ImageIcon } from 'lucide-react'
+import { ProfileMerchantImage } from '@/types/props/userProp'
 
 interface ProfileLogoUploadProps {
   images: ProfileMerchantImage[] | ProfileMerchantImage | null | undefined
@@ -39,7 +39,7 @@ export function ProfileLogoUpload({
       const file = files[0]
 
       // Validate file type
-      if (!file.type.startsWith("image/")) {
+      if (!file.type.startsWith('image/')) {
         alert(`${file.name} is not an image file`)
         return
       }
@@ -52,7 +52,7 @@ export function ProfileLogoUpload({
 
       // Clean up existing blob URLs to prevent memory leaks
       imgList.forEach((image) => {
-        if (image.url?.startsWith?.("blob:")) {
+        if (image.url?.startsWith?.('blob:')) {
           URL.revokeObjectURL(image.url)
         }
       })
@@ -68,19 +68,19 @@ export function ProfileLogoUpload({
       // โปรไฟล์มีรูปเดียว → แทนที่ทันที
       onImagesChange([imageData])
     } catch (error) {
-      console.error("Error processing file:", error)
-      alert("Error processing file")
+      console.error('Error processing file:', error)
+      alert('Error processing file')
     } finally {
       setUploading(false)
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = ''
       }
     }
   }
 
   const removeImage = () => {
     // Clean up blob URL ถ้ามี
-    if (imgList.length > 0 && imgList[0].url?.startsWith?.("blob:")) {
+    if (imgList.length > 0 && imgList[0].url?.startsWith?.('blob:')) {
       URL.revokeObjectURL(imgList[0].url)
     }
 
@@ -102,7 +102,7 @@ export function ProfileLogoUpload({
           disabled={uploading}
         >
           <Upload className="h-4 w-4 mr-2" />
-          {hasImage ? "Change Logo" : uploading ? "Uploading..." : "Add Logo"}
+          {hasImage ? 'Change Logo' : uploading ? 'Uploading...' : 'Add Logo'}
         </Button>
       </div>
 
@@ -132,7 +132,7 @@ export function ProfileLogoUpload({
           <div className="aspect-square relative max-w-xs mx-auto">
             <img
               src={imgList[0].url}
-              alt={imgList[0].fileName || "Profile logo"}
+              alt={imgList[0].fileName || 'Profile logo'}
               className="w-full h-full object-cover"
             />
 
@@ -168,9 +168,9 @@ export function ProfileLogoUpload({
               {imgList[0].fileName}
             </p>
             <p className="text-xs text-green-600">
-              {imgList[0].url?.startsWith?.("blob:")
-                ? "New image - will upload on save"
-                : "Current logo"}
+              {imgList[0].url?.startsWith?.('blob:')
+                ? 'New image - will upload on save'
+                : 'Current logo'}
             </p>
           </div>
         </Card>

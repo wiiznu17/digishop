@@ -4,41 +4,48 @@ import {
   Optional,
   Sequelize,
   Association,
-  HasManyGetAssociationsMixin,
-} from 'sequelize';
-import { UserRole } from '../types/enum';
+  HasManyGetAssociationsMixin
+} from 'sequelize'
+import { UserRole } from '../types/enum'
 
 export interface UserAttributes {
-  id: number;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  role: UserRole;
-  createdAt?: Date; // managed by sequelize
-  updatedAt?: Date; // mapped to edit_at in DB
+  id: number
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  middleName: string
+  role: UserRole
+  createdAt?: Date // managed by sequelize
+  updatedAt?: Date // mapped to edit_at in DB
 }
 
-export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'middleName' |'createdAt' | 'updatedAt'> {}
+export interface UserCreationAttributes
+  extends Optional<
+    UserAttributes,
+    'id' | 'middleName' | 'createdAt' | 'updatedAt'
+  > {}
 
-export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public id!: number;
-  public email!: string;
-  public password!: string;
-  public firstName!: string;
-  public lastName!: string;
-  public middleName!: string;
-  public role!: UserRole;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date; // column edit_at
+export class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
+  public id!: number
+  public email!: string
+  public password!: string
+  public firstName!: string
+  public lastName!: string
+  public middleName!: string
+  public role!: UserRole
+  public readonly createdAt!: Date
+  public readonly updatedAt!: Date // column edit_at
 
   // example mixins
-  public getAddresses!: HasManyGetAssociationsMixin<any>;
+  public getAddresses!: HasManyGetAssociationsMixin<any>
 
   public static associations: {
-    addresses: Association<User, any>;
-  };
+    addresses: Association<User, any>
+  }
 
   static initModel(sequelize: Sequelize): typeof User {
     User.init(
@@ -46,59 +53,59 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
         id: {
           type: DataTypes.INTEGER.UNSIGNED,
           autoIncrement: true,
-          primaryKey: true,
+          primaryKey: true
         },
         email: {
           type: DataTypes.STRING(191),
           allowNull: false,
-          unique: true,
+          unique: true
         },
         password: {
           type: DataTypes.STRING(191),
-          allowNull: false,
+          allowNull: false
         },
         firstName: {
           type: DataTypes.STRING(191),
           allowNull: false,
-          field: 'first_name',
+          field: 'first_name'
         },
         lastName: {
           type: DataTypes.STRING(191),
           allowNull: false,
-          field: 'last_name',
+          field: 'last_name'
         },
         middleName: {
           type: DataTypes.STRING(191),
           allowNull: true,
-          field: 'middle_name',
+          field: 'middle_name'
         },
         role: {
           type: DataTypes.ENUM(...Object.values(UserRole)),
           allowNull: false,
-          defaultValue: UserRole.CUSTOMER,
+          defaultValue: UserRole.CUSTOMER
         },
         createdAt: {
           type: DataTypes.DATE,
           allowNull: false,
           field: 'created_at',
-          defaultValue: DataTypes.NOW,
+          defaultValue: DataTypes.NOW
         },
         updatedAt: {
           type: DataTypes.DATE,
           allowNull: false,
           // ER used edit_at
           field: 'updated_at',
-          defaultValue: DataTypes.NOW,
-        },
+          defaultValue: DataTypes.NOW
+        }
       },
       {
         sequelize,
         tableName: 'USERS',
         modelName: 'User',
-        paranoid: true,            // เปิด soft delete
-        deletedAt: 'deleted_at',   // ชื่อคอลัมน์ soft delete
+        paranoid: true, // เปิด soft delete
+        deletedAt: 'deleted_at' // ชื่อคอลัมน์ soft delete
       }
-    );
-    return User;
+    )
+    return User
   }
 }

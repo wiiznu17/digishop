@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import React, { useEffect, useState, useTransition } from "react"
-import { Input } from "@/components/ui/input"
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import { fetchAdminStoreNameSuggestRequester } from "@/utils/requesters/orderRequester"
-import type { AdminStoreNameSuggestItem } from "@/types/commerce/orders"
+import React, { useEffect, useState, useTransition } from 'react'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+import { fetchAdminStoreNameSuggestRequester } from '@/utils/requesters/orderRequester'
+import type { AdminStoreNameSuggestItem } from '@/types/commerce/orders'
 
 function useDebounce<T>(val: T, ms = 250) {
   const [v, setV] = useState(val)
@@ -18,7 +18,7 @@ function useDebounce<T>(val: T, ms = 250) {
 export function StoreNameSearchBox({
   value,
   onChange,
-  placeholder = "Store name eg. My Store"
+  placeholder = 'Store name eg. My Store'
 }: {
   value: string
   onChange: (v: string) => void
@@ -96,7 +96,7 @@ export function StoreNameSearchBox({
               >
                 <div className="text-sm font-medium">{s.currentStoreName}</div>
                 <div className="text-xs text-muted-foreground">
-                  {s.storeNameSnapshot ?? "-"} · {s.orderCount ?? 0} orders
+                  {s.storeNameSnapshot ?? '-'} · {s.orderCount ?? 0} orders
                 </div>
               </button>
             ))

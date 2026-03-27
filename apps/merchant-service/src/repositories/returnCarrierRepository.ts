@@ -5,66 +5,73 @@ import {
   ReturnShipment,
   ReturnShipmentEvent,
   ReturnShipmentStatus,
-  sequelize,
-} from "@digishop/db";
-import { CreationAttributes, Transaction } from "sequelize";
+  sequelize
+} from '@digishop/db'
+import { CreationAttributes, Transaction } from 'sequelize'
 
 export class ReturnCarrierRepository {
   async withTransaction<T>(handler: (transaction: Transaction) => Promise<T>) {
-    return sequelize.transaction(handler);
+    return sequelize.transaction(handler)
   }
 
   async createReturnShipmentEvent(
     payload: CreationAttributes<ReturnShipmentEvent>,
-    transaction: Transaction,
+    transaction: Transaction
   ) {
-    return ReturnShipmentEvent.create(payload, { transaction });
+    return ReturnShipmentEvent.create(payload, { transaction })
   }
 
   async updateReturnShipment(
     returnShipment: ReturnShipment,
     patch: Partial<CreationAttributes<ReturnShipment>>,
-    transaction: Transaction,
+    transaction: Transaction
   ) {
-    return returnShipment.update(patch, { transaction });
+    return returnShipment.update(patch, { transaction })
   }
 
-  async updateOrderStatus(order: Order, status: OrderStatus, transaction: Transaction) {
-    return order.update({ status }, { transaction });
+  async updateOrderStatus(
+    order: Order,
+    status: OrderStatus,
+    transaction: Transaction
+  ) {
+    return order.update({ status }, { transaction })
   }
 
   async createOrderStatusHistory(
     payload: CreationAttributes<OrderStatusHistory>,
-    transaction: Transaction,
+    transaction: Transaction
   ) {
-    return OrderStatusHistory.create(payload, { transaction });
+    return OrderStatusHistory.create(payload, { transaction })
   }
 
   async findReturnShipmentByPk(returnShipmentId: number) {
-    return ReturnShipment.findByPk(returnShipmentId);
+    return ReturnShipment.findByPk(returnShipmentId)
   }
 
   async findOrderByPk(orderId: number, transaction?: Transaction) {
-    return Order.findByPk(orderId, { transaction });
+    return Order.findByPk(orderId, { transaction })
   }
 
   async findLastReturnShipmentEvent(returnShipmentId: number) {
     return ReturnShipmentEvent.findOne({
       where: { returnShipmentId },
-      order: [["occurredAt", "DESC"], ["id", "DESC"]],
-    });
+      order: [
+        ['occurredAt', 'DESC'],
+        ['id', 'DESC']
+      ]
+    })
   }
 
   async countReturnShipmentEventsByStatus(
     returnShipmentId: number,
     status: ReturnShipmentStatus,
-    transaction?: Transaction,
+    transaction?: Transaction
   ) {
     return ReturnShipmentEvent.count({
       where: { returnShipmentId, toStatus: status },
-      transaction,
-    });
+      transaction
+    })
   }
 }
 
-export const returnCarrierRepository = new ReturnCarrierRepository();
+export const returnCarrierRepository = new ReturnCarrierRepository()

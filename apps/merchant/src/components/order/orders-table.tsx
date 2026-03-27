@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Card,
@@ -6,8 +6,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -15,12 +15,12 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Pagination } from "@/components/order/pagination"
-import { Eye } from "lucide-react"
-import { Order, OrderStatus } from "@/types/props/orderProp"
-import { useRouter } from "next/navigation"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Pagination } from '@/components/order/pagination'
+import { Eye } from 'lucide-react'
+import { Order, OrderStatus } from '@/types/props/orderProp'
+import { useRouter } from 'next/navigation'
 interface OrdersTableProps {
   // data
   orders: Order[]
@@ -55,23 +55,23 @@ export function OrdersTable({
   const router = useRouter()
   // formatters
   const fmtTHB = (n: number) =>
-    new Intl.NumberFormat("th-TH", {
-      style: "currency",
-      currency: "THB",
+    new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
       maximumFractionDigits: 0
     }).format(n)
 
   const fmtDate = (iso: string) =>
-    new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
+    new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     }).format(new Date(iso))
 
   const fmtTime = (iso: string) =>
-    new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+    new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: false
     }).format(new Date(iso))
 
@@ -91,7 +91,7 @@ export function OrdersTable({
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>
-              Showing {orders.length.toLocaleString()} of{" "}
+              Showing {orders.length.toLocaleString()} of{' '}
               {total.toLocaleString()} results
             </span>
           </div>

@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { Check, ChevronsUpDown, X } from "lucide-react"
-import { cn } from "@/utils/tailwindUtils"
-import { Button } from "@/components/ui/button"
+import * as React from 'react'
+import { Check, ChevronsUpDown, X } from 'lucide-react'
+import { cn } from '@/utils/tailwindUtils'
+import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
-} from "@/components/ui/popover"
+} from '@/components/ui/popover'
 import {
   Command,
   CommandEmpty,
@@ -16,8 +16,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList
-} from "@/components/ui/command"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/command'
+import { Badge } from '@/components/ui/badge'
 
 type Ctx = {
   open: boolean
@@ -29,7 +29,7 @@ const MultiSelectCtx = React.createContext<Ctx | null>(null)
 
 function useMS() {
   const ctx = React.useContext(MultiSelectCtx)
-  if (!ctx) throw new Error("MultiSelect.* must be used inside <MultiSelect>")
+  if (!ctx) throw new Error('MultiSelect.* must be used inside <MultiSelect>')
   return ctx
 }
 
@@ -50,7 +50,7 @@ export function MultiSelect({
     <MultiSelectCtx.Provider
       value={{ open, setOpen, value, setValue: onValueChange }}
     >
-      <div className={cn("w-full", className)}>
+      <div className={cn('w-full', className)}>
         <Popover open={open} onOpenChange={setOpen}>
           {children}
         </Popover>
@@ -71,7 +71,7 @@ export function MultiSelectTrigger({
         variant="outline"
         role="combobox"
         aria-expanded={open}
-        className={cn("w-full justify-between items-center", className)}
+        className={cn('w-full justify-between items-center', className)}
         onClick={() => setOpen(!open)}
       >
         {/* โซนค่า: ชิดซ้าย + เลื่อนแนวนอน + เห็นสกอร์บาร์ */}
@@ -91,7 +91,7 @@ export function MultiSelectValue({ placeholder }: { placeholder?: string }) {
   if (!value?.length) {
     return (
       <span className="text-muted-foreground truncate">
-        {placeholder ?? "Select…"}
+        {placeholder ?? 'Select…'}
       </span>
     )
   }
@@ -119,7 +119,7 @@ export function MultiSelectValue({ placeholder }: { placeholder?: string }) {
               remove(v)
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
+              if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
                 remove(v)
               }
@@ -135,8 +135,8 @@ export function MultiSelectValue({ placeholder }: { placeholder?: string }) {
 
 export function MultiSelectContent({
   children,
-  searchPlaceholder = "Search…",
-  emptyText = "No results"
+  searchPlaceholder = 'Search…',
+  emptyText = 'No results'
 }: React.PropsWithChildren<{
   searchPlaceholder?: string
   emptyText?: string
@@ -150,12 +150,12 @@ export function MultiSelectContent({
       <Command shouldFilter defaultValue="">
         <CommandInput placeholder={searchPlaceholder} />
         <CommandList className="max-h-56 overflow-y-auto">
-          {" "}
+          {' '}
           {/* scroll ได้ + เห็นแถบ */}
           <CommandEmpty>{emptyText}</CommandEmpty>
           <CommandGroup
             onKeyDown={(e) => {
-              if (e.key === "Escape") setOpen(false)
+              if (e.key === 'Escape') setOpen(false)
             }}
           >
             {children}

@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { GripVertical, Trash2, Plus, Check, X } from "lucide-react"
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { GripVertical, Trash2, Plus, Check, X } from 'lucide-react'
 
 // SKU: สำหรับเชื่อมกับ items ภายนอก (optional)
 type ItemLike = {
@@ -51,13 +51,13 @@ const hashString = (s: string) => {
 }
 const toCode = (s: string, max = 4) => {
   const t = s
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "")
+    .replace(/[^A-Z0-9]+/g, '')
     .slice(0, max)
   if (t) return t
-  return Math.abs(hashString(s)).toString(36).toUpperCase().slice(0, max) || "X"
+  return Math.abs(hashString(s)).toString(36).toUpperCase().slice(0, max) || 'X'
 }
 
 export function VariationEditor({
@@ -69,20 +69,20 @@ export function VariationEditor({
 }: Props) {
   // inline editing state (UI only)
   const [editingVarId, setEditingVarId] = useState<string | null>(null)
-  const [editingVarName, setEditingVarName] = useState<string>("")
+  const [editingVarName, setEditingVarName] = useState<string>('')
 
   const [editingOptKey, setEditingOptKey] = useState<{
     v: string
     o: string
   } | null>(null)
-  const [editingOptValue, setEditingOptValue] = useState<string>("")
+  const [editingOptValue, setEditingOptValue] = useState<string>('')
 
   const [dragging, setDragging] = useState<{ v: string; o: string } | null>(
     null
   )
 
   // State สำหรับ add variation (input ใน UI)
-  const [newVarName, setNewVarName] = useState<string>("")
+  const [newVarName, setNewVarName] = useState<string>('')
 
   // State สำหรับ add option per variation (input ใน UI)
   const [newOptValues, setNewOptValues] = useState<Record<string, string>>({})
@@ -102,7 +102,7 @@ export function VariationEditor({
     const name = newVarName.trim()
     if (!name) return
     setVars((prev) => [...prev, { clientId: uid(), name, options: [] }])
-    setNewVarName("") // Clear input หลัง add
+    setNewVarName('') // Clear input หลัง add
   }
 
   const beginEditVar = (vId: string, current: string) => {
@@ -111,7 +111,7 @@ export function VariationEditor({
   }
   const cancelEditVar = () => {
     setEditingVarId(null)
-    setEditingVarName("")
+    setEditingVarName('')
   }
   const saveEditVar = () => {
     const vId = editingVarId
@@ -134,7 +134,7 @@ export function VariationEditor({
 
   // ----- Option ops -----
   const addOption = (vId: string) => {
-    const val = (newOptValues[vId] ?? "").trim()
+    const val = (newOptValues[vId] ?? '').trim()
     if (!val) return
     setVars((prev) =>
       prev.map((v) =>
@@ -153,7 +153,7 @@ export function VariationEditor({
           : v
       )
     )
-    setNewOptValues((prev) => ({ ...prev, [vId]: "" })) // Clear input หลัง add
+    setNewOptValues((prev) => ({ ...prev, [vId]: '' })) // Clear input หลัง add
   }
 
   const beginEditOpt = (vId: string, optKey: string, current: string) => {
@@ -162,7 +162,7 @@ export function VariationEditor({
   }
   const cancelEditOpt = () => {
     setEditingOptKey(null)
-    setEditingOptValue("")
+    setEditingOptValue('')
   }
   const saveEditOpt = () => {
     const k = editingOptKey
@@ -201,7 +201,7 @@ export function VariationEditor({
   // ----- Drag reorder (per-variation) -----
   const onDragStart = (vId: string, oKey: string) => (e: React.DragEvent) => {
     setDragging({ v: vId, o: oKey })
-    e.dataTransfer.effectAllowed = "move"
+    e.dataTransfer.effectAllowed = 'move'
   }
 
   const onDragOverRow = (vId: string) => (e: React.DragEvent) => {
@@ -248,18 +248,18 @@ export function VariationEditor({
     const optionLabelById = buildOptionLabelMap()
     const seen = new Set(
       items
-        .map((r) => (r.sku || "").trim())
+        .map((r) => (r.sku || '').trim())
         .filter(Boolean)
         .map((s) => s.toUpperCase())
     )
-    const prefix = toCode((skuPrefix ?? "").trim(), 6) || "PRD"
+    const prefix = toCode((skuPrefix ?? '').trim(), 6) || 'PRD'
 
     const next = items.map((r) => {
-      if ((r.sku || "").trim()) return r
+      if ((r.sku || '').trim()) return r
       const optCodes = r.optionCids.map((id) =>
-        toCode(optionLabelById.get(id) ?? "OPT", 3)
+        toCode(optionLabelById.get(id) ?? 'OPT', 3)
       )
-      let base = [prefix, ...optCodes].join("-").replace(/-+/g, "-")
+      let base = [prefix, ...optCodes].join('-').replace(/-+/g, '-')
       base = base.slice(0, 28)
       let candidate = base
       let i = 1
@@ -298,7 +298,7 @@ export function VariationEditor({
           value={newVarName}
           onChange={(e) => setNewVarName(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") addVariation()
+            if (e.key === 'Enter') addVariation()
           }}
         />
         <Button size="sm" onClick={addVariation} disabled={!newVarName.trim()}>
@@ -322,8 +322,8 @@ export function VariationEditor({
                     value={editingVarName}
                     onChange={(e) => setEditingVarName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEditVar()
-                      if (e.key === "Escape") cancelEditVar()
+                      if (e.key === 'Enter') saveEditVar()
+                      if (e.key === 'Escape') cancelEditVar()
                     }}
                   />
                   <Button size="sm" onClick={saveEditVar}>
@@ -369,7 +369,7 @@ export function VariationEditor({
                       disabled={value.length <= 1} // ← กันลบชุดสุดท้าย
                       title={
                         value.length <= 1
-                          ? "Must have at least 1 variation"
+                          ? 'Must have at least 1 variation'
                           : undefined
                       }
                     >
@@ -407,8 +407,8 @@ export function VariationEditor({
                             value={editingOptValue}
                             onChange={(e) => setEditingOptValue(e.target.value)}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") saveEditOpt()
-                              if (e.key === "Escape") cancelEditOpt()
+                              if (e.key === 'Enter') saveEditOpt()
+                              if (e.key === 'Escape') cancelEditOpt()
                             }}
                           />
                           <Button size="sm" onClick={saveEditOpt}>
@@ -467,7 +467,7 @@ export function VariationEditor({
                               disabled={v.options.length <= 1} // ← กันลบ option สุดท้ายในชุด
                               title={
                                 v.options.length <= 1
-                                  ? "Each variation must have at least 1 option"
+                                  ? 'Each variation must have at least 1 option'
                                   : undefined
                               }
                             >
@@ -484,7 +484,7 @@ export function VariationEditor({
               <div className="flex items-center gap-2">
                 <Input
                   placeholder="New option value"
-                  value={newOptValues[v.clientId] ?? ""}
+                  value={newOptValues[v.clientId] ?? ''}
                   onChange={(e) =>
                     setNewOptValues((prev) => ({
                       ...prev,
@@ -492,14 +492,14 @@ export function VariationEditor({
                     }))
                   }
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") addOption(v.clientId)
+                    if (e.key === 'Enter') addOption(v.clientId)
                   }}
                 />
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => addOption(v.clientId)}
-                  disabled={!(newOptValues[v.clientId] ?? "").trim()}
+                  disabled={!(newOptValues[v.clientId] ?? '').trim()}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Option

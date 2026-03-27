@@ -1,113 +1,108 @@
-"use client";
-import { useEffect, useState } from "react";
-import { use } from "react";
-import { searchProduct } from "@/utils/requestUtils/requestProduct";
-import NotFound from "@/components/notFound";
-import { useRouter } from "next/navigation";
-import { Card } from "@/components/productCard";
+'use client'
+import { useEffect, useState } from 'react'
+import { use } from 'react'
+import { searchProduct } from '@/utils/requestUtils/requestProduct'
+import NotFound from '@/components/notFound'
+import { useRouter } from 'next/navigation'
+import { Card } from '@/components/productCard'
 import {
   Search,
   X,
   ChevronRight,
   ChevronLeft,
   ArrowDown,
-  ArrowUp,
- 
-} from "lucide-react";
-import {
-  Product,
-  ProductItem,
-  Store,
-} from "@/types/props/productProp";
+  ArrowUp
+} from 'lucide-react'
+import { Product, ProductItem, Store } from '@/types/props/productProp'
 
 export default function SearchResult({
-  searchParams,
+  searchParams
 }: {
-  searchParams: Promise<{ [key: string]: string }>;
+  searchParams: Promise<{ [key: string]: string }>
 }) {
-  const [rawProduct, setRawProduct] = useState<Product[]>();
-  const [products, setProduct] = useState<Product[]>();
-  const [stores, setStore] = useState<Store[]>();
-  const [count, setCount] = useState<number>(0);
-  const [page, setPage] = useState<number>(1);
-  const [filter, setFilter] = useState("ASC");
-  const { query } = use(searchParams);
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState(query);
-  const [searchResult, setSearchResult] = useState<string[] | undefined>();
-  const [hover, setHover] = useState<boolean>(false);
-  const [loading, setLoading] = useState(false);
+  const [rawProduct, setRawProduct] = useState<Product[]>()
+  const [products, setProduct] = useState<Product[]>()
+  const [stores, setStore] = useState<Store[]>()
+  const [count, setCount] = useState<number>(0)
+  const [page, setPage] = useState<number>(1)
+  const [filter, setFilter] = useState('ASC')
+  const { query } = use(searchParams)
+  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState(query)
+  const [searchResult, setSearchResult] = useState<string[] | undefined>()
+  const [hover, setHover] = useState<boolean>(false)
+  const [loading, setLoading] = useState(false)
   const handleSearch = (query = searchQuery) => {
-    setHover(false);
-    setSearchResult(undefined);
-    setSearchQuery(query);
-    if (!query.trim()) return;
-    router.push(`/search?query=${query}`);
-  };
+    setHover(false)
+    setSearchResult(undefined)
+    setSearchQuery(query)
+    if (!query.trim()) return
+    router.push(`/search?query=${query}`)
+  }
   useEffect(() => {
-    const abort = new AbortController();
-    const query = searchQuery.trim();
+    const abort = new AbortController()
+    const query = searchQuery.trim()
     if (query.length > 0 && loading) {
       const timeOutId = setTimeout(async () => {
         const res = (await searchProduct(query)) as {
-          product: Product[] | null;
-          store: Store[] | null;
-        };
-        const productName = res.product?.map((product) => product.name);
-        const storeName = res.store?.map((store) => store.storeName);
-        const resultSearch = [...(productName ?? []), ...(storeName ?? [])];
-        if (resultSearch.length > 0) {
-          setSearchResult(resultSearch);
-        } else {
-          setSearchResult(undefined);
+          product: Product[] | null
+          store: Store[] | null
         }
-        setLoading(false);
-      }, 500);
+        const productName = res.product?.map((product) => product.name)
+        const storeName = res.store?.map((store) => store.storeName)
+        const resultSearch = [...(productName ?? []), ...(storeName ?? [])]
+        if (resultSearch.length > 0) {
+          setSearchResult(resultSearch)
+        } else {
+          setSearchResult(undefined)
+        }
+        setLoading(false)
+      }, 500)
       return () => {
-        clearTimeout(timeOutId);
-        abort.abort();
-      };
+        clearTimeout(timeOutId)
+        abort.abort()
+      }
     }
-  }, [searchQuery, loading]);
+  }, [searchQuery, loading])
   const clearSearch = () => {
-    setSearchQuery("");
-  };
+    setSearchQuery('')
+  }
   const minPrice = (data: ProductItem[]) => {
-    const price = data.map((item) => item.priceMinor);
-    const minPrice = Math.min(...price);
-    return minPrice;
-  };
+    const price = data.map((item) => item.priceMinor)
+    const minPrice = Math.min(...price)
+    return minPrice
+  }
   useEffect(() => {
     const fetchProduct = async () => {
       const res = (await searchProduct(query, page)) as {
-        product: Product[];
-        productCount: number;
-        store: Store[];
-      };
-      setRawProduct(res.product);
-      setStore(res.store);
-      setCount(res.productCount);
-    };
-    fetchProduct();
-  }, [query, page]);
+        product: Product[]
+        productCount: number
+        store: Store[]
+      }
+      setRawProduct(res.product)
+      setStore(res.store)
+      setCount(res.productCount)
+    }
+    fetchProduct()
+  }, [query, page])
   useEffect(() => {
     if (stores?.length && !rawProduct?.length) {
-      setCount(1);
+      setCount(1)
     }
-  }, [stores, rawProduct]);
+  }, [stores, rawProduct])
   useEffect(() => {
-    if (!rawProduct) return;
-    if (filter == "ASC") {
+    if (!rawProduct) return
+    if (filter == 'ASC') {
       const sorted = rawProduct?.sort(
         (a, b) => minPrice(a.items) - minPrice(b.items)
-      );
-      setProduct(sorted);
-    } else if (filter == "DESC") {
+      )
+      setProduct(sorted)
+    } else if (filter == 'DESC') {
       setProduct((rawProduct) =>
         rawProduct?.sort((a, b) => minPrice(b.items) - minPrice(a.items))
-      );
+      )
     }
-  }, [filter, products, rawProduct]);
+  }, [filter, products, rawProduct])
   return (
     <div className=" pt-3">
       <div className="flex justify-center mb-3 ">
@@ -117,11 +112,11 @@ export default function SearchResult({
             value={searchQuery}
             onFocus={() => setHover(true)}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setLoading(true);
+              setSearchQuery(e.target.value)
+              setLoading(true)
             }}
             placeholder="Search for products, brands, or categories..."
-            className={`w-full px-6 py-4 text-xl border-2 z-50 border-gray-200 ${searchResult && searchQuery ? "rounded-t-4xl" : "rounded-full"} focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
+            className={`w-full px-6 py-4 text-xl border-2 z-50 border-gray-200 ${searchResult && searchQuery ? 'rounded-t-4xl' : 'rounded-full'} focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
           />
           {searchQuery && hover && (
             <div className="absolute right-0 z-100 w-full">
@@ -129,7 +124,7 @@ export default function SearchResult({
                 <button
                   key={index}
                   onClick={() => handleSearch(result)}
-                  className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 text-xl border-gray-200 hover:bg-gray-300 ${index === searchResult.length - 1 ? "rounded-b-4xl" : ""}`}
+                  className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 text-xl border-gray-200 hover:bg-gray-300 ${index === searchResult.length - 1 ? 'rounded-b-4xl' : ''}`}
                 >
                   {result}
                 </button>
@@ -163,17 +158,16 @@ export default function SearchResult({
             {(products?.length ?? 0) > 0 && (
               <div className="flex justify-end items-center mb-2">
                 <div className="flex mx-3">
-                 
-                  {filter == "ASC" ? (
+                  {filter == 'ASC' ? (
                     <button
-                      onClick={() => setFilter("DESC")}
+                      onClick={() => setFilter('DESC')}
                       className="bg-gray-200 p-1 hover:cursor-pointer"
                     >
                       <ArrowUp />
                     </button>
                   ) : (
                     <button
-                      onClick={() => setFilter("ASC")}
+                      onClick={() => setFilter('ASC')}
                       className="bg-gray-200 p-1 hover:cursor-pointer"
                     >
                       <ArrowDown />
@@ -197,11 +191,7 @@ export default function SearchResult({
                       <button
                         key={index}
                         className="cursor-pointer"
-                        onClick={() =>
-                          router.push(
-                            `/store/${store.uuid}`
-                          )
-                        }
+                        onClick={() => router.push(`/store/${store.uuid}`)}
                       >
                         <div className="flex p-6 rounded-2xl bg-white border ">
                           <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
@@ -209,7 +199,9 @@ export default function SearchResult({
                             <h1 className="text-2xl font-medium">
                               {store.storeName}
                             </h1>
-                            <h6 className="mt-4 text-lg">{store.description}</h6>
+                            <h6 className="mt-4 text-lg">
+                              {store.description}
+                            </h6>
                           </div>
                         </div>
                       </button>
@@ -235,7 +227,7 @@ export default function SearchResult({
               <span>Page</span>
               <button
                 onClick={() => setPage(page + 1)}
-                className={`${page == 1 ? "opacity-0" : "opacity-100"}`}
+                className={`${page == 1 ? 'opacity-0' : 'opacity-100'}`}
               >
                 <ChevronLeft />
               </button>
@@ -244,7 +236,7 @@ export default function SearchResult({
               </div>
               <button
                 onClick={() => setPage(page + 1)}
-                className={`${page == Math.ceil(count / 10) ? "opacity-0" : "opacity-100"}`}
+                className={`${page == Math.ceil(count / 10) ? 'opacity-0' : 'opacity-100'}`}
               >
                 <ChevronRight />
               </button>
@@ -253,5 +245,5 @@ export default function SearchResult({
         </div>
       )}
     </div>
-  );
+  )
 }

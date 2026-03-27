@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from '@/components/ui/card'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -17,10 +17,10 @@ import {
   CartesianGrid,
   Tooltip,
   Line
-} from "recharts"
-import { fmtCompact, fmtDateShort, fmtTHB, toNum } from "../format"
-import type { DashboardSeriesPoint } from "@/types/admin/dashboard"
-import { fetchDashboardSeries } from "@/utils/requesters/dashboardRequester"
+} from 'recharts'
+import { fmtCompact, fmtDateShort, fmtTHB, toNum } from '../format'
+import type { DashboardSeriesPoint } from '@/types/admin/dashboard'
+import { fetchDashboardSeries } from '@/utils/requesters/dashboardRequester'
 
 export default function BlockGmvOverTime({
   from,
@@ -75,7 +75,7 @@ export default function BlockGmvOverTime({
       <CardHeader>
         <CardTitle>GMV over time</CardTitle>
         <CardDescription>
-          {loading ? "Loading…" : "ยอดขายรวมตามวัน"}
+          {loading ? 'Loading…' : 'ยอดขายรวมตามวัน'}
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[360px]">
@@ -96,9 +96,9 @@ export default function BlockGmvOverTime({
             <YAxis tick={{ fontSize: 12 }} tickFormatter={fmtCompact} />
             <Tooltip
               formatter={(v: unknown, name: unknown) => {
-                const key = String(name ?? "")
-                if (key === "gmvMinor" || key === "gmvMA")
-                  return [fmtTHB(v), key === "gmvMA" ? "GMV (MA)" : "GMV"]
+                const key = String(name ?? '')
+                if (key === 'gmvMinor' || key === 'gmvMA')
+                  return [fmtTHB(v), key === 'gmvMA' ? 'GMV (MA)' : 'GMV']
                 return [String(toNum(v)), key]
               }}
               labelFormatter={(label: unknown) => fmtDateShort(label)}

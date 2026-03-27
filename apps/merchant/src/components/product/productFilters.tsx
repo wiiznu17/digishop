@@ -1,35 +1,35 @@
 // apps/merchant/src/components/product/productFilters.tsx
-"use client"
+'use client'
 
-import { useEffect, useMemo, useRef, useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover"
-import { Search, RotateCcw } from "lucide-react"
+} from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover'
+import { Search, RotateCcw } from 'lucide-react'
 // import CATEGORYMASTER from "@/constants/master/categoryMaster.json"
-import PRODUCT_STATUS_MASTER from "@/constants/master/productStatusMaster.json"
-import PRODUCT_REQ_STATUS_MASTER from "@/constants/master/productReqStatusMaster.json"
+import PRODUCT_STATUS_MASTER from '@/constants/master/productStatusMaster.json'
+import PRODUCT_REQ_STATUS_MASTER from '@/constants/master/productReqStatusMaster.json'
 import type {
   CategoryDto,
   SortBy,
   SortDir,
   SuggestResponse
-} from "@/utils/requestUtils/requestProductUtils"
-import { fetchProductSuggestionsRequester } from "@/utils/requestUtils/requestProductUtils"
+} from '@/utils/requestUtils/requestProductUtils'
+import { fetchProductSuggestionsRequester } from '@/utils/requestUtils/requestProductUtils'
 
 export type ProductFilterState = {
   q: string
   categoryUuid?: string
-  status?: "ACTIVE" | "INACTIVE"
-  reqStatus?: "PENDING" | "APPROVED" | "REJECT" // << NEW
-  stock: "in" | "out" | "all"
+  status?: 'ACTIVE' | 'INACTIVE'
+  reqStatus?: 'PENDING' | 'APPROVED' | 'REJECT' // << NEW
+  stock: 'in' | 'out' | 'all'
   sortBy: SortBy
   sortDir: SortDir
 }
@@ -42,15 +42,15 @@ type Props = {
   categories: CategoryDto[]
 }
 
-const ALL_VALUE = "__ALL__"
+const ALL_VALUE = '__ALL__'
 const DEFAULT_FILTERS: ProductFilterState = {
-  q: "",
+  q: '',
   categoryUuid: undefined,
   status: undefined,
   reqStatus: undefined,
-  stock: "all",
-  sortBy: "createdAt",
-  sortDir: "desc"
+  stock: 'all',
+  sortBy: 'createdAt',
+  sortDir: 'desc'
 }
 
 // ← ตั้งดีบาวซ์เป็น 2 วินาทีตามที่ต้องการ
@@ -66,10 +66,10 @@ export function ProductFilters({
   const v = value
 
   // ----- คุมอินพุตด้วย local state เพื่อลด re-render ทั้งหน้า -----
-  const [localQ, setLocalQ] = useState<string>(v.q ?? "")
+  const [localQ, setLocalQ] = useState<string>(v.q ?? '')
   useEffect(() => {
     // ถ้า parent เปลี่ยน q (เช่นจาก URL) ค่อย sync ลงมา
-    setLocalQ(v.q ?? "")
+    setLocalQ(v.q ?? '')
   }, [v.q])
 
   // const categories = useMemo(
@@ -156,7 +156,7 @@ export function ProductFilters({
                   setTimeout(() => setOpen(false), 150)
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") applyNow()
+                  if (e.key === 'Enter') applyNow()
                 }}
                 autoComplete="off"
               />
@@ -301,7 +301,7 @@ export function ProductFilters({
             onValueChange={(val) =>
               onChange({
                 status:
-                  val === ALL_VALUE ? undefined : (val as "ACTIVE" | "INACTIVE")
+                  val === ALL_VALUE ? undefined : (val as 'ACTIVE' | 'INACTIVE')
               })
             }
           >
@@ -329,7 +329,7 @@ export function ProductFilters({
                 reqStatus:
                   val === ALL_VALUE
                     ? undefined
-                    : (val as "PENDING" | "APPROVED" | "REJECT")
+                    : (val as 'PENDING' | 'APPROVED' | 'REJECT')
               })
             }
           >
@@ -352,7 +352,7 @@ export function ProductFilters({
           <label className="block text-sm mb-1">Stock</label>
           <Select
             value={v.stock}
-            onValueChange={(val: "in" | "out" | "all") =>
+            onValueChange={(val: 'in' | 'out' | 'all') =>
               onChange({ stock: val })
             }
           >

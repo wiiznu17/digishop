@@ -1,28 +1,28 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { DashboardHeader } from '@/components/dashboard-header'
 import {
   fetchAdminProductDetailRequester,
   adminModerateProductRequester
-} from "@/utils/requesters/productRequester"
+} from '@/utils/requesters/productRequester'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+} from '@/components/ui/dialog'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   AdminProductDetail,
   AdminProductImage,
@@ -30,24 +30,24 @@ import {
   AdminProductItemConfiguration,
   AdminVariation,
   AdminVariationOption
-} from "@/types/admin/catalog"
-import AuthGuard from "@/components/AuthGuard"
+} from '@/types/admin/catalog'
+import AuthGuard from '@/components/AuthGuard'
 
 const fmtTHB = (minor?: number | null) =>
   minor == null
-    ? "-"
-    : (minor / 100).toLocaleString("th-TH", {
-        style: "currency",
-        currency: "THB"
+    ? '-'
+    : (minor / 100).toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB'
       })
 
 const formatDate = (v: unknown) => {
   if (v instanceof Date) return v.toLocaleString()
-  if (typeof v === "string" || typeof v === "number") {
+  if (typeof v === 'string' || typeof v === 'number') {
     const d = new Date(v)
-    return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString()
+    return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString()
   }
-  return "-"
+  return '-'
 }
 
 function AdminProductDetailPage() {
@@ -102,7 +102,7 @@ function AdminProductDetailPage() {
     if (items.length === 0) return null
     let min = Number.POSITIVE_INFINITY
     for (const it of items) {
-      if (typeof it.priceMinor === "number") min = Math.min(min, it.priceMinor)
+      if (typeof it.priceMinor === 'number') min = Math.min(min, it.priceMinor)
     }
     return Number.isFinite(min) ? min : null
   }, [data])
@@ -110,15 +110,15 @@ function AdminProductDetailPage() {
   // Moderate (PENDING -> APPROVED|REJECT)
   const onApprove = async () => {
     const ok = await adminModerateProductRequester(uuid, {
-      reqStatus: "APPROVED"
+      reqStatus: 'APPROVED'
     })
     if (ok) await load()
   }
   const onReject = async () => {
-    const reason = window.prompt("Reject reason?")
+    const reason = window.prompt('Reject reason?')
     if (!reason) return
     const ok = await adminModerateProductRequester(uuid, {
-      reqStatus: "REJECT",
+      reqStatus: 'REJECT',
       rejectReason: reason
     })
     if (ok) await load()
@@ -162,7 +162,7 @@ function AdminProductDetailPage() {
                         )
                       )
                     }
-                    title={mainImage ? "Click to preview" : undefined}
+                    title={mainImage ? 'Click to preview' : undefined}
                   >
                     {mainImage ? (
                       <img
@@ -183,7 +183,7 @@ function AdminProductDetailPage() {
                       UUID: {data.uuid}
                     </CardDescription> */}
                     <p className="text-sm text-muted-foreground mt-2">
-                      {data.description || "—"}
+                      {data.description || '—'}
                     </p>
 
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -211,9 +211,9 @@ function AdminProductDetailPage() {
                       </div>
                     </div>
 
-                    {data.reqStatus === "REJECT" && !!data.rejectReason && (
+                    {data.reqStatus === 'REJECT' && !!data.rejectReason && (
                       <div className="mt-3 text-sm rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2">
-                        <span className="font-medium">Rejected reason:</span>{" "}
+                        <span className="font-medium">Rejected reason:</span>{' '}
                         <span className="opacity-90">{data.rejectReason}</span>
                       </div>
                     )}
@@ -224,11 +224,11 @@ function AdminProductDetailPage() {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => router.push("/admin/products")}
+                    onClick={() => router.push('/admin/products')}
                   >
                     Back
                   </Button>
-                  {data.reqStatus === "PENDING" && (
+                  {data.reqStatus === 'PENDING' && (
                     <>
                       <Button onClick={onApprove}>Approve</Button>
                       <Button variant="destructive" onClick={onReject}>
@@ -343,7 +343,7 @@ function AdminProductDetailPage() {
                               {o.value}
                             </span>
                           ))
-                        : "—"}
+                        : '—'}
                     </div>
                   </div>
                 ))}
@@ -381,7 +381,7 @@ function AdminProductDetailPage() {
                           const itemLabel =
                             it.sku ||
                             it.productItemImage?.fileName ||
-                            "Item image"
+                            'Item image'
                           return (
                             <tr key={it.uuid} className="border-t">
                               <td className="p-2">
@@ -409,7 +409,7 @@ function AdminProductDetailPage() {
                                   </div>
                                 )}
                               </td>
-                              <td className="p-2">{it.sku || "-"}</td>
+                              <td className="p-2">{it.sku || '-'}</td>
                               <td className="p-2 text-xs text-muted-foreground">
                                 {(it.configurations ?? [])
                                   .map(
@@ -417,7 +417,7 @@ function AdminProductDetailPage() {
                                       c.variationOption?.value
                                   )
                                   .filter(Boolean)
-                                  .join(" · ") || "—"}
+                                  .join(' · ') || '—'}
                               </td>
                               <td className="p-2 text-right">
                                 {fmtTHB(it.priceMinor ?? null)}
@@ -427,7 +427,7 @@ function AdminProductDetailPage() {
                               </td>
                               <td className="p-2 text-center">
                                 <Badge variant="outline">
-                                  {enabled ? "Enabled" : "Disabled"}
+                                  {enabled ? 'Enabled' : 'Disabled'}
                                 </Badge>
                               </td>
                             </tr>
@@ -455,7 +455,7 @@ function AdminProductDetailPage() {
             {previewList[previewIndex] && (
               <img
                 src={previewList[previewIndex].url}
-                alt={previewList[previewIndex].label ?? "preview"}
+                alt={previewList[previewIndex].label ?? 'preview'}
                 className="max-h-[80vh] w-full object-contain"
               />
             )}
@@ -490,8 +490,8 @@ function AdminProductDetailPage() {
 }
 
 function Guard({ children }: { children: React.ReactNode }) {
-  "use client"
-  return <AuthGuard requiredPerms={["PRODUCTS_READ"]}>{children}</AuthGuard>
+  'use client'
+  return <AuthGuard requiredPerms={['PRODUCTS_READ']}>{children}</AuthGuard>
 }
 
 export default function DeatailPage() {

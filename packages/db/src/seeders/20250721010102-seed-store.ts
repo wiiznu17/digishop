@@ -1,10 +1,10 @@
-import { QueryInterface } from 'sequelize';
-import { v4 as uuidv4 } from 'uuid';
-import { StoreStatus } from '../types/enum';
+import { QueryInterface } from 'sequelize'
+import { v4 as uuidv4 } from 'uuid'
+import { StoreStatus } from '../types/enum'
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
-    const now = new Date();
+    const now = new Date()
 
     await queryInterface.bulkInsert('STORES', [
       {
@@ -20,7 +20,7 @@ export default {
         status: StoreStatus.APPROVED,
         created_at: now,
         updated_at: now,
-        deleted_at: null,
+        deleted_at: null
       },
       {
         uuid: uuidv4(),
@@ -35,12 +35,12 @@ export default {
         status: StoreStatus.APPROVED,
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null,
-      },
-    ]);
+        deleted_at: null
+      }
+    ])
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
-    await queryInterface.bulkDelete('STORES', { user_id: [2, 3] });
-  },
-};
+    await queryInterface.bulkDelete('STORES', { user_id: [2, 3] })
+  }
+}

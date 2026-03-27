@@ -1,28 +1,28 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
-import { ModeToggle } from "@/components/mode-toggle"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
-import { createMerchant } from "@/utils/requestUtils/requestAuthUtils"
+} from '@/components/ui/select'
+import { ModeToggle } from '@/components/mode-toggle'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
+import { createMerchant } from '@/utils/requestUtils/requestAuthUtils'
 
 type FormData = {
   storeName: string
@@ -43,23 +43,23 @@ type FormData = {
 
 export default function RegisterPage() {
   const DIGISHOP_URL =
-    process.env.NEXT_PUBLIC_DIGISHOP_URL ?? "http://localhost:3000"
+    process.env.NEXT_PUBLIC_DIGISHOP_URL ?? 'http://localhost:3000'
 
   const [formData, setFormData] = useState<FormData>({
-    storeName: "",
-    ownerName: "",
-    email: "",
-    phone: "",
-    businessType: "",
-    description: "",
-    addressNumber: "",
-    addressBuilding: "",
-    addressSubStreet: "",
-    addressStreet: "",
-    addressSubdistrict: "",
-    addressDistrict: "",
-    addressProvince: "",
-    addressZip: ""
+    storeName: '',
+    ownerName: '',
+    email: '',
+    phone: '',
+    businessType: '',
+    description: '',
+    addressNumber: '',
+    addressBuilding: '',
+    addressSubStreet: '',
+    addressStreet: '',
+    addressSubdistrict: '',
+    addressDistrict: '',
+    addressProvince: '',
+    addressZip: ''
   })
 
   const { logout, user, isLoading } = useAuth()
@@ -68,9 +68,9 @@ export default function RegisterPage() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login")
-      } else if (user.role === "MERCHANT") {
-        router.push("/orders")
+        router.push('/login')
+      } else if (user.role === 'MERCHANT') {
+        router.push('/orders')
       }
     }
   }, [user, isLoading, router])
@@ -80,17 +80,17 @@ export default function RegisterPage() {
 
   // ช่องที่ต้องกรอกเฉพาะที่มี *
   const REQUIRED_BY_STEP: Record<number, (keyof FormData)[]> = {
-    1: ["storeName", "ownerName", "email", "phone", "businessType"],
+    1: ['storeName', 'ownerName', 'email', 'phone', 'businessType'],
     2: [
-      "addressNumber",
-      "addressSubdistrict",
-      "addressDistrict",
-      "addressProvince",
-      "addressZip"
+      'addressNumber',
+      'addressSubdistrict',
+      'addressDistrict',
+      'addressProvince',
+      'addressZip'
     ]
   }
 
-  const isEmpty = (v?: string) => !v || v.trim() === ""
+  const isEmpty = (v?: string) => !v || v.trim() === ''
   const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
   const handleChange = (field: keyof FormData, value: string) => {
@@ -109,7 +109,7 @@ export default function RegisterPage() {
 
     for (const key of REQUIRED_BY_STEP[stepNum] ?? []) {
       const val = formData[key]
-      if (isEmpty(val)) nextErrors[key] = "This field is required"
+      if (isEmpty(val)) nextErrors[key] = 'This field is required'
     }
 
     if (
@@ -118,7 +118,7 @@ export default function RegisterPage() {
       !isEmpty(formData.email) &&
       !isEmail(formData.email)
     ) {
-      nextErrors.email = "Invalid email format"
+      nextErrors.email = 'Invalid email format'
     }
 
     return nextErrors
@@ -173,16 +173,16 @@ export default function RegisterPage() {
     const payload = { ...formData, userId: user?.id }
     try {
       await createMerchant(payload)
-      router.push("/")
+      router.push('/')
     } catch (error) {
-      console.error("Error creating merchant:", error)
-      alert("Failed to create merchant account. Please try again later.")
+      console.error('Error creating merchant:', error)
+      alert('Failed to create merchant account. Please try again later.')
     }
   }
 
   // helper สำหรับคลาส error
   const errorClass = (key: keyof FormData) =>
-    errors[key] ? "border-red-500 focus-visible:ring-red-500" : ""
+    errors[key] ? 'border-red-500 focus-visible:ring-red-500' : ''
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
@@ -199,27 +199,27 @@ export default function RegisterPage() {
             {/* Step Indicator */}
             <div className="flex items-center justify-center gap-4 mt-4">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step === 1 ? "bg-primary" : "bg-gray-400"}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step === 1 ? 'bg-primary' : 'bg-gray-400'}`}
               >
                 1
               </div>
               <div className="h-1 w-8 bg-gray-300" />
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step === 2 ? "bg-primary" : "bg-gray-400"}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step === 2 ? 'bg-primary' : 'bg-gray-400'}`}
               >
                 2
               </div>
               <div className="h-1 w-8 bg-gray-300" />
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step === 3 ? "bg-primary" : "bg-gray-400"}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step === 3 ? 'bg-primary' : 'bg-gray-400'}`}
               >
                 3
               </div>
             </div>
             <div className="mt-2 text-sm text-muted-foreground">
-              {step === 1 && "Business Info"}
-              {step === 2 && "Business Address"}
-              {step === 3 && "Confirmation"}
+              {step === 1 && 'Business Info'}
+              {step === 2 && 'Business Address'}
+              {step === 3 && 'Confirmation'}
             </div>
           </CardHeader>
           <CardContent>
@@ -233,11 +233,11 @@ export default function RegisterPage() {
                         id="storeName"
                         value={formData.storeName}
                         onChange={(e) =>
-                          handleChange("storeName", e.target.value)
+                          handleChange('storeName', e.target.value)
                         }
                         placeholder="Your Merchant Name"
                         aria-invalid={!!errors.storeName}
-                        className={errorClass("storeName")}
+                        className={errorClass('storeName')}
                       />
                       {errors.storeName && (
                         <p className="text-sm text-red-600">
@@ -251,11 +251,11 @@ export default function RegisterPage() {
                         id="ownerName"
                         value={formData.ownerName}
                         onChange={(e) =>
-                          handleChange("ownerName", e.target.value)
+                          handleChange('ownerName', e.target.value)
                         }
                         placeholder="Full Name"
                         aria-invalid={!!errors.ownerName}
-                        className={errorClass("ownerName")}
+                        className={errorClass('ownerName')}
                       />
                       {errors.ownerName && (
                         <p className="text-sm text-red-600">
@@ -271,10 +271,10 @@ export default function RegisterPage() {
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
+                        onChange={(e) => handleChange('email', e.target.value)}
                         placeholder="digio@thailand.com"
                         aria-invalid={!!errors.email}
-                        className={errorClass("email")}
+                        className={errorClass('email')}
                       />
                       {errors.email && (
                         <p className="text-sm text-red-600">{errors.email}</p>
@@ -286,10 +286,10 @@ export default function RegisterPage() {
                         id="phone"
                         type="tel"
                         value={formData.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
+                        onChange={(e) => handleChange('phone', e.target.value)}
                         placeholder="+66 8X-XXX-XXXX"
                         aria-invalid={!!errors.phone}
-                        className={errorClass("phone")}
+                        className={errorClass('phone')}
                       />
                       {errors.phone && (
                         <p className="text-sm text-red-600">{errors.phone}</p>
@@ -302,13 +302,13 @@ export default function RegisterPage() {
                     <div
                       className={
                         errors.businessType
-                          ? "rounded-md border border-red-500 p-0.5"
-                          : ""
+                          ? 'rounded-md border border-red-500 p-0.5'
+                          : ''
                       }
                     >
                       <Select
                         onValueChange={(value) =>
-                          handleChange("businessType", value)
+                          handleChange('businessType', value)
                         }
                         value={formData.businessType}
                       >
@@ -342,7 +342,7 @@ export default function RegisterPage() {
                       id="description"
                       value={formData.description}
                       onChange={(e) =>
-                        handleChange("description", e.target.value)
+                        handleChange('description', e.target.value)
                       }
                       placeholder="Describe your business and what you sell..."
                       rows={3}
@@ -357,7 +357,7 @@ export default function RegisterPage() {
                       disabled={isLoading}
                       onClick={async () => {
                         await logout()
-                        router.push("/login")
+                        router.push('/login')
                       }}
                     >
                       Logout
@@ -389,11 +389,11 @@ export default function RegisterPage() {
                       id="addressNumber"
                       value={formData.addressNumber}
                       onChange={(e) =>
-                        handleChange("addressNumber", e.target.value)
+                        handleChange('addressNumber', e.target.value)
                       }
                       placeholder="Address Number"
                       aria-invalid={!!errors.addressNumber}
-                      className={errorClass("addressNumber")}
+                      className={errorClass('addressNumber')}
                     />
                     {errors.addressNumber && (
                       <p className="text-sm text-red-600">
@@ -408,7 +408,7 @@ export default function RegisterPage() {
                       id="addressBuilding"
                       value={formData.addressBuilding}
                       onChange={(e) =>
-                        handleChange("addressBuilding", e.target.value)
+                        handleChange('addressBuilding', e.target.value)
                       }
                       placeholder="Address Building"
                     />
@@ -420,7 +420,7 @@ export default function RegisterPage() {
                       id="addressSubStreet"
                       value={formData.addressSubStreet}
                       onChange={(e) =>
-                        handleChange("addressSubStreet", e.target.value)
+                        handleChange('addressSubStreet', e.target.value)
                       }
                       placeholder="Address SubStreet"
                     />
@@ -432,7 +432,7 @@ export default function RegisterPage() {
                       id="addressStreet"
                       value={formData.addressStreet}
                       onChange={(e) =>
-                        handleChange("addressStreet", e.target.value)
+                        handleChange('addressStreet', e.target.value)
                       }
                       placeholder="Street"
                     />
@@ -444,11 +444,11 @@ export default function RegisterPage() {
                       id="addressSubdistrict"
                       value={formData.addressSubdistrict}
                       onChange={(e) =>
-                        handleChange("addressSubdistrict", e.target.value)
+                        handleChange('addressSubdistrict', e.target.value)
                       }
                       placeholder="Subdistrict"
                       aria-invalid={!!errors.addressSubdistrict}
-                      className={errorClass("addressSubdistrict")}
+                      className={errorClass('addressSubdistrict')}
                     />
                     {errors.addressSubdistrict && (
                       <p className="text-sm text-red-600">
@@ -463,11 +463,11 @@ export default function RegisterPage() {
                       id="addressDistrict"
                       value={formData.addressDistrict}
                       onChange={(e) =>
-                        handleChange("addressDistrict", e.target.value)
+                        handleChange('addressDistrict', e.target.value)
                       }
                       placeholder="District"
                       aria-invalid={!!errors.addressDistrict}
-                      className={errorClass("addressDistrict")}
+                      className={errorClass('addressDistrict')}
                     />
                     {errors.addressDistrict && (
                       <p className="text-sm text-red-600">
@@ -482,11 +482,11 @@ export default function RegisterPage() {
                       id="addressProvince"
                       value={formData.addressProvince}
                       onChange={(e) =>
-                        handleChange("addressProvince", e.target.value)
+                        handleChange('addressProvince', e.target.value)
                       }
                       placeholder="Province"
                       aria-invalid={!!errors.addressProvince}
-                      className={errorClass("addressProvince")}
+                      className={errorClass('addressProvince')}
                     />
                     {errors.addressProvince && (
                       <p className="text-sm text-red-600">
@@ -501,13 +501,13 @@ export default function RegisterPage() {
                       id="addressZip"
                       value={formData.addressZip}
                       onChange={(e) =>
-                        handleChange("addressZip", e.target.value)
+                        handleChange('addressZip', e.target.value)
                       }
                       placeholder="Zip Code"
                       inputMode="numeric"
                       pattern="\d*"
                       aria-invalid={!!errors.addressZip}
-                      className={errorClass("addressZip")}
+                      className={errorClass('addressZip')}
                     />
                     {errors.addressZip && (
                       <p className="text-sm text-red-600">

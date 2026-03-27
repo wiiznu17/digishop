@@ -1,30 +1,29 @@
-const nodemailer = require("nodemailer");
-const nodemailerSendgrid = require("nodemailer-sendgrid");
-import jwt from "jsonwebtoken";
-const JWT_SECRET = process.env.JWT_SECRET ?? "";
+const nodemailer = require('nodemailer')
+const nodemailerSendgrid = require('nodemailer-sendgrid')
+import jwt from 'jsonwebtoken'
+const JWT_SECRET = process.env.JWT_SECRET ?? ''
 import { redis } from '../lib/redis'
-
 
 const transporter = nodemailer.createTransport(
   nodemailerSendgrid({
-    apiKey: process.env.SENDGRED_API,
+    apiKey: process.env.SENDGRED_API
   })
-);
+)
 interface PayloadProps {
-  firstName: string;
-  middleName: string | null;
-  lastName: string;
-  email: string;
+  firstName: string
+  middleName: string | null
+  lastName: string
+  email: string
 }
-export const sendMailVerified = async (email:string) => {
-  const token = await jwt.sign({email}, JWT_SECRET, { expiresIn: "1H" });
-  const url = `${process.env.WEBSITE_CUSTOMER_URL}/auth/confirmation?token=${token}`;
+export const sendMailVerified = async (email: string) => {
+  const token = await jwt.sign({ email }, JWT_SECRET, { expiresIn: '1H' })
+  const url = `${process.env.WEBSITE_CUSTOMER_URL}/auth/confirmation?token=${token}`
   try {
     await transporter.sendMail({
-      from: "digishop080@gmail.com",
+      from: 'digishop080@gmail.com',
       to: `${email} <${email}>`,
-      subject: "Verified Email",
-      
+      subject: 'Verified Email',
+
       html: `
     <div style="
       font-family: Arial, sans-serif;
@@ -59,22 +58,24 @@ export const sendMailVerified = async (email:string) => {
         This link will expire in 1 hour.
       </p>
     </div>
-  `,
-    });
-    return true;
+  `
+    })
+    return true
   } catch (error: any) {
-    return false;
+    return false
   }
-};
-export const sendMailForgotPassword = async (email:string): Promise<boolean> => {
-  const token = await jwt.sign({email}, JWT_SECRET, { expiresIn: '1h' });
-  await redis.set(`reset-password:${email}`, token, "EX", 3600);
-  const url = `${process.env.WEBSITE_CUSTOMER_URL}/auth/reset-password?token=${token}`;
+}
+export const sendMailForgotPassword = async (
+  email: string
+): Promise<boolean> => {
+  const token = await jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' })
+  await redis.set(`reset-password:${email}`, token, 'EX', 3600)
+  const url = `${process.env.WEBSITE_CUSTOMER_URL}/auth/reset-password?token=${token}`
   try {
     await transporter.sendMail({
-      from: "digishop080@gmail.com",
-      to: `${ email} <${email}>`,
-      subject: "Reset Password Link",
+      from: 'digishop080@gmail.com',
+      to: `${email} <${email}>`,
+      subject: 'Reset Password Link',
       html: `
     <div style="
       font-family: Arial, sans-serif;
@@ -109,10 +110,10 @@ export const sendMailForgotPassword = async (email:string): Promise<boolean> => 
         This link will expire in 1 hour.
       </p>
     </div>
-  `,
-    });
-    return true;
+  `
+    })
+    return true
   } catch (error: any) {
-    return false;
+    return false
   }
-};
+}

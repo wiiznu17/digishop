@@ -1,24 +1,28 @@
-"use client";
+'use client'
 
-import { SetStateAction, useEffect, useState } from "react";
-import InputField from "@/components/inputField";
-import Button from "./button";
-import { CancelProp, CancelRefundProps, OrderDetail } from "@/types/props/orderProp";
-import CancelReasonMaster from "../master/cancelReason.json";
-import RefundReasonMaster from "../master/refundReason.json"
-import { cancelOrder } from "@/utils/requestUtils/requestOrderUtils";
-import { OrderStatus } from "../../../../packages/db/src/types/enum";
+import { SetStateAction, useEffect, useState } from 'react'
+import InputField from '@/components/inputField'
+import Button from './button'
+import {
+  CancelProp,
+  CancelRefundProps,
+  OrderDetail
+} from '@/types/props/orderProp'
+import CancelReasonMaster from '../master/cancelReason.json'
+import RefundReasonMaster from '../master/refundReason.json'
+import { cancelOrder } from '@/utils/requestUtils/requestOrderUtils'
+import { OrderStatus } from '../../../../packages/db/src/types/enum'
 
 interface CancelOrderProps {
-  isShowCancel: CancelRefundProps;
+  isShowCancel: CancelRefundProps
   email: string
-  order: OrderDetail;
-  reason: string;
-  setReason: React.Dispatch<SetStateAction<string>>;
-  detail: string;
-  setDetail: React.Dispatch<SetStateAction<string>>;
-  setIsShowCancel: React.Dispatch<SetStateAction<CancelRefundProps>>;
-  handleOnCancel: () => void;
+  order: OrderDetail
+  reason: string
+  setReason: React.Dispatch<SetStateAction<string>>
+  detail: string
+  setDetail: React.Dispatch<SetStateAction<string>>
+  setIsShowCancel: React.Dispatch<SetStateAction<CancelRefundProps>>
+  handleOnCancel: () => void
 }
 
 export const CancelOrder = ({
@@ -30,37 +34,42 @@ export const CancelOrder = ({
   detail,
   setDetail,
   setIsShowCancel,
-  handleOnCancel,
+  handleOnCancel
 }: CancelOrderProps) => {
   useEffect(() => {
     setCancelData({
-        reason: CancelReasonMaster[reason as keyof typeof CancelReasonMaster].label,
-        description: detail,
-        contactEmail: email
-    });
-  },[reason, detail, email])
-  const [cancelData, setCancelData] = useState<CancelProp>();
-  const handleOnConfirm = async() => {
-    if (!reason) return;
-    setIsShowCancel({...isShowCancel, ['shown']: false})
-      if(cancelData){
-        const updateCancelOrder = (await cancelOrder(order.id , cancelData)) as {data: string }
-        if(updateCancelOrder.data){
-            window.location.reload()
-          }
+      reason:
+        CancelReasonMaster[reason as keyof typeof CancelReasonMaster].label,
+      description: detail,
+      contactEmail: email
+    })
+  }, [reason, detail, email])
+  const [cancelData, setCancelData] = useState<CancelProp>()
+  const handleOnConfirm = async () => {
+    if (!reason) return
+    setIsShowCancel({ ...isShowCancel, ['shown']: false })
+    if (cancelData) {
+      const updateCancelOrder = (await cancelOrder(order.id, cancelData)) as {
+        data: string
       }
-  };
-  
+      if (updateCancelOrder.data) {
+        window.location.reload()
+      }
+    }
+  }
+
   const handleSelectReson = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setReason(e.target.value);
-  };
+    setReason(e.target.value)
+  }
   const handleInputDetail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDetail(e.target.value);
-  };
+    setDetail(e.target.value)
+  }
   if (isShowCancel.shown)
     return (
-      <div className='text-xl'>
-        <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">Cancel</div>
+      <div className="text-xl">
+        <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">
+          Cancel
+        </div>
         <div className=" m-1 pt-2 bg-white ">
           <div>I want to cancel this order because</div>
         </div>
@@ -90,9 +99,7 @@ export const CancelOrder = ({
               other
             </option>
           </select>
-          <div
-            className={`my-3 rounded-md bg-white`}
-          >
+          <div className={`my-3 rounded-md bg-white`}>
             <div className="">
               <InputField
                 label="Detail"
@@ -101,7 +108,7 @@ export const CancelOrder = ({
                 value={detail}
                 className="h-auto"
                 onChange={handleInputDetail}
-                required={ reason ==="CC00"}
+                required={reason === 'CC00'}
               />
             </div>
           </div>
@@ -114,23 +121,28 @@ export const CancelOrder = ({
           >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleOnConfirm} className={`${reason ==="CC00" &&  detail.trim() === '' ? 'bg-gray-500 text-white':'bg-green-500 text-white'} `} disabled={reason ==="CC00" && reason.length === 0}>
+          <Button
+            size="sm"
+            onClick={handleOnConfirm}
+            className={`${reason === 'CC00' && detail.trim() === '' ? 'bg-gray-500 text-white' : 'bg-green-500 text-white'} `}
+            disabled={reason === 'CC00' && reason.length === 0}
+          >
             Confirm
           </Button>
         </div>
       </div>
-    );
-};
+    )
+}
 interface RefundOrderProps {
-  isShowRefund: CancelRefundProps;
-  setIsShowRefund: React.Dispatch<SetStateAction<CancelRefundProps>>;
-  email: string,
-  order: OrderDetail;
-  reason: string;
-  setReason: React.Dispatch<SetStateAction<string>>;
-  detail: string;
-  setDetail: React.Dispatch<SetStateAction<string>>;
-  handleOnCancel: () => void;
+  isShowRefund: CancelRefundProps
+  setIsShowRefund: React.Dispatch<SetStateAction<CancelRefundProps>>
+  email: string
+  order: OrderDetail
+  reason: string
+  setReason: React.Dispatch<SetStateAction<string>>
+  detail: string
+  setDetail: React.Dispatch<SetStateAction<string>>
+  handleOnCancel: () => void
 }
 export const RefundOrder = ({
   isShowRefund,
@@ -143,35 +155,40 @@ export const RefundOrder = ({
   setDetail,
   handleOnCancel
 }: RefundOrderProps) => {
-  const [refundData, setRefundData] = useState<CancelProp>();
+  const [refundData, setRefundData] = useState<CancelProp>()
   useEffect(() => {
     setRefundData({
-      reason: RefundReasonMaster[reason as keyof typeof RefundReasonMaster].label,
+      reason:
+        RefundReasonMaster[reason as keyof typeof RefundReasonMaster].label,
       description: detail,
       contactEmail: email
-    });
-  },[reason, detail,email])
-  const handleOnConfirm = async() => {
+    })
+  }, [reason, detail, email])
+  const handleOnConfirm = async () => {
     if (!reason) return
-    setIsShowRefund({ ...isShowRefund, ['shown']: false})
-      if(refundData){
-        const updateCancelOrder = (await cancelOrder(order.id , refundData)) as {data: { id: number, status: OrderStatus }  }
-          if(updateCancelOrder.data){
-              window.location.reload()
-            }
+    setIsShowRefund({ ...isShowRefund, ['shown']: false })
+    if (refundData) {
+      const updateCancelOrder = (await cancelOrder(order.id, refundData)) as {
+        data: { id: number; status: OrderStatus }
       }
-  };
+      if (updateCancelOrder.data) {
+        window.location.reload()
+      }
+    }
+  }
 
   const handleSelectReson = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setReason(e.target.value);
-  };
+    setReason(e.target.value)
+  }
   const handleInputDetail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDetail(e.target.value);
-  };
-  if(isShowRefund.shown)
+    setDetail(e.target.value)
+  }
+  if (isShowRefund.shown)
     return (
-      <div className='text-xl'>
-        <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">Refund</div>
+      <div className="text-xl">
+        <div className="border-b py-2 text-2xl font-medium mb-2 w-fit">
+          Refund
+        </div>
         <div className=" m-1 pt-2 bg-white">
           <div>I want to refund this order</div>
         </div>
@@ -205,9 +222,7 @@ export const RefundOrder = ({
               other
             </option>
           </select>
-          <div
-            className={`my-3 rounded-md bg-white }`}
-          >
+          <div className={`my-3 rounded-md bg-white }`}>
             <div className="">
               <InputField
                 label="Detail"
@@ -215,7 +230,7 @@ export const RefundOrder = ({
                 name="detail"
                 value={detail}
                 onChange={handleInputDetail}
-                required={ reason === "RF00"}
+                required={reason === 'RF00'}
               />
             </div>
           </div>
@@ -228,10 +243,15 @@ export const RefundOrder = ({
           >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleOnConfirm} className={`${reason ==="RF00" &&  detail.trim() === '' ? 'bg-gray-500 text-white':'bg-green-500 text-white'}`}  disabled={reason ==="RF00" && reason.length === 0}>
+          <Button
+            size="sm"
+            onClick={handleOnConfirm}
+            className={`${reason === 'RF00' && detail.trim() === '' ? 'bg-gray-500 text-white' : 'bg-green-500 text-white'}`}
+            disabled={reason === 'RF00' && reason.length === 0}
+          >
             Confirm
           </Button>
         </div>
       </div>
-    );
-};
+    )
+}

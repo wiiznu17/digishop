@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import PasswordRulesForm from "@/components/auth/PasswordRulesForm"
-import { confirmReset } from "@/utils/requesters/credentialRequester"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import PasswordRulesForm from '@/components/auth/PasswordRulesForm'
+import { confirmReset } from '@/utils/requesters/credentialRequester'
 
 export default function ResetPasswordClient({
   token,
@@ -18,23 +18,23 @@ export default function ResetPasswordClient({
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!token) setErr("Missing token. Please use the link from your email.")
+    if (!token) setErr('Missing token. Please use the link from your email.')
   }, [token])
 
   async function handleSubmit({ password }: { password: string }) {
     setErr(null)
     if (!token) {
-      setErr("Missing token.")
+      setErr('Missing token.')
       return
     }
     setSubmitting(true)
     try {
       await confirmReset({ token, password })
-      router.push("/login?msg=password_reset")
+      router.push('/login?msg=password_reset')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error(e)
-      setErr(e?.response?.data?.error ?? "Failed to reset password.")
+      setErr(e?.response?.data?.error ?? 'Failed to reset password.')
     } finally {
       setSubmitting(false)
     }
