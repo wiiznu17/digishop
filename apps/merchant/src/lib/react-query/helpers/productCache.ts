@@ -48,6 +48,43 @@ export function updateProductLists(
   })
 }
 
+export function reconcileProductListsFromDetail(
+  queryClient: QueryClient,
+  product: Product
+) {
+  updateProductLists(queryClient, (products) =>
+    products.map((current) => {
+      if (current.uuid !== product.uuid) return current
+
+      const enabledItems = (product.items ?? []).filter((item) => item.isEnable)
+
+      return {
+        ...current,
+        name: product.name,
+        description: product.description ?? current.description ?? null,
+        category: product.category ?? current.category ?? null,
+        status: product.status,
+        reqStatus: product.reqStatus,
+        minPriceMinor:
+          product.minPriceMinor ??
+          (enabledItems.length > 0
+            ? Math.min(...enabledItems.map((item) => item.priceMinor))
+            : (current.minPriceMinor ?? null)),
+        totalStock:
+          product.totalStock ??
+          (product.items
+            ? product.items.reduce(
+                (sum, item) => sum + Math.max(0, item.stockQuantity ?? 0),
+                0
+              )
+            : (current.totalStock ?? null)),
+        updatedAt: product.updatedAt ?? current.updatedAt,
+        createdAt: product.createdAt ?? current.createdAt
+      }
+    })
+  )
+}
+
 export function updateProductDetail(
   queryClient: QueryClient,
   productUuid: string,

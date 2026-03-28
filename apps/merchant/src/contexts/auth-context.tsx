@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await logoutUser()
+    await queryClient.cancelQueries({ queryKey: authQueryKeys.all })
     queryClient.setQueryData(authQueryKeys.user(), null)
     queryClient.setQueryData(authQueryKeys.storeStatus(), null)
     router.replace('/login')

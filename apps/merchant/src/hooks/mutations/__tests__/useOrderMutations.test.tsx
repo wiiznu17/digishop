@@ -235,4 +235,85 @@ describe('useOrderMutations', () => {
     ).toBe(true)
     expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
   })
+
+  it('keeps list/detail caches coherent under concurrent status and tracking mutations', async () => {
+    const queryClient = createTestQueryClient()
+    const wrapper = createQueryWrapper(queryClient)
+    const order = createOrder()
+    const { listKey } = seedOrderCache(queryClient, order)
+
+    const statusPending = deferred<{ data: Order }>()
+    const trackingPending = deferred<{ data: Order }>()
+
+    vi.mocked(updateOrderRequester)
+      .mockReturnValueOnce(statusPending.promise)
+      .mockReturnValueOnce(trackingPending.promise)
+
+    const { result: statusResult } = renderHook(
+      () => useUpdateOrderStatusMutation(),
+      { wrapper }
+    )
+    const { result: trackingResult } = renderHook(
+      () => useUpdateOrderTrackingMutation(),
+      { wrapper }
+    )
+
+    let statusPromise: Promise<unknown>
+    let trackingPromise: Promise<unknown>
+
+    await act(async () => {
+      statusPromise = statusResult.current.mutateAsync({
+        orderId: order.id,
+        newStatus: 'PROCESSING'
+      })
+      trackingPromise = trackingResult.current.mutateAsync({
+        orderId: order.id,
+        trackingNumber: 'TRACK-123',
+        carrier: 'DHL'
+      })
+    })
+
+    const optimisticDetail = queryClient.getQueryData<{ data: Order }>(
+      orderQueryKeys.detail(order.id)
+    )
+    const optimisticList = queryClient.getQueryData<ListOrdersResponse>(listKey)
+
+    expect(optimisticDetail?.data.status).toBe('PROCESSING')
+    expect(optimisticDetail?.data.trackingNumber).toBe('TRACK-123')
+    expect(optimisticList?.data[0].status).toBe('PROCESSING')
+    expect(optimisticList?.data[0].trackingNumber).toBe('TRACK-123')
+
+    const serverStatusOrder = createOrder({
+      status: 'PROCESSING',
+      statusHistory: ['PAID', 'PROCESSING']
+    })
+    const serverTrackingOrder = createOrder({
+      status: 'PROCESSING',
+      statusHistory: ['PAID', 'PROCESSING'],
+      trackingNumber: 'TRACK-123',
+      carrier: 'DHL'
+    })
+
+    await act(async () => {
+      statusPending.resolve({ data: serverStatusOrder })
+      await statusPromise!
+    })
+
+    expect(
+      queryClient.getQueryData<{ data: Order }>(orderQueryKeys.detail(order.id))
+    ).toEqual({ data: serverStatusOrder })
+
+    await act(async () => {
+      trackingPending.resolve({ data: serverTrackingOrder })
+      await trackingPromise!
+    })
+
+    expect(
+      queryClient.getQueryData<{ data: Order }>(orderQueryKeys.detail(order.id))
+    ).toEqual({ data: serverTrackingOrder })
+    expect(
+      queryClient.getQueryState(orderQueryKeys.summary())?.isInvalidated
+    ).toBe(true)
+    expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
+  })
 })

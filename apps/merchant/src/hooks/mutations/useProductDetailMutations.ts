@@ -11,7 +11,13 @@ import {
   type DesiredPayload
 } from '@/utils/requestUtils/requestProductUtils'
 import { productQueryKeys } from '@/lib/react-query/keys/productKeys'
-import { updateProductDetail } from '@/lib/react-query/helpers/productCache'
+import {
+  captureProductListsSnapshot,
+  reconcileProductListsFromDetail,
+  restoreProductListsSnapshot,
+  updateProductDetail,
+  updateProductLists
+} from '@/lib/react-query/helpers/productCache'
 import { invalidateQueryGroups } from '@/lib/react-query/helpers/cacheSnapshots'
 import { useToast } from '@/hooks/use-toast'
 
@@ -23,6 +29,7 @@ export function useProductDetailQueryState(productUuid: string) {
 }
 
 export function useCreateProductMutation() {
+  const queryClient = useQueryClient()
   const { toast } = useToast()
 
   return useMutation({
@@ -43,7 +50,9 @@ export function useCreateProductMutation() {
       if (!result?.uuid) throw new Error('Create failed')
       return result
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      queryClient.setQueryData(productQueryKeys.detail(result.uuid), result)
+      invalidateQueryGroups(queryClient, [productQueryKeys.lists()])
       toast({ title: 'Created' })
     },
     onError: () => {
@@ -77,6 +86,7 @@ export function useUpdateProductDesiredMutation(productUuid: string) {
     },
     onSuccess: (result) => {
       queryClient.setQueryData(productQueryKeys.detail(productUuid), result)
+      reconcileProductListsFromDetail(queryClient, result)
       invalidateQueryGroups(queryClient, [productQueryKeys.lists()])
       toast({ title: 'Saved' })
     },
@@ -96,20 +106,45 @@ export function useDeleteProductDetailMutation(productUuid: string) {
       if (!ok) throw new Error('Delete failed')
       return productUuid
     },
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: productQueryKeys.all })
+      const previousDetail = queryClient.getQueryData<Product | null>(
+        productQueryKeys.detail(productUuid)
+      )
+      const previousLists = captureProductListsSnapshot(queryClient)
+
       queryClient.removeQueries({
         queryKey: productQueryKeys.detail(productUuid)
       })
+      updateProductLists(queryClient, (products) =>
+        products.filter((product) => product.uuid !== productUuid)
+      )
+
+      return { previousDetail, previousLists }
+    },
+    onError: (_error, _variables, context) => {
+      queryClient.setQueryData(
+        productQueryKeys.detail(productUuid),
+        context?.previousDetail
+      )
+      restoreProductListsSnapshot(queryClient, context?.previousLists)
+      toast({ title: 'Failed to delete product', variant: 'destructive' })
+    },
+    onSuccess: () => {
       invalidateQueryGroups(queryClient, [productQueryKeys.lists()])
       toast({ title: 'Product deleted' })
     },
-    onError: () => {
-      toast({ title: 'Failed to delete product', variant: 'destructive' })
+    onSettled: () => {
+      invalidateQueryGroups(queryClient, [
+        productQueryKeys.lists(),
+        productQueryKeys.detail(productUuid)
+      ])
     }
   })
 }
 
 export function useDuplicateProductMutation() {
+  const queryClient = useQueryClient()
   const { toast } = useToast()
 
   return useMutation({
@@ -117,6 +152,11 @@ export function useDuplicateProductMutation() {
       const result = await duplicateProductRequester(productUuid)
       if (!result?.uuid) throw new Error('Duplicate failed')
       return result
+    },
+    onSuccess: (result) => {
+      queryClient.setQueryData(productQueryKeys.detail(result.uuid), result)
+      invalidateQueryGroups(queryClient, [productQueryKeys.lists()])
+      toast({ title: 'Product duplicated' })
     },
     onError: () => {
       toast({ title: 'Failed to duplicate product', variant: 'destructive' })
