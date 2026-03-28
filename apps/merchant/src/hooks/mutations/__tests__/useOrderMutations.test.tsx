@@ -13,6 +13,8 @@ import {
   type ListOrdersResponse
 } from '@/utils/requestUtils/requestOrderUtils'
 
+const toastSpy = vi.hoisted(() => vi.fn())
+
 vi.mock('@/utils/requestUtils/requestOrderUtils', () => ({
   handOverOrderRequester: vi.fn(),
   updateOrderRequester: vi.fn()
@@ -20,7 +22,7 @@ vi.mock('@/utils/requestUtils/requestOrderUtils', () => ({
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
-    toast: vi.fn(),
+    toast: toastSpy,
     toasts: [],
     dismiss: vi.fn()
   })
@@ -67,15 +69,30 @@ function seedOrderCache(
     data: [order],
     meta: { page: 1, pageSize: 20, total: 1 }
   }
+  const listKey = orderQueryKeys.list({ page: 1, pageSize: 20 })
 
-  queryClient.setQueryData(
-    orderQueryKeys.list({ page: 1, pageSize: 20 }),
-    listData
-  )
+  queryClient.setQueryData(orderQueryKeys.summary(), {
+    totalOrders: 1,
+    pendingPayment: 0,
+    paidOrders: 1,
+    processing: 0,
+    handedOver: 0,
+    refundRequests: 0,
+    canceledOrders: 0,
+    totalRevenue: 1000,
+    refundSuccessOrders: 0,
+    completed: 0
+  })
+  queryClient.setQueryData(listKey, listData)
   queryClient.setQueryData(orderQueryKeys.detail(order.id), { data: order })
+  return { listKey }
 }
 
 describe('useOrderMutations', () => {
+  beforeEach(() => {
+    toastSpy.mockReset()
+  })
+
   it('optimistically updates status across list and detail caches and rolls back on failure', async () => {
     const queryClient = createTestQueryClient()
     const wrapper = createQueryWrapper(queryClient)
@@ -179,5 +196,43 @@ describe('useOrderMutations', () => {
     expect(
       queryClient.getQueryData<{ data: Order }>(orderQueryKeys.detail(order.id))
     ).toEqual({ data: handedOver })
+  })
+
+  it('shows refund failure feedback and invalidates summary after refund-related status changes', async () => {
+    const queryClient = createTestQueryClient()
+    const wrapper = createQueryWrapper(queryClient)
+    const order = createOrder()
+    const { listKey } = seedOrderCache(queryClient, order)
+
+    const refundFailed = createOrder({
+      status: 'REFUND_FAIL',
+      statusHistory: ['PAID', 'MERCHANT_CANCELED']
+    })
+    vi.mocked(updateOrderRequester).mockResolvedValue({ data: refundFailed })
+
+    const { result } = renderHook(() => useUpdateOrderStatusMutation(), {
+      wrapper
+    })
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        orderId: order.id,
+        newStatus: 'MERCHANT_CANCELED'
+      })
+    })
+
+    expect(toastSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Refund failed',
+        variant: 'destructive'
+      })
+    )
+    expect(
+      queryClient.getQueryState(orderQueryKeys.summary())?.isInvalidated
+    ).toBe(true)
+    expect(
+      queryClient.getQueryState(orderQueryKeys.detail(order.id))?.isInvalidated
+    ).toBe(true)
+    expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
   })
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  createElement,
   createContext,
   useCallback,
   useContext,
@@ -10,7 +11,7 @@ import {
 } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-import { type AuthContextType, type StoreStatus } from '@/types/props/userProp'
+import { type AuthContextType } from '@/types/props/userProp'
 import {
   authQueryKeys,
   useAuthUserQuery,
@@ -84,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [isLoading, login, logout, storeStatus, user]
   )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return createElement(AuthContext.Provider, { value }, children)
 }
 
 export function useAuth() {
