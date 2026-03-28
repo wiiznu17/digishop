@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { MerchantHeader } from '@/components/dashboard-header'
 import {
@@ -10,44 +9,12 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import {
-  BarChart3,
-  ShoppingCart,
-  Package,
-  Users,
-  DollarSign
-} from 'lucide-react'
-import {
-  fetchMerchantDashboard,
-  type MerchantDashboard
-} from '@/utils/requestUtils/requestDashboardUtils'
+import { ShoppingCart, Package, Users, DollarSign } from 'lucide-react'
 import { formatCurrencyTHB } from '@/utils/formatters/currency'
+import { useMerchantDashboardQuery } from '@/hooks/queries/useMerchantQueries'
 
 export default function Home() {
-  const [data, setData] = useState<MerchantDashboard | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const res = await fetchMerchantDashboard()
-        if (mounted) setData(res)
-      } catch (e: Error | unknown) {
-        if (e instanceof Error) {
-          setError(e.message)
-        } else {
-          setError('An unknown error occurred')
-        }
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [])
+  const { data, isLoading: loading, error } = useMerchantDashboardQuery()
 
   const statCards = [
     {
@@ -90,7 +57,9 @@ export default function Home() {
               <CardTitle>Error</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-destructive">
-              {error}
+              {error instanceof Error
+                ? error.message
+                : 'Failed to load dashboard'}
             </CardContent>
           </Card>
         )}
@@ -179,25 +148,6 @@ export default function Home() {
           </Card>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Row({
-  label,
-  value,
-  loading
-}: {
-  label: string
-  value: string
-  loading: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm">{label}</span>
-      <span className="text-sm font-medium">
-        {loading ? <span className="animate-pulse">•••</span> : value}
-      </span>
     </div>
   )
 }

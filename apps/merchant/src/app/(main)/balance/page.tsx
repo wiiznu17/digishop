@@ -19,17 +19,20 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import BankAccountDialog from '@/components/balance/linkBankAccount'
-import { useToast } from '@/hooks/use-toast'
+import { type BankAccount } from '../../../utils/requestUtils/requestBankUtils'
+import { useBankAccountsQuery } from '@/hooks/queries/useMerchantQueries'
 import {
-  getBankAccountsRequester,
-  createBankAccountRequester,
-  deleteBankAccountRequester,
-  setDefaultBankAccountRequester,
-  type BankAccount,
-  type CreateBankAccountRequest
-} from '../../../utils/requestUtils/requestBankUtils'
+  useCreateBankAccountMutation,
+  useDeleteBankAccountMutation,
+  useSetDefaultBankAccountMutation
+} from '@/hooks/mutations/useMerchantMutations'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import {
+  closeBankAccountDialog,
+  openBankAccountDialog
+} from '@/store/slices/merchantSlice'
 
 interface BankAccountFormData {
   bankName: string
@@ -46,82 +49,36 @@ function maskAccountNumber(accountNumber: string) {
 }
 
 export default function AccountLinking() {
-  const { toast } = useToast()
-  const [showBankDialog, setShowBankDialog] = useState<boolean>(false)
-  const [linkedAccounts, setLinkedAccounts] = useState<BankAccount[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [actionLoading, setActionLoading] = useState<boolean>(false)
+  const dispatch = useAppDispatch()
+  const showBankDialog = useAppSelector(
+    (state) => state.merchant.isBankAccountDialogOpen
+  )
+  const {
+    data: linkedAccounts = [],
+    isLoading: loading,
+    isFetching
+  } = useBankAccountsQuery()
+  const createBankAccountMutation = useCreateBankAccountMutation()
+  const deleteBankAccountMutation = useDeleteBankAccountMutation()
+  const setDefaultBankAccountMutation = useSetDefaultBankAccountMutation()
   const [removingAccountId, setRemovingAccountId] = useState<number | null>(
     null
   )
   const [defaultingAccountId, setDefaultingAccountId] = useState<number | null>(
     null
   )
-  const [savingAccount, setSavingAccount] = useState<boolean>(false)
-
-  useEffect(() => {
-    loadBankAccounts()
-  }, [])
 
   const handleSaveBankAccount = async (accountData: BankAccountFormData) => {
-    setSavingAccount(true)
     try {
-      const requestData: CreateBankAccountRequest = {
+      await createBankAccountMutation.mutateAsync({
         bankName: accountData.bankName,
         accountNumber: accountData.confirmAccountNumber,
         accountHolderName: accountData.accountHolderName,
         isDefault: accountData.isDefault
-      }
-
-      const newAccount = await createBankAccountRequester(requestData)
-
-      if (newAccount) {
-        setLinkedAccounts((prev) => [...prev, newAccount])
-        toast({
-          title: 'Success',
-          description: 'Bank account added successfully'
-        })
-        setShowBankDialog(false)
-        await loadBankAccounts() // refresh data
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to add bank account',
-          variant: 'destructive'
-        })
-      }
+      })
+      dispatch(closeBankAccountDialog())
     } catch (error) {
       console.error('Error adding bank account:', error)
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const loadBankAccounts = async () => {
-    setLoading(true)
-    try {
-      const accounts = await getBankAccountsRequester()
-      if (accounts) {
-        setLinkedAccounts(accounts)
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to load bank accounts',
-          variant: 'destructive'
-        })
-      }
-    } catch (error) {
-      console.log('Error to load bank account: ', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to load bank accounts',
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -131,27 +88,9 @@ export default function AccountLinking() {
     }
     setRemovingAccountId(accountId)
     try {
-      const success = await deleteBankAccountRequester(accountId)
-      if (success) {
-        setLinkedAccounts((prev) => prev.filter((acc) => acc.id !== accountId))
-        toast({
-          title: 'Success',
-          description: 'Bank account removed successfully'
-        })
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to remove bank account',
-          variant: 'destructive'
-        })
-      }
+      await deleteBankAccountMutation.mutateAsync(accountId)
     } catch (error) {
       console.log('Error to remove bank account: ', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to remove bank account',
-        variant: 'destructive'
-      })
     } finally {
       setRemovingAccountId(null)
     }
@@ -159,37 +98,12 @@ export default function AccountLinking() {
 
   const handleSetDefault = async (accountId: number) => {
     setDefaultingAccountId(accountId)
-    setActionLoading(true)
     try {
-      const success = await setDefaultBankAccountRequester(accountId)
-      if (success) {
-        setLinkedAccounts((prev) =>
-          prev.map((acc) => ({
-            ...acc,
-            isDefault: acc.id === accountId
-          }))
-        )
-        toast({
-          title: 'Success',
-          description: 'Default bank account updated successfully'
-        })
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to set default bank account',
-          variant: 'destructive'
-        })
-      }
+      await setDefaultBankAccountMutation.mutateAsync(accountId)
     } catch (error) {
       console.log('Error to set default for this bank account: ', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to set default bank account',
-        variant: 'destructive'
-      })
     } finally {
       setDefaultingAccountId(null)
-      setActionLoading(false)
     }
   }
 
@@ -301,9 +215,9 @@ export default function AccountLinking() {
               </CardDescription>
             </div>
             <Button
-              onClick={() => setShowBankDialog(true)}
+              onClick={() => dispatch(openBankAccountDialog())}
               className="flex items-center gap-2"
-              disabled={actionLoading}
+              disabled={isFetching}
             >
               <Plus className="h-4 w-4" />
               Add Bank Account
@@ -321,7 +235,7 @@ export default function AccountLinking() {
                     Add your first bank account to start receiving payments
                   </p>
                   <Button
-                    onClick={() => setShowBankDialog(true)}
+                    onClick={() => dispatch(openBankAccountDialog())}
                     className="flex items-center gap-2 mx-auto"
                   >
                     <Plus className="h-4 w-4" />
@@ -418,9 +332,11 @@ export default function AccountLinking() {
       {/* Dialog เพิ่มบัญชี */}
       <BankAccountDialog
         open={showBankDialog}
-        onOpenChange={setShowBankDialog}
+        onOpenChange={(open) =>
+          dispatch(open ? openBankAccountDialog() : closeBankAccountDialog())
+        }
         onSave={handleSaveBankAccount}
-        saving={savingAccount}
+        saving={createBankAccountMutation.isPending}
       />
     </div>
   )

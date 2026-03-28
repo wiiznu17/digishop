@@ -13,11 +13,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { ProductTable } from './productTable'
 import type { ProductListItem } from '@/types/props/productProp'
 import { ProductFilters, type ProductFilterState } from './productFilters'
-import { type CategoryDto } from '@/utils/requestUtils/requestProductUtils'
-import {
-  bulkDeleteProductsRequester,
-  bulkUpdateProductStatusRequester
-} from '@/utils/requestUtils/requestProductUtils'
+import type { CategoryDto } from '@/utils/requestUtils/requestProductUtils'
 import {
   Select,
   SelectContent,
@@ -32,14 +28,22 @@ type ProductListProps = {
   onEdit: (product: ProductListItem) => void
   onDelete: (uuid: string) => void
   onQuickView: (product: ProductListItem) => void
-
   filters: ProductFilterState
   onFiltersChange: (patch: Partial<ProductFilterState>) => void
   onApplyFilters: () => void
   onResetFilters: () => void
   categories: CategoryDto[]
-
-  onBulkCompleted?: () => Promise<void> | void
+  selectMode: boolean
+  selectedUuids: string[]
+  bulkStatusChoice: string
+  applying: boolean
+  onSelectModeChange: (enabled: boolean) => void
+  onBulkStatusChoiceChange: (status: string) => void
+  onToggleRow: (uuid: string, checked: boolean) => void
+  onToggleAllOnPage: (uuids: string[], checked: boolean) => void
+  onClearSelection: () => void
+  onApplyBulkStatus: () => void
+  onApplyBulkDelete: () => void
 }
 
 export function ProductList({
@@ -52,85 +56,26 @@ export function ProductList({
   onApplyFilters,
   onResetFilters,
   categories,
-  onBulkCompleted
+  selectMode,
+  selectedUuids,
+  bulkStatusChoice,
+  applying,
+  onSelectModeChange,
+  onBulkStatusChoiceChange,
+  onToggleRow,
+  onToggleAllOnPage,
+  onClearSelection,
+  onApplyBulkStatus,
+  onApplyBulkDelete
 }: ProductListProps) {
-  // ==== selection mode ====
-  const [selectMode, setSelectMode] = useState<boolean>(false)
-
-  // ==== selection state ====
-  const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set())
-  const [applying, setApplying] = useState<boolean>(false)
-  const [statusChoice, setStatusChoice] = useState<string>('ACTIVE')
-  const [statusOpen, setStatusOpen] = useState<boolean>(false)
-
-  const onToggleRow = (uuid: string, checked: boolean) => {
-    setSelectedUuids((prev) => {
-      const next = new Set(prev)
-      if (checked) next.add(uuid)
-      else next.delete(uuid)
-      return next
-    })
-  }
-
-  const onToggleAllOnPage = (uuids: string[], checked: boolean) => {
-    setSelectedUuids((prev) => {
-      const next = new Set(prev)
-      if (checked) uuids.forEach((id) => next.add(id))
-      else uuids.forEach((id) => next.delete(id))
-      return next
-    })
-  }
-
-  const clearSelection = () => setSelectedUuids(new Set())
-
-  const selectedCount = selectedUuids.size
-  const selectedArray = useMemo(
-    () => Array.from(selectedUuids),
-    [selectedUuids]
-  )
-
-  // ==== bulk ops ====
-  const applyBulkStatus = async () => {
-    if (selectedCount === 0) return
-    setApplying(true)
-    try {
-      const updated = await bulkUpdateProductStatusRequester(
-        selectedArray,
-        statusChoice
-      )
-      if (updated == null) {
-        alert('Bulk update status failed')
-      } else {
-        clearSelection()
-        await onBulkCompleted?.()
-      }
-    } finally {
-      setApplying(false)
-    }
-  }
-
-  const applyBulkDelete = async () => {
-    if (selectedCount === 0) return
-    const ok = confirm(`Delete ${selectedCount} selected product(s)?`)
-    if (!ok) return
-    setApplying(true)
-    try {
-      const done = await bulkDeleteProductsRequester(selectedArray)
-      if (!done) {
-        alert('Bulk delete failed')
-      } else {
-        clearSelection()
-        await onBulkCompleted?.()
-      }
-    } finally {
-      setApplying(false)
-    }
-  }
+  const [statusOpen, setStatusOpen] = useState(false)
+  const selectedSet = useMemo(() => new Set(selectedUuids), [selectedUuids])
+  const selectedCount = selectedUuids.length
 
   const exitSelectionMode = () => {
-    setSelectMode(false)
-    setStatusOpen(false) // ปิด select dropdown ถ้าเปิดอยู่
-    clearSelection()
+    onSelectModeChange(false)
+    setStatusOpen(false)
+    onClearSelection()
   }
 
   return (
@@ -145,9 +90,11 @@ export function ProductList({
           </div>
 
           <div className="flex gap-2">
-            {/* ปุ่มเข้า/ออก selection mode */}
             {!selectMode ? (
-              <Button variant="outline" onClick={() => setSelectMode(true)}>
+              <Button
+                variant="outline"
+                onClick={() => onSelectModeChange(true)}
+              >
                 Select
               </Button>
             ) : (
@@ -175,22 +122,21 @@ export function ProductList({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* ==== Bulk actions bar (เฉพาะตอน selection mode) ==== */}
         {selectMode && (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border rounded-md p-3 bg-muted/30">
+          <div className="flex flex-col gap-2 border rounded-md p-3 bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm">
               Selected: <span className="font-medium">{selectedCount}</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2">
                 <span className="text-sm">Set status:</span>
                 <Select
-                  value={statusChoice}
+                  value={bulkStatusChoice}
                   open={statusOpen}
                   onOpenChange={setStatusOpen}
-                  onValueChange={(v) => {
-                    setStatusChoice(v)
+                  onValueChange={(value) => {
+                    onBulkStatusChoiceChange(value)
                     setStatusOpen(false)
                   }}
                   disabled={selectedCount === 0 || applying}
@@ -205,17 +151,9 @@ export function ProductList({
                     <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
                   </SelectContent>
                 </Select>
-                {/* <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setStatusOpen(true)}
-                  disabled={selectedCount === 0 || applying}
-                >
-                  Select
-                </Button> */}
                 <Button
                   size="sm"
-                  onClick={applyBulkStatus}
+                  onClick={onApplyBulkStatus}
                   disabled={selectedCount === 0 || applying}
                 >
                   {applying ? 'Applying...' : 'Apply'}
@@ -226,7 +164,7 @@ export function ProductList({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={clearSelection}
+                  onClick={onClearSelection}
                   disabled={selectedCount === 0 || applying}
                 >
                   Clear
@@ -234,7 +172,7 @@ export function ProductList({
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={applyBulkDelete}
+                  onClick={onApplyBulkDelete}
                   disabled={selectedCount === 0 || applying}
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
@@ -250,7 +188,7 @@ export function ProductList({
           onEdit={onEdit}
           onDelete={onDelete}
           onQuickView={onQuickView}
-          selectedUuids={selectedUuids}
+          selectedUuids={selectedSet}
           onToggleRow={onToggleRow}
           onToggleAllOnPage={onToggleAllOnPage}
           showSelection={selectMode}

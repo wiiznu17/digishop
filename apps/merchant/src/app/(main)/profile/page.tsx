@@ -22,14 +22,8 @@ import {
 import { MerchantHeader } from '@/components/dashboard-header'
 import { User, Building, Save, Edit, CheckCircle } from 'lucide-react'
 import {
-  fetchMerchantProfileRequester,
-  updateMerchantAddressRequester,
-  updateMerchantProfileRequester
-} from '@/utils/requestUtils/requestProfileUtils'
-import {
   defaultMerchant,
   MerchantProfileFormValues,
-  MerchantProfileProps,
   ProfileMerchantImage,
   MerchantAddressForm,
   AddressType
@@ -44,6 +38,18 @@ import {
 } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { cn } from '@/utils/tailwindUtils'
+import { useMerchantProfileQuery } from '@/hooks/queries/useMerchantQueries'
+import {
+  useUpdateMerchantAddressMutation,
+  useUpdateMerchantProfileMutation
+} from '@/hooks/mutations/useMerchantMutations'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import {
+  closeProfileAddressAdd,
+  closeProfileAddressEdit,
+  openProfileAddressAdd,
+  openProfileAddressEdit
+} from '@/store/slices/merchantSlice'
 
 function normalizeImages(
   imgs: MerchantProfileFormValues['store']['profileImages']
@@ -53,25 +59,33 @@ function normalizeImages(
 }
 
 export default function ProfilePage() {
+  const dispatch = useAppDispatch()
+  const editOpen = useAppSelector(
+    (state) => state.merchant.isProfileAddressEditOpen
+  )
+  const addOpen = useAppSelector(
+    (state) => state.merchant.isProfileAddressAddOpen
+  )
+  const { data: profile, isLoading: isProfileLoading } =
+    useMerchantProfileQuery()
+  const updateProfileMutation = useUpdateMerchantProfileMutation()
+  const updateAddressMutation = useUpdateMerchantAddressMutation()
   const [profileData, setProfileData] =
     useState<MerchantProfileFormValues>(defaultMerchant)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
 
-  // dialog state
-  const [editOpen, setEditOpen] = useState(false)
   const [editingAddress, setEditingAddress] =
     useState<MerchantAddressForm | null>(null)
 
-  // states สำหรับ Add Address
-  const [addOpen, setAddOpen] = useState(false)
   const [draftNewAddress, setDraftNewAddress] =
     useState<MerchantAddressForm | null>(null)
 
-  // useEffect for fetch merchant detail
   useEffect(() => {
-    void handleFetchMerchantProfile()
-  }, [])
+    if (!profile?.store || !profile.store.addresses) {
+      setProfileData(defaultMerchant)
+      return
+    }
+    setProfileData(profile)
+  }, [profile])
   const emptyAddress = (): MerchantAddressForm => ({
     // id: undefined, // ใหม่ยังไม่มี id
     ownerName: '',
@@ -89,10 +103,9 @@ export default function ProfilePage() {
     isDefault: profileData.store.addresses.length === 0 // อันแรกให้ default
   })
   const openAddDialog = () => {
-    // อันแรกให้ default = true ตามเดิม
     const base = emptyAddress()
     setDraftNewAddress(base)
-    setAddOpen(true)
+    dispatch(openProfileAddressAdd())
   }
 
   // เมื่อกด Save ใน Add Dialog
@@ -120,18 +133,8 @@ export default function ProfilePage() {
         store: { ...prev.store, addresses: nextList }
       }
     })
-    setAddOpen(false)
+    dispatch(closeProfileAddressAdd())
     setDraftNewAddress(null)
-  }
-
-  const addAddress = () => {
-    setProfileData((prev) => ({
-      ...prev,
-      store: {
-        ...prev.store,
-        addresses: [...prev.store.addresses, emptyAddress()]
-      }
-    }))
   }
 
   const removeAddressByIndex = (index: number) => {
@@ -147,22 +150,6 @@ export default function ProfilePage() {
       }
       return { ...prev, store: { ...prev.store, addresses: list } }
     })
-  }
-
-  const handleFetchMerchantProfile = async () => {
-    try {
-      setIsLoading(true)
-      const currentProfile = await fetchMerchantProfileRequester()
-      if (!currentProfile?.store || !currentProfile?.store.addresses) {
-        setProfileData(defaultMerchant)
-      } else {
-        setProfileData(currentProfile)
-      }
-    } catch (error) {
-      console.error('Error fetching merchant profile:', error)
-    } finally {
-      setIsLoading(false)
-    }
   }
 
   const handleImagesChange = (images: ProfileMerchantImage[]) => {
@@ -211,8 +198,6 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      setIsSaving(true)
-
       const imgList = normalizeImages(profileData.store.profileImages)
 
       const imageFiles: File[] = []
@@ -229,28 +214,23 @@ export default function ProfilePage() {
         }
       }
 
-      const result = await updateMerchantProfileRequester(
+      const result = await updateProfileMutation.mutateAsync({
         profileData,
-        imageFiles
-      )
+        images: imageFiles
+      })
       if (result) {
         if (imgList.length > 0 && imgList[0].url?.startsWith?.('blob:')) {
           URL.revokeObjectURL(imgList[0].url)
         }
-        await handleFetchMerchantProfile()
-        alert('Profile updated successfully!')
       }
     } catch (error) {
       console.error('Error saving profile:', error)
-      alert('Error saving profile. Please try again.')
-    } finally {
-      setIsSaving(false)
     }
   }
 
   const openEditDialog = (addr: MerchantAddressForm) => {
     setEditingAddress(addr)
-    setEditOpen(true)
+    dispatch(openProfileAddressEdit())
   }
   const submitEditAddress = async () => {
     if (!editingAddress) return
@@ -263,12 +243,13 @@ export default function ProfilePage() {
     }
 
     try {
-      await updateMerchantAddressRequester(editingAddress.id, editingAddress)
-      setEditOpen(false)
-      await handleFetchMerchantProfile()
+      await updateAddressMutation.mutateAsync({
+        addressId: editingAddress.id,
+        payload: editingAddress
+      })
+      dispatch(closeProfileAddressEdit())
     } catch (e) {
       console.error(e)
-      alert('Update address failed')
     }
   }
 
@@ -280,9 +261,12 @@ export default function ProfilePage() {
         title="Profile"
         description="Manage your merchant account and business settings"
       >
-        <Button onClick={handleSave} disabled={isSaving || isLoading}>
+        <Button
+          onClick={handleSave}
+          disabled={updateProfileMutation.isPending || isProfileLoading}
+        >
           <Save className="mr-2 h-4 w-4" />
-          {isSaving ? 'Saving...' : 'Save Changes'}
+          {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
         </Button>
       </MerchantHeader>
 
@@ -618,7 +602,7 @@ export default function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!isLoading && (
+              {!isProfileLoading && (
                 <ProfileLogoUpload
                   images={profileData.store.profileImages}
                   onImagesChange={handleImagesChange}
@@ -660,7 +644,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Edit Address Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog
+        open={editOpen}
+        onOpenChange={(open) =>
+          dispatch(open ? openProfileAddressEdit() : closeProfileAddressEdit())
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Address</DialogTitle>
@@ -815,7 +804,10 @@ export default function ProfilePage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => dispatch(closeProfileAddressEdit())}
+            >
               Cancel
             </Button>
             <Button onClick={submitEditAddress}>Save</Button>
@@ -823,7 +815,12 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
       {/* Add Address Dialog */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+      <Dialog
+        open={addOpen}
+        onOpenChange={(open) =>
+          dispatch(open ? openProfileAddressAdd() : closeProfileAddressAdd())
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Address</DialogTitle>
@@ -985,7 +982,10 @@ export default function ProfilePage() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => dispatch(closeProfileAddressAdd())}
+            >
               Cancel
             </Button>
             <Button onClick={submitAddAddress}>Save</Button>

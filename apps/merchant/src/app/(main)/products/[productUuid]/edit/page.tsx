@@ -1,16 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { MerchantHeader } from '@/components/dashboard-header'
 import { ImageUpload, type ImageLike } from '@/components/product/imageUpload'
-import {
-  fetchProductDetailRequester,
-  fetchCategoriesRequester,
-  type CategoryDto,
-  updateProductDesiredRequester,
-  type DesiredPayload
-} from '@/utils/requestUtils/requestProductUtils'
+import { type DesiredPayload } from '@/utils/requestUtils/requestProductUtils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,25 +22,14 @@ import {
   type VariationDraft
 } from '@/components/product/variationEditor'
 import { Switch } from '@/components/ui/switch'
+import {
+  useProductCategoriesQuery,
+  useProductDetailQuery
+} from '@/hooks/queries/useProductQueries'
+import { useUpdateProductDesiredMutation } from '@/hooks/mutations/useProductDetailMutations'
 
 // ใช้ค่านี้เป็นตัวแทน "ไม่เลือกหมวด"
 const NONE_VALUE = 'none'
-
-type ServerImageLite = {
-  uuid: string
-  isMain: boolean
-  sortOrder: number
-  fileName: string
-}
-
-type ItemBaseline = {
-  uuid: string
-  sku: string
-  priceMinor: number
-  stockQuantity: number
-  isEnable: boolean
-  imageUuid?: string | null
-}
 
 type ItemEdit = {
   key: string
@@ -65,9 +48,10 @@ type ItemEdit = {
 export default function EditProductPage() {
   const { productUuid } = useParams<{ productUuid: string }>()
   const router = useRouter()
-
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const { data: product, isLoading } = useProductDetailQuery(productUuid)
+  const { data: categories = [], isLoading: catLoading } =
+    useProductCategoriesQuery()
+  const updateProductMutation = useUpdateProductDesiredMutation(productUuid)
 
   const [name, setName] = useState('')
   const [categoryUuid, setCategoryUuid] = useState<string>(NONE_VALUE)
@@ -77,21 +61,11 @@ export default function EditProductPage() {
 
   // images
   const [uiImages, setUiImages] = useState<ImageLike[]>([])
-  const [initialServerImages, setInitialServerImages] = useState<
-    ServerImageLite[]
-  >([])
-
-  const [categories, setCategories] = useState<CategoryDto[]>([])
-  const [catLoading, setCatLoading] = useState(false)
-
-  const [itemBaselines, setItemBaselines] = useState<ItemBaseline[]>([])
   const [itemEdits, setItemEdits] = useState<ItemEdit[]>([])
   const [baselineRowsByKey, setBaselineRowsByKey] = useState<
     Map<string, ItemEdit>
   >(new Map())
 
-  type VariationInit = VariationDraft
-  const [variationsInit, setVariationsInit] = useState<VariationInit[]>([])
   const [variationsDraft, setVariationsDraft] = useState<VariationDraft[]>([])
 
   // ===== Utils =====
@@ -126,131 +100,92 @@ export default function EditProductPage() {
   const comboLabel = (vals: string[]) => vals.join(' / ')
   const comboKey = (keys: string[]) => keys.join('|')
 
-  // ===== Load detail =====
   useEffect(() => {
-    const run = async () => {
-      setLoading(true)
-      const res = await fetchProductDetailRequester(productUuid)
-      setLoading(false)
-      if (!res) return
+    if (!product) return
 
-      setName(res.name || '')
-      setCategoryUuid(res.category?.uuid || NONE_VALUE)
-      setStatus(res.status || 'DRAFT')
-      setDescription(res.description || '')
-      setUpdatedAt(res.updatedAt)
+    setName(product.name || '')
+    setCategoryUuid(product.category?.uuid || NONE_VALUE)
+    setStatus(product.status || 'DRAFT')
+    setDescription(product.description || '')
+    setUpdatedAt(product.updatedAt)
 
-      const toClientId = (id?: string) =>
-        id ?? `${crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`
+    const toClientId = (id?: string) =>
+      id ?? `${crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`
 
-      const vDraft: VariationDraft[] = (res.variations ?? []).map((v) => ({
-        clientId: toClientId(v.uuid),
-        uuid: v.uuid,
-        name: v.name,
-        options: (v.options ?? [])
-          .slice()
-          .sort((a, b) => {
-            const so = (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-            if (so !== 0) return so
-            const ta = new Date(a.createdAt ?? '').getTime() || 0
-            const tb = new Date(b.createdAt ?? '').getTime() || 0
-            return ta - tb
-          })
-          .map((o, idx) => ({
-            clientId: toClientId(o.uuid),
-            uuid: o.uuid,
-            value: o.value,
-            sortOrder: o.sortOrder ?? idx
-          }))
-      }))
-      setVariationsInit(vDraft)
-      setVariationsDraft(JSON.parse(JSON.stringify(vDraft)) as VariationDraft[])
-
-      const imgs = (res.images ?? [])
-        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-        .map((it) => ({
-          uuid: it.uuid,
-          url: it.url,
-          fileName: it.fileName,
-          isMain: it.isMain,
-          sortOrder: it.sortOrder
-        }))
-      setUiImages(imgs)
-      setInitialServerImages(
-        imgs
-          .filter((i): i is Required<ImageLike> => !!i.uuid)
-          .map((i) => ({
-            uuid: i.uuid!,
-            isMain: !!i.isMain,
-            sortOrder: i.sortOrder ?? 0,
-            fileName: i.fileName
-          }))
-      )
-
-      const baseRows: ItemEdit[] = (res.items ?? [])
-        .map((it) => {
-          const optUuids = (it.configurations ?? [])
-            .map((c) => c.variationOption?.uuid)
-            .filter((u): u is string => !!u)
-
-          const keysInOrder: string[] = []
-          const labelsInOrder: string[] = []
-          for (const v of vDraft) {
-            const found = v.options.find(
-              (o) => o.uuid && optUuids.includes(o.uuid)
-            )
-            if (!found) return null
-            const k = found.uuid ?? found.clientId
-            keysInOrder.push(k)
-            labelsInOrder.push(found.value)
-          }
-
-          return {
-            key: comboKey(keysInOrder),
-            uuid: it.uuid,
-            optionKeys: keysInOrder,
-            label: comboLabel(labelsInOrder),
-            sku: it.sku ?? '',
-            price: fromMinor(it.priceMinor ?? 0),
-            stock: String(it.stockQuantity ?? 0),
-            isEnable: Boolean((it as ProductItemLite).isEnable ?? true),
-            image: it.productItemImage
-              ? ({
-                  uuid: it.productItemImage.uuid,
-                  url: it.productItemImage.url,
-                  fileName: it.productItemImage.fileName
-                } as ImageLike)
-              : null,
-            imageBaselineUuid: it.productItemImage?.uuid ?? null
-          }
+    const vDraft: VariationDraft[] = (product.variations ?? []).map((v) => ({
+      clientId: toClientId(v.uuid),
+      uuid: v.uuid,
+      name: v.name,
+      options: (v.options ?? [])
+        .slice()
+        .sort((a, b) => {
+          const so = (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+          if (so !== 0) return so
+          const ta = new Date(a.createdAt ?? '').getTime() || 0
+          const tb = new Date(b.createdAt ?? '').getTime() || 0
+          return ta - tb
         })
-        .filter((x): x is NonNullable<typeof x> => x !== null)
-
-      setItemBaselines(
-        (res.items ?? []).map((it) => ({
-          uuid: it.uuid,
-          sku: it.sku ?? '',
-          priceMinor: it.priceMinor ?? 0,
-          stockQuantity: it.stockQuantity ?? 0,
-          isEnable: Boolean((it as ProductItemLite).isEnable ?? true),
-          imageUuid: it.productItemImage?.uuid ?? null
+        .map((o, idx) => ({
+          clientId: toClientId(o.uuid),
+          uuid: o.uuid,
+          value: o.value,
+          sortOrder: o.sortOrder ?? idx
         }))
-      )
-      setItemEdits(baseRows)
-      setBaselineRowsByKey(new Map(baseRows.map((r) => [r.key, r])))
-    }
-    run()
-  }, [productUuid])
+    }))
+    setVariationsDraft(JSON.parse(JSON.stringify(vDraft)) as VariationDraft[])
 
-  useEffect(() => {
-    const run = async () => {
-      setCatLoading(true)
-      const list = await fetchCategoriesRequester()
-      setCategories(list)
-      setCatLoading(false)
-    }
-    run()
-  }, [])
+    const images = (product.images ?? [])
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      .map((image) => ({
+        uuid: image.uuid,
+        url: image.url,
+        fileName: image.fileName,
+        isMain: image.isMain,
+        sortOrder: image.sortOrder
+      }))
+    setUiImages(images)
+    const baseRows: ItemEdit[] = (product.items ?? [])
+      .map((it) => {
+        const optUuids = (it.configurations ?? [])
+          .map((c) => c.variationOption?.uuid)
+          .filter((u): u is string => !!u)
+
+        const keysInOrder: string[] = []
+        const labelsInOrder: string[] = []
+        for (const v of vDraft) {
+          const found = v.options.find(
+            (o) => o.uuid && optUuids.includes(o.uuid)
+          )
+          if (!found) return null
+          const k = found.uuid ?? found.clientId
+          keysInOrder.push(k)
+          labelsInOrder.push(found.value)
+        }
+
+        return {
+          key: comboKey(keysInOrder),
+          uuid: it.uuid,
+          optionKeys: keysInOrder,
+          label: comboLabel(labelsInOrder),
+          sku: it.sku ?? '',
+          price: fromMinor(it.priceMinor ?? 0),
+          stock: String(it.stockQuantity ?? 0),
+          isEnable: Boolean((it as ProductItemLite).isEnable ?? true),
+          image: it.productItemImage
+            ? ({
+                uuid: it.productItemImage.uuid,
+                url: it.productItemImage.url,
+                fileName: it.productItemImage.fileName
+              } as ImageLike)
+            : null,
+          imageBaselineUuid: it.productItemImage?.uuid ?? null
+        }
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null)
+
+    setItemEdits(baseRows)
+    setBaselineRowsByKey(new Map(baseRows.map((row) => [row.key, row])))
+  }, [product])
 
   useEffect(() => {
     const optionMatrix = variationsDraft.map((v) =>
@@ -307,28 +242,12 @@ export default function EditProductPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(variationsDraft)])
 
-  const serverUuidsInitial = useMemo(
-    () => new Set(initialServerImages.map((i) => i.uuid)),
-    [initialServerImages]
-  )
-
   const patchItem = (key: string, patch: Partial<ItemEdit>) => {
     setItemEdits((prev) =>
       prev.map((r) => (r.key === key ? { ...r, ...patch } : r))
     )
   }
 
-  const removeItem = (key: string) => {
-    setItemEdits((prev) => {
-      const row = prev.find((r) => r.key === key)
-      if (!row) return prev
-      if (!row.uuid) return prev.filter((r) => r.key !== key)
-      // return prev.map((r) =>
-      //   r.key === key ? { ...r, toBeDeleted: !r.toBeDeleted } : r
-      // )
-      return prev
-    })
-  }
   const getOptionPairs = (r: ItemEdit): { name?: string; value: string }[] => {
     const pairs: { name?: string; value: string }[] = []
 
@@ -378,7 +297,6 @@ export default function EditProductPage() {
       )
       return
     }
-    setSaving(true)
     try {
       // product images
       const productImageFiles: File[] = []
@@ -471,25 +389,14 @@ export default function EditProductPage() {
         items: desiredItems.filter(Boolean) as []
       }
 
-      const updated = await updateProductDesiredRequester(
-        productUuid,
+      await updateProductMutation.mutateAsync({
         payload,
-        productImageFiles,
-        itemImageFiles
-      )
-      if (!updated?.uuid) {
-        alert('Save failed')
-        setSaving(false)
-        return
-      }
-
-      alert('Saved')
+        productImages: productImageFiles,
+        itemImages: itemImageFiles
+      })
       router.push(`/products/${productUuid}`)
-    } catch (e) {
-      console.error(e)
-      alert('Error while saving')
-    } finally {
-      setSaving(false)
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -501,7 +408,7 @@ export default function EditProductPage() {
         description="Update your product detail"
       />
       <div className="p-4 space-y-6">
-        {loading ? (
+        {isLoading ? (
           <div className="text-sm text-muted-foreground">Loading...</div>
         ) : (
           <>
@@ -837,13 +744,16 @@ export default function EditProductPage() {
 
             {/* Actions */}
             <div className="flex gap-3">
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving...' : 'Save'}
+              <Button
+                onClick={handleSave}
+                disabled={updateProductMutation.isPending}
+              >
+                {updateProductMutation.isPending ? 'Saving...' : 'Save'}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => router.push(`/products/${productUuid}`)}
-                disabled={saving}
+                disabled={updateProductMutation.isPending}
               >
                 Cancel
               </Button>

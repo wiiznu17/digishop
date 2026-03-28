@@ -1,15 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { MerchantHeader } from '@/components/dashboard-header'
-import {
-  fetchProductDetailRequester,
-  deleteProductRequester,
-  duplicateProductRequester,
-  updateProductItemRequester // toggle enable
-} from '@/utils/requestUtils/requestProductUtils'
-
 import {
   Card,
   CardContent,
@@ -27,28 +20,30 @@ import {
 } from '@/components/ui/dialog'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ProductItemLite } from '@/types/props/productProp'
+import { useProductDetailQuery } from '@/hooks/queries/useProductQueries'
+import {
+  useDeleteProductDetailMutation,
+  useDuplicateProductMutation,
+  useToggleProductItemMutation
+} from '@/hooks/mutations/useProductDetailMutations'
 
-type ProductDetail = Awaited<ReturnType<typeof fetchProductDetailRequester>>
-
-// ช่วย format วันที่ โดยไม่ต้อง cast any
-const formatDate = (v: unknown) => {
-  if (v instanceof Date) return v.toLocaleString()
-  if (typeof v === 'string' || typeof v === 'number') {
-    const d = new Date(v)
-    return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString()
+const formatDate = (value: unknown) => {
+  if (value instanceof Date) return value.toLocaleString()
+  if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString()
   }
   return '-'
 }
 
 export default function ProductDetailPage() {
-  const params = useParams<{ productUuid: string }>()
+  const { productUuid } = useParams<{ productUuid: string }>()
   const router = useRouter()
-  const productUuid = params.productUuid
+  const { data, isLoading, isError } = useProductDetailQuery(productUuid)
+  const deleteProductMutation = useDeleteProductDetailMutation(productUuid)
+  const duplicateProductMutation = useDuplicateProductMutation()
+  const toggleProductItemMutation = useToggleProductItemMutation(productUuid)
 
-  const [data, setData] = useState<ProductDetail>(null)
-  const [loading, setLoading] = useState<boolean>(false)
-
-  // ===== Lightbox preview state =====
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewIndex, setPreviewIndex] = useState(0)
   const [previewList, setPreviewList] = useState<
@@ -56,101 +51,77 @@ export default function ProductDetailPage() {
   >([])
 
   const openPreview = (list: { url: string; label?: string }[], index = 0) => {
-    if (!list || list.length === 0) return
+    if (list.length === 0) return
     setPreviewList(list)
     setPreviewIndex(Math.max(0, Math.min(index, list.length - 1)))
     setPreviewOpen(true)
   }
-  const nextPreview = () =>
-    setPreviewIndex((i) => (i + 1) % Math.max(1, previewList.length))
-  const prevPreview = () =>
+
+  const nextPreview = () => {
+    setPreviewIndex((index) => (index + 1) % Math.max(1, previewList.length))
+  }
+
+  const prevPreview = () => {
     setPreviewIndex(
-      (i) =>
-        (i - 1 + Math.max(1, previewList.length)) %
+      (index) =>
+        (index - 1 + Math.max(1, previewList.length)) %
         Math.max(1, previewList.length)
     )
-
-  const load = async () => {
-    setLoading(true)
-    const res = await fetchProductDetailRequester(productUuid)
-    setLoading(false)
-    setData(res)
   }
-
-  useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productUuid])
 
   const handleDelete = async () => {
-    if (!confirm('Delete this product?')) return
-    const ok = await deleteProductRequester(productUuid)
-    if (ok) router.push('/products')
-  }
-
-  const handleDuplicate = async () => {
-    const res = await duplicateProductRequester(productUuid)
-    if (res?.uuid) router.push(`/products/${res.uuid}/edit`)
-  }
-
-  // toggle isEnable แบบ optimistic update
-  const handleToggleEnable = async (
-    itemUuid: string,
-    next: boolean,
-    prev: boolean
-  ) => {
-    // optimistic
-    setData((prevData) =>
-      prevData
-        ? ({
-            ...prevData,
-            items: (prevData.items ?? []).map((it) =>
-              it.uuid === itemUuid ? { ...it, isEnable: next } : it
-            )
-          } as ProductDetail)
-        : prevData
-    )
+    if (!window.confirm('Delete this product?')) return
 
     try {
-      const res = await updateProductItemRequester(productUuid, itemUuid, {
-        isEnable: next
-      })
-      if (!res) throw new Error('Update failed')
+      await deleteProductMutation.mutateAsync()
+      router.push('/products')
     } catch {
-      // revert
-      setData((prevData) =>
-        prevData
-          ? ({
-              ...prevData,
-              items: (prevData.items ?? []).map((it) =>
-                it.uuid === itemUuid ? { ...it, isEnable: prev } : it
-              )
-            } as ProductDetail)
-          : prevData
-      )
-      alert('Failed to update enable status')
+      // toast handled in mutation hook
     }
   }
 
-  // ====== Derived UI values ======
+  const handleDuplicate = async () => {
+    try {
+      const duplicated = await duplicateProductMutation.mutateAsync(productUuid)
+      router.push(`/products/${duplicated.uuid}/edit`)
+    } catch {
+      // toast handled in mutation hook
+    }
+  }
+
+  const handleToggleEnable = async (itemUuid: string, next: boolean) => {
+    try {
+      await toggleProductItemMutation.mutateAsync({ itemUuid, next })
+    } catch {
+      // toast handled in mutation hook
+    }
+  }
+
   const mainImage = useMemo(() => {
-    const imgs = data?.images ?? []
-    return imgs.find((i) => i.isMain) ?? imgs[0] ?? null
+    const images = data?.images ?? []
+    return images.find((image) => image.isMain) ?? images[0] ?? null
   }, [data])
 
   const totalStock = useMemo(
     () =>
-      (data?.items ?? []).reduce((sum, it) => sum + (it.stockQuantity ?? 0), 0),
+      (data?.items ?? []).reduce(
+        (sum, item) => sum + (item.stockQuantity ?? 0),
+        0
+      ),
     [data]
   )
 
   const minPriceMinor = useMemo(() => {
     const items = data?.items ?? []
     if (items.length === 0) return null
+
     let min = Number.POSITIVE_INFINITY
-    for (const it of items) {
-      if (typeof it.priceMinor === 'number') min = Math.min(min, it.priceMinor)
+    for (const item of items) {
+      if (typeof item.priceMinor === 'number') {
+        min = Math.min(min, item.priceMinor)
+      }
     }
+
     return Number.isFinite(min) ? min : null
   }, [data])
 
@@ -162,9 +133,12 @@ export default function ProductDetailPage() {
           currency: 'THB'
         })
 
-  // แกลเลอรีทั้งหมดของ product
   const galleryList = useMemo(
-    () => (data?.images ?? []).map((g) => ({ url: g.url, label: g.fileName })),
+    () =>
+      (data?.images ?? []).map((image) => ({
+        url: image.url,
+        label: image.fileName
+      })),
     [data]
   )
 
@@ -175,31 +149,31 @@ export default function ProductDetailPage() {
         description="View product information"
       />
 
-      <div className="p-4 space-y-6">
-        {/* Loading / Not found */}
-        {loading && (
+      <div className="space-y-6 p-4">
+        {isLoading && (
           <div className="text-sm text-muted-foreground">Loading...</div>
         )}
-        {!loading && !data && (
+        {!isLoading && (isError || !data) && (
           <div className="text-sm text-destructive">Not found</div>
         )}
 
-        {!loading && !!data && (
+        {!isLoading && data && (
           <>
-            {/* ===== Top Header Card ===== */}
             <Card>
               <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-4">
                   <button
                     type="button"
-                    className="h-60 w-60 rounded-lg overflow-hidden bg-muted border cursor-zoom-in"
+                    className="h-60 w-60 overflow-hidden rounded-lg border bg-muted"
                     onClick={() =>
                       mainImage &&
                       openPreview(
                         galleryList,
                         Math.max(
                           0,
-                          galleryList.findIndex((g) => g.url === mainImage.url)
+                          galleryList.findIndex(
+                            (image) => image.url === mainImage.url
+                          )
                         )
                       )
                     }
@@ -212,7 +186,7 @@ export default function ProductDetailPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
+                      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
                         No image
                       </div>
                     )}
@@ -220,35 +194,32 @@ export default function ProductDetailPage() {
 
                   <div>
                     <CardTitle className="text-xl">{data.name}</CardTitle>
-                    {/* <CardDescription className="mt-1">
-                      UUID: {data.uuid}
-                    </CardDescription> */}
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       {data.description || '—'}
                     </p>
 
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
                       {data.category?.name && (
-                        <div className="px-2 py-1 rounded border bg-muted/40">
+                        <div className="rounded border bg-muted/40 px-2 py-1">
                           Category: {data.category.name}
                         </div>
                       )}
-                      <div className="px-2 py-1 rounded border bg-muted/40">
+                      <div className="rounded border bg-muted/40 px-2 py-1">
                         Status: {data.status}
                       </div>
-                      <div className="px-2 py-1 rounded border bg-muted/40">
+                      <div className="rounded border bg-muted/40 px-2 py-1">
                         Approval: {data.reqStatus}
                       </div>
-                      <div className="px-2 py-1 rounded border bg-muted/40">
+                      <div className="rounded border bg-muted/40 px-2 py-1">
                         Created: {formatDate(data.createdAt)}
                       </div>
-                      <div className="px-2 py-1 rounded border bg-muted/40">
+                      <div className="rounded border bg-muted/40 px-2 py-1">
                         Updated: {formatDate(data.updatedAt)}
                       </div>
                     </div>
 
                     {data.reqStatus === 'REJECT' && !!data.rejectReason && (
-                      <div className="mt-3 text-sm rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2">
+                      <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                         <span className="font-medium">Rejected reason:</span>{' '}
                         <span className="opacity-90">{data.rejectReason}</span>
                       </div>
@@ -256,7 +227,6 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -264,7 +234,11 @@ export default function ProductDetailPage() {
                   >
                     Back
                   </Button>
-                  <Button variant="outline" onClick={handleDuplicate}>
+                  <Button
+                    variant="outline"
+                    onClick={handleDuplicate}
+                    disabled={duplicateProductMutation.isPending}
+                  >
                     Duplicate
                   </Button>
                   <Button
@@ -272,15 +246,18 @@ export default function ProductDetailPage() {
                   >
                     Edit
                   </Button>
-                  <Button variant="destructive" onClick={handleDelete}>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={deleteProductMutation.isPending}
+                  >
                     Delete
                   </Button>
                 </div>
               </CardHeader>
 
               <CardContent>
-                {/* Quick stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                   <div className="rounded-lg border p-3">
                     <div className="text-xs text-muted-foreground">SKUs</div>
                     <div className="text-lg font-semibold">
@@ -294,8 +271,8 @@ export default function ProductDetailPage() {
                     <div className="text-lg font-semibold">
                       {
                         (data.items ?? []).filter(
-                          (i) =>
-                            (i as { isEnable?: boolean }).isEnable !== false
+                          (item) =>
+                            (item as { isEnable?: boolean }).isEnable !== false
                         ).length
                       }
                     </div>
@@ -318,7 +295,6 @@ export default function ProductDetailPage() {
               </CardContent>
             </Card>
 
-            {/* ===== Images ===== */}
             <Card>
               <CardHeader>
                 <CardTitle>Images</CardTitle>
@@ -329,24 +305,24 @@ export default function ProductDetailPage() {
                   <div className="text-sm text-muted-foreground">No images</div>
                 )}
                 {data.images && data.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {data.images.map((img, idx) => (
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {data.images.map((image, index) => (
                       <button
-                        key={img.uuid}
+                        key={image.uuid}
                         type="button"
-                        className="border rounded overflow-hidden cursor-zoom-in"
-                        onClick={() => openPreview(galleryList, idx)}
+                        className="overflow-hidden rounded border"
+                        onClick={() => openPreview(galleryList, index)}
                         title="Click to preview"
                       >
                         <img
-                          src={img.url}
-                          alt={img.fileName}
-                          className="w-full aspect-square object-cover"
+                          src={image.url}
+                          alt={image.fileName}
+                          className="aspect-square w-full object-cover"
                         />
-                        <div className="p-2 text-xs flex items-center justify-between">
-                          <span className="truncate">{img.fileName}</span>
-                          {img.isMain && (
-                            <span className="px-1 rounded bg-yellow-200 text-yellow-900">
+                        <div className="flex items-center justify-between p-2 text-xs">
+                          <span className="truncate">{image.fileName}</span>
+                          {image.isMain && (
+                            <span className="rounded bg-yellow-200 px-1 text-yellow-900">
                               Main
                             </span>
                           )}
@@ -358,7 +334,6 @@ export default function ProductDetailPage() {
               </CardContent>
             </Card>
 
-            {/* ===== Variations ===== */}
             <Card>
               <CardHeader>
                 <CardTitle>Variations</CardTitle>
@@ -370,17 +345,17 @@ export default function ProductDetailPage() {
                     No variations
                   </div>
                 )}
-                {(data.variations ?? []).map((v) => (
-                  <div key={v.uuid} className="rounded border p-3">
-                    <div className="font-medium">{v.name}</div>
-                    <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-2">
-                      {(v.options?.length ?? 0) > 0
-                        ? v.options?.map((o) => (
+                {(data.variations ?? []).map((variation) => (
+                  <div key={variation.uuid} className="rounded border p-3">
+                    <div className="font-medium">{variation.name}</div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      {(variation.options?.length ?? 0) > 0
+                        ? variation.options?.map((option) => (
                             <span
-                              key={o.uuid}
-                              className="px-2 py-1 rounded bg-muted/40 border"
+                              key={option.uuid}
+                              className="rounded border bg-muted/40 px-2 py-1"
                             >
-                              {o.value}
+                              {option.value}
                             </span>
                           ))
                         : '—'}
@@ -390,7 +365,6 @@ export default function ProductDetailPage() {
               </CardContent>
             </Card>
 
-            {/* ===== Items (SKUs) ===== */}
             <Card>
               <CardHeader>
                 <CardTitle>Product Items (SKUs)</CardTitle>
@@ -402,38 +376,38 @@ export default function ProductDetailPage() {
                 )}
                 {(data.items ?? []).length > 0 && (
                   <div className="overflow-x-auto">
-                    <table className="min-w-[900px] w-full text-sm border rounded">
+                    <table className="min-w-[900px] w-full rounded border text-sm">
                       <thead className="bg-muted/40">
                         <tr>
-                          <th className="text-left p-2">Image</th>
-                          <th className="text-left p-2">SKU</th>
-                          <th className="text-left p-2">Configurations</th>
-                          <th className="text-right p-2">Price</th>
-                          <th className="text-right p-2">Stock</th>
-                          <th className="text-center p-2">Enable</th>
+                          <th className="p-2 text-left">Image</th>
+                          <th className="p-2 text-left">SKU</th>
+                          <th className="p-2 text-left">Configurations</th>
+                          <th className="p-2 text-right">Price</th>
+                          <th className="p-2 text-right">Stock</th>
+                          <th className="p-2 text-center">Enable</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(data.items ?? []).map((it) => {
+                        {(data.items ?? []).map((item) => {
                           const enabled =
-                            (it as { isEnable?: boolean }).isEnable !== false
-                          // รองรับทั้ง field เดิมและใหม่
+                            (item as { isEnable?: boolean }).isEnable !== false
                           const itemImgUrl =
-                            (it as ProductItemLite).productItemImage?.url ??
-                            it.imageUrl ??
+                            (item as ProductItemLite).productItemImage?.url ??
+                            item.imageUrl ??
                             null
                           const itemLabel =
-                            it.sku ||
-                            (it as ProductItemLite).productItemImage
+                            item.sku ||
+                            (item as ProductItemLite).productItemImage
                               ?.fileName ||
                             'Item image'
+
                           return (
-                            <tr key={it.uuid} className="border-t">
+                            <tr key={item.uuid} className="border-t">
                               <td className="p-2">
                                 {itemImgUrl ? (
                                   <button
                                     type="button"
-                                    className="h-20 w-20 rounded object-cover border overflow-hidden cursor-zoom-in"
+                                    className="h-20 w-20 overflow-hidden rounded border"
                                     onClick={() =>
                                       openPreview(
                                         [{ url: itemImgUrl, label: itemLabel }],
@@ -449,36 +423,37 @@ export default function ProductDetailPage() {
                                     />
                                   </button>
                                 ) : (
-                                  <div className="h-20 w-20 rounded border flex items-center justify-center text-[10px] text-muted-foreground">
+                                  <div className="flex h-20 w-20 items-center justify-center rounded border text-[10px] text-muted-foreground">
                                     No Image
                                   </div>
                                 )}
                               </td>
-                              <td className="p-2">{it.sku || '-'}</td>
+                              <td className="p-2">{item.sku || '-'}</td>
                               <td className="p-2 text-xs text-muted-foreground">
-                                {(it.configurations ?? [])
-                                  .map((c) => c.variationOption?.value)
+                                {(item.configurations ?? [])
+                                  .map(
+                                    (config) => config.variationOption?.value
+                                  )
                                   .filter(Boolean)
                                   .join(' · ') || '—'}
                               </td>
                               <td className="p-2 text-right">
-                                {formatTHB(it.priceMinor ?? null)}
+                                {formatTHB(item.priceMinor ?? null)}
                               </td>
                               <td className="p-2 text-right">
-                                {it.stockQuantity ?? 0}
+                                {item.stockQuantity ?? 0}
                               </td>
                               <td className="p-2 text-center">
                                 <div className="flex items-center justify-center gap-2">
                                   <Switch
                                     checked={enabled}
                                     onCheckedChange={(checked: boolean) =>
-                                      handleToggleEnable(
-                                        it.uuid,
-                                        checked,
-                                        enabled
-                                      )
+                                      handleToggleEnable(item.uuid, checked)
                                     }
-                                    aria-label={`Toggle enable for ${it.sku}`}
+                                    disabled={
+                                      toggleProductItemMutation.isPending
+                                    }
+                                    aria-label={`Toggle enable for ${item.sku}`}
                                   />
                                   <span className="text-xs text-muted-foreground">
                                     {enabled ? 'Enabled' : 'Disabled'}
@@ -498,10 +473,8 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      {/* ===== Lightbox Preview ===== */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] p-0 overflow-hidden">
-          {/* A11y: ต้องมี DialogTitle */}
+        <DialogContent className="overflow-hidden p-0 sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw]">
           <DialogHeader>
             <DialogTitle className="sr-only">Image preview</DialogTitle>
           </DialogHeader>
@@ -519,7 +492,7 @@ export default function ProductDetailPage() {
               <>
                 <button
                   type="button"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 transition-colors hover:bg-white"
                   onClick={prevPreview}
                   aria-label="Previous image"
                 >
@@ -527,7 +500,7 @@ export default function ProductDetailPage() {
                 </button>
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 transition-colors hover:bg-white"
                   onClick={nextPreview}
                   aria-label="Next image"
                 >
@@ -536,7 +509,7 @@ export default function ProductDetailPage() {
               </>
             )}
           </div>
-          <div className="px-4 py-2 text-sm text-muted-foreground truncate">
+          <div className="truncate px-4 py-2 text-sm text-muted-foreground">
             {previewList[previewIndex]?.label}
           </div>
         </DialogContent>

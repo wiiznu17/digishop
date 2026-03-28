@@ -33,10 +33,10 @@ import { useOrderStatus } from '@/hooks/useOrderStatus'
 interface OrderDetailDialogProps {
   order: Order | null
   isOpen: boolean
+  loading?: boolean
   onClose: () => void
   onStatusChange: (orderId: string, newStatus: OrderStatus) => void
   onTrackingNumberUpdate: (orderId: string, trackingNumber: string) => void
-  /** NEW: สำหรับอัพเดตเป็น HANDED_OVER + tracking พร้อมกัน */
   onHandedOver?: (
     orderId: string,
     trackingNumber: string,
@@ -47,19 +47,32 @@ interface OrderDetailDialogProps {
 export function OrderDetailDialog({
   order,
   isOpen,
+  loading = false,
   onClose,
   onStatusChange,
   onTrackingNumberUpdate,
-  onHandedOver // <-- NEW
+  onHandedOver
 }: OrderDetailDialogProps) {
-  const {
-    getStatusBadgeColor,
-    getStatusIcon,
-    getStatusText,
-    getMerchantEditableStatuses
-  } = useOrderStatus()
+  const { getStatusBadgeColor, getStatusIcon, getStatusText } = useOrderStatus()
 
-  if (!order) return null
+  if (!isOpen) return null
+
+  if (!order) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+            <DialogDescription>
+              {loading
+                ? 'Loading order details…'
+                : 'Order details unavailable.'}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -70,12 +83,13 @@ export function OrderDetailDialog({
             Order Details - {order.id}
           </DialogTitle>
           <DialogDescription>
-            Complete information about the order and products
+            {loading
+              ? 'Refreshing latest order details…'
+              : 'Complete information about the order and products'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Status and Payment */}
           <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
             <div className="flex items-center gap-4">
               <Badge
@@ -113,7 +127,6 @@ export function OrderDetailDialog({
             </div>
           </div>
 
-          {/* Status Management */}
           <OrderStatusManager
             currentStatus={order.status}
             statusHistory={order.statusHistory ?? []}
@@ -121,11 +134,9 @@ export function OrderDetailDialog({
             trackingNumber={order.trackingNumber ?? undefined}
             onStatusChange={onStatusChange}
             onTrackingNumberUpdate={onTrackingNumberUpdate}
-            /** ส่ง handler hand over ลงไป */
             onHandedOver={onHandedOver}
           />
 
-          {/* Notes */}
           {order.notes && (
             <Card>
               <CardHeader>
@@ -136,7 +147,7 @@ export function OrderDetailDialog({
               </CardContent>
             </Card>
           )}
-          {/* Customer Information and Shipping */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -218,7 +229,6 @@ export function OrderDetailDialog({
             </Card>
           </div>
 
-          {/* Product List */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Order Items</CardTitle>
@@ -260,37 +270,10 @@ export function OrderDetailDialog({
                   </TableBody>
                 </Table>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  No products in this order.
-                </p>
+                <div className="text-sm text-muted-foreground">
+                  No order items.
+                </div>
               )}
-
-              {/* Order Summary */}
-              <div className="mt-4 space-y-2 border-t pt-4">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal:</span>
-                  <span>
-                    ฿
-                    {(
-                      order.grandTotal -
-                      (order.shippingCost ?? 0) -
-                      (order.tax ?? 0)
-                    ).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Shipping:</span>
-                  <span>฿{order.shippingCost?.toLocaleString() ?? '0'}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Tax:</span>
-                  <span>฿{order.tax?.toLocaleString() ?? '0'}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
-                  <span>฿{order.grandTotal?.toLocaleString() ?? '0'}</span>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

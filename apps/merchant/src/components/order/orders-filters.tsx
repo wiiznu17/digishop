@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RotateCcw, SlidersHorizontal } from 'lucide-react'
@@ -10,7 +10,7 @@ import {
   MultiSelectItem,
   MultiSelectTrigger,
   MultiSelectValue
-} from '@/components/ui/multi-select' // <- ใช้ lib multi-select ของคุณ หรือเปลี่ยนเป็น combobox custom ก็ได้
+} from '@/components/ui/multi-select'
 import {
   Select,
   SelectContent,
@@ -24,37 +24,24 @@ export type SortDir = 'ASC' | 'DESC'
 
 export interface OrdersFiltersValue {
   q: string
-  statuses: string[] // multi
+  statuses: string[]
   sortBy: SortField
   sortDir: SortDir
-  hasTracking?: 'true' | 'false' | '' // optional
+  hasTracking?: 'true' | 'false' | ''
 }
 
 export function OrdersFilters({
-  initial,
+  value,
+  onChange,
   onApply,
   onReset
 }: {
-  initial: OrdersFiltersValue
-  onApply: (v: OrdersFiltersValue) => void
+  value: OrdersFiltersValue
+  onChange: (patch: Partial<OrdersFiltersValue>) => void
+  onApply: () => void
   onReset: () => void
 }) {
-  const [q, setQ] = useState(initial.q)
-  const [statuses, setStatuses] = useState<string[]>(initial.statuses)
-  const [sortBy, setSortBy] = useState<SortField>(initial.sortBy)
-  const [sortDir, setSortDir] = useState<SortDir>(initial.sortDir)
-  const [hasTracking, setHasTracking] = useState<'' | 'true' | 'false'>(
-    initial.hasTracking ?? ''
-  )
-  const ALL = '__ALL__' // sentinel แทน "All"
-
-  useEffect(() => {
-    setQ(initial.q)
-    setStatuses(initial.statuses)
-    setSortBy(initial.sortBy)
-    setSortDir(initial.sortDir)
-    setHasTracking(initial.hasTracking ?? '')
-  }, [initial])
+  const ALL = '__ALL__'
 
   const statusOptions = useMemo(
     () => [
@@ -84,17 +71,15 @@ export function OrdersFilters({
     []
   )
 
-  const apply = () => onApply({ q, statuses, sortBy, sortDir, hasTracking })
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <Input
           placeholder="Search order id / order code…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+          value={value.q}
+          onChange={(e) => onChange({ q: e.target.value })}
         />
-        <Button onClick={apply}>Search</Button>
+        <Button onClick={onApply}>Search</Button>
         <Button variant="outline" onClick={onReset}>
           <RotateCcw className="h-4 w-4 mr-1" /> Clear
         </Button>
@@ -104,25 +89,28 @@ export function OrdersFilters({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* multi status */}
-        <MultiSelect value={statuses} onValueChange={setStatuses}>
+        <MultiSelect
+          value={value.statuses}
+          onValueChange={(statuses) => onChange({ statuses })}
+        >
           <MultiSelectTrigger>
             <MultiSelectValue placeholder="Filter by statuses..." />
           </MultiSelectTrigger>
           <MultiSelectContent>
-            {statusOptions.map((s) => (
-              <MultiSelectItem key={s} value={s}>
-                {s}
+            {statusOptions.map((status) => (
+              <MultiSelectItem key={status} value={status}>
+                {status}
               </MultiSelectItem>
             ))}
           </MultiSelectContent>
         </MultiSelect>
 
-        {/* tracking */}
         <Select
-          value={hasTracking === '' ? ALL : hasTracking}
-          onValueChange={(v) =>
-            setHasTracking(v === ALL ? '' : (v as 'true' | 'false'))
+          value={value.hasTracking === '' ? ALL : value.hasTracking}
+          onValueChange={(next) =>
+            onChange({
+              hasTracking: next === ALL ? '' : (next as 'true' | 'false')
+            })
           }
         >
           <SelectTrigger>
@@ -135,11 +123,10 @@ export function OrdersFilters({
           </SelectContent>
         </Select>
 
-        {/* sort */}
         <div className="flex gap-2">
           <Select
-            value={sortBy}
-            onValueChange={(v) => setSortBy(v as SortField)}
+            value={value.sortBy}
+            onValueChange={(next) => onChange({ sortBy: next as SortField })}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Sort field" />
@@ -153,8 +140,8 @@ export function OrdersFilters({
           </Select>
 
           <Select
-            value={sortDir}
-            onValueChange={(v) => setSortDir(v as SortDir)}
+            value={value.sortDir}
+            onValueChange={(next) => onChange({ sortDir: next as SortDir })}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Direction" />
