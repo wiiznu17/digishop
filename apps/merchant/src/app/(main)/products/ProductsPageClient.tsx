@@ -38,6 +38,7 @@ import {
   useDeleteProductMutation
 } from '@/hooks/mutations/useProductMutations'
 import type { FetchProductsParams } from '@/utils/requestUtils/requestProductUtils'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 function fromSearchParams(searchParams: URLSearchParams): {
   filters: ProductFilterState
@@ -124,6 +125,7 @@ export default function ProductsPage() {
     bulkStatusChoice
   } = useAppSelector((state) => state.products)
   const { toast } = useToast()
+  const { confirm } = useConfirm()
   const productsErrorSignatureRef = useRef<string | null>(null)
   const categoriesErrorSignatureRef = useRef<string | null>(null)
 
@@ -222,7 +224,16 @@ export default function ProductsPage() {
   }
 
   const handleDelete = async (uuid: string) => {
-    if (!confirm('Delete this product?')) return
+    const confirmed = await confirm({
+      title: 'Delete product?',
+      description:
+        'This product will be removed from your catalog. This action cannot be undone.',
+      confirmText: 'Delete product',
+      cancelText: 'Keep product',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
+
     await deleteProductMutation.mutateAsync(uuid)
     dispatch(removeProductsFromSelection([uuid]))
     if (quickViewProductUuid === uuid) {
@@ -232,6 +243,15 @@ export default function ProductsPage() {
 
   const handleApplyBulkStatus = async () => {
     if (selectedUuids.length === 0) return
+
+    const confirmed = await confirm({
+      title: 'Apply bulk status update?',
+      description: `Update ${selectedUuids.length} selected product(s) to "${bulkStatusChoice}"?`,
+      confirmText: 'Apply status',
+      cancelText: 'Cancel'
+    })
+    if (!confirmed) return
+
     await bulkStatusMutation.mutateAsync({
       productUuids: selectedUuids,
       status: bulkStatusChoice
@@ -241,7 +261,16 @@ export default function ProductsPage() {
 
   const handleApplyBulkDelete = async () => {
     if (selectedUuids.length === 0) return
-    if (!confirm(`Delete ${selectedUuids.length} selected product(s)?`)) return
+
+    const confirmed = await confirm({
+      title: 'Delete selected products?',
+      description: `Delete ${selectedUuids.length} selected product(s)? This action cannot be undone.`,
+      confirmText: 'Delete products',
+      cancelText: 'Keep products',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
+
     const deleting = [...selectedUuids]
     await bulkDeleteMutation.mutateAsync(deleting)
     dispatch(clearSelectedProducts())

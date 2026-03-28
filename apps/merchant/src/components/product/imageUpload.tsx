@@ -28,6 +28,7 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 // รองรับทั้ง id/uuid
 export type ImageLike = {
@@ -61,6 +62,7 @@ export function ImageUpload({
   variant = 'default'
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
+  const { confirm } = useConfirm()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [fileInputKey, setFileInputKey] = useState(0) // recreate input ทุกครั้งหลังเลือกไฟล์
 
@@ -271,6 +273,18 @@ export function ImageUpload({
     e?.stopPropagation()
 
     const img = images[index]
+    const confirmed = await confirm({
+      title: 'Remove image?',
+      description:
+        mode === 'server'
+          ? 'This image will be removed from the product gallery.'
+          : 'This image will be removed from the current draft.',
+      confirmText: 'Remove image',
+      cancelText: 'Keep image',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
+
     const imageUuid = img.uuid ?? img.id
 
     if (mode === 'server' && productUuid && imageUuid && !isBlob(img.url)) {

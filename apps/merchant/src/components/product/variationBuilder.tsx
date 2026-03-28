@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Plus, Trash2 } from 'lucide-react'
 import { ImageLike, ImageUpload } from './imageUpload'
 import { Switch } from '../ui/switch'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 // ===== Types for Draft on client =====
 export type OptionDraft = {
@@ -130,6 +131,8 @@ export default function VariationBuilder({
   onItemsChange,
   skuPrefix
 }: Props) {
+  const { confirm } = useConfirm()
+
   // เมื่อ variations เปลี่ยน → regenerate rows โดย merge ค่าที่เคยกรอก
   useEffect(() => {
     const optionMatrix = variations.map((v) => v.options)
@@ -203,7 +206,17 @@ export default function VariationBuilder({
     onVariationsChange([...variations, nv])
   }
 
-  const removeVariation = (cid: string) => {
+  const removeVariation = async (cid: string) => {
+    const confirmed = await confirm({
+      title: 'Delete variation?',
+      description:
+        'Deleting this variation will also remove its generated item combinations.',
+      confirmText: 'Delete variation',
+      cancelText: 'Keep variation',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
+
     onVariationsChange(variations.filter((v) => v.cid !== cid))
   }
 
@@ -233,7 +246,17 @@ export default function VariationBuilder({
     )
   }
 
-  const removeOption = (varCid: string, optCid: string) => {
+  const removeOption = async (varCid: string, optCid: string) => {
+    const confirmed = await confirm({
+      title: 'Delete option?',
+      description:
+        'Deleting this option may remove generated SKU combinations that depend on it.',
+      confirmText: 'Delete option',
+      cancelText: 'Keep option',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
+
     onVariationsChange(
       variations.map((v) =>
         v.cid === varCid

@@ -23,6 +23,7 @@ import { ModeToggle } from '@/components/mode-toggle'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { createMerchant } from '@/utils/requestUtils/requestAuthUtils'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 type FormData = {
   storeName: string
@@ -64,6 +65,7 @@ export default function RegisterPage() {
 
   const { logout, user, isLoading } = useAuth()
   const router = useRouter()
+  const { confirm } = useConfirm()
 
   useEffect(() => {
     if (!isLoading) {
@@ -356,6 +358,16 @@ export default function RegisterPage() {
                       className="flex-1"
                       disabled={isLoading}
                       onClick={async () => {
+                        const confirmed = await confirm({
+                          title: 'Log out?',
+                          description:
+                            'You will leave merchant registration and be signed out.',
+                          confirmText: 'Log out',
+                          cancelText: 'Continue registration',
+                          variant: 'destructive'
+                        })
+                        if (!confirmed) return
+
                         await logout()
                         router.push('/login')
                       }}

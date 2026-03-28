@@ -8,6 +8,7 @@ import {
   isServer
 } from '@tanstack/react-query'
 import { store } from '@/store'
+import { ConfirmProvider } from '@/providers/ConfirmProvider'
 
 function makeQueryClient() {
   return new QueryClient({
@@ -41,7 +42,9 @@ export default function AppProvider({ children }: PropsWithChildren) {
 
   return (
     <ReduxProvider store={store}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <ConfirmProvider>{children}</ConfirmProvider>
+      </QueryClientProvider>
     </ReduxProvider>
   )
 }

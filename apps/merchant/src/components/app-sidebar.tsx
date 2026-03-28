@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 type NavItem = {
   title: string
@@ -74,6 +75,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { logout, isLoading } = useAuth()
+  const { confirm } = useConfirm()
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
@@ -140,6 +142,16 @@ export function AppSidebar() {
                     className="w-full"
                     disabled={isLoading}
                     onClick={async () => {
+                      const confirmed = await confirm({
+                        title: 'Log out?',
+                        description:
+                          'You will be signed out of the merchant portal.',
+                        confirmText: 'Log out',
+                        cancelText: 'Stay signed in',
+                        variant: 'destructive'
+                      })
+                      if (!confirmed) return
+
                       await logout()
                       router.push('/login')
                     }}

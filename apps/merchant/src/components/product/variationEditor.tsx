@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { GripVertical, Trash2, Plus, Check, X } from 'lucide-react'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 // SKU: สำหรับเชื่อมกับ items ภายนอก (optional)
 type ItemLike = {
@@ -67,6 +68,8 @@ export function VariationEditor({
   onItemsChange,
   skuPrefix
 }: Props) {
+  const { confirm } = useConfirm()
+
   // inline editing state (UI only)
   const [editingVarId, setEditingVarId] = useState<string | null>(null)
   const [editingVarName, setEditingVarName] = useState<string>('')
@@ -86,13 +89,6 @@ export function VariationEditor({
 
   // State สำหรับ add option per variation (input ใน UI)
   const [newOptValues, setNewOptValues] = useState<Record<string, string>>({})
-
-  // State สำหรับ confirmation delete (inline, ไม่ใช้ dialog)
-  const [pendingDeleteVar, setPendingDeleteVar] = useState<string | null>(null)
-  const [pendingDeleteOpt, setPendingDeleteOpt] = useState<{
-    v: string
-    o: string
-  } | null>(null)
 
   const setVars = (updater: (prev: VariationDraft[]) => VariationDraft[]) =>
     onChange(updater(value))
@@ -123,13 +119,18 @@ export function VariationEditor({
     cancelEditVar()
   }
 
-  const confirmDeleteVariation = (vId: string) => {
-    setVars((prev) => prev.filter((v) => v.clientId !== vId))
-    setPendingDeleteVar(null)
-  }
+  const confirmDeleteVariation = async (vId: string) => {
+    const confirmed = await confirm({
+      title: 'Delete variation?',
+      description:
+        'Deleting this variation will remove the related SKU combinations.',
+      confirmText: 'Delete variation',
+      cancelText: 'Keep variation',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
 
-  const cancelDeleteVariation = () => {
-    setPendingDeleteVar(null)
+    setVars((prev) => prev.filter((v) => v.clientId !== vId))
   }
 
   // ----- Option ops -----
@@ -183,7 +184,17 @@ export function VariationEditor({
     cancelEditOpt()
   }
 
-  const confirmDeleteOption = (vId: string, optKey: string) => {
+  const confirmDeleteOption = async (vId: string, optKey: string) => {
+    const confirmed = await confirm({
+      title: 'Delete option?',
+      description:
+        'Deleting this option may remove SKU combinations that depend on it.',
+      confirmText: 'Delete option',
+      cancelText: 'Keep option',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
+
     setVars((prev) =>
       prev.map((v) =>
         v.clientId === vId
@@ -191,11 +202,6 @@ export function VariationEditor({
           : v
       )
     )
-    setPendingDeleteOpt(null)
-  }
-
-  const cancelDeleteOption = () => {
-    setPendingDeleteOpt(null)
   }
 
   // ----- Drag reorder (per-variation) -----
@@ -343,40 +349,20 @@ export function VariationEditor({
                   >
                     Rename
                   </Button>
-                  {pendingDeleteVar === v.clientId ? (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => confirmDeleteVariation(v.clientId)}
-                      >
-                        Sure?
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={cancelDeleteVariation}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    // ปุ่มลบ Variation
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => setPendingDeleteVar(v.clientId)}
-                      disabled={value.length <= 1} // ← กันลบชุดสุดท้าย
-                      title={
-                        value.length <= 1
-                          ? 'Must have at least 1 variation'
-                          : undefined
-                      }
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => void confirmDeleteVariation(v.clientId)}
+                    disabled={value.length <= 1}
+                    title={
+                      value.length <= 1
+                        ? 'Must have at least 1 variation'
+                        : undefined
+                    }
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
                 </>
               )}
             </div>
@@ -388,9 +374,6 @@ export function VariationEditor({
                   const editing =
                     editingOptKey?.v === v.clientId &&
                     editingOptKey?.o === o.clientId
-                  const isPendingDelete =
-                    pendingDeleteOpt?.v === v.clientId &&
-                    pendingDeleteOpt?.o === o.clientId
                   return (
                     <div
                       key={o.clientId}
@@ -434,46 +417,21 @@ export function VariationEditor({
                           >
                             Rename
                           </Button>
-                          {isPendingDelete ? (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  confirmDeleteOption(v.clientId, o.clientId)
-                                }
-                              >
-                                Sure?
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={cancelDeleteOption}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          ) : (
-                            // ปุ่มลบ Option
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() =>
-                                setPendingDeleteOpt({
-                                  v: v.clientId,
-                                  o: o.clientId
-                                })
-                              }
-                              disabled={v.options.length <= 1} // ← กันลบ option สุดท้ายในชุด
-                              title={
-                                v.options.length <= 1
-                                  ? 'Each variation must have at least 1 option'
-                                  : undefined
-                              }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              void confirmDeleteOption(v.clientId, o.clientId)
+                            }
+                            disabled={v.options.length <= 1}
+                            title={
+                              v.options.length <= 1
+                                ? 'Each variation must have at least 1 option'
+                                : undefined
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </>
                       )}
                     </div>

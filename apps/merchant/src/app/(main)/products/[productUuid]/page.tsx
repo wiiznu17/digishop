@@ -26,6 +26,7 @@ import {
   useDuplicateProductMutation,
   useToggleProductItemMutation
 } from '@/hooks/mutations/useProductDetailMutations'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 const formatDate = (value: unknown) => {
   if (value instanceof Date) return value.toLocaleString()
@@ -43,6 +44,7 @@ export default function ProductDetailPage() {
   const deleteProductMutation = useDeleteProductDetailMutation(productUuid)
   const duplicateProductMutation = useDuplicateProductMutation()
   const toggleProductItemMutation = useToggleProductItemMutation(productUuid)
+  const { confirm } = useConfirm()
 
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewIndex, setPreviewIndex] = useState(0)
@@ -70,7 +72,15 @@ export default function ProductDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!window.confirm('Delete this product?')) return
+    const confirmed = await confirm({
+      title: 'Delete product?',
+      description:
+        'This product will be permanently removed from your catalog. This action cannot be undone.',
+      confirmText: 'Delete product',
+      cancelText: 'Keep product',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
 
     try {
       await deleteProductMutation.mutateAsync()

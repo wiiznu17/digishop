@@ -50,6 +50,7 @@ import {
   openProfileAddressAdd,
   openProfileAddressEdit
 } from '@/store/slices/merchantSlice'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 function normalizeImages(
   imgs: MerchantProfileFormValues['store']['profileImages']
@@ -70,6 +71,7 @@ export default function ProfilePage() {
     useMerchantProfileQuery()
   const updateProfileMutation = useUpdateMerchantProfileMutation()
   const updateAddressMutation = useUpdateMerchantAddressMutation()
+  const { confirm } = useConfirm()
   const [profileData, setProfileData] =
     useState<MerchantProfileFormValues>(defaultMerchant)
 
@@ -137,7 +139,16 @@ export default function ProfilePage() {
     setDraftNewAddress(null)
   }
 
-  const removeAddressByIndex = (index: number) => {
+  const removeAddressByIndex = async (index: number) => {
+    const confirmed = await confirm({
+      title: 'Delete address?',
+      description: 'This address will be removed from your merchant profile.',
+      confirmText: 'Delete address',
+      cancelText: 'Keep address',
+      variant: 'destructive'
+    })
+    if (!confirmed) return
+
     setProfileData((prev) => {
       const list = [...prev.store.addresses]
       const removed = list.splice(index, 1)
@@ -197,6 +208,15 @@ export default function ProfilePage() {
   }
 
   const handleSave = async () => {
+    const confirmed = await confirm({
+      title: 'Save profile changes?',
+      description:
+        'Your merchant profile and business settings will be updated.',
+      confirmText: 'Save changes',
+      cancelText: 'Review again'
+    })
+    if (!confirmed) return
+
     try {
       const imgList = normalizeImages(profileData.store.profileImages)
 

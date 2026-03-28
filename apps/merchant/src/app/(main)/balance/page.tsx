@@ -33,6 +33,7 @@ import {
   closeBankAccountDialog,
   openBankAccountDialog
 } from '@/store/slices/merchantSlice'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 interface BankAccountFormData {
   bankName: string
@@ -61,6 +62,7 @@ export default function AccountLinking() {
   const createBankAccountMutation = useCreateBankAccountMutation()
   const deleteBankAccountMutation = useDeleteBankAccountMutation()
   const setDefaultBankAccountMutation = useSetDefaultBankAccountMutation()
+  const { confirm } = useConfirm()
   const [removingAccountId, setRemovingAccountId] = useState<number | null>(
     null
   )
@@ -83,7 +85,15 @@ export default function AccountLinking() {
   }
 
   const handleRemoveAccount = async (accountId: number) => {
-    if (!confirm('Are you sure you want to remove this bank account?')) {
+    const confirmed = await confirm({
+      title: 'Remove bank account?',
+      description:
+        'This bank account will be unlinked from your merchant profile.',
+      confirmText: 'Remove account',
+      cancelText: 'Keep account',
+      variant: 'destructive'
+    })
+    if (!confirmed) {
       return
     }
     setRemovingAccountId(accountId)
@@ -97,6 +107,15 @@ export default function AccountLinking() {
   }
 
   const handleSetDefault = async (accountId: number) => {
+    const confirmed = await confirm({
+      title: 'Set new default bank account?',
+      description:
+        'Future payouts will be sent to this bank account by default.',
+      confirmText: 'Set as default',
+      cancelText: 'Cancel'
+    })
+    if (!confirmed) return
+
     setDefaultingAccountId(accountId)
     try {
       await setDefaultBankAccountMutation.mutateAsync(accountId)

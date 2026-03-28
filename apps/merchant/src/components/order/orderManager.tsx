@@ -16,32 +16,31 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Clock } from 'lucide-react'
 import { OrderStatus } from '@/types/props/orderProp'
 import { useOrderStatus } from '@/hooks/useOrderStatus'
+import { useConfirm } from '@/providers/ConfirmProvider'
 
 interface OrderStatusManagerProps {
   currentStatus: OrderStatus
   statusHistory: OrderStatus[]
   orderId: string
   trackingNumber?: string
-  onStatusChange: (orderId: string, newStatus: OrderStatus) => void
-  onTrackingNumberUpdate: (orderId: string, trackingNumber: string) => void
+  onStatusChange: (
+    orderId: string,
+    newStatus: OrderStatus
+  ) => void | Promise<void>
+  onTrackingNumberUpdate: (
+    orderId: string,
+    trackingNumber: string
+  ) => void | Promise<void>
   onHandedOver?: (
     orderId: string,
     trackingNumber: string,
     carrier?: string
-  ) => void
+  ) => void | Promise<void>
 }
 
 export function OrderStatusManager({
@@ -54,11 +53,11 @@ export function OrderStatusManager({
   onHandedOver
 }: OrderStatusManagerProps) {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [newTrackingNumber, setNewTrackingNumber] = useState(
     trackingNumber || ''
   )
   const [carrier, setCarrier] = useState<string>('') // NEW
+  const { confirm } = useConfirm()
 
   // --- Hook helpers for order status ---
   const {
@@ -73,49 +72,73 @@ export function OrderStatusManager({
   const timelineToDisplay = getMergedTimeline(currentStatus, statusHistory)
   const editableStatuses = getMerchantEditableStatuses(currentStatus)
 
-  const handleStatusUpdate = () => {
+  const handleStatusUpdate = async (targetStatus?: OrderStatus) => {
+    const nextStatus =
+      targetStatus ?? selectedStatus ?? editableStatuses.at(0) ?? null
+
+    if (!nextStatus) return
+
     if (selectedStatus) {
-      if (selectedStatus === 'HANDED_OVER') {
+      if (nextStatus === 'HANDED_OVER') {
         // ต้องมี tracking + carrier
-        onHandedOver?.(orderId, newTrackingNumber, carrier)
+        await onHandedOver?.(orderId, newTrackingNumber, carrier)
       } else {
-        onStatusChange(orderId, selectedStatus)
+        await onStatusChange(orderId, nextStatus)
       }
-    } else if (editableStatuses.length === 1) {
-      const next = editableStatuses[0]
-      if (next === 'HANDED_OVER') {
-        onHandedOver?.(orderId, newTrackingNumber, carrier)
-      } else {
-        onStatusChange(orderId, next)
-      }
+    } else if (nextStatus === 'HANDED_OVER') {
+      await onHandedOver?.(orderId, newTrackingNumber, carrier)
+    } else {
+      await onStatusChange(orderId, nextStatus)
     }
 
     // update tracking number แยก กรณี status อื่น
-    if (
-      newTrackingNumber !== trackingNumber &&
-      selectedStatus !== 'HANDED_OVER'
-    ) {
-      onTrackingNumberUpdate(orderId, newTrackingNumber)
+    if (newTrackingNumber !== trackingNumber && nextStatus !== 'HANDED_OVER') {
+      await onTrackingNumberUpdate(orderId, newTrackingNumber)
     }
 
-    setIsConfirmDialogOpen(false)
     setSelectedStatus(null)
   }
 
-  const handleConfirm = (status?: OrderStatus) => {
-    const statusToConfirm = status || selectedStatus
-    if (statusToConfirm) {
-      setSelectedStatus(statusToConfirm)
-      setIsConfirmDialogOpen(true)
+  const buildConfirmOptions = (targetStatus: OrderStatus) => {
+    const nextText = getStatusText(targetStatus)
+    const currentText = getStatusText(currentStatus)
+    const destructiveStatuses: OrderStatus[] = [
+      'MERCHANT_CANCELED',
+      'REFUND_APPROVED',
+      'REFUND_REJECTED',
+      'REFUND_RETRY',
+      'AWAITING_RETURN'
+    ]
+
+    return {
+      title: `Confirm ${nextText}`,
+      description: `Change order status from "${currentText}" to "${nextText}"?`,
+      confirmText:
+        targetStatus === 'MERCHANT_CANCELED'
+          ? 'Cancel order'
+          : targetStatus.startsWith('REFUND')
+            ? 'Confirm refund action'
+            : 'Apply change',
+      cancelText: 'Keep current status',
+      variant: destructiveStatuses.includes(targetStatus)
+        ? ('destructive' as const)
+        : ('default' as const)
     }
   }
 
-  const getConfirmMessage = () => {
-    const targetStatus = selectedStatus
-    if (!targetStatus) return ''
-    return `Do you want to change the status from "${getStatusText(
-      currentStatus
-    )}" to "${getStatusText(targetStatus)}"?`
+  const handleConfirm = async (status?: OrderStatus) => {
+    const statusToConfirm = status || selectedStatus
+    if (!statusToConfirm) return
+
+    setSelectedStatus(statusToConfirm)
+
+    const confirmed = await confirm(buildConfirmOptions(statusToConfirm))
+    if (!confirmed) {
+      setSelectedStatus(null)
+      return
+    }
+
+    await handleStatusUpdate(statusToConfirm)
   }
 
   return (
@@ -275,42 +298,6 @@ export function OrderStatusManager({
           </div>
         )}
       </CardContent>
-
-      {/* Confirm Dialog */}
-      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Status Change</DialogTitle>
-            <DialogDescription>{getConfirmMessage()}</DialogDescription>
-          </DialogHeader>
-
-          {/* {newTrackingNumber && (
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-1">
-              <p className="text-sm text-blue-800">
-                <strong>Tracking:</strong> {newTrackingNumber}
-              </p>
-              {carrier && (
-                <p className="text-sm text-blue-800">
-                  <strong>Carrier:</strong> {carrier}
-                </p>
-              )}
-            </div>
-          )} */}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsConfirmDialogOpen(false)
-                setSelectedStatus(null)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleStatusUpdate}>Confirm</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   )
 }
