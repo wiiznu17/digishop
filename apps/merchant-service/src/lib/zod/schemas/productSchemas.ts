@@ -16,6 +16,7 @@ export const BulkDeleteProductsSchema = z.object({
 export const UpdateProductItemSchema = z.object({
   sku: z.string().optional(),
   stockQuantity: z.number().int().min(0).optional(),
+  stockDelta: z.number().int().optional(),
   priceMinor: z.number().int().min(0).optional(),
   imageUrl: z.string().url().nullable().optional(),
   isEnable: z.boolean().optional()

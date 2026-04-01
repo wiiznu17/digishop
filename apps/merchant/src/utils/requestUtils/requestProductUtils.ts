@@ -59,7 +59,10 @@ export type CreateItemPayload = {
   imageUrl?: string | null
   isEnable?: boolean
 }
-export type UpdateItemPayload = Partial<CreateItemPayload>
+export type UpdateItemPayload = Partial<CreateItemPayload> & {
+  stockDelta?: number
+}
+
 export type SetItemConfigurationsPayload = { optionUuids: string[] }
 
 export type SuggestResponse = {
@@ -346,7 +349,8 @@ export type DesiredItem = {
   clientKey?: string
   sku?: string
   priceMinor: number
-  stockQuantity: number
+  stockQuantity?: number
+  stockDelta?: number
   isEnable: boolean
   optionRefs: string[] // uuid หรือ clientId
   image?: DesiredItemImage

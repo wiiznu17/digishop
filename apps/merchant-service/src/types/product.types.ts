@@ -51,7 +51,8 @@ export type DS_Item = {
   clientKey?: string
   sku?: string
   priceMinor: number
-  stockQuantity: number
+  stockQuantity?: number
+  stockDelta?: number
   isEnable: boolean
   optionRefs: string[]
   image?: DS_ItemImage | null

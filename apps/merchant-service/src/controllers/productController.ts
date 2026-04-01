@@ -129,13 +129,15 @@ export const updateProductItem = asyncHandler(
       productUuid: string
       itemUuid: string
     }
-    const { sku, stockQuantity, priceMinor, imageUrl, isEnable } = req.body as {
-      sku?: string
-      stockQuantity?: number
-      priceMinor?: number
-      imageUrl?: string | null
-      isEnable?: boolean
-    }
+    const { sku, stockQuantity, stockDelta, priceMinor, imageUrl, isEnable } =
+      req.body as {
+        sku?: string
+        stockQuantity?: number
+        stockDelta?: number
+        priceMinor?: number
+        imageUrl?: string | null
+        isEnable?: boolean
+      }
 
     const result = await productService.updateProductItem(
       storeId,
@@ -144,6 +146,7 @@ export const updateProductItem = asyncHandler(
       {
         sku,
         stockQuantity,
+        stockDelta,
         priceMinor,
         imageUrl,
         isEnable

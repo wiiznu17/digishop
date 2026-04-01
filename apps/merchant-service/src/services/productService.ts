@@ -840,10 +840,32 @@ export class ProductService {
           if ((itemRecord.sku || '') !== sku) updatePayload.sku = sku
           if (itemRecord.priceMinor !== desiredItem.priceMinor)
             updatePayload.priceMinor = desiredItem.priceMinor
-          if (itemRecord.stockQuantity !== desiredItem.stockQuantity)
-            updatePayload.stockQuantity = desiredItem.stockQuantity
           if (itemRecord.isEnable !== desiredItem.isEnable)
             updatePayload.isEnable = desiredItem.isEnable
+
+          // 1. Handle stockDelta (Priority)
+          if (
+            typeof desiredItem.stockDelta === 'number' &&
+            desiredItem.stockDelta !== 0
+          ) {
+            if (desiredItem.stockDelta > 0) {
+              await itemRecord.increment('stockQuantity', {
+                by: desiredItem.stockDelta,
+                transaction
+              })
+            } else {
+              await itemRecord.decrement('stockQuantity', {
+                by: Math.abs(desiredItem.stockDelta),
+                transaction
+              })
+            }
+          } else if (
+            typeof desiredItem.stockQuantity === 'number' &&
+            itemRecord.stockQuantity !== desiredItem.stockQuantity
+          ) {
+            // 2. Handle absolute stockQuantity (Locking already handled by product search in some cases, but here we are in a transaction)
+            updatePayload.stockQuantity = desiredItem.stockQuantity
+          }
 
           if (Object.keys(updatePayload).length > 0) {
             await productRepository.updateProductItemById(
@@ -858,7 +880,7 @@ export class ProductService {
               productId,
               sku,
               priceMinor: desiredItem.priceMinor,
-              stockQuantity: desiredItem.stockQuantity,
+              stockQuantity: desiredItem.stockQuantity ?? 0,
               imageUrl: null,
               isEnable: desiredItem.isEnable
             },
@@ -1203,51 +1225,78 @@ export class ProductService {
     payload: {
       sku?: string
       stockQuantity?: number
+      stockDelta?: number
       priceMinor?: number
       imageUrl?: string | null
       isEnable?: boolean
     }
   ) {
-    const product = await productRepository.findProductByUuidForStore(
-      productUuid,
-      storeId
-    )
-    if (!product) {
-      throw new ProductServiceError(404, 'Product not found')
-    }
+    return await sequelize.transaction(async (t) => {
+      const product = await productRepository.findProductByUuidForStore(
+        productUuid,
+        storeId,
+        t
+      )
+      if (!product) {
+        throw new ProductServiceError(404, 'Product not found')
+      }
 
-    const item = await productRepository.findItemByUuidForProduct(
-      itemUuid,
-      product.id
-    )
-    if (!item) {
-      throw new ProductServiceError(404, 'Item not found')
-    }
+      // Lock the item specifically for stock safety if requested
+      const item = await productRepository.findProductItemByUuidForProduct(
+        itemUuid,
+        product.id,
+        t,
+        true // lockForUpdate
+      )
+      if (!item) {
+        throw new ProductServiceError(404, 'Item not found')
+      }
 
-    await productRepository.updateProductItemById(item.id, {
-      sku: payload.sku,
-      stockQuantity: payload.stockQuantity,
-      priceMinor: payload.priceMinor,
-      imageUrl: payload.imageUrl,
-      isEnable: payload.isEnable
+      const updatePayload: any = {
+        sku: payload.sku,
+        priceMinor: payload.priceMinor,
+        imageUrl: payload.imageUrl,
+        isEnable: payload.isEnable
+      }
+
+      // 1. Handle stockDelta (Priority)
+      if (typeof payload.stockDelta === 'number' && payload.stockDelta !== 0) {
+        if (payload.stockDelta > 0) {
+          await item.increment('stockQuantity', {
+            by: payload.stockDelta,
+            transaction: t
+          })
+        } else {
+          await item.decrement('stockQuantity', {
+            by: Math.abs(payload.stockDelta),
+            transaction: t
+          })
+        }
+      } else if (typeof payload.stockQuantity === 'number') {
+        // 2. Handle absolute stockQuantity (Safe overwrite within lock)
+        updatePayload.stockQuantity = payload.stockQuantity
+      }
+
+      await productRepository.updateProductItemById(item.id, updatePayload, t)
+
+      const refreshed = await productRepository.findItemByUuidForProduct(
+        itemUuid,
+        product.id,
+        t
+      )
+      if (!refreshed) {
+        throw new ProductServiceError(404, 'Item not found')
+      }
+
+      return {
+        uuid: refreshed.uuid,
+        sku: refreshed.sku,
+        stockQuantity: refreshed.stockQuantity,
+        priceMinor: refreshed.priceMinor,
+        imageUrl: refreshed.imageUrl,
+        isEnable: refreshed.isEnable
+      }
     })
-
-    const refreshed = await productRepository.findItemByUuidForProduct(
-      itemUuid,
-      product.id
-    )
-    if (!refreshed) {
-      throw new ProductServiceError(404, 'Item not found')
-    }
-
-    return {
-      uuid: refreshed.uuid,
-      sku: refreshed.sku,
-      stockQuantity: refreshed.stockQuantity,
-      priceMinor: refreshed.priceMinor,
-      imageUrl: refreshed.imageUrl,
-      isEnable: refreshed.isEnable
-    }
   }
 }
 

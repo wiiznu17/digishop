@@ -337,11 +337,20 @@ export class ProductRepository {
   async findProductItemByUuidForProduct(
     itemUuid: string,
     productId: number,
-    transaction: Transaction
+    transaction?: Transaction,
+    lockForUpdate = false
   ) {
     return ProductItem.findOne({
       where: { uuid: itemUuid, productId },
-      transaction
+      transaction,
+      ...(lockForUpdate && transaction ? { lock: transaction.LOCK.UPDATE } : {})
+    })
+  }
+
+  async findProductItemByIdForUpdate(id: number, transaction: Transaction) {
+    return ProductItem.findByPk(id, {
+      transaction,
+      lock: transaction.LOCK.UPDATE
     })
   }
 
@@ -374,6 +383,20 @@ export class ProductRepository {
       where: { id: productItemId },
       transaction
     })
+  }
+
+  async incrementStock(
+    productItemId: number,
+    delta: number,
+    transaction: Transaction
+  ) {
+    const item = await ProductItem.findByPk(productItemId, { transaction })
+    if (!item) return
+    if (delta > 0) {
+      return item.increment('stockQuantity', { by: delta, transaction })
+    } else if (delta < 0) {
+      return item.decrement('stockQuantity', { by: Math.abs(delta), transaction })
+    }
   }
 
   async findProductItemImageByProductItemId(

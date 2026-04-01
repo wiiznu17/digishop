@@ -363,12 +363,28 @@ export default function EditProductPage() {
             image = null // ไม่แตะ
           }
 
+          const baseline = r.key ? baselineRowsByKey.get(r.key) : null
+          const currentStock = toInt(r.stock)
+          let stockQuantity: number | undefined = currentStock
+          let stockDelta: number | undefined = undefined
+
+          if (r.uuid && baseline) {
+            const originalStock = toInt(baseline.stock)
+            if (currentStock !== originalStock) {
+              stockDelta = currentStock - originalStock
+              stockQuantity = undefined // Prioritize delta for existing items
+            } else {
+              stockQuantity = undefined // No change needed
+            }
+          }
+
           return {
             uuid: r.uuid,
             clientKey: r.key,
             sku: (r.sku || '').trim() || undefined,
             priceMinor: toMinor(r.price),
-            stockQuantity: toInt(r.stock),
+            stockQuantity,
+            stockDelta,
             isEnable: r.isEnable,
             optionRefs: r.optionKeys, // uuid หรือ clientId ก็ได้
             image
