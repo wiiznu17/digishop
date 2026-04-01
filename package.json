@@ -11,6 +11,10 @@
     "dev:customer2": "turbo run dev --parallel --filter=customer-service2... --filter=customer2...",
     "dev:authen": "turbo run dev --parallel --filter=authen-service...",
     "lint": "turbo run lint",
+    "db:migrate": "turbo run migrate:all --filter=@digishop/db",
+    "db:seed": "turbo run seed --filter=@digishop/db",
+    "db:create": "npx sequelize-cli migration:generate --name",
+    "db:undo": "turbo run migrate:undo --filter=@digishop/db",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "check-types": "turbo run check-types"
   },
