@@ -1,0 +1,62 @@
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Migration Undoer for DigiShop
+ * This script scans the migrations directory for sub-folders (versions)
+ * and runs them in REVERSE alphabetical order.
+ */
+
+// Root path for migrations in dist (where sequelize-cli looks)
+const distRoot = path.resolve(__dirname, '../../dist/migrations');
+
+async function run() {
+  if (!fs.existsSync(distRoot)) {
+    console.error(`[Error] Migrations directory not found at: ${distRoot}`);
+    console.error(`Please run "npm run build" in packages/db first.`);
+    process.exit(1);
+  }
+
+  // Get all version folders (v1.0, v1.1, etc.)
+  const versions = fs.readdirSync(distRoot)
+    .filter(file => {
+        const fullPath = path.join(distRoot, file);
+        return fs.statSync(fullPath).isDirectory();
+    })
+    // Sort in REVERSE order for UNDO (v1.1 before v1.0)
+    .sort((a, b) => b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }));
+
+  if (versions.length === 0) {
+    console.log('[Info] No version folders found in dist/migrations. Nothing to undo.');
+    process.exit(0);
+  }
+
+  console.log(`[Info] Found ${versions.length} version folders for undo: ${versions.join(', ')}`);
+
+  for (const version of versions) {
+    const versionPath = path.join(distRoot, version);
+    console.log(`\n---------------------------------------------------------`);
+    console.log(`>>> Reverting version: ${version}`);
+    console.log(`>>> Path: ${versionPath}`);
+    console.log(`---------------------------------------------------------`);
+    
+    try {
+      // Run the migration undo for this specific version folder
+      execSync(`npx sequelize-cli db:migrate:undo:all --migrations-path ${versionPath}`, { 
+        stdio: 'inherit',
+        cwd: path.resolve(__dirname, '../..') // Run from package root
+      });
+    } catch (error) {
+      console.error(`[Error] Failed to revert version ${version}. Stopping.`);
+      process.exit(1);
+    }
+  }
+
+  console.log('\n[Success] All versioned migrations reverted successfully.');
+}
+
+run().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

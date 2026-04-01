@@ -1,5 +1,5 @@
 import { QueryInterface, DataTypes } from 'sequelize'
-import { BankAccountStatus } from '../types/enum'
+import { BankAccountStatus } from '../../types/enum'
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {

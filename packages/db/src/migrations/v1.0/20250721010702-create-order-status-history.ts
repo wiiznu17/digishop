@@ -1,6 +1,6 @@
 // migrations/2025xxxx-create-orderStatusHistory.ts
 import { QueryInterface, DataTypes } from 'sequelize'
-import { ActorType, OrderStatus } from '../types/enum'
+import { ActorType, OrderStatus } from '../../types/enum'
 
 export = {
   async up(queryInterface: QueryInterface) {

@@ -1,6 +1,6 @@
 // src/migrations/2025xxxx-create-refund-status-history.ts
 import { QueryInterface, DataTypes, Sequelize } from 'sequelize'
-import { ActorType, RefundStatus } from '../types/enum'
+import { ActorType, RefundStatus } from '../../types/enum'
 
 export default {
   async up(queryInterface: QueryInterface) {

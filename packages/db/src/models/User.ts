@@ -16,6 +16,7 @@ export interface UserAttributes {
   lastName: string
   middleName: string
   role: UserRole
+  googleId: string | null
   createdAt?: Date // managed by sequelize
   updatedAt?: Date // mapped to edit_at in DB
 }
@@ -37,6 +38,7 @@ export class User
   public lastName!: string
   public middleName!: string
   public role!: UserRole
+  public googleId!: string | null
   public readonly createdAt!: Date
   public readonly updatedAt!: Date // column edit_at
 
@@ -83,6 +85,12 @@ export class User
           type: DataTypes.ENUM(...Object.values(UserRole)),
           allowNull: false,
           defaultValue: UserRole.CUSTOMER
+        },
+        googleId: {
+          type: DataTypes.STRING(191),
+          allowNull: true,
+          unique: true,
+          field: 'google_id'
         },
         createdAt: {
           type: DataTypes.DATE,

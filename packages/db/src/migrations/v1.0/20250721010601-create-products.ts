@@ -1,5 +1,5 @@
 import { QueryInterface, DataTypes } from 'sequelize'
-import { ProductReqStatus, ProductStatus } from '../types/enum'
+import { ProductReqStatus, ProductStatus } from '../../types/enum'
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {

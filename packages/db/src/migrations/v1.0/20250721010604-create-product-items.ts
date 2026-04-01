@@ -21,7 +21,8 @@ export default {
       stock_quantity: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 0,
+        comment: 'Stock quantity (atomic updates recommended)'
       },
       is_enable: {
         type: DataTypes.BOOLEAN,

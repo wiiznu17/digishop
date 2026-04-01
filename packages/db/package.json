@@ -7,7 +7,7 @@
     "migrate": "sequelize-cli db:migrate",
     "migrate:all": "ts-node src/scripts/migrate-all.ts",
     "seed": "sequelize-cli db:seed:all",
-    "migrate:undo": "sequelize-cli db:migrate:undo:all",
+    "migrate:undo": "ts-node src/scripts/undo-all.ts",
     "seed:undo": "sequelize-cli db:seed:undo:all"
   },
   "keywords": [],

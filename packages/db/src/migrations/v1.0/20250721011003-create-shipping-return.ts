@@ -1,5 +1,5 @@
 import { QueryInterface, DataTypes, Sequelize } from 'sequelize'
-import { ReturnShipmentStatus } from '../types/enum'
+import { ReturnShipmentStatus } from '../../types/enum'
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {

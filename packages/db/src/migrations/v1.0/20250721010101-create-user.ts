@@ -1,5 +1,5 @@
 import { QueryInterface, DataTypes } from 'sequelize'
-import { UserRole } from '../types/enum'
+import { UserRole } from '../../types/enum'
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
@@ -21,6 +21,11 @@ export default {
           type: DataTypes.STRING(191),
           allowNull: false
         },
+        google_id: {
+          type: DataTypes.STRING(191),
+          allowNull: true,
+          unique: true
+        },
         first_name: {
           type: DataTypes.STRING(191),
           allowNull: false
@@ -31,7 +36,7 @@ export default {
         },
         middle_name: {
           type: DataTypes.STRING(191),
-          allowNull: false
+          allowNull: true
         },
         role: {
           type: DataTypes.ENUM(...Object.values(UserRole)),

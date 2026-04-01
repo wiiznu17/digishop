@@ -11,7 +11,7 @@ export default {
         uuid: uuidv4(),
         product_id: 1001,
         sku: 'X-BLK-128',
-        stock_quantity: 0,
+        stock_quantity: 10,
         price_minor: 50_000,
         is_enable: true,
         image_url: null,

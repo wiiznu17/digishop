@@ -1,7 +1,7 @@
 import { checkDatabaseConnection, sequelize, Op } from './db'
 import { Sequelize } from 'sequelize'
 // ── Core / Profile
-import { User } from './models/User'
+import { User, UserAttributes } from './models/User'
 import { Address } from './models/Address'
 import { Store } from './models/Store'
 import { MerchantAddress } from './models/StoreAddress'
