@@ -126,6 +126,8 @@ process.env.SESSION_PREFIX = 'usr:rt';
 process.env.SUPABASE_URL = 'http://localhost:54321';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-key';
 process.env.NODE_ENV = 'development'; // Enable error logging in errorHandler
+process.env.CARRIER_WEBHOOK_SECRET = 'test-carrier-secret';
+process.env.RETURN_CARRIER_WEBHOOK_SECRET = 'test-return-secret';
 
 // Mock repositories that might be initialized at module level
 jest.mock('../repositories/bankRepository', () => ({
