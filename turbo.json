@@ -18,6 +18,21 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "migrate:all": {
+      "cache": false
+    },
+    "migrate:undo": {
+      "cache": false
+    },
+    "seed": {
+      "cache": false
+    },
+    "seed:undo": {
+      "cache": false
+    },
+    "migrate": {
+      "cache": false
     }
   }
 }

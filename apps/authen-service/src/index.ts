@@ -9,12 +9,19 @@ async function main() {
   try {
     await checkDatabaseConnection()
     const app = express()
-    app.set('trust proxy', 1)
+    app.set('trust proxy', true)
 
     app.use(cookieParser())
     app.use(express.json())
 
-    app.use((req, _res, next) => {
+    app.use((req, res, next) => {
+      const start = Date.now()
+      res.on('finish', () => {
+        const duration = Date.now() - start
+        console.log(
+          `[AUTH] ${req.method} ${req.url} ${res.statusCode} ${duration}ms - Origin: ${req.headers.origin}`
+        )
+      })
       console.log(
         '[AUTH] Incoming',
         req.method,

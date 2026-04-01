@@ -17,7 +17,7 @@ import {
   useAuthUserQuery,
   useStoreStatusQuery
 } from '@/hooks/queries/useAuthQueries'
-import { loginUser, logoutUser } from '@/utils/requestUtils/requestAuthUtils'
+import { loginUser, loginUserWithGoogle, logoutUser } from '@/utils/requestUtils/requestAuthUtils'
 import { resolveRedirectPath } from '@/contexts/auth-routing'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -72,6 +72,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [queryClient]
   )
+  const googleLogin = useCallback(
+    async (idToken: string): Promise<boolean> => {
+      const loggedInUser = await loginUserWithGoogle(idToken)
+
+      if (!loggedInUser) {
+        queryClient.setQueryData(authQueryKeys.user(), null)
+        queryClient.setQueryData(authQueryKeys.storeStatus(), null)
+        return false
+      }
+
+      queryClient.setQueryData(authQueryKeys.user(), loggedInUser)
+
+      if (loggedInUser.role === 'CUSTOMER') {
+        queryClient.setQueryData(authQueryKeys.storeStatus(), null)
+      } else {
+        void queryClient.invalidateQueries({
+          queryKey: authQueryKeys.storeStatus()
+        })
+      }
+
+      return true
+    },
+    [queryClient]
+  )
 
   const logout = useCallback(async () => {
     await logoutUser()
@@ -82,8 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient, router])
 
   const value = useMemo<AuthContextType>(
-    () => ({ user, login, logout, isLoading, storeStatus }),
-    [isLoading, login, logout, storeStatus, user]
+    () => ({ user, login, googleLogin, logout, isLoading, storeStatus }),
+    [isLoading, login, googleLogin, logout, storeStatus, user]
   )
 
   return createElement(AuthContext.Provider, { value }, children)

@@ -46,6 +46,18 @@ export async function loginUser(
   }
 }
 
+export async function loginUserWithGoogle(
+  idToken: string
+): Promise<FormLogin | null> {
+  try {
+    const res = await axios.post(`/api/auth/google/login`, { idToken })
+    return (res.data?.user ?? null) as FormLogin | null
+  } catch (error) {
+    console.error('Google login error:', error)
+    return null
+  }
+}
+
 export async function logoutUser(): Promise<{ ok: boolean }> {
   const res = await axios.post('/api/auth/logout')
   return res.data as { ok: boolean }

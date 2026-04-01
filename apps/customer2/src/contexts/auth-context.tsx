@@ -13,6 +13,7 @@ import { FormLogin, AuthContextType } from '../types/props/userProp'
 import {
   fetchUser,
   loginUser,
+  loginUserWithGoogle,
   logoutUser
 } from '../utils/requestUtils/requestLoginUtils'
 import { usePathname, useRouter } from 'next/navigation'
@@ -116,13 +117,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false
   }
 
+  const googleLogin = async (idToken: string): Promise<boolean> => {
+    setIsLoading(true)
+    const loggedInUser = await loginUserWithGoogle(idToken)
+    if (loggedInUser) {
+      setUser(loggedInUser)
+      setIsLoading(false)
+      return true
+    }
+    setIsLoading(false)
+    return false
+  }
+
   const logout = async () => {
     await logoutUser()
     setUser(null)
     goToCustomerHome()
   }
   const value = useMemo<AuthContextType>(
-    () => ({ user, login, logout, isLoading }),
+    () => ({ user, login, googleLogin, logout, isLoading }),
     [user, isLoading]
   )
 

@@ -19,6 +19,7 @@ export interface ProfileMerchantImage {
 export interface AuthContextType {
   user: UserAuth | null
   login: (email: string, password: string) => Promise<boolean>
+  googleLogin: (idToken: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
   storeStatus: StoreStatus | null

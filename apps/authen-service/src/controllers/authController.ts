@@ -12,8 +12,8 @@ const REFRESH_TOKEN_TTL_MS =
 
 const BASE_COOKIE: import('express').CookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: 'none',
+  secure: IS_PROD,
+  sameSite: IS_PROD ? 'none' : 'lax',
   path: '/',
   ...(IS_PROD ? ({ partitioned: true } as any) : {})
 }
@@ -48,6 +48,22 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const { user, tokens } = await AuthService.login(
     email,
     password,
+    req.ip,
+    req.headers['user-agent'] as string
+  )
+
+  setAuthCookies(res, tokens.access, tokens.refresh)
+  return res.json({ ok: true, user })
+})
+
+export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
+  const { idToken } = (req.body ?? {}) as { idToken: string }
+  if (!idToken) {
+    return res.status(400).json({ error: 'ID_TOKEN_REQUIRED' })
+  }
+
+  const { user, tokens } = await AuthService.googleLogin(
+    idToken,
     req.ip,
     req.headers['user-agent'] as string
   )

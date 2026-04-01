@@ -33,6 +33,17 @@ export async function loginUser(
   }
 }
 
+export async function loginUserWithGoogle(
+  idToken: string
+): Promise<UserAuth | null> {
+  try {
+    const res = await axios.post('/api/auth/google/login', { idToken })
+    return (res.data?.user ?? null) as UserAuth | null
+  } catch {
+    return null
+  }
+}
+
 export async function logoutUser() {
   try {
     await axios.post('/api/auth/logout')

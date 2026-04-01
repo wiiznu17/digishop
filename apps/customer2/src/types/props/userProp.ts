@@ -40,6 +40,7 @@ export interface FormLogin {
 export interface AuthContextType {
   user: FormLogin | null
   login: (email: string, password: string) => Promise<boolean>
+  googleLogin: (idToken: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
 }

@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-query'
 import { store } from '@/store'
 import { ConfirmProvider } from '@/providers/ConfirmProvider'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function makeQueryClient() {
   return new QueryClient({
@@ -43,7 +44,11 @@ export default function AppProvider({ children }: PropsWithChildren) {
   return (
     <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
-        <ConfirmProvider>{children}</ConfirmProvider>
+        <GoogleOAuthProvider
+          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}
+        >
+          <ConfirmProvider>{children}</ConfirmProvider>
+        </GoogleOAuthProvider>
       </QueryClientProvider>
     </ReduxProvider>
   )
