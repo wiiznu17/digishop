@@ -1,31 +1,13 @@
-import express from 'express'
-import cors from 'cors'
-import router from './iamRouter'
 import './helpers/dotenv.helper'
-import { checkDatabaseConnection, initModels, sequelize } from '@digishop/db'
-import { errorHandler } from './middlewares/errorHandler'
-const cookieParser = require('cookie-parser')
+import { checkDatabaseConnection } from '@digishop/db'
+import app from './app'
 
-const PORT = Number(process.env.PORT)
+const PORT = Number(process.env.PORT) || 4003
 
 async function main() {
   try {
+    // Ensure DB connection before listening
     await checkDatabaseConnection()
-
-    const app = express()
-    app.use(express.json())
-    app.use(cookieParser())
-    // app.use(cors({
-    //   origin: process.env.ALLOW_CORS,
-    //   credentials: true
-    // }))
-    initModels(sequelize)
-    app.use((req, res, next) => {
-      console.log('[MERCHANT] Incoming', req.method, req.url)
-      next()
-    })
-    app.use('/api', router)
-    app.use(errorHandler)
 
     const server = app.listen(PORT, () => {
       console.log(`Merchant Service listening at: http://localhost:${PORT}`)
@@ -49,7 +31,6 @@ async function main() {
           process.exit(1)
         }
         console.log('Server closed')
-        sequelize.close()
         process.exit(0)
       })
     }
@@ -57,14 +38,9 @@ async function main() {
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
     process.on('SIGINT', () => gracefulShutdown('SIGINT'))
 
-    // Keep process alive - return promise ที่ไม่ resolve
-    return new Promise((resolve, reject) => {
-      server.on('error', reject)
-      // ไม่ resolve เพื่อให้ process ทำงานต่อไป
-    })
   } catch (err) {
     console.error('❌ Server failed to start:', err)
-    throw err
+    process.exit(1)
   }
 }
 
