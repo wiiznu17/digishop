@@ -1,34 +1,11 @@
-import express from 'express'
-import cors from 'cors'
-import router from './iamRouter'
-import './helpers/dotenv.helper'
-import { checkDatabaseConnection, initModels, sequelize } from '@digishop/db'
-import { errorHandler } from './middlewares/errorHandler'
-const cookieParser = require('cookie-parser')
+import app from './app'
+import { checkDatabaseConnection, sequelize } from '@digishop/db'
 
-const PORT = Number(process.env.PORT)
+const PORT = Number(process.env.PORT) || 3000
 
 async function main() {
   try {
     await checkDatabaseConnection()
-
-    const app = express()
-    app.use(express.json())
-    app.use(cookieParser())
-    app.use(
-      cors({
-        origin: ['http://localhost:3000', 'http://localhost:4000'],
-        credentials: true
-      })
-    )
-    initModels(sequelize)
-    app.use('/api', router)
-    app.use('/', router)
-    app.use((req, res, next) => {
-      console.log('[Customer2] Incoming', req.method, req.url)
-      next()
-    })
-    app.use(errorHandler as any)
 
     const server = app.listen(PORT, () => {
       console.log(`Customer Service 2 listening at: http://localhost:${PORT}`)
@@ -60,10 +37,9 @@ async function main() {
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
     process.on('SIGINT', () => gracefulShutdown('SIGINT'))
 
-    // Keep process alive - return promise ที่ไม่ resolve
+    // Keep process alive
     return new Promise((resolve, reject) => {
       server.on('error', reject)
-      // ไม่ resolve เพื่อให้ process ทำงานต่อไป
     })
   } catch (err) {
     console.error('❌ Server failed to start:', err)
