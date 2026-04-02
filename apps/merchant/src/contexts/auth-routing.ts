@@ -26,7 +26,7 @@ export function resolveRedirectPath(
   if (isLoginPath(pathname)) {
     if (!user) return null
     if (user.role === 'CUSTOMER') return '/register'
-    if (storeStatus && storeStatus !== 'APPROVED') {
+    if (storeStatus !== 'APPROVED') {
       return toStoreStatusPath(storeStatus)
     }
     return MERCHANT_HOME
@@ -35,7 +35,7 @@ export function resolveRedirectPath(
   if (isRegisterPath(pathname)) {
     if (!user) return '/login'
     if (user.role === 'CUSTOMER') return null
-    if (storeStatus && storeStatus !== 'APPROVED') {
+    if (storeStatus !== 'APPROVED') {
       return toStoreStatusPath(storeStatus)
     }
     return MERCHANT_HOME
@@ -44,13 +44,13 @@ export function resolveRedirectPath(
   if (isStoreStatusPath(pathname)) {
     if (!user) return '/login'
     if (user.role === 'CUSTOMER') return '/register'
-    if (storeStatus && storeStatus !== 'APPROVED') return null
+    if (storeStatus !== 'APPROVED') return null
     return MERCHANT_HOME
   }
 
   if (!user) return '/login'
   if (user.role === 'CUSTOMER') return '/register'
-  if (storeStatus && storeStatus !== 'APPROVED') {
+  if (storeStatus !== 'APPROVED') {
     return toStoreStatusPath(storeStatus)
   }
   return null
