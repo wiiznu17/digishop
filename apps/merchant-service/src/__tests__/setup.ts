@@ -9,10 +9,17 @@ jest.mock('../lib/redis/client', () => ({
 }));
 
 // Mock Database
+const mockTransaction = {
+  commit: jest.fn(),
+  rollback: jest.fn(),
+  finished: undefined as string | undefined,
+};
+
 jest.mock('@digishop/db', () => ({
   sequelize: {
     authenticate: jest.fn().mockResolvedValue(true),
     close: jest.fn(),
+    transaction: jest.fn().mockResolvedValue(mockTransaction),
   },
   checkDatabaseConnection: jest.fn().mockResolvedValue(true),
   initModels: jest.fn(),
@@ -33,7 +40,17 @@ jest.mock('@digishop/db', () => ({
     create: jest.fn(),
     update: jest.fn(),
     destroy: jest.fn(),
+    count: jest.fn(),
+    findAll: jest.fn(),
+    findAndCountAll: jest.fn(),
   },
+  OrderStatusHistory: {
+    create: jest.fn(),
+  },
+  CheckOut: {},
+  User: {},
+  Payment: {},
+  OrderItem: {},
   ShippingInfo: {
     findByPk: jest.fn(),
     findOne: jest.fn(),
@@ -47,6 +64,17 @@ jest.mock('@digishop/db', () => ({
     create: jest.fn(),
     update: jest.fn(),
     destroy: jest.fn(),
+  },
+  RefundOrder: {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  RefundStatusHistory: {
+    create: jest.fn(),
+  },
+  PaymentGatewayEvent: {
+    create: jest.fn(),
   },
   ReturnShipment: {
     findByPk: jest.fn(),
@@ -68,6 +96,7 @@ jest.mock('@digishop/db', () => ({
     REJECTED: 'REJECTED',
   },
   ShippingStatus: {
+    PENDING: 'PENDING',
     READY_TO_SHIP: 'READY_TO_SHIP',
     RECEIVE_PARCEL: 'RECEIVE_PARCEL',
     ARRIVED_SORTING_CENTER: 'ARRIVED_SORTING_CENTER',
@@ -82,15 +111,37 @@ jest.mock('@digishop/db', () => ({
     RE_TRANSIT: 'RE_TRANSIT',
   },
   OrderStatus: {
+    PENDING: 'PENDING',
+    CUSTOMER_CANCELED: 'CUSTOMER_CANCELED',
+    PAID: 'PAID',
+    MERCHANT_CANCELED: 'MERCHANT_CANCELED',
+    PROCESSING: 'PROCESSING',
     READY_TO_SHIP: 'READY_TO_SHIP',
     HANDED_OVER: 'HANDED_OVER',
     SHIPPED: 'SHIPPED',
     DELIVERED: 'DELIVERED',
+    COMPLETE: 'COMPLETE',
     TRANSIT_LACK: 'TRANSIT_LACK',
     RE_TRANSIT: 'RE_TRANSIT',
+    REFUND_REQUEST: 'REFUND_REQUEST',
+    REFUND_REJECTED: 'REFUND_REJECTED',
     AWAITING_RETURN: 'AWAITING_RETURN',
     RECEIVE_RETURN: 'RECEIVE_RETURN',
+    RETURN_VERIFIED: 'RETURN_VERIFIED',
     RETURN_FAIL: 'RETURN_FAIL',
+    REFUND_APPROVED: 'REFUND_APPROVED',
+    REFUND_PROCESSING: 'REFUND_PROCESSING',
+    REFUND_SUCCESS: 'REFUND_SUCCESS',
+    REFUND_FAIL: 'REFUND_FAIL',
+    REFUND_RETRY: 'REFUND_RETRY',
+    CANCELED_REFUND: 'CANCELED_REFUND',
+  },
+  RefundStatus: {
+    REQUESTED: 'REQUESTED',
+    APPROVED: 'APPROVED',
+    SUCCESS: 'SUCCESS',
+    FAIL: 'FAIL',
+    CANCELED: 'CANCELED',
   },
   ReturnShipmentStatus: {
     AWAITING_DROP: 'AWAITING_DROP',
@@ -100,9 +151,10 @@ jest.mock('@digishop/db', () => ({
     RETURN_FAILED: 'RETURN_FAILED',
   },
   ActorType: {
-    SYSTEM: 'SYSTEM',
-    USER: 'USER',
+    CUSTOMER: 'CUSTOMER',
     MERCHANT: 'MERCHANT',
+    ADMIN: 'ADMIN',
+    SYSTEM: 'SYSTEM',
   }
 }));
 
