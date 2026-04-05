@@ -143,6 +143,15 @@ jest.mock('@digishop/db', () => ({
     FAIL: 'FAIL',
     CANCELED: 'CANCELED',
   },
+  ProductStatus: {
+    ACTIVE: 'ACTIVE',
+    INACTIVE: 'INACTIVE',
+  },
+  ProductReqStatus: {
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
+    REJECT: 'REJECT',
+  },
   ReturnShipmentStatus: {
     AWAITING_DROP: 'AWAITING_DROP',
     RETURN_IN_TRANSIT: 'RETURN_IN_TRANSIT',
