@@ -761,19 +761,9 @@ export class ProductService {
         const comboKey = makeComboKeyFromItem(currentItem, varIndexById)
 
         if (!allowedComboKeys.has(comboKey)) {
-          const oldImage = currentItem.productItemImage
-          if (oldImage) {
-            await azureBlobService.deleteImage(oldImage.blobName)
-            await productRepository.deleteProductItemImageById(
-              oldImage.id,
-              transaction
-            )
-          }
-
-          await productRepository.deleteProductConfigurationsByItemId(
-            currentItem.id,
-            transaction
-          )
+          // Perform a graceful soft delete: only delete the ProductItem row
+          // (which triggers deleted_at via paranoid: true). DO NOT delete Azure Image blobs
+          // or configurations, preserving historical order integrity.
           await productRepository.deleteProductItemById(
             currentItem.id,
             transaction
@@ -783,6 +773,10 @@ export class ProductService {
 
       if ((desired.variations?.length ?? 0) < 1) {
         throw new ProductServiceError(400, 'At least one variation is required')
+      }
+
+      if ((desired.variations?.length ?? 0) > 2) {
+        throw new ProductServiceError(400, 'Maximum 2 variations allowed')
       }
 
       for (const variation of desired.variations) {
