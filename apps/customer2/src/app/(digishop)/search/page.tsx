@@ -1,18 +1,10 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { use } from 'react'
+import { useEffect, useState, use } from 'react'
 import { searchProduct } from '@/utils/requestUtils/requestProduct'
 import NotFound from '@/components/notFound'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/productCard'
-import {
-  Search,
-  X,
-  ChevronRight,
-  ChevronLeft,
-  ArrowDown,
-  ArrowUp
-} from 'lucide-react'
+import { ChevronRight, ChevronLeft, SlidersHorizontal, Store as StoreIcon } from 'lucide-react'
 import { Product, ProductItem, Store } from '@/types/props/productProp'
 
 export default function SearchResult({
@@ -20,228 +12,146 @@ export default function SearchResult({
 }: {
   searchParams: Promise<{ [key: string]: string }>
 }) {
-  const [rawProduct, setRawProduct] = useState<Product[]>()
-  const [products, setProduct] = useState<Product[]>()
-  const [stores, setStore] = useState<Store[]>()
+  const [rawProduct, setRawProduct] = useState<Product[] | undefined>(undefined)
+  const [products, setProduct] = useState<Product[] | undefined>(undefined)
+  const [stores, setStore] = useState<Store[] | undefined>(undefined)
   const [count, setCount] = useState<number>(0)
   const [page, setPage] = useState<number>(1)
-  const [filter, setFilter] = useState('ASC')
+  const [filter, setFilter] = useState('RELEVANCE') // RELEVANCE, ASC, DESC
   const { query } = use(searchParams)
   const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState(query)
-  const [searchResult, setSearchResult] = useState<string[] | undefined>()
-  const [hover, setHover] = useState<boolean>(false)
-  const [loading, setLoading] = useState(false)
-  const handleSearch = (query = searchQuery) => {
-    setHover(false)
-    setSearchResult(undefined)
-    setSearchQuery(query)
-    if (!query.trim()) return
-    router.push(`/search?query=${query}`)
-  }
-  useEffect(() => {
-    const abort = new AbortController()
-    const query = searchQuery.trim()
-    if (query.length > 0 && loading) {
-      const timeOutId = setTimeout(async () => {
-        const res = (await searchProduct(query)) as {
-          product: Product[] | null
-          store: Store[] | null
-        }
-        const productName = res.product?.map((product) => product.name)
-        const storeName = res.store?.map((store) => store.storeName)
-        const resultSearch = [...(productName ?? []), ...(storeName ?? [])]
-        if (resultSearch.length > 0) {
-          setSearchResult(resultSearch)
-        } else {
-          setSearchResult(undefined)
-        }
-        setLoading(false)
-      }, 500)
-      return () => {
-        clearTimeout(timeOutId)
-        abort.abort()
-      }
-    }
-  }, [searchQuery, loading])
-  const clearSearch = () => {
-    setSearchQuery('')
-  }
+  const [loading, setLoading] = useState(true)
+
   const minPrice = (data: ProductItem[]) => {
     const price = data.map((item) => item.priceMinor)
-    const minPrice = Math.min(...price)
-    return minPrice
+    return Math.min(...price)
   }
+
   useEffect(() => {
     const fetchProduct = async () => {
-      const res = (await searchProduct(query, page)) as {
-        product: Product[]
-        productCount: number
-        store: Store[]
+      setLoading(true)
+      try {
+        const res = (await searchProduct(query, page)) as {
+          product: Product[]
+          productCount: number
+          store: Store[]
+        }
+        setRawProduct(res.product)
+        setStore(res.store)
+        setCount(res.productCount)
+      } finally {
+        setTimeout(() => setLoading(false), 500) // fake delay for loading animation smoothing
       }
-      setRawProduct(res.product)
-      setStore(res.store)
-      setCount(res.productCount)
     }
     fetchProduct()
   }, [query, page])
-  useEffect(() => {
-    if (stores?.length && !rawProduct?.length) {
-      setCount(1)
-    }
-  }, [stores, rawProduct])
+
   useEffect(() => {
     if (!rawProduct) return
-    if (filter == 'ASC') {
-      const sorted = rawProduct?.sort(
-        (a, b) => minPrice(a.items) - minPrice(b.items)
-      )
-      setProduct(sorted)
-    } else if (filter == 'DESC') {
-      setProduct((rawProduct) =>
-        rawProduct?.sort((a, b) => minPrice(b.items) - minPrice(a.items))
-      )
+    let sorted = [...rawProduct]
+    if (filter === 'ASC') {
+      sorted.sort((a, b) => minPrice(a.items) - minPrice(b.items))
+    } else if (filter === 'DESC') {
+      sorted.sort((a, b) => minPrice(b.items) - minPrice(a.items))
     }
-  }, [filter, products, rawProduct])
-  return (
-    <div className=" pt-3">
-      <div className="flex justify-center mb-3 ">
-        <div className="relative w-1/2">
-          <input
-            type="text"
-            value={searchQuery}
-            onFocus={() => setHover(true)}
-            onChange={(e) => {
-              setSearchQuery(e.target.value)
-              setLoading(true)
-            }}
-            placeholder="Search for products, brands, or categories..."
-            className={`w-full px-6 py-4 text-xl border-2 z-50 border-gray-200 ${searchResult && searchQuery ? 'rounded-t-4xl' : 'rounded-full'} focus:border-blue-500 focus:outline-none shadow-lg text-black bg-white`}
-          />
-          {searchQuery && hover && (
-            <div className="absolute right-0 z-100 w-full">
-              {searchResult?.map((result, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSearch(result)}
-                  className={`flex bg-white flex-row w-full p-4 border-b-2 border-x-2 text-xl border-gray-200 hover:bg-gray-300 ${index === searchResult.length - 1 ? 'rounded-b-4xl' : ''}`}
-                >
-                  {result}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="p-1 text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
-            )}
-            <button
-              onClick={() => handleSearch()}
-              className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 transition-colors"
-            >
-              <Search size={20} />
-            </button>
-          </div>
+    setProduct(sorted)
+  }, [filter, rawProduct])
+
+  if (loading) {
+     return (
+      <div className="max-w-6xl mx-auto py-10 px-4">
+        <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse mb-8" />
+        <div className="flex gap-4 mb-6">
+          {[1,2,3,4].map(i => <div key={i} className="h-10 w-24 bg-gray-200 rounded animate-pulse" />)}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+           {[1,2,3,4,5,6,7,8,9,10].map(i => (
+             <div key={i} className="h-64 bg-gray-200 rounded-lg animate-pulse" />
+           ))}
         </div>
       </div>
-      {(!rawProduct && !stores) ||
-      (rawProduct?.length == 0 && stores?.length == 0) ? (
-        <NotFound props={query} />
-      ) : (
-        <div className="flex justify-center items-center">
-          <div className="w-3/4">
-            {(products?.length ?? 0) > 0 && (
-              <div className="flex justify-end items-center mb-2">
-                <div className="flex mx-3">
-                  {filter == 'ASC' ? (
-                    <button
-                      onClick={() => setFilter('DESC')}
-                      className="bg-gray-200 p-1 hover:cursor-pointer"
-                    >
-                      <ArrowUp />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setFilter('ASC')}
-                      className="bg-gray-200 p-1 hover:cursor-pointer"
-                    >
-                      <ArrowDown />
-                    </button>
-                  )}
-                </div>
-                {products?.length && (
-                  <div className="text-xl">
-                    <div>
-                      amount : {(page - 1) * 10 + products.length} / {count}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className=" flex justify-center items-center">
-              <div>
-                <div className="grid grid-cols-2 gap-2 mb-6 ">
-                  {stores &&
-                    stores.map((store, index) => (
-                      <button
-                        key={index}
-                        className="cursor-pointer"
-                        onClick={() => router.push(`/store/${store.uuid}`)}
-                      >
-                        <div className="flex p-6 rounded-2xl bg-white border ">
-                          <div className="h-[100px] w-[100px] rounded-[50px] bg-amber-800 "></div>
-                          <div className="px-4">
-                            <h1 className="text-2xl font-medium">
-                              {store.storeName}
-                            </h1>
-                            <h6 className="mt-4 text-lg">
-                              {store.description}
-                            </h6>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                </div>
+     )
+  }
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {products &&
-                    products.map((item: Product, index: number) => (
-                      <div
-                        key={index}
-                        onClick={() =>
-                          router.push(`/product/${String(item.uuid)}`)
-                        }
-                      >
-                        <Card data={item} />
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-            <div className=" flex justify-center items-center text-xl mt-15 py-5">
-              <span>Page</span>
-              <button
-                onClick={() => setPage(page + 1)}
-                className={`${page == 1 ? 'opacity-0' : 'opacity-100'}`}
-              >
-                <ChevronLeft />
-              </button>
-              <div className="mx-5">
-                {page} / {Math.ceil(count / 10)}
-              </div>
-              <button
-                onClick={() => setPage(page + 1)}
-                className={`${page == Math.ceil(count / 10) ? 'opacity-0' : 'opacity-100'}`}
-              >
-                <ChevronRight />
-              </button>
-            </div>
+  const noResults = (!rawProduct?.length && !stores?.length)
+  if(noResults) {
+    return <NotFound props={query} />
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto py-8 px-4 min-h-screen">
+      <div className="mb-6 flex items-center items-baseline gap-2">
+         <h1 className="text-2xl font-bold text-gray-800">Search Results for "{query}"</h1>
+         <span className="text-gray-500">({count} Product{count !== 1 ? 's' : ''})</span>
+      </div>
+
+      {stores && stores.length > 0 && (
+         <div className="mb-8">
+           <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+             <StoreIcon size={20} className="text-blue-pastel-500" /> Stores
+           </h2>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {stores.map((store, index) => (
+                <button
+                  key={index}
+                  className="flex bg-white items-center p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer text-left w-full group"
+                  onClick={() => router.push(`/store/${store.uuid}`)}
+                >
+                  <div className="h-16 w-16 rounded-full bg-blue-pastel-100 flex-shrink-0 flex items-center justify-center text-blue-pastel-500 font-bold text-2xl group-hover:scale-105 transition-transform overflow-hidden">
+                     {store.storeName.charAt(0)}
+                  </div>
+                  <div className="ml-4 flex-1 overflow-hidden">
+                    <h3 className="text-lg font-medium text-gray-800 truncate">{store.storeName}</h3>
+                    <p className="text-sm text-gray-500 line-clamp-1">{store.description || 'Welcome to our store'}</p>
+                  </div>
+                </button>
+              ))}
+           </div>
+         </div>
+      )}
+
+      {products && products.length > 0 && (
+         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+           <div className="flex bg-gray-50 p-2 rounded-lg items-center gap-4 text-sm font-medium text-gray-600">
+             <span className="flex items-center gap-2 px-2"><SlidersHorizontal size={16}/> Sort By</span>
+             <button onClick={() => setFilter('RELEVANCE')} className={`px-4 py-2 rounded-md transition-colors cursor-pointer ${filter === 'RELEVANCE' ? 'bg-blue-pastel-500 text-white' : 'bg-white hover:bg-blue-50'}`}>Relevance</button>
+             <button onClick={() => setFilter('ASC')} className={`px-4 py-2 rounded-md transition-colors cursor-pointer ${filter === 'ASC' ? 'bg-blue-pastel-500 text-white' : 'bg-white hover:bg-blue-50'}`}>Price: Low to High</button>
+             <button onClick={() => setFilter('DESC')} className={`px-4 py-2 rounded-md transition-colors cursor-pointer ${filter === 'DESC' ? 'bg-blue-pastel-500 text-white' : 'bg-white hover:bg-blue-50'}`}>Price: High to Low</button>
+           </div>
+         </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {products?.map((item: Product, index: number) => (
+          <div
+            key={index}
+            className="cursor-pointer group flex justify-center hover:-translate-y-1 hover:shadow-lg transition-transform duration-300 rounded-b-2xl overflow-hidden bg-white shadow-sm"
+            onClick={() => router.push(`/product/${String(item.uuid)}`)}
+          >
+            <Card data={item} />
           </div>
+        ))}
+      </div>
+
+      {Math.ceil(count / 10) > 1 && (
+        <div className="flex justify-center items-center text-lg mt-12 gap-6 bg-white py-4 rounded-xl shadow-sm w-max mx-auto px-8 border border-gray-100">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            className={`p-2 rounded-full transition-colors ${page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-pastel-500 hover:bg-blue-50 cursor-pointer'}`}
+            disabled={page === 1}
+          >
+            <ChevronLeft />
+          </button>
+          <span className="font-medium text-gray-700">
+            {page} / {Math.ceil(count / 10)}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(Math.ceil(count / 10), p + 1))}
+             className={`p-2 rounded-full transition-colors ${page === Math.ceil(count / 10) ? 'text-gray-300 cursor-not-allowed' : 'text-blue-pastel-500 hover:bg-blue-50 cursor-pointer'}`}
+            disabled={page === Math.ceil(count / 10)}
+          >
+            <ChevronRight />
+          </button>
         </div>
       )}
     </div>

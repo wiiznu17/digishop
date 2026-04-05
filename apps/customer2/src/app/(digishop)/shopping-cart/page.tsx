@@ -1,34 +1,44 @@
 'use client'
 import { useAuth } from '@/contexts/auth-context'
 import { OrderIdProp, ShoppingDetail } from '@/types/props/orderProp'
-import { fetchUserChart } from '@/utils/requestUtils/requestOrderUtils'
+import { fetchUserChart, createOrderId, deleteCart } from '@/utils/requestUtils/requestOrderUtils'
 import { SetStateAction, useEffect, useState } from 'react'
-import {
-  createOrderId,
-  deleteCart
-} from '@/utils/requestUtils/requestOrderUtils'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/button'
-import { Minus, Plus } from 'lucide-react'
+import { Minus, Plus, Store as StoreIcon, Trash2, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { formatSku } from '@/lib/function'
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react'
 import Image from 'next/image'
 
 export default function ShoppingCart() {
-  const [data, setData] = useState<ShoppingDetail[]>()
+  const [data, setData] = useState<ShoppingDetail[] | undefined>()
   const { user } = useAuth()
   const router = useRouter()
   const [select, setSelected] = useState<ShoppingDetail[]>([])
-  const [price, setPrice] = useState<number>(0)
-  const [deleteDialogItemId, setDeleteDialogItemId] = useState<number | null>(
-    null
-  )
+  const [deleteDialogItemId, setDeleteDialogItemId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const [order, setOrder] = useState<OrderIdProp>({
     customerId: user?.id ?? 0,
     orderData: []
   })
+
+  useEffect(() => {
+    const fetchCart = async () => {
+      setLoading(true)
+      try {
+        if (user) {
+          const cartData = (await fetchUserChart(user.id)) as { data: ShoppingDetail[] }
+          setData(cartData.data)
+        }
+      } finally {
+        setTimeout(() => setLoading(false), 500)
+      }
+    }
+    fetchCart()
+  }, [user])
+
   const sumPrice = (items: ShoppingDetail[]) => {
     let sum = 0
     for (let i = 0; i < items.length; i++) {
@@ -36,50 +46,42 @@ export default function ShoppingCart() {
     }
     return sum
   }
+
   const rawCartData = () => {
     if (!data) return
-    return Object.groupBy(
-      data,
-      ({ productItem }) => productItem.product.store.storeName
-    )
+    return Object.groupBy(data, ({ productItem }) => productItem.product.store.storeName)
   }
-  useEffect(() => {
-    const fetchCart = async () => {
-      if (user) {
-        const cartData = (await fetchUserChart(user.id)) as {
-          data: ShoppingDetail[]
-        }
-        setData(cartData.data)
-      }
-    }
-    fetchCart()
-  }, [user])
-  useEffect(() => {
-    setPrice(sumPrice(select))
-  }, [select])
+
   const handleDelete = async (id: (number | undefined)[]) => {
     const del = await deleteCart(id)
     return del
   }
+
   const handleChangeAmount = (cal: string, id: number | undefined) => {
     if (!data && !id) return
     setData((data) =>
       data?.map((item) =>
         item.id === id
-          ? {
-              ...item,
-              quantity: cal === 'add' ? item.quantity + 1 : item.quantity - 1
-            }
+          ? { ...item, quantity: cal === 'add' ? item.quantity + 1 : item.quantity - 1 }
+          : item
+      )
+    )
+    setSelected((sel) =>
+      sel.map((item) =>
+         item.id === id
+          ? { ...item, quantity: cal === 'add' ? item.quantity + 1 : item.quantity - 1 }
           : item
       )
     )
   }
+
   const handleDeletCartItem = async (id: number | undefined) => {
     const del = (await handleDelete([id])) as { message: string }
     if (del.message) {
       window.location.reload()
     }
   }
+
   const handleSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = e.target
     if (!checked) {
@@ -92,23 +94,22 @@ export default function ShoppingCart() {
     }
   }
 
-  const handleDel = async () => {
+  const handleDelSelected = async () => {
     if (!user) return
-    const cardIds = select.map((item) => item.id)
-    const del = await handleDelete(cardIds)
-    if (del) {
-      window.location.reload()
+    if (confirm('Are you sure you want to delete these items from your cart?')) {
+      const cardIds = select.map((item) => item.id)
+      const del = await handleDelete(cardIds)
+      if (del) {
+        window.location.reload()
+      }
     }
   }
+
   const handleBuy = async () => {
     if (!user) return
     order.customerId = user.id
     order.orderData = select
-    setOrder((prev) => ({
-      ...prev,
-      customerId: user.id,
-      orderData: select
-    }))
+    setOrder((prev) => ({ ...prev, customerId: user.id, orderData: select }))
 
     const cardIds = select.map((item) => item.id)
     const res = (await createOrderId(order)) as { data: string }
@@ -118,233 +119,194 @@ export default function ShoppingCart() {
     }
   }
 
-  const cartData = rawCartData() ? rawCartData() : 'null'
-  if (!data || !cartData)
-    return (
-      <div className=" flex justify-center items-center text-gray-500  p-4">
-        <div>no cart items </div>
-      </div>
-    )
-  return data?.length > 0 ? (
-    <div className={`pt-5 grid grid-cols-2 `}>
-      <div className="flex justify-center ">
-        <div>
-          {Object.entries(cartData).map(([key, values]) => (
-            <div key={key} className=" px-5 py-3 mb-5 border w-2xl rounded-2xl">
-              <Link href={`/store/${values[0].productItem.product.store.uuid}`}>
-                <div className="flex items-center mb-3">
-                  <div className="mx-4 w-[60px] h-[60px] rounded-full bg-amber-300"></div>
-                  <div className="text-2xl font-bold">{key}</div>
-                </div>
-              </Link>
+  if (loading) {
+     return (
+       <div className="max-w-6xl mx-auto py-8 px-4 grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
+         <div className="lg:col-span-2 flex flex-col gap-6">
+           <div className="h-48 bg-white rounded-xl shadow-sm border border-gray-100" />
+           <div className="h-48 bg-white rounded-xl shadow-sm border border-gray-100" />
+         </div>
+         <div className="lg:col-span-1">
+           <div className="h-64 bg-white rounded-xl shadow-sm border border-gray-100 sticky top-24" />
+         </div>
+       </div>
+     )
+  }
 
-              {values &&
-                values.map((value: ShoppingDetail, index: number) => (
-                  <div key={index}>
-                    <div className="flex gap-4 relative mb-2">
-                      <input
-                        type="checkbox"
-                        name="selected"
-                        value={value.id}
-                        onChange={handleSelected}
-                        className={`${value.quantity > value.productItem.stockQuantity || (select[0] && select[0].productItem.product.storeId !== value.productItem.product.storeId) ? 'opacity-0' : ''}`}
-                        disabled={
-                          value.quantity > value.productItem.stockQuantity
-                        }
-                      />
-                      {value.productItem.productItemImage && (
-                        <Image
-                          src={value.productItem.productItemImage.url}
-                          alt={value.productItem.productItemImage.blobName}
-                          height={200}
-                          width={200}
-                          className="object-fill w-[150px] h-[150px] "
-                        />
-                      )}
+  const cartData = rawCartData()
+  const isEmpty = !data || data.length === 0
 
-                      <div>
-                        <div className="flex-1">
-                          <Link
-                            href={`/product/${value.productItem.product.uuid}`}
-                            className="cursor-pointer hover:bg-gray-300 rounded-2xl text-xl font-medium"
-                          >
-                            {value.productItem.product.name}
-                          </Link>
-                          <div className="flex justify-between items-center">
-                            <div className="pt-3  text-gray-500 font-ligth text-base">
-                              {formatSku(value.productItem.configurations)}
-                            </div>
-                            <div className="flex gap-2 items-center absolute right-0 bottom-12 text-base font-normal">
-                              <button
-                                onClick={() => {
-                                  if (value.quantity > 1) {
-                                    handleChangeAmount('sub', value.id)
-                                  } else if (value.quantity === 1 && value.id) {
-                                    setDeleteDialogItemId(value.id)
-                                  }
-                                }}
-                                className={` rounded-xs hover:bg-gray-400 p-0.5 ${value.quantity == 0 || select.map((select) => select.id).includes(value.id) ? 'opacity-0' : 'opacity-100'}`}
-                              >
-                                <Minus className="w-4 h-4" />
-                              </button>
-                              <span className="w-8 text-center font-medium text-gray-900 bg-gray-200">
-                                {value.quantity}
-                              </span>
-                              <button
-                                disabled={
-                                  value.quantity ==
-                                  value.productItem.stockQuantity
-                                }
-                                className={`hover:bg-gray-400 p-0.5 rounded-xs ${value.quantity == value.productItem.stockQuantity || select.map((select) => select.id).includes(value.id) ? 'opacity-0' : 'opacity-100'}`}
-                                onClick={() =>
-                                  handleChangeAmount('add', value.id)
-                                }
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
-                            </div>
-                            {value.quantity >
-                              value.productItem.stockQuantity && (
-                              <div className="absolute bottom-5  text-red-400 text-[14px]">
-                                * product has only{' '}
-                                {value.productItem.stockQuantity}
+  if (isEmpty) {
+     return (
+        <div className="max-w-6xl mx-auto py-20 px-4 flex flex-col items-center justify-center text-center">
+          <div className="bg-blue-pastel-50 p-6 rounded-full mb-6">
+             <ShoppingBag size={64} className="text-blue-pastel-300" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
+          <p className="text-gray-500 mb-8 max-w-sm">Looks like you haven't added anything to your cart yet. Discover great products now!</p>
+          <Link href="/" className="bg-blue-pastel-500 text-white px-8 py-3 rounded-full font-medium hover:bg-blue-pastel-600 hover:shadow-lg transition-all">
+            Continue Shopping
+          </Link>
+        </div>
+     )
+  }
+
+  return (
+     <div className="max-w-6xl mx-auto py-8 px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column - Cart Items */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+           <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+             <h1 className="text-2xl font-bold text-gray-800">Shopping Cart <span className="text-gray-500 text-lg font-normal">({data?.length || 0} items)</span></h1>
+           </div>
+
+           {cartData && Object.entries(cartData).map(([storeName, values]) => (
+             <div key={storeName} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group">
+                <Link href={`/store/${values?.[0]?.productItem.product.store.uuid}`} className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center gap-3 hover:bg-blue-pastel-50 transition-colors cursor-pointer">
+                  <div className="h-8 w-8 bg-blue-pastel-200 text-blue-pastel-600 rounded-lg flex items-center justify-center font-bold text-xs uppercase overflow-hidden shrink-0">
+                     {storeName.charAt(0)}
+                  </div>
+                  <span className="font-semibold text-gray-800 flex items-center gap-2"><StoreIcon size={16}/>{storeName}</span>
+                </Link>
+
+                <div className="p-2">
+                  {values?.map((item: ShoppingDetail, index: number) => {
+                     const isOutOfStock = item.quantity > item.productItem.stockQuantity;
+                     const isDiffStore = select.length > 0 && select[0].productItem.product.storeId !== item.productItem.product.storeId;
+                     const disabled = isOutOfStock || isDiffStore;
+
+                     return (
+                        <div key={item.id} className="flex gap-4 p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-xl relative">
+                           <div className="flex items-center">
+                              <label className="relative flex items-center p-2 rounded-full cursor-pointer">
+                                 <input 
+                                   type="checkbox" 
+                                   value={item.id} 
+                                   onChange={handleSelected}
+                                   disabled={disabled}
+                                   checked={select.some(s => s.id === item.id)}
+                                   className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-pastel-500 before:opacity-0 before:transition-opacity checked:border-blue-pastel-500 checked:bg-blue-pastel-500 checked:before:bg-blue-pastel-500 hover:scale-105 hover:before:opacity-10 disabled:opacity-50"
+                                 />
+                                 <span className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
+                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" strokeWidth="1">
+                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                                   </svg>
+                                 </span>
+                              </label>
+                           </div>
+
+                           <Link href={`/product/${item.productItem.product.uuid}`} className="shrink-0">
+                              {item.productItem.productItemImage ? (
+                                <Image
+                                  src={item.productItem.productItemImage.url}
+                                  alt={item.productItem.productItemImage.blobName}
+                                  height={100}
+                                  width={100}
+                                  className="object-cover w-24 h-24 rounded-lg border border-gray-100 shadow-sm"
+                                />
+                              ) : (
+                                <div className="w-24 h-24 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-xs text-gray-400">No Image</div>
+                              )}
+                           </Link>
+
+                           <div className="flex-1 flex flex-col justify-between">
+                              <div className="flex justify-between items-start gap-4">
+                                <Link href={`/product/${item.productItem.product.uuid}`} className="font-medium text-gray-800 hover:text-blue-pastel-600 transition-colors line-clamp-2">
+                                  {item.productItem.product.name}
+                                </Link>
+                                <div className="text-right whitespace-nowrap font-bold text-gray-800">
+                                   ฿{((item.productItem.priceMinor * item.quantity)/100).toLocaleString()}
+                                </div>
                               </div>
-                            )}
-                          </div>
 
-                          <div className="absolute bottom-0 right-0 text-xl ">
-                            ฿{' '}
-                            {(
-                              (value.productItem.priceMinor * value.quantity) /
-                              100
-                            )
-                              .toString()
-                              .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                          </div>
+                              <div className="text-sm text-gray-500 mb-2 whitespace-pre-line">
+                                 {formatSku(item.productItem.configurations)}<br/>฿{(item.productItem.priceMinor/100).toLocaleString()} / item
+                              </div>
+
+                              <div className="flex justify-between items-end gap-2 mt-auto">
+                                 <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                                    <button 
+                                      onClick={() => {
+                                        if (item.quantity > 1) handleChangeAmount('sub', item.id)
+                                        else if (item.quantity === 1) setDeleteDialogItemId(item.id!)
+                                      }}
+                                      className="p-1.5 hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
+                                      disabled={select.some(s => s.id === item.id)}
+                                    >
+                                      {item.quantity === 1 ? <Trash2 size={16} className="text-red-500" /> : <Minus size={16} />}
+                                    </button>
+                                    <span className="w-10 text-center font-medium text-sm py-1 border-x border-gray-200">
+                                      {item.quantity}
+                                    </span>
+                                    <button 
+                                      onClick={() => handleChangeAmount('add', item.id)}
+                                      disabled={item.quantity >= item.productItem.stockQuantity || select.some(s => s.id === item.id)}
+                                      className="p-1.5 hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
+                                    >
+                                      <Plus size={16} />
+                                    </button>
+                                 </div>
+                                 
+                                 {isOutOfStock && (
+                                   <div className="text-xs text-red-500 font-medium">Only {item.productItem.stockQuantity} left</div>
+                                 )}
+                              </div>
+                           </div>
+
+                           {deleteDialogItemId === item.id && (
+                             <DialogDeletShopingCartItem
+                               data={item}
+                               aleartDeletItem={deleteDialogItemId === item.id}
+                               setAleartDeletItem={(open) => setDeleteDialogItemId(open ? item.id! : null)}
+                               handleDeletCartItem={handleDeletCartItem}
+                             />
+                           )}
                         </div>
-                      </div>
-                    </div>
-                    {deleteDialogItemId === value.id && (
-                      <DialogDeletShopingCartItem
-                        data={value}
-                        aleartDeletItem={deleteDialogItemId === value.id}
-                        setAleartDeletItem={(open) => {
-                          if (typeof value.id !== 'undefined') {
-                            setDeleteDialogItemId(open ? value.id : null)
-                          }
-                        }}
-                        handleDeletCartItem={handleDeletCartItem}
-                      />
-                    )}
-                  </div>
-                ))}
-              {values && values.length > 1 && (
-                <div className="border-t pt-2 flex justify-between text-2xl">
-                  <div>Total</div>
-                  <div className="flex justify-end font-medium">
-                    ฿{' '}
-                    {(sumPrice(values) / 100)
-                      .toString()
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  </div>
+                     )
+                  })}
+                </div>
+             </div>
+           ))}
+        </div>
+
+        {/* Right Column - Checkout Summary */}
+        <div className="lg:col-span-1">
+           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-28">
+              <h2 className="text-lg font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100">Order Summary</h2>
+              
+              <div className="flex justify-between items-center mb-4 text-gray-600">
+                <span>Selected Items</span>
+                <span className="font-medium">{select.length}</span>
+              </div>
+              
+              <div className="flex justify-between items-end mb-6 pt-4 border-t border-gray-100">
+                <span className="text-gray-800 font-medium">Total</span>
+                <span className="text-3xl font-bold text-blue-pastel-600">฿{(sumPrice(select)/100).toLocaleString()}</span>
+              </div>
+
+              {select.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                   <button 
+                     onClick={handleBuy}
+                     className="w-full bg-blue-pastel-500 hover:bg-blue-pastel-600 text-white font-bold py-4 rounded-xl shadow-md hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer"
+                   >
+                     Checkout ({select.length})
+                   </button>
+                   <button 
+                     onClick={handleDelSelected}
+                     className="w-full bg-red-50 hover:bg-red-100 text-red-500 font-bold py-3 rounded-xl transition-all border border-red-200 cursor-pointer"
+                   >
+                     Remove Selected
+                   </button>
+                </div>
+              ) : (
+                <div className="bg-gray-50 text-gray-400 text-center py-4 rounded-xl font-medium border border-gray-100">
+                   Select items to checkout
                 </div>
               )}
-            </div>
-          ))}
+           </div>
         </div>
-      </div>
-
-      {select && (
-        <div className="flex justify-center items-start">
-          <div className=" flex flex-col w-2xl">
-            <div className=" p-5 mb-5 border w-2xl h-fit rounded-2xl">
-              <div className="flex justify-center  text-2xl ">
-                selected items
-              </div>
-              <div className={`border-t flex justify-end my-2`}></div>
-              <div>
-                {select.map((value, index) => (
-                  <div key={index}>
-                    {value.id && (
-                      <div className="flex gap-4 relative mb-2">
-                        {/* <div className="w-[100px] h-[100px] bg-amber-700"></div> */}
-                        {value.productItem.productItemImage && (
-                          <Image
-                            src={value.productItem.productItemImage.url}
-                            alt={value.productItem.productItemImage.blobName}
-                            height={120}
-                            width={120}
-                            className="object-fill w-[120px] h-[120px] "
-                          />
-                        )}
-                        <div>
-                          <div className="flex-1">
-                            <div className="text-xl font-medium">
-                              {value.productItem.product.name}
-                            </div>
-                            <div className="absolute text-gray-500 pt-2 text-base ">
-                              {formatSku(value.productItem.configurations)}
-                            </div>
-                            <div className="absolute bottom-0 right-0 text-base text-gray-500 ">
-                              x {String(value.quantity)}
-                            </div>
-                            <div className="absolute bottom-7 right-0 text-xl  text-gray-500 ">
-                              ฿{' '}
-                              {(value.productItem.priceMinor / 100)
-                                .toString()
-                                .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className={`${price === 0 ? 'opacity-0' : 'opacity-100'} `}>
-              <div className="flex justify-evenly items-center mb-6">
-                <div className="text-2xl">Total</div>
-                <div className="text-2xl font-medium">
-                  ฿{' '}
-                  {(sumPrice(select) / 100)
-                    .toString()
-                    .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="mb-3 text-2xl ">I want to </div>
-                <div className="pt-2">
-                  <Button
-                    size="lg"
-                    onClick={handleDel}
-                    color="bg-red-500"
-                    className="w-[150px] text-white"
-                  >
-                    Delete
-                  </Button>
-                </div>
-                <div className="text-2xl ">or</div>
-                <div className="pt-2">
-                  <Button
-                    size="lg"
-                    onClick={handleBuy}
-                    color="bg-green-500"
-                    className="w-[150px] text-white"
-                  >
-                    Buy
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  ) : (
-    <div className=" flex justify-center items-center text-gray-500  p-4">
-      <div>no cart items </div>
-    </div>
+     </div>
   )
 }
 
@@ -359,55 +321,48 @@ const DialogDeletShopingCartItem = ({
   setAleartDeletItem: React.Dispatch<SetStateAction<boolean>>
   handleDeletCartItem: (id: number | undefined) => Promise<void>
 }) => {
-  if (!data) return
+  if (!data) return null
   return (
-    <div className="flex justify-center ">
-      <div>
-        <Dialog
-          open={aleartDeletItem}
-          onClose={() => setAleartDeletItem(false)}
-          className="relative z-100"
-        >
-          <DialogBackdrop
+    <Dialog
+      open={aleartDeletItem}
+      onClose={() => setAleartDeletItem(false)}
+      className="relative z-50"
+    >
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-black/50 transition-opacity backdrop-blur-sm"
+      />
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <DialogPanel
             transition
-            className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+            className="w-full max-w-sm transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all"
           >
-            <div className={`fixed inset-0 z-100 w-screen overflow-y-auto `}>
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <DialogPanel
-                  transition
-                  className="relative transform overflow-hidden rounded-lg  text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
-                >
-                  <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className="text-black text-lg">
-                      Do you want to delete {data.productItem.product.name} ?
-                    </div>
-                    <div className="text-black text-base pt-2 ">
-                      detail {formatSku(data.productItem.configurations) ?? '-'}
-                    </div>
-                  </div>
-                  <div className="bg-white px-4 py-1 sm:flex sm:flex-row-reverse sm:px-6">
-                    <Button
-                      size="sm"
-                      className={`text-sm text-white bg-green-500 sm:ml-3 sm:w-auto`}
-                      onClick={() => handleDeletCartItem(data.id)}
-                    >
-                      Confirm
-                    </Button>
-                    <Button
-                      size="sm"
-                      className=" text-white bg-red-500"
-                      onClick={() => setAleartDeletItem(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </DialogPanel>
-              </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Remove Item</h3>
+            <p className="text-gray-600 mb-1">
+              Do you want to remove <strong>{data.productItem.product.name}</strong> from your cart?
+            </p>
+            <p className="text-sm text-gray-400 mb-6">
+              Detail: {formatSku(data.productItem.configurations) || '-'}
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setAleartDeletItem(false)}
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-medium transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeletCartItem(data.id)}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors shadow-sm cursor-pointer"
+              >
+                Remove
+              </button>
             </div>
-          </DialogBackdrop>
-        </Dialog>
+          </DialogPanel>
+        </div>
       </div>
-    </div>
+    </Dialog>
   )
 }
