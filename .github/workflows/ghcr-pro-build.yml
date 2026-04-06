@@ -1,0 +1,37 @@
+name: Build and Push to GHCR
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_PREFIX: wiiznu
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - authen-service
+          - customer-service2
+          - customer2
+          - merchant
+          - merchant-service
+          - merchant-worker
+          - portal
+          - portal-service
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: { uses: actions/docker/login-action@v3, with: { registry: '${{ env.REGISTRY }}', username: '${{ github.actor }}', password: '${{ secrets.GITHUB_TOKEN }}' } }
+
+      - name: Build and push Docker image
+        uses: { uses: actions/docker/build-push-action@v5, with: { context: ., file: 'apps/${{ matrix.service }}/Dockerfile', push: true, tags: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/${{ matrix.service }}:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/${{ matrix.service }}:latest' } }

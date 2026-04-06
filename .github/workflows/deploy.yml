@@ -1,0 +1,75 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build everything
+        run: npx turbo run build
+
+      # We upload the dist/ directories to artifacts if needed, 
+      # but Railway 'up' usually wants to build in its own containerized environment 
+      # or you upload the built files. 
+      # Given the GitLab CI uploaded 'apps/portal-service/dist', 
+      # I'll keep the build artifacts for the next job.
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            apps/*/dist
+            apps/*/.next
+            packages/*/dist
+            package.json
+            package-lock.json
+            turbo.json
+            tsconfig.json
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          'authen-service',
+          'customer-service2',
+          'customer2',
+          'merchant',
+          'merchant-service',
+          'merchant-worker',
+          'portal',
+          'portal-service'
+        ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway up . --service ${{ matrix.service }} --environment ${{ secrets.RAILWAY_ENVIRONMENT }} --ci --path-as-root --verbose
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

@@ -1,0 +1,25 @@
+resources:
+  - ../../base
+
+# In production, images are updated via CI with commit SHA
+images:
+  - name: ghcr.io/wiiznu/authen-service
+    newTag: PROD_SHA
+  - name: ghcr.io/wiiznu/customer-service2
+    newTag: PROD_SHA
+  - name: ghcr.io/wiiznu/customer2
+    newTag: PROD_SHA
+  - name: ghcr.io/wiiznu/merchant
+    newTag: PROD_SHA
+  - name: ghcr.io/wiiznu/merchant-service
+    newTag: PROD_SHA
+  - name: ghcr.io/wiiznu/merchant-worker
+    newTag: PROD_SHA
+  - name: ghcr.io/wiiznu/portal
+    newTag: PROD_SHA
+  - name: ghcr.io/wiiznu/portal-service
+    newTag: PROD_SHA
+
+# Prod specific configs like resource increases or domain names
+patchesStrategicMerge:
+# Example: - ingress-prod.yaml

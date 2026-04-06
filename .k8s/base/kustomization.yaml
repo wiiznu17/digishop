@@ -1,0 +1,7 @@
+resources:
+  - mysql-statefulset.yaml
+  - redis-statefulset.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml

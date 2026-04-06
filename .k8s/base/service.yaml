@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: authen-service
+spec:
+  ports:
+  - port: 4001
+  selector:
+    app: authen-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-service2
+spec:
+  ports:
+  - port: 4002
+  selector:
+    app: customer-service2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: merchant-service
+spec:
+  ports:
+  - port: 4003
+  selector:
+    app: merchant-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal-service
+spec:
+  ports:
+  - port: 4004
+  selector:
+    app: portal-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer2
+spec:
+  ports:
+  - port: 3001
+  selector:
+    app: customer2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: merchant
+spec:
+  ports:
+  - port: 3002
+  selector:
+    app: merchant
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal
+spec:
+  ports:
+  - port: 3003
+  selector:
+    app: portal
