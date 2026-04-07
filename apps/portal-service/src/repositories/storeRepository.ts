@@ -226,11 +226,8 @@ export class StoreRepository {
     })
   }
 
-  async approveStore(id: number) {
-    return Store.update(
-      { status: StoreStatus.APPROVED },
-      { where: { id, status: StoreStatus.PENDING } }
-    )
+  async approveStore(id: number, status: StoreStatus = StoreStatus.APPROVED) {
+    return Store.update({ status }, { where: { id, status: StoreStatus.PENDING } })
   }
 }
 

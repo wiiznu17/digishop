@@ -273,7 +273,11 @@ export class StoreService {
     }
   }
 
-  async approveStore(id: number) {
+  async updateStoreStatus(
+    id: number,
+    status: StoreStatus = StoreStatus.APPROVED,
+    reason?: string
+  ) {
     if (!Number.isFinite(id)) throw new BadRequestError('Invalid id')
 
     const existing: any = await storeRepository.findStoreById(id)
@@ -281,11 +285,12 @@ export class StoreService {
 
     const currentStatus = String(existing.get('status')) as StoreStatus
     if (currentStatus === StoreStatus.BANNED) {
-      throw new ConflictError('Store is BANNED and cannot be approved')
+      throw new ConflictError('Store is BANNED and cannot be modified')
     }
-    if (currentStatus === StoreStatus.APPROVED) {
+
+    if (currentStatus === status) {
       return {
-        message: 'Store already approved',
+        message: `Store already ${status.toLowerCase()}`,
         store: {
           id: existing.get('id'),
           uuid: existing.get('uuid'),
@@ -297,16 +302,16 @@ export class StoreService {
       }
     }
 
-    const [affected] = await storeRepository.approveStore(id)
+    const [affected] = await storeRepository.approveStore(id, status)
 
     if (affected === 0) {
       const after: any = await storeRepository.findStoreById(id)
       if (!after) throw new NotFoundError('Not found')
 
       const st = String(after.get('status')) as StoreStatus
-      if (st === StoreStatus.APPROVED) {
+      if (st === status) {
         return {
-          message: 'Store already approved',
+          message: `Store already ${status.toLowerCase()}`,
           store: {
             id: after.get('id'),
             uuid: after.get('uuid'),
@@ -317,16 +322,13 @@ export class StoreService {
           }
         }
       }
-      if (st === StoreStatus.BANNED) {
-        throw new ConflictError('Store is BANNED and cannot be approved')
-      }
-      throw new ConflictError('Store status is not eligible for approval')
+      throw new ConflictError(`Store status is not eligible for ${status.toLowerCase()}`)
     }
 
     const updated: any = await storeRepository.findStoreById(id)
 
     return {
-      message: 'Store approved',
+      message: `Store status updated to ${status}`,
       store: {
         id: updated?.get('id'),
         uuid: updated?.get('uuid'),

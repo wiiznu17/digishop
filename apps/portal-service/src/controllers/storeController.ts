@@ -28,7 +28,8 @@ export const adminGetStoreDetail: RequestHandler = asyncHandler(
 export const adminApproveStore: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     const id = Number(req.params.id)
-    const result = await storeService.approveStore(id)
+    const { status, reason } = req.body
+    const result = await storeService.updateStoreStatus(id, status, reason)
     res.status(200).json(result)
   }
 )

@@ -1,6 +1,9 @@
 import { z } from 'zod'
 
-export const ApproveStoreSchema = z.object({
-  status: z.enum(['APPROVED', 'REJECTED', 'SUSPENDED']),
-  reason: z.string().optional()
-})
+export const ApproveStoreSchema = z
+  .object({
+    status: z.enum(['APPROVED', 'REJECTED', 'SUSPENDED']).optional().default('APPROVED'),
+    reason: z.string().optional()
+  })
+  .optional()
+  .default({ status: 'APPROVED' })

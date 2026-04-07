@@ -53,7 +53,7 @@ describe('Store API (Admin)', () => {
 
     describe('POST /api/admin/stores/:id/approve', () => {
         it('should return 200 on approval success', async () => {
-            (storeService.approveStore as jest.Mock).mockResolvedValue({
+            (storeService.updateStoreStatus as jest.Mock).mockResolvedValue({
                 id: 1,
                 status: 'APPROVED'
             });
@@ -62,6 +62,20 @@ describe('Store API (Admin)', () => {
                 .post('/api/admin/stores/1/approve')
                 .set('Cookie', ['access_token=valid-token'])
                 .send({ status: 'APPROVED', reason: 'Verified' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe('APPROVED');
+        });
+
+        it('should return 200 on approval success without body', async () => {
+            (storeService.updateStoreStatus as jest.Mock).mockResolvedValue({
+                id: 1,
+                status: 'APPROVED'
+            });
+
+            const res = await request(app)
+                .post('/api/admin/stores/1/approve')
+                .set('Cookie', ['access_token=valid-token']);
 
             expect(res.status).toBe(200);
             expect(res.body.status).toBe('APPROVED');
