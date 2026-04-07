@@ -309,7 +309,11 @@ export function VariationEditor({
             }}
             disabled={value.length >= 2}
           />
-          <Button size="sm" onClick={addVariation} disabled={!newVarName.trim() || value.length >= 2}>
+          <Button
+            size="sm"
+            onClick={addVariation}
+            disabled={!newVarName.trim() || value.length >= 2}
+          >
             <Plus className="h-4 w-4 mr-1" />
             Add Variation
           </Button>

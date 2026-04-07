@@ -7,8 +7,9 @@ import React, {
   useEffect,
   ReactNode,
   useRef,
-  useMemo
-} from 'react'
+  useMemo,
+  useCallback
+ } from 'react'
 import { FormLogin, AuthContextType } from '../types/props/userProp'
 import {
   fetchUser,
@@ -102,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     const loggedInUser = await loginUser(email, password)
     console.log('loggedInUser', loggedInUser)
@@ -113,9 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(false)
     return false
-  }
+  }, [])
 
-  const googleLogin = async (idToken: string): Promise<boolean> => {
+  const googleLogin = useCallback(async (idToken: string): Promise<boolean> => {
     setIsLoading(true)
     const loggedInUser = await loginUserWithGoogle(idToken)
     if (loggedInUser) {
@@ -125,13 +126,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(false)
     return false
-  }
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await logoutUser()
     setUser(null)
     goToCustomerHome()
-  }
+  }, [])
   const value = useMemo<AuthContextType>(
     () => ({ user, login, googleLogin, logout, isLoading }),
     [user, isLoading, login, googleLogin, logout]

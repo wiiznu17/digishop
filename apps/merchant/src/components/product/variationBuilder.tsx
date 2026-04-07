@@ -164,7 +164,7 @@ export default function VariationBuilder({
     const m = new Map<string, string>()
     for (const v of variations) for (const o of v.options) m.set(o.cid, o.value)
     return m
-  }, [JSON.stringify(variations)])
+  }, [variations])
 
   const autoGenerateSkus = (overwriteExisting = false) => {
     const seen = new Set(

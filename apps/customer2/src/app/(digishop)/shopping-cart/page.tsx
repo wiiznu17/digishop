@@ -170,7 +170,7 @@ export default function ShoppingCart() {
                 </Link>
 
                 <div className="p-2">
-                  {values?.map((item: ShoppingDetail, index: number) => {
+                  {values?.map((item: ShoppingDetail) => {
                      const isOutOfStock = item.quantity > item.productItem.stockQuantity;
                      const isDiffStore = select.length > 0 && select[0].productItem.product.storeId !== item.productItem.product.storeId;
                      const disabled = isOutOfStock || isDiffStore;

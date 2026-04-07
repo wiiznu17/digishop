@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { CircleUser, ClipboardList, ShoppingCart, Bell, HelpCircle } from 'lucide-react'
 import { AuthProvider, useAuth } from '@/contexts/auth-context'
 import { Rubik } from 'next/font/google'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import { HeaderSearch } from '@/components/HeaderSearch'
 
