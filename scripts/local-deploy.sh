@@ -35,8 +35,14 @@ kubectl wait --namespace ingress-nginx \
   --selector=app.kubernetes.io/component=controller \
   --timeout=180s
 
+echo "⏳ Waiting for Admission Webhook to be ready (15s)..."
+sleep 15
+
 # 4. Apply Kustomize
 echo "☸️ Applying Kubernetes manifests (Dev)..."
 kubectl apply -k .k8s/overlays/dev
+
+echo "🔄 Restarting deployments to apply new images..."
+kubectl rollout restart deployment "${SERVICES[@]}"
 
 echo "🎉 Deployment complete! Access your app at http://localhost"

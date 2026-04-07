@@ -26,9 +26,6 @@
     "@types/node": "^24.0.14",
     "ts-node": "^10.9.2"
   },
-  "engines": {
-    "node": ">=20"
-  },
   "packageManager": "npm@10.8.2",
   "workspaces": [
     "apps/*",

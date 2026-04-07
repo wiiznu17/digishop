@@ -1,87 +1,102 @@
-# ☸️ DigiShop Kubernetes Technical Guide
+# ☸️ DigiShop Kubernetes Get Started Guide
 
-เอกสารนี้รวบรวมรายละเอียดทางเทคนิคทั้งหมดเกี่ยวกับโครงสร้างพื้นฐาน **Kubernetes** ของโปรเจ็ค DigiShop ตั้งแต่การรันในเครื่อง (Local) ไปจนถึงการขึ้นระบบจริง (Production)
-
----
-
-## 🏗️ สถาปัตยกรรม (Architecture)
-
-ระบบถูกออกแบบมาให้เป็น **Cloud-Native** 100% โดยใช้หลักการแยกส่วน (Decoupling) ดังนี้:
-
-- **Orchestration**: Kubernetes (Kind ในเครื่อง dev / Managed K8s ใน prod)
-- **Ingress Controller**: NGINX Ingress (ทำหน้าที่เป็นทางเข้าหน้าด่านและ Load Balancer)
-- **Configuration**: Managed by **Kustomize** (แยก `base/` และ `overlays/`)
-- **Package Registry**: GitHub Container Registry (GHCR)
-
-### โครงสร้างไฟล์ (.k8s/)
-```text
-.k8s/
-├── base/                # ค่าตั้งค่าหลักที่ใช้ร่วมกันทุกระบบ (Deployments, Services, HPA)
-├── overlays/
-│   ├── dev/             # ปรับแต่งสำหรับการรันในเครื่อง (ใช้ Image :latest, 1 replica)
-│   └── prod/            # ปรับแต่งสำหรับระบบจริง (ใช้ Image SHA-tag, Scaling สูงสุด)
-```
+คู่มือฉบับรวบรัดสำหรับการติดตั้งและรันระบบ DigiShop บน Kubernetes (Kind) สำหรับนักพัฒนาที่เพิ่งเริ่มต้น
 
 ---
 
-## 🛠️ การติดตั้งสำหรับนักพัฒนา (Local Setup)
+## 🛠️ ขั้นตอนเตรียมตัว (Prerequisites)
 
-เราใช้ **Kind (Kubernetes in Docker)** เพื่อจำลอง Cluster จริงบนเครื่องคุณ
+ก่อนเริ่มรันระบบ ตรวจสอบว่าเครื่องของคุณมีเครื่องมือเหล่านี้ครบถ้วน:
+- **Docker Desktop**: แนะนำให้ตั้งค่า RAM อย่างน้อย 8GB+
+- **Kind**: สำหรับจำลอง Cluster (`brew install kind`)
+- **Kubectl**: สำหรับสั่งการ Cluster (`brew install kubectl`)
 
-### 1. เครื่องมือที่ต้องมี
-- **Docker Desktop** (RAM 8GB+)
-- **Kind**, **Kubectl**, **Kustomize**
+---
 
-### 2. การรันระบบ
-เราได้จัดเตรียมสคริปต์อัตโนมัติไว้ให้แล้ว:
+## 🚀 เริ่มใช้งานใน 5 นาที (Quick Start)
+
+### 1. ตั้งค่า Secrets (สำคัญมาก)
+ระบบต้องการ API Keys และ Config บางอย่างเพื่อรันบริการพื้นฐาน ให้คัดลอกไฟล์ตัวอย่างไปสร้างไฟล์จริง:
 ```bash
-# รันทุกอย่างตั้งแต่ Build ไปจนถึง Deploy
+cp .k8s/base/secrets.yaml.example .k8s/base/secrets.yaml
+```
+> [!WARNING]
+> ตรวจสอบในไฟล์ `secrets.yaml` ว่ามีค่า `SENDGRID_API_KEY`, `SUPABASE_URL`, และ `AZURE_STORAGE_*` ให้ครบถ้วน
+> **ห้าม Push ไฟล์ `secrets.yaml` ขึ้น Git เด็ดขาด** เพราะข้อมูลเป็นเพียง Base64 (ไม่ได้เข้ารหัส) ควรใช้ `secrets.yaml.example` เป็นแม่แบบเท่านั้น
+
+### 2. รันระบบทั้งหมด
+เราได้เตรียมสคริปต์ที่จัดการทุกอย่างให้ในคำสั่งเดียว (Build, Load, Apply):
+```bash
 ./scripts/local-deploy.sh
 ```
+*รอประมาณ 5-10 นาทีเพื่อให้ Next.js Build และโหลด Image เข้าสู่ Cluster*
 
 ---
 
-## 🚀 ระบบ CI/CD และการจัดการ Image
+## 🌐 ช่องทางเข้าใช้งาน (Access Endpoints)
 
-ระบบใช้ **GitHub Actions** (`.github/workflows/ghcr-pro-build.yml`) ในการจัดการวงจรชีวิตของแอป:
+เมื่อระบบขึ้นสถานะ `Running` ครบทุกตัว คุณสามารถเข้าใช้งานได้ที่ URL เหล่านี้:
 
-1. **Build**: สร้าง Docker Image จาก `Dockerfile` ของแต่ละ Service
-2. **Tagging**: ติดแท็กด้วย **Commit SHA** (เช่น `auth:a1b2c3d`) เพื่อให้ระบุเวอร์ชันที่แน่นอนได้
-3. **Push**: ส่งภาพไปเก็บที่ **GHCR (ghcr.io/wiiznu/...)**
-
----
-
-## 🔐 ความปลอดภัยและการตั้งค่า (Security & Secrets)
-
-- **Non-Root User**: ทุก Service ถูกกำหนดให้รันด้วย User ที่ไม่ใช่ root เพื่อความปลอดภัย
-- **Kubernetes Secrets**: ข้อมูลสำคัญ (เช่น DB Password) จะถูกจัดการผ่านทรัพยากร `Secret` เท่านั้น
-- **Resource Limits**: มีการจำกัด CPU และ Memory ของแต่ละแอป เพื่อป้องกันแอปใดแอปหนึ่งกินทรัพยากรจนระบบล่ม
+| ส่วนงาน | URL (Local) | Health Check |
+| :--- | :--- | :--- |
+| **หน้าร้าน (Customer)** | [http://localhost](http://localhost) | `/healthz` |
+| **ร้านค้า (Merchant)** | [http://merchant.localhost](http://merchant.localhost) | `/api/healthz` |
+| **แอดมิน (Admin Portal)** | [http://portal.localhost](http://portal.localhost) | `/api/healthz` |
+| **ระบบล็อกอิน (Auth API)** | [http://localhost/api/auth](http://localhost/api/auth) | `/api/auth/healthz` |
 
 ---
 
-## 📈 การขยายตัวและความเสถียร (Auto-scaling & HA)
+## 🛠️ รอบวงจรการพัฒนา (Development Workflow)
 
-- **HPA (Horizontal Pod Autoscaler)**: ระบบจะขยายจำนวน Pods อัตโนมัติเมื่อ CPU ใช้งานเกิน 80% (ตั้งค่าได้ใน `hpa.yaml`)
-- **PDB (Pod Disruption Budget)**: รับประกันว่าจะมีแอปอย่างน้อย 1 ตัวรันอยู่เสมอขณะทำการบำรุงรักษา
-- **Rolling Update**: การอัปเดตโค้ดแบบ Zero-downtime โดย Kubernetes จะรอให้ Pod ใหม่พร้อมใช้งานจริง (Readiness Probe) ก่อนปิดตัวเก่า
-
----
-
-## 🔍 คำสั่งที่ใช้บ่อย (Common Commands)
-
+### หากมีการแก้ไขโค้ด (Manual Redeploy)
+หากคุณแก้ไขโค้ดใน Service ใด Service หนึ่ง และต้องการดูผลใน Cluster ทันที:
 ```bash
-# ดูสถานะภาพรวม
-kubectl get all
+# 1. Build & Load เข้า Kind
+docker build -t ghcr.io/wiiznu/[service-name]:latest -f apps/[service-name]/Dockerfile .
+kind load docker-image ghcr.io/wiiznu/[service-name]:latest --name digishop-cluster
 
-# ตรวจสอบ LOGS ของแอป
-kubectl logs -f deployment/[service-name]
+# 2. สั่ง Restart Pod
+kubectl rollout restart deployment [service-name]
+```
 
-# เข้าไปรันคำสั่งใน Container
-kubectl exec -it [pod-name] -- /bin/sh
-
-# ดูค่าสถานะการ Scalings (HPA)
-kubectl get hpa
+### หากมีการแก้ไขไฟล์ใน `.k8s/`
+```bash
+kubectl apply -k .k8s/overlays/dev
 ```
 
 ---
-*จัดทำโดยทีม DevOps - DigiShop*
+
+## 🆘 การแก้ปัญหาเบื้องต้น (Troubleshooting)
+
+### 1. ล้างฐานข้อมูลใหม่ (Reset MySQL)
+หากรหัสผ่าน DB ไม่ตรงหรือต้องการเริ่มข้อมูลใหม่ทั้งหมด:
+```bash
+kubectl delete statefulset mysql && kubectl delete pvc mysql-data-mysql-0 && kubectl apply -k .k8s/overlays/dev
+```
+
+### 2. หยุดการทำงานชั่วคราว (Pause/Resume)
+หากต้องการประหยัดทรัพยากร (CPU/RAM) โดยที่ยังไม่ต้องการลบ Cluster ทิ้ง สามารถหยุด Container ของ Kind ได้:
+- **หยุดชั่วคราว**: `./scripts/local-pause.sh` (ใช้ `docker stop`)
+- **กลับมาทำงานต่อ**: `./scripts/local-resume.sh` (ใช้ `docker start`)
+
+### 3. ลบทรัพยากรทั้งหมด (Full Cleanup)
+หากต้องการลบ Cluster ออกจากเครื่องถาวร:
+```bash
+./scripts/local-cleanup.sh
+```
+หรือใช้คำสั่ง: `kind delete cluster --name digishop-cluster`
+
+### 4. ตรวจสอบสถานะและ LOGS
+```bash
+# ดูสถานะ Pod ทั้งหมด (ควรเป็น 1/1 Running)
+kubectl get pods
+
+# ดู Logs เมื่อแอปพัง
+kubectl logs -f deployment/[service-name]
+```
+
+---
+> [!TIP]
+> **หมายเหตุทางเทคนิค**: 
+> - **Backend**: ทุก Backend Service ถูกบังคับให้ใช้ตัวแปร `PORT` ผ่าน `deployment.yaml` และมี `readinessProbe` ที่สัมพันธ์กับ Route จริงในแอป
+> - **Frontend (Assets)**: เนื่องจากใช้ Next.js Standalone mode ใน Monorepo ต้องมั่นใจว่าใน `Dockerfile` มีการ COPY โฟลเดอร์ `public` และ `static` ไปยัง Path ที่ถูกต้อง (เช่น `apps/[app]/public`) ไม่เช่นนั้นรูปภาพจะไม่แสดงผล

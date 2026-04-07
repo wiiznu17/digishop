@@ -19,18 +19,22 @@ spec:
       containers:
       - name: authen-service
         image: ghcr.io/wiiznu/authen-service
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4001
         readinessProbe:
-          httpGet: { path: /healthz, port: 4001 }
+          httpGet: { path: /api/auth/healthz, port: 4001 }
           initialDelaySeconds: 5
         livenessProbe:
-          httpGet: { path: /healthz, port: 4001 }
+          httpGet: { path: /api/auth/healthz, port: 4001 }
         resources:
           requests: { cpu: 100m, memory: 128Mi }
           limits: { cpu: 500m, memory: 256Mi }
         envFrom:
         - secretRef: { name: digishop-secrets }
+        env:
+        - name: PORT
+          value: "4001"
 
 ---
 
@@ -53,6 +57,7 @@ spec:
       containers:
       - name: customer-service2
         image: ghcr.io/wiiznu/customer-service2
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4002
         readinessProbe:
@@ -61,6 +66,9 @@ spec:
           requests: { cpu: 100m, memory: 128Mi }
         envFrom:
         - secretRef: { name: digishop-secrets }
+        env:
+        - name: PORT
+          value: "4002"
 
 ---
 
@@ -83,14 +91,18 @@ spec:
       containers:
       - name: merchant-service
         image: ghcr.io/wiiznu/merchant-service
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4003
         readinessProbe:
-          httpGet: { path: /healthz, port: 4003 }
+          httpGet: { path: /api/healthz, port: 4003 }
         resources:
           requests: { cpu: 100m, memory: 128Mi }
         envFrom:
         - secretRef: { name: digishop-secrets }
+        env:
+        - name: PORT
+          value: "4003"
 
 ---
 
@@ -113,14 +125,18 @@ spec:
       containers:
       - name: portal-service
         image: ghcr.io/wiiznu/portal-service
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4004
         readinessProbe:
-          httpGet: { path: /healthz, port: 4004 }
+          httpGet: { path: /api/healthz, port: 4004 }
         resources:
           requests: { cpu: 100m, memory: 128Mi }
         envFrom:
         - secretRef: { name: digishop-secrets }
+        env:
+        - name: PORT
+          value: "4004"
 
 ---
 
@@ -143,6 +159,7 @@ spec:
       containers:
       - name: merchant-worker
         image: ghcr.io/wiiznu/merchant-worker
+        imagePullPolicy: IfNotPresent
         resources:
           requests: { cpu: 100m, memory: 128Mi }
         envFrom:
@@ -171,6 +188,7 @@ spec:
       containers:
       - name: customer2
         image: ghcr.io/wiiznu/customer2
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3001
         readinessProbe:
@@ -201,6 +219,7 @@ spec:
       containers:
       - name: merchant
         image: ghcr.io/wiiznu/merchant
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3002
         readinessProbe:
@@ -231,6 +250,7 @@ spec:
       containers:
       - name: portal
         image: ghcr.io/wiiznu/portal
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3003
         readinessProbe:
