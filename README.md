@@ -78,6 +78,14 @@ npx sequelize-cli migration:generate --name [ชื่อ-migration] --migration
 ### 3. การรันโปรเจ็ค (Running)
 
 #### ➤ โหมดการพัฒนา (Local Development)
+
+1. **เตรียมโครงสร้างพื้นฐาน (Infrastructure)**:
+รันฐานข้อมูลและระบบเสริมผ่าน Docker Compose:
+```bash
+docker-compose up -d
+```
+
+2. **รันตัวแอปพลิเคชัน (Services)**:
 รันทุกบริการ (Frontend + Backend) พร้อมกัน:
 ```bash
 npm run dev

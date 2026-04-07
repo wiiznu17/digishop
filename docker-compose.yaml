@@ -1,8 +1,35 @@
+name: digishop-dev
+
 services:
+  # ── Infrastructure ───────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: digishop-redis-dev
+    restart: unless-stopped
+    command: redis-server --requirepass pote2546
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "pote2546", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Gateway ──────────────────────────────────────────────────────────────────
   nginx-gateway:
     image: nginx:alpine
-    container_name: digishop-nginx-gateway
+    container_name: digishop-nginx-gateway-dev
     ports:
       - "4000:4000"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis_dev_data:
