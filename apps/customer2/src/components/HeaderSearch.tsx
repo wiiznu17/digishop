@@ -43,7 +43,7 @@ export const HeaderSearch = () => {
           } else {
             setSearchResult(undefined)
           }
-        } catch (e) {
+        } catch {
           setSearchResult(undefined)
         } finally {
           setLoading(false)

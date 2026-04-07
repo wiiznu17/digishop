@@ -6,7 +6,7 @@ import { CircleUser, ClipboardList, ShoppingCart, Bell, HelpCircle } from 'lucid
 import { AuthProvider, useAuth } from '@/contexts/auth-context'
 import { Rubik } from 'next/font/google'
 import { usePathname, useRouter } from 'next/navigation'
-import Button from '@/components/button'
+
 import { HeaderSearch } from '@/components/HeaderSearch'
 
 const rubik = Rubik({
@@ -22,7 +22,7 @@ export default function MainLayout({
   const { user } = useAuth()
   const pathName = usePathname()
   const orderPage = '/order/D'
-  const router = useRouter()
+
   return (
     <AuthProvider>
       {!pathName.includes(orderPage) && (

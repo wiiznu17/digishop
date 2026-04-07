@@ -45,9 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return u ?? null
   }
 
-  function isLoginPath(p: string) {
-    return p.startsWith('/auth')
-  }
+
   async function routeAccordingToRules(currentPath: string) {
     const mySeq = ++seqRef.current
     activeRef.current = mySeq
@@ -136,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   const value = useMemo<AuthContextType>(
     () => ({ user, login, googleLogin, logout, isLoading }),
-    [user, isLoading]
+    [user, isLoading, login, googleLogin, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
