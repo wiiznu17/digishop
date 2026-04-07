@@ -4,7 +4,7 @@ import { OrderIdProp, ShoppingDetail } from '@/types/props/orderProp'
 import { fetchUserChart, createOrderId, deleteCart } from '@/utils/requestUtils/requestOrderUtils'
 import { SetStateAction, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Button from '@/components/button'
+
 import { Minus, Plus, Store as StoreIcon, Trash2, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { formatSku } from '@/lib/function'
@@ -143,7 +143,7 @@ export default function ShoppingCart() {
              <ShoppingBag size={64} className="text-blue-pastel-300" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
-          <p className="text-gray-500 mb-8 max-w-sm">Looks like you haven't added anything to your cart yet. Discover great products now!</p>
+          <p className="text-gray-500 mb-8 max-w-sm">Looks like you haven&apos;t added anything to your cart yet. Discover great products now!</p>
           <Link href="/" className="bg-blue-pastel-500 text-white px-8 py-3 rounded-full font-medium hover:bg-blue-pastel-600 hover:shadow-lg transition-all">
             Continue Shopping
           </Link>
@@ -170,7 +170,7 @@ export default function ShoppingCart() {
                 </Link>
 
                 <div className="p-2">
-                  {values?.map((item: ShoppingDetail, index: number) => {
+                  {values?.map((item: ShoppingDetail) => {
                      const isOutOfStock = item.quantity > item.productItem.stockQuantity;
                      const isDiffStore = select.length > 0 && select[0].productItem.product.storeId !== item.productItem.product.storeId;
                      const disabled = isOutOfStock || isDiffStore;

@@ -48,7 +48,7 @@ export default function SearchResult({
 
   useEffect(() => {
     if (!rawProduct) return
-    let sorted = [...rawProduct]
+    const sorted = [...rawProduct]
     if (filter === 'ASC') {
       sorted.sort((a, b) => minPrice(a.items) - minPrice(b.items))
     } else if (filter === 'DESC') {
@@ -81,7 +81,7 @@ export default function SearchResult({
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 min-h-screen">
       <div className="mb-6 flex items-center items-baseline gap-2">
-         <h1 className="text-2xl font-bold text-gray-800">Search Results for "{query}"</h1>
+         <h1 className="text-2xl font-bold text-gray-800">Search Results for &quot;{query}&quot;</h1>
          <span className="text-gray-500">({count} Product{count !== 1 ? 's' : ''})</span>
       </div>
 

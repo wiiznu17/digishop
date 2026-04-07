@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import { getProduct } from '@/utils/requestUtils/requestProduct'
 import { Choices, Product, ProductItem } from '@/types/props/productProp'
 import { useRouter } from 'next/navigation'
-import Button from '@/components/button'
+
 import {
   createOrderId,
   createWishList

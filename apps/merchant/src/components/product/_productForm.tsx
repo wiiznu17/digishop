@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 export type ProductFormValues = {
   name: string
@@ -185,7 +185,11 @@ export default function ProductForm({
               key={(img.uuid || img.url) + idx}
               className="relative rounded border p-2"
             >
-              <img src={img.url} className="w-full h-32 object-cover rounded" />
+              <img
+                src={img.url}
+                alt="Product preview"
+                className="w-full h-32 object-cover rounded"
+              />
               <div className="mt-2 flex items-center justify-between text-xs">
                 <button
                   className={`px-2 py-1 rounded border ${img.isMain ? 'bg-black text-white' : ''}`}

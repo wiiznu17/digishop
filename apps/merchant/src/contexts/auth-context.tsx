@@ -17,7 +17,11 @@ import {
   useAuthUserQuery,
   useStoreStatusQuery
 } from '@/hooks/queries/useAuthQueries'
-import { loginUser, loginUserWithGoogle, logoutUser } from '@/utils/requestUtils/requestAuthUtils'
+import {
+  loginUser,
+  loginUserWithGoogle,
+  logoutUser
+} from '@/utils/requestUtils/requestAuthUtils'
 import { resolveRedirectPath } from '@/contexts/auth-routing'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
