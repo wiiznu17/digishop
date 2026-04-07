@@ -40,15 +40,18 @@ function getQueryClient() {
 
 export default function AppProvider({ children }: PropsWithChildren) {
   const [queryClient] = useState(getQueryClient)
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
   return (
     <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
-        <GoogleOAuthProvider
-          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}
-        >
+        {clientId ? (
+          <GoogleOAuthProvider clientId={clientId}>
+            <ConfirmProvider>{children}</ConfirmProvider>
+          </GoogleOAuthProvider>
+        ) : (
           <ConfirmProvider>{children}</ConfirmProvider>
-        </GoogleOAuthProvider>
+        )}
       </QueryClientProvider>
     </ReduxProvider>
   )
