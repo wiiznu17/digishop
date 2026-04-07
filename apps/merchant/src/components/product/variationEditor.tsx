@@ -123,7 +123,7 @@ export function VariationEditor({
     const confirmed = await confirm({
       title: 'Delete variation?',
       description:
-        'Deleting this variation will remove the related SKU combinations.',
+        'Deleting this variation will archive/disable the related SKU combinations. Past orders will not be affected.',
       confirmText: 'Delete variation',
       cancelText: 'Keep variation',
       variant: 'destructive'
@@ -188,7 +188,7 @@ export function VariationEditor({
     const confirmed = await confirm({
       title: 'Delete option?',
       description:
-        'Deleting this option may remove SKU combinations that depend on it.',
+        'Deleting this option will archive/disable the SKU combinations that depend on it. Past orders will not be affected.',
       confirmText: 'Delete option',
       cancelText: 'Keep option',
       variant: 'destructive'
@@ -298,20 +298,27 @@ export function VariationEditor({
       </div>
 
       {/* Input สำหรับ add variation ใหม่ (อยู่ใน UI) */}
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="New variation name"
-          value={newVarName}
-          onChange={(e) => setNewVarName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') addVariation()
-          }}
-        />
-        <Button size="sm" onClick={addVariation} disabled={!newVarName.trim()}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Variation
-        </Button>
-      </div>
+      {value.length < 2 ? (
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="New variation name"
+            value={newVarName}
+            onChange={(e) => setNewVarName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') addVariation()
+            }}
+            disabled={value.length >= 2}
+          />
+          <Button size="sm" onClick={addVariation} disabled={!newVarName.trim() || value.length >= 2}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add Variation
+          </Button>
+        </div>
+      ) : (
+        <div className="text-xs font-semibold text-amber-600 bg-amber-50 p-3 rounded border border-amber-200">
+          Maximum of 2 variations reached.
+        </div>
+      )}
 
       {value.length === 0 && (
         <div className="text-sm text-muted-foreground">No variations</div>

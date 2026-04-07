@@ -1,24 +1,26 @@
 /*
 
-# --- allow เฉพาะของที่ portal-service ต้องใช้ ---
+# Allow all workspace apps and packages
 !/apps/
-!/apps/portal-service/**
-
+!/apps/**
 !/packages/
-!/packages/db/**
+!/packages/**
 
-# ไฟล์ root ที่จำเป็นต่อ workspaces / TS build
+# Root configuration files
 !package.json
 !package-lock.json
 !tsconfig.json
 !tsconfig.base.json
 !.npmrc
 
-# กันของหนักที่ไม่ต้องอัป
+# Global ignores (exclude heavy or temporary files)
 **/node_modules
 .turbo
-.next
 .vercel
 coverage
-**/dist
 *.log
+
+# Use Railway's internal build or upload dist if needed. 
+# Keeping dist ignored for now as Railway Nixpacks usually builds from source.
+**/dist
+.next

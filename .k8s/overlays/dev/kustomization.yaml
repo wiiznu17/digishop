@@ -1,0 +1,29 @@
+resources:
+  - ../../base
+
+images:
+  - name: ghcr.io/wiiznu/authen-service
+    newTag: latest
+  - name: ghcr.io/wiiznu/customer-service2
+    newTag: latest
+  - name: ghcr.io/wiiznu/customer2
+    newTag: latest
+  - name: ghcr.io/wiiznu/merchant
+    newTag: latest
+  - name: ghcr.io/wiiznu/merchant-service
+    newTag: latest
+  - name: ghcr.io/wiiznu/merchant-worker
+    newTag: latest
+  - name: ghcr.io/wiiznu/portal
+    newTag: latest
+  - name: ghcr.io/wiiznu/portal-service
+    newTag: latest
+
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      labelSelector: "app"

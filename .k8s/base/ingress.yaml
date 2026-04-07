@@ -1,0 +1,55 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: digishop-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  rules:
+  - host: localhost
+    http:
+      paths:
+      - path: /api/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: authen-service
+            port: { number: 4001 }
+      - path: /api/customer
+        pathType: Prefix
+        backend:
+          service:
+            name: customer-service2
+            port: { number: 4002 }
+      - path: /api/merchant
+        pathType: Prefix
+        backend:
+          service:
+            name: merchant-service
+            port: { number: 4003 }
+      - path: /api/admin
+        pathType: Prefix
+        backend:
+          service:
+            name: portal-service
+            port: { number: 4004 }
+      - path: /portal
+        pathType: Prefix
+        backend:
+          service:
+            name: portal
+            port: { number: 3003 }
+      - path: /merchant
+        pathType: Prefix
+        backend:
+          service:
+            name: merchant
+            port: { number: 3002 }
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: customer2
+            port: { number: 3001 }

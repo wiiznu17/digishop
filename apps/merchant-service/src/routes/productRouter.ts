@@ -78,7 +78,7 @@ router.put(
   requireApprovedStore(),
   ensureStore,
   upload.fields([
-    { name: 'productImages', maxCount: 20 },
+    { name: 'productImages', maxCount: 5 },
     { name: 'itemImages', maxCount: 50 }
   ]) as any,
   syncUpdateDesiredProduct

@@ -1,0 +1,241 @@
+# ── Backend Services ─────────────────────────────────────────────────────────
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authen-service
+  labels:
+    app: authen-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authen-service
+  template:
+    metadata:
+      labels:
+        app: authen-service
+    spec:
+      containers:
+      - name: authen-service
+        image: ghcr.io/wiiznu/authen-service
+        ports:
+        - containerPort: 4001
+        readinessProbe:
+          httpGet: { path: /healthz, port: 4001 }
+          initialDelaySeconds: 5
+        livenessProbe:
+          httpGet: { path: /healthz, port: 4001 }
+        resources:
+          requests: { cpu: 100m, memory: 128Mi }
+          limits: { cpu: 500m, memory: 256Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-service2
+  labels:
+    app: customer-service2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-service2
+  template:
+    metadata:
+      labels:
+        app: customer-service2
+    spec:
+      containers:
+      - name: customer-service2
+        image: ghcr.io/wiiznu/customer-service2
+        ports:
+        - containerPort: 4002
+        readinessProbe:
+          httpGet: { path: /healthz, port: 4002 }
+        resources:
+          requests: { cpu: 100m, memory: 128Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: merchant-service
+  labels:
+    app: merchant-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: merchant-service
+  template:
+    metadata:
+      labels:
+        app: merchant-service
+    spec:
+      containers:
+      - name: merchant-service
+        image: ghcr.io/wiiznu/merchant-service
+        ports:
+        - containerPort: 4003
+        readinessProbe:
+          httpGet: { path: /healthz, port: 4003 }
+        resources:
+          requests: { cpu: 100m, memory: 128Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-service
+  labels:
+    app: portal-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portal-service
+  template:
+    metadata:
+      labels:
+        app: portal-service
+    spec:
+      containers:
+      - name: portal-service
+        image: ghcr.io/wiiznu/portal-service
+        ports:
+        - containerPort: 4004
+        readinessProbe:
+          httpGet: { path: /healthz, port: 4004 }
+        resources:
+          requests: { cpu: 100m, memory: 128Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: merchant-worker
+  labels:
+    app: merchant-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: merchant-worker
+  template:
+    metadata:
+      labels:
+        app: merchant-worker
+    spec:
+      containers:
+      - name: merchant-worker
+        image: ghcr.io/wiiznu/merchant-worker
+        resources:
+          requests: { cpu: 100m, memory: 128Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }
+
+# ── Frontends (Next.js) ──────────────────────────────────────────────────────
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer2
+  labels:
+    app: customer2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer2
+  template:
+    metadata:
+      labels:
+        app: customer2
+    spec:
+      containers:
+      - name: customer2
+        image: ghcr.io/wiiznu/customer2
+        ports:
+        - containerPort: 3001
+        readinessProbe:
+          httpGet: { path: /, port: 3001 }
+        resources:
+          requests: { cpu: 100m, memory: 256Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: merchant
+  labels:
+    app: merchant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: merchant
+  template:
+    metadata:
+      labels:
+        app: merchant
+    spec:
+      containers:
+      - name: merchant
+        image: ghcr.io/wiiznu/merchant
+        ports:
+        - containerPort: 3002
+        readinessProbe:
+          httpGet: { path: /, port: 3002 }
+        resources:
+          requests: { cpu: 100m, memory: 256Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal
+  labels:
+    app: portal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portal
+  template:
+    metadata:
+      labels:
+        app: portal
+    spec:
+      containers:
+      - name: portal
+        image: ghcr.io/wiiznu/portal
+        ports:
+        - containerPort: 3003
+        readinessProbe:
+          httpGet: { path: /, port: 3003 }
+        resources:
+          requests: { cpu: 100m, memory: 256Mi }
+        envFrom:
+        - secretRef: { name: digishop-secrets }

@@ -2,11 +2,12 @@
 import Link from 'next/link'
 import Logo from './../logo.png'
 import Image from 'next/image'
-import { CircleUser, ClipboardList, ShoppingCart } from 'lucide-react'
+import { CircleUser, ClipboardList, ShoppingCart, Bell, HelpCircle } from 'lucide-react'
 import { AuthProvider, useAuth } from '@/contexts/auth-context'
 import { Rubik } from 'next/font/google'
 import { usePathname, useRouter } from 'next/navigation'
 import Button from '@/components/button'
+import { HeaderSearch } from '@/components/HeaderSearch'
 
 const rubik = Rubik({
   subsets: ['latin'],
@@ -25,72 +26,90 @@ export default function MainLayout({
   return (
     <AuthProvider>
       {!pathName.includes(orderPage) && (
-        <header className="bg-white border-2 flex-1">
-          <div className="px-20 py-5">
-            <div className="flex items-center justify-between">
-              {/* <h1 className="text-2xl font-bold text-gray-800">ShopSearch</h1> */}
-              <Link href="/">
-                <Image src={Logo} alt="icon" height={70} />
-              </Link>
-              {user && (
-                <nav className="hidden md:flex space-x-6">
-                  <Link
-                    href="/shopping-cart"
-                    className="text-black hover:text-gray-500 text-2xl "
-                  >
-                    <ShoppingCart
-                      size={40}
-                      className={`${pathName === '/shopping-cart' ? 'text-gray-500' : 'text-black'}`}
-                    />
-                  </Link>
-                  <Link
-                    href="/order/status"
-                    className="text-black hover:text-gray-500 text-2xl px-10"
-                  >
-                    <ClipboardList
-                      size={40}
-                      className={`${pathName === '/order/status' ? 'text-gray-500' : 'text-black'}`}
-                    />
-                  </Link>
-                  <a
-                    href="/setting/profile"
-                    className="text-black hover:text-gray-500 text-2xl"
-                  >
-                    <CircleUser
-                      size={40}
-                      className={`${pathName === '/setting/profile' ? 'text-gray-500' : 'text-black'}`}
-                    />
-                  </a>
-                </nav>
-              )}
+        <header className="flex flex-col bg-gradient-to-r from-blue-pastel-400 to-blue-pastel-500 sticky top-0 z-40 text-white shadow-md w-full">
+          {/* Top subtle bar */}
+          <div className="flex justify-between items-center px-4 md:px-20 py-2 border-b border-blue-pastel-300 text-sm">
+            <div className="flex space-x-4">
+              <a href="#" className="hover:text-blue-50 transition-colors">Seller Centre</a>
+              <span className="text-white/50">|</span>
+              <a href="#" className="hover:text-blue-50 transition-colors">Download</a>
+              <span className="text-white/50">|</span>
+              <span className="flex space-x-2">
+                <span>Follow us on</span>
+                <span className="font-semibold">DigiShop</span>
+              </span>
+            </div>
+            <div className="flex space-x-6 items-center">
+              <a href="#" className="flex items-center space-x-1 hover:text-blue-50 transition-colors">
+                <Bell size={16} />
+                <span>Notifications</span>
+              </a>
+              <a href="#" className="flex items-center space-x-1 hover:text-blue-50 transition-colors">
+                <HelpCircle size={16} />
+                <span>Help</span>
+              </a>
               {!user && (
-                <nav className={`hidden md:flex space-x-6 ${rubik.className}`}>
-                  <Button
-                    size="lg"
-                    color="bg-blue-600/80 text-white"
-                    onClick={() => router.push('/auth')}
-                  >
-                    Log in
-                  </Button>
-                  <Button
-                    size="lg"
-                    border="border-blue-600/80"
-                    onClick={() => router.push('/auth/register')}
-                  >
-                    Register
-                  </Button>
-                </nav>
+                <>
+                  <span className="text-white/50">|</span>
+                  <Link href="/auth/register" className="hover:text-blue-50 font-medium transition-colors">Sign Up</Link>
+                  <span className="text-white/50">|</span>
+                  <Link href="/auth" className="hover:text-blue-50 font-medium transition-colors">Login</Link>
+                </>
+              )}
+              {user && (
+                <div className="hidden md:flex space-x-4 items-center">
+                  <a href="/setting/profile" className="flex items-center space-x-1 hover:text-blue-50 transition-colors">
+                    <CircleUser size={18} />
+                    <span>Profile</span>
+                  </a>
+                </div>
               )}
             </div>
           </div>
+
+          {/* Main header body */}
+          <div className="px-4 md:px-20 py-4 flex items-center justify-between gap-8">
+            <Link href="/" className="flex-shrink-0 flex items-center justify-center">
+              {/* Wrapping Image to invert or tint if we wanted, but we'll leave as is or use brightness to match the blue bg */}
+              <div className="bg-white/90 p-1 rounded-xl">
+                <Image src={Logo} alt="DigiShop Logo" height={50} className="object-contain" />
+              </div>
+            </Link>
+
+            <div className="flex-1 max-w-4xl flex items-center justify-center">
+              <HeaderSearch />
+            </div>
+
+            {user ? (
+               <nav className="flex space-x-6 items-center text-white">
+                <Link href="/shopping-cart" className="relative hover:scale-110 transition-transform">
+                  <ShoppingCart size={32} />
+                  {/* Placeholder badge */}
+                  <span className="absolute -top-1 -right-2 bg-yellow text-blue-900 border-2 border-blue-pastel-500 text-xs font-bold px-1.5 py-0.5 rounded-full">
+                    0
+                  </span>
+                </Link>
+                <Link href="/order/status" className="hover:scale-110 transition-transform">
+                  <ClipboardList size={32} />
+                </Link>
+              </nav>
+            ) : (
+              <div className="flex space-x-4">
+                 <Link href="/shopping-cart" className="relative hover:scale-110 transition-transform text-white">
+                  <ShoppingCart size={32} />
+                </Link>
+              </div>
+            )}
+          </div>
         </header>
       )}
-      <div className={`min-h-screen bg-white text-black ${rubik.className}`}>
+      <div className={`min-h-screen bg-gray-50 text-black ${rubik.className}`}>
         {children}
       </div>
-      <footer className="bg-white text-black py-5 border border-t border-gray-300">
+      <footer className="bg-white text-gray-500 py-8 border-t-4 border-blue-pastel-500 mt-10">
         <div className="max-w-7xl mx-auto text-center">
-          <p>&copy; 2025 Digishop. All rights reserved. </p>
+          <p className="mb-4">Digishop Premium e-Commerce</p>
+          <p>&copy; 2026 Digishop. All rights reserved. </p>
         </div>
       </footer>
     </AuthProvider>
