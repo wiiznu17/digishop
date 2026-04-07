@@ -1,49 +1,11 @@
-name: Deploy to Railway
+name: Deploy to Kubernetes (Production)
 
+# ไว้สำหรับรันมือเท่านั้น (Manual Trigger) ป้องกันไม่ให้รันจริงอัตโนมัติ
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build everything
-        run: npx turbo run build
-
-      # We upload the dist/ directories to artifacts if needed, 
-      # but Railway 'up' usually wants to build in its own containerized environment 
-      # or you upload the built files. 
-      # Given the GitLab CI uploaded 'apps/portal-service/dist', 
-      # I'll keep the build artifacts for the next job.
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            apps/*/dist
-            apps/*/.next
-            packages/*/dist
-            package.json
-            package-lock.json
-            turbo.json
-            tsconfig.json
-
-  deploy:
-    needs: build
+  build-and-push:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -61,15 +23,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          name: build-artifacts
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Railway CLI
-        run: npm i -g @railway/cli
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
 
-      - name: Deploy to Railway
-        run: railway up . --service ${{ matrix.service }} --environment ${{ secrets.RAILWAY_ENVIRONMENT }} --ci --path-as-root --verbose
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Kubeconfig
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          # จำลองการ Apply Manifest ไปยัง Cluster จริง
+          # ในที่นี้ใช้ Kustomize บนโฟลเดอร์ .k8s/overlays/dev (หรือเปลี่ยนเป็น prod ในอนาคต)
+          kubectl apply -k .k8s/overlays/dev
+          
+          # สั่ง Restart ทุก Deployment เพื่อให้ใช้ Image ใหม่ล่าสุด
+          kubectl rollout restart deployment -n default

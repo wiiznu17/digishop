@@ -64,6 +64,23 @@ kubectl rollout restart deployment [service-name]
 kubectl apply -k .k8s/overlays/dev
 ```
 
+kubectl apply -k .k8s/overlays/dev
+```
+
+---
+
+## 🚢 ระบบ CI/CD สำหรับ Production (GitHub Actions)
+
+ในโฟลเดอร์ `.github/workflows/deploy.yml` ได้มีการเตรียมเทมเพลตสำหรับ Deploy ขึ้น Kubernetes Cluster จริงไว้ดังนี้:
+
+- **Manual Trigger**: ตั้งค่าเป็น `workflow_dispatch` (ต้องกดรันเองจากหน้า GitHub Actions) เพื่อป้องกันการ Deploy จริงโดยไม่ตั้งใจ
+- **Build & Push (GHCR)**: จะทำการ Build และส่ง Image ไปยัง GitHub Container Registry
+- **Deploy**: ใช้ `kubectl` ในการอัปเดต Manifest ไปยัง Production Cluster
+
+> [!IMPORTANT]
+> **สิ่งที่ต้องตั้งค่าใน GitHub Secrets**:
+> - `KUBECONFIG`: ไฟล์สำหรับเชื่อมต่อกับ Cluster จริง (Production)
+
 ---
 
 ## 🆘 การแก้ปัญหาเบื้องต้น (Troubleshooting)
