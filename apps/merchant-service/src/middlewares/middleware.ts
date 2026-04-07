@@ -111,6 +111,8 @@ export function requireApprovedStore(opts?: {
           attributes: ['id', 'status']
         })
         if (!owned) return res.status(404).json({ error: 'Store not found' })
+        if (owned.status === StoreStatus.BANNED)
+          return res.status(403).json({ error: 'STORE_BANNED' })
         if (owned.status !== StoreStatus.APPROVED)
           return res.status(403).json({ error: 'Store status is not APPROVED' })
         ;(req as any).store = owned
@@ -123,6 +125,8 @@ export function requireApprovedStore(opts?: {
         attributes: ['id', 'status']
       })
       if (!store) return res.status(404).json({ error: 'Store not found' })
+      if (store.status === StoreStatus.BANNED)
+        return res.status(403).json({ error: 'STORE_BANNED' })
       if (store.status !== StoreStatus.APPROVED)
         return res.status(403).json({ error: 'Store status is not APPROVED' })
       ;(req as any).store = store

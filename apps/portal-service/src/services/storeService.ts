@@ -284,10 +284,6 @@ export class StoreService {
     if (!existing) throw new NotFoundError('Not found')
 
     const currentStatus = String(existing.get('status')) as StoreStatus
-    if (currentStatus === StoreStatus.BANNED) {
-      throw new ConflictError('Store is BANNED and cannot be modified')
-    }
-
     if (currentStatus === status) {
       return {
         message: `Store already ${status.toLowerCase()}`,
@@ -302,7 +298,13 @@ export class StoreService {
       }
     }
 
-    const [affected] = await storeRepository.approveStore(id, status)
+    // Allow transitions from these statuses
+    const allowedSource = [
+      StoreStatus.PENDING,
+      StoreStatus.APPROVED,
+      StoreStatus.BANNED
+    ]
+    const [affected] = await storeRepository.updateStatus(id, status, allowedSource)
 
     if (affected === 0) {
       const after: any = await storeRepository.findStoreById(id)

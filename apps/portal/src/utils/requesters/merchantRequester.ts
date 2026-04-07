@@ -71,14 +71,15 @@ type ApproveStoreAPIResponse = {
   store?: AdminStoreLite // ฝั่ง controller ส่งฟิลด์แบบ lite กลับมา
 }
 
-export async function approveAdminStore(id: number): Promise<{
+export async function approveAdminStore(id: number, status: string = 'APPROVED'): Promise<{
   ok: boolean
   message: string
   store?: AdminStoreLite
 }> {
   try {
     const r = await axios.post<ApproveStoreAPIResponse>(
-      `/api/admin/stores/${id}/approve`
+      `/api/admin/stores/${id}/approve`,
+      { status }
     )
     return {
       ok: true,

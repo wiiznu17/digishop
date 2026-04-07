@@ -68,23 +68,45 @@ function AdminStoreDetailPage() {
     [data]
   )
 
-  async function handleApprove() {
+  async function handleUpdateStatus(status: 'APPROVED' | 'BANNED') {
     if (!data) return
+
+    const isApprove = status === 'APPROVED'
+    const isCurrentlyBanned = data.status === 'BANNED'
+
+    let title = isApprove ? 'Approve this store?' : 'Banned this store?'
+    if (isCurrentlyBanned && isApprove) title = 'Un-ban this store?'
+
+    let confirmBtnText = isApprove ? 'Approve' : 'Banned'
+    if (isCurrentlyBanned && isApprove) confirmBtnText = 'Un-ban'
+
+    const loadingTitle = 'Processing...'
+
+    let successTitle = isApprove ? 'Approved' : 'Banned'
+    if (isCurrentlyBanned && isApprove) successTitle = 'Un-banned'
+
+    let successText = isApprove
+      ? 'Store approved successfully'
+      : 'Store banned successfully'
+    if (isCurrentlyBanned && isApprove)
+      successText = 'Store un-banned successfully'
+
     const { isConfirmed } = await Swal.fire({
-      title: 'Approve this store?',
+      title,
       text: `Merchant: ${data.storeName}`,
-      icon: 'question',
+      icon: isApprove ? 'question' : 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Approve',
+      confirmButtonText: confirmBtnText,
       cancelButtonText: 'Cancel',
-      reverseButtons: true
+      reverseButtons: true,
+      confirmButtonColor: isApprove ? undefined : '#ef4444'
     })
     if (!isConfirmed) return
 
     setApproving(true)
 
     Swal.fire({
-      title: 'Approving...',
+      title: loadingTitle,
       allowOutsideClick: false,
       allowEscapeKey: false,
       didOpen: () => {
@@ -93,26 +115,26 @@ function AdminStoreDetailPage() {
     })
 
     try {
-      const res = await approveAdminStore(Number(id))
+      const res = await approveAdminStore(Number(id), status)
 
       // ปิด loading ก่อนแจ้งผล
       Swal.close()
 
       if (res.ok) {
         setData((prev) =>
-          prev ? ({ ...prev, status: 'APPROVED' } as AdminStoreDetail) : prev
+          prev ? ({ ...prev, status } as AdminStoreDetail) : prev
         )
         await Swal.fire({
           icon: 'success',
-          title: 'Approved',
-          text: res.message || 'Store approved successfully',
+          title: successTitle,
+          text: res.message || successText,
           showConfirmButton: false,
           timer: 1400
         })
       } else {
         await Swal.fire({
           icon: 'error',
-          title: 'Approve failed',
+          title: 'Failed',
           text: res.message || 'Something went wrong'
         })
       }
@@ -121,7 +143,7 @@ function AdminStoreDetailPage() {
       Swal.close()
       await Swal.fire({
         icon: 'error',
-        title: 'Approve failed',
+        title: 'Error',
         text: err?.message || 'Network or server error'
       })
     } finally {
@@ -175,10 +197,31 @@ function AdminStoreDetailPage() {
             {!!data && data.status === 'PENDING' && (
               <Button
                 variant="default"
-                onClick={handleApprove}
+                onClick={() => handleUpdateStatus('APPROVED')}
                 disabled={approving}
               >
                 {approving ? 'Approving...' : 'Approve'}
+              </Button>
+            )}
+
+            {!!data && data.status === 'APPROVED' && (
+              <Button
+                variant="destructive"
+                onClick={() => handleUpdateStatus('BANNED')}
+                disabled={approving}
+              >
+                {approving ? 'Processing...' : 'BANNED'}
+              </Button>
+            )}
+
+            {!!data && data.status === 'BANNED' && (
+              <Button
+                variant="outline"
+                className="text-green-600 border-green-600 hover:bg-green-50"
+                onClick={() => handleUpdateStatus('APPROVED')}
+                disabled={approving}
+              >
+                {approving ? 'Processing...' : 'UN-BAN'}
               </Button>
             )}
 

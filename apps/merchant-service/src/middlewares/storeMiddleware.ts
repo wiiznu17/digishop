@@ -25,6 +25,10 @@ export function attachStore(opts?: { allowServiceBypass?: boolean }) {
         return res.status(404).json({ error: 'No store found' })
       }
 
+      if (store.status === 'BANNED') {
+        return res.status(403).json({ error: 'STORE_BANNED' })
+      }
+
       req.store = store
       return next()
     } catch (error) {

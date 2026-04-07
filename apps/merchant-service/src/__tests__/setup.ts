@@ -94,6 +94,7 @@ jest.mock('@digishop/db', () => ({
     APPROVED: 'APPROVED',
     PENDING: 'PENDING',
     REJECTED: 'REJECTED',
+    BANNED: 'BANNED',
   },
   ShippingStatus: {
     PENDING: 'PENDING',
